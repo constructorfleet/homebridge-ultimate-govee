@@ -1,7 +1,8 @@
 import {device} from 'aws-iot-device-sdk';
 import path from 'path';
+import {GoveeClient} from './GoveeClient';
 
-export class AWSClient {
+export class AWSClient extends GoveeClient {
   private awsIOTDevice: device;
 
   constructor(
@@ -11,6 +12,7 @@ export class AWSClient {
     clientId: string,
     host: string,
   ) {
+    super();
     this.awsIOTDevice = new device({
       clientId: clientId,
       certPath: path.resolve(certificatePath),
