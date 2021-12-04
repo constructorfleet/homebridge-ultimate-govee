@@ -1,4 +1,5 @@
-export abstract class BaseRequest {
-  protected constructor() {
+export class BaseRequest {
+  public static build(): BaseRequest {
+    return new BaseRequest();
   }
 }

@@ -1,7 +1,7 @@
 import {BaseResponse} from './base/baseResponse';
 import {Expose, Transform, Type} from 'class-transformer';
 
-export class DeviceListResponse extends BaseResponse {
+export class AppDeviceListResponse extends BaseResponse {
   @Expose({name: 'devices'})
   @Type(() => DeviceInformation)
   public devices!: DeviceInformation[];

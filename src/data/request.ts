@@ -1,6 +1,6 @@
-import {BaseHeaders} from './headers/baseHeaders';
-import {BaseRequest} from './payloads/base/baseRequest';
-import {BaseResponse} from './payloads/base/baseResponse';
+import {BaseHeaders} from './structures/api/requests/headers/baseHeaders';
+import {BaseRequest} from './structures/api/requests/payloads/base/baseRequest';
+import {BaseResponse} from './structures/api/requests/payloads/base/baseResponse';
 import axios from 'axios';
 import {instanceToPlain} from 'class-transformer';
 
