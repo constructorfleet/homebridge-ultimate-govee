@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { API } from 'homebridge';
 
 import { PLATFORM_NAME } from './settings';
