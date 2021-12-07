@@ -1,0 +1,63 @@
+33:
+  01: Power
+    00: OFF
+    01: ON
+  02:
+  03:
+  04: Brightness
+    00: 0 (0%)
+    ..:
+    ff: 255 (100%)
+  05:
+    02: Color
+      rr: Red
+      gg: Green
+      bb: Blue
+    04: Scene
+      ID: Identifier
+  05: Color Temp (RGB From Kelvin)
+    02:
+      ff:
+        ff:
+          ff:
+            01:
+              rr:
+              gg:
+              bb:
+a3: SEQUENCE/EFFECT
+  00:
+    01:
+      05:
+        03:
+          Effect:
+            09: Clockwise
+            0a: Counterclockwise
+            02: Cycle
+            13: Gradient
+            0f: twinkle
+            14: breathe
+          Speed:
+            00: 0%
+            64: 100%
+          Brightness:
+            01: 1%
+            64: 100%
+          ff:
+            ff:
+              ff:
+                Segments: 1+
+                Length:
+                  01: 1
+                  3C: 50
+                Red:
+                  00: 0
+                  FF: 255
+                Green:
+                  00: 0
+                  FF: 255
+                Blue:
+                  00: 0
+                  FF: 255
+                00:
+                '..':
+                'length(hex)': Place holders, counting by one, go to 23

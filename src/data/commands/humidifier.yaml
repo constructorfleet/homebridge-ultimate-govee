@@ -1,0 +1,24 @@
+33:
+  05:
+    01: Manual Level
+      01: 1
+      ..:
+      08: 8
+    02: Custom
+      00: Custom 1
+      11: Custom 2
+      22: Custom 3
+        01: Mist 1
+        ..:
+        08: Mist 8
+          0000: 0 Minutes
+          ..:
+          0168: 360 Minutes
+  10: ??
+  11: Timer
+    01:
+      0000: 0 Minutes
+      ..:
+        0168: 360 Minutes
+
+
