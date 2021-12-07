@@ -1,66 +1,56 @@
-import {BaseResponse} from './base/baseResponse';
-import {Expose, Transform, Type} from 'class-transformer';
+import {BaseResponse} from './base/BaseResponse';
+import {Expose, plainToInstance} from 'class-transformer';
 
 export class AppDeviceListResponse extends BaseResponse {
-  @Expose({name: 'devices'})
-  @Type(() => DeviceInformation)
   public devices!: DeviceInformation[];
 }
 
 class DeviceInformation {
-  @Expose({name: 'groupId'})
   public groupId!: number;
 
-  @Expose({name: 'device'})
-  public deviceId!: string;
+  public device!: string;
 
-  @Expose({name: 'sku'})
-  public deviceModel!: string;
+  public sku!: string;
 
-  @Expose({name: 'spec'})
-  public specification!: string;
+  public spec!: string;
 
-  @Expose({name: 'versionHard'})
-  public hardwareVersion!: string;
+  public versionHard!: string;
 
-  @Expose({name: 'versionSoft'})
-  public softwareVersion!: string;
+  public versionSoft!: string;
 
-  @Expose({name: 'deviceName'})
   public deviceName!: string;
 
-  @Expose({name: 'pactType'})
   public pactType!: number;
 
-  @Expose({name: 'pactCode'})
   public pactCode!: number;
 
-  @Expose({name: 'goodsType'})
   public goodsType!: number;
 
-  @Expose({name:'deviceExt'})
-  @Type(() => DeviceExtensionProperties)
-  public deviceExtensionProperties!: DeviceExtensionProperties;
+  public deviceExt!: DeviceExtensionProperties;
 }
 
 class DeviceExtensionProperties {
-  @Expose({name: 'deviceSettings'})
-  @Type(() => DeviceSettings)
-  @Transform(({value}) => JSON.parse(value), {toClassOnly: true})
-  @Transform(({value}) => JSON.stringify(value), {toPlainOnly: true})
-  public deviceSettings!: DeviceSettings;
+  public get settings(): DeviceSettings {
+    return plainToInstance(DeviceSettings, JSON.parse(this.deviceSettings));
+  }
 
-  @Expose({name: 'lastDeviceData'})
-  @Type(() => DeviceData)
-  @Transform(({value}) => JSON.parse(value), {toClassOnly: true})
-  @Transform(({value}) => JSON.stringify(value), {toPlainOnly: true})
-  public lastDeviceData!: DeviceData;
+  public get deviceData(): DeviceData {
+    return plainToInstance(DeviceData, JSON.parse(this.lastDeviceData));
+  }
 
-  @Expose({name: 'extResources'})
-  @Type(() => DeviceExternalResources)
-  @Transform(({value}) => JSON.parse(value), {toClassOnly: true})
-  @Transform(({value}) => JSON.stringify(value), {toPlainOnly: true})
-  public externalResources!: string;
+  public get externalResources(): DeviceExternalResources {
+    return plainToInstance(DeviceExternalResources,
+      JSON.parse(this.extResources));
+  }
+
+  @Expose({toPlainOnly: true})
+  public deviceSettings!: string;
+
+  @Expose({toPlainOnly: true})
+  public lastDeviceData!: string;
+
+  @Expose({toPlainOnly: true})
+  public extResources!: string;
 }
 
 class DeviceSettings {

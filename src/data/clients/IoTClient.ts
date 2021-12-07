@@ -1,7 +1,7 @@
 import {device} from 'aws-iot-device-sdk';
 import path from 'path';
 import {GoveeClient} from './GoveeClient';
-import {Emits, Handles} from '../../util/events';
+import {Emits} from '../../util/events';
 import {IotMessage} from '../structures/iot/device/IotMessage';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {container} from 'tsyringe';
@@ -53,12 +53,10 @@ export class IoTClient extends GoveeClient {
     );
   }
 
-  @Handles('SubscribeToTopic')
   subscribeTo(topic: string) {
     this.awsIOTDevice.subscribe(topic);
   }
 
-  @Handles('PublishToTopic')
   publishTo(message: IotMessage) {
     this.awsIOTDevice.publish(
       message.topic,

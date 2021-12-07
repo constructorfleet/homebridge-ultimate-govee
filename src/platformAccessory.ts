@@ -1,6 +1,6 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 
-import { UltimateGovePlatform } from './platform';
+import {UltimateGoveePlatform} from './platform';
 
 /**
  * Platform Accessory
@@ -20,7 +20,7 @@ export class ExamplePlatformAccessory {
   };
 
   constructor(
-    private readonly platform: UltimateGovePlatform,
+    private readonly platform: UltimateGoveePlatform,
     private readonly accessory: PlatformAccessory,
   ) {
 

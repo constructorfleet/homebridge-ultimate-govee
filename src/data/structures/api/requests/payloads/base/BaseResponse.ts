@@ -1,8 +1,12 @@
-import {Expose} from "class-transformer";
+import {Expose} from 'class-transformer';
 
-export abstract class BaseResponse {
+export class BaseResponse {
+  constructor() {
+  }
+
   @Expose({name: 'message'})
   public message!: string;
+
   @Expose({name: 'status'})
   public status!: number;
 }

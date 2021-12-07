@@ -1,14 +1,8 @@
-import {BaseHeaders} from './baseHeaders';
-import {Expose} from 'class-transformer';
+import {BaseHeaders} from './BaseHeaders';
 
-export class ApiHeader extends BaseHeaders {
-  public static build(apiKey: string): ApiHeader {
-    const headers = new ApiHeader();
-    headers.apiKey = apiKey;
+export function ApiHeader(apiKey: string) {
+  const baseHeaders = BaseHeaders;
+  baseHeaders['Govee-API-Key'] = apiKey;
 
-    return headers;
-  }
-
-  @Expose({name: 'Govee-API-Key'})
-  public apiKey!: string;
+  return baseHeaders;
 }

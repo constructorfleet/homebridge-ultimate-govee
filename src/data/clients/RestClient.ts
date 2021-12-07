@@ -1,34 +1,38 @@
 import {request} from '../request';
-import {BaseHeaders} from '../structures/api/requests/headers/baseHeaders';
-import {LoginRequest} from '../structures/api/requests/payloads/loginRequest';
-import {LoginResponse} from '../structures/api/requests/payloads/loginResponse';
-import {AuthenticatedHeader} from '../structures/api/requests/headers/authenticatedHeader';
-import {BaseRequest} from '../structures/api/requests/payloads/base/baseRequest';
-import {AppDeviceListResponse} from '../structures/api/requests/payloads/appDeviceListResponse';
+import {BaseHeaders} from '../structures/api/requests/headers/BaseHeaders';
+import {
+  loginRequest,
+  LoginRequest,
+} from '../structures/api/requests/payloads/LoginRequest';
+import {LoginResponse} from '../structures/api/requests/payloads/LoginResponse';
+import {AuthenticatedHeader} from '../structures/api/requests/headers/AuthenticatedHeader';
+import {BaseRequest} from '../structures/api/requests/payloads/base/BaseRequest';
+import {AppDeviceListResponse} from '../structures/api/requests/payloads/AppDeviceListResponse';
 import {GoveeClient} from './GoveeClient';
 import {ApiHeader} from '../structures/api/requests/headers/ApiHeader';
-import {ApiDeviceListResponse} from '../structures/api/requests/payloads/apiDeviceListResponse';
-import {container, inject, singleton} from 'tsyringe';
+import {ApiDeviceListResponse} from '../structures/api/requests/payloads/ApiDeviceListResponse';
+import {autoInjectable, container, inject} from 'tsyringe';
 import {
   GOVEE_API_KEY,
   GOVEE_CLIENT_ID,
   GOVEE_PASSWORD,
-  GOVEE_USERNAME, IOT_ACCOUNT_TOPIC,
+  GOVEE_USERNAME,
+  IOT_ACCOUNT_TOPIC,
 } from '../../util/const';
-import {Emits, Handles} from '../../util/events';
+import {Emits} from '../../util/events';
+import {GoveeDevice} from '../../devices/GoveeDevice';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
 const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
 
-@singleton()
 @Emits<RestClient>(
-  'Authenticated',
-  'Subscribe',
+  'DeviceSettings',
+  'DeviceState',
 )
+@autoInjectable()
 export class RestClient extends GoveeClient {
   private token?: string;
-  private topic?: string;
 
   constructor(
     @inject(GOVEE_USERNAME) private username: string,
@@ -37,76 +41,75 @@ export class RestClient extends GoveeClient {
     @inject(GOVEE_API_KEY) private apiKey?: string,
   ) {
     super();
+    console.log('Constructing');
   }
 
-  @Handles('Authenticate')
-  async handleAuthentication() {
-    await this.login();
-  }
-
-  @Handles('retrieveDevices')
-  async handleRetrieveDevices() {
-    await this.getDevices();
-  }
-
-  @Handles('Authenticate')
-  async login() {
-    const response = await request<BaseHeaders, LoginRequest, LoginResponse>(
+  async login(): Promise<RestClient> {
+    return await request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
-      new BaseHeaders(),
-      LoginRequest.build(
+      BaseHeaders,
+      loginRequest(
         this.username,
         this.password,
         this.clientId,
       ),
-    ).get().catch(err => {
-      throw Error(`Unable to authenticate with Govee server. ${err}`);
+    ).post().then((response: LoginResponse) => {
+      this.token = response.client.token;
+      container.register(
+        IOT_ACCOUNT_TOPIC,
+        {
+          useValue: response.client.topic,
+        },
+      );
+
+      return this;
     });
-
-    if (response?.clientInfo?.bearerToken) {
-      throw Error('Unable to retrieve Govee application token.');
-    }
-
-    this.token = response.clientInfo.bearerToken;
-    container.registerInstance(
-      IOT_ACCOUNT_TOPIC,
-      response.clientInfo.iotAccountTopic,
-    );
-
-    this.emit('Authenticated');
   }
 
-  @Handles('RetrieveDevices')
-  async getDevices() {
-    await Promise.all([
+  async getDevices(): Promise<RestClient> {
+    return await Promise.all([
       this.getAppDevices(),
       this.getApiDevices(),
-    ]).catch(err => {
-      throw Error(err);
+    ]).then(([appDevices, apiDevices]) => {
+      return this;
     });
   }
 
-  async getAppDevices() {
-    await request<AuthenticatedHeader, BaseRequest, AppDeviceListResponse>(
+  async getAppDevices(): Promise<GoveeDevice[] | void> {
+    return await request<BaseRequest, AppDeviceListResponse>(
       `${BASE_GOVEE_APP_DEVICE_URL}/list`,
-      AuthenticatedHeader.build(this.token!),
-      BaseRequest.build(),
-    ).get().then(response => {
-
-    }).catch(err => {
-      throw Error(`Unable to retrieve Govee device list. ${err}`);
-    });
+      AuthenticatedHeader(this.token!),
+    ).post().then((response) => {
+        console.log(response);
+        return response.devices.map(
+          (device) => new GoveeDevice(
+            device.deviceName,
+            device.device,
+            device.sku,
+          ),
+        );
+      },
+      (err) => console.log(err),
+    );
   }
 
-  async getApiDevices() {
-    await request<ApiHeader, BaseRequest, ApiDeviceListResponse>(
+  async getApiDevices(): Promise<GoveeDevice[] | void> {
+    return await request<BaseRequest, ApiDeviceListResponse>(
       `${GOVEE_API_BASE_URL}`,
-      ApiHeader.build(this.apiKey!),
-      BaseRequest.build(),
-    ).get().then(response => {
-
-    }).catch(err => {
-      throw Error(`Unable to retrieve Govee api device list. ${err}`);
-    });
+      ApiHeader(this.apiKey!),
+      new BaseRequest(),
+    ).get().then((response) => {
+        console.log(response);
+        return response.data.devices.map(
+          (device) => new GoveeDevice(
+            device.deviceName,
+            device.device,
+            device.model,
+          ),
+        );
+      }, (err) => {
+        console.log(err);
+      },
+    );
   }
 }

@@ -2,12 +2,12 @@ import {machineIdSync} from 'node-machine-id';
 import {container} from 'tsyringe';
 import {
   API,
+  Characteristic,
   DynamicPlatformPlugin,
   Logger,
   PlatformAccessory,
   PlatformConfig,
   Service,
-  Characteristic,
 } from 'homebridge';
 
 import {PLATFORM_NAME, PLUGIN_NAME} from './settings';
@@ -16,22 +16,17 @@ import {
   GOVEE_API_KEY,
   GOVEE_CLIENT_ID,
   GOVEE_PASSWORD,
-  GOVEE_USERNAME, HAP_CHARACTERISTICS, HAP_SERVICES,
+  GOVEE_USERNAME,
+  HAP_CHARACTERISTICS,
+  HAP_SERVICES,
 } from './util/const';
-import {EventEmitter} from 'events';
-import {Emits} from './util/events';
 
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-@Emits<UltimateGoveePlatform>(
-  'Authenticate',
-  'RetrieveDevice',
-)
 export class UltimateGoveePlatform
-  extends EventEmitter
   implements DynamicPlatformPlugin {
 
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -45,8 +40,6 @@ export class UltimateGoveePlatform
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
-    super();
-
     if (!config?.username || !config?.password) {
       throw Error('Both Username and Password are required');
     }
