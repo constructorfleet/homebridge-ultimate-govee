@@ -8,8 +8,13 @@ import {AppDeviceListResponse} from '../structures/api/requests/payloads/appDevi
 import {GoveeClient} from './GoveeClient';
 import {ApiHeader} from '../structures/api/requests/headers/ApiHeader';
 import {ApiDeviceListResponse} from '../structures/api/requests/payloads/apiDeviceListResponse';
-import {inject, singleton} from 'tsyringe';
-import {GOVEE_API_KEY, GOVEE_PASSWORD, GOVEE_USERNAME} from '../../util/const';
+import {container, inject, singleton} from 'tsyringe';
+import {
+  GOVEE_API_KEY,
+  GOVEE_CLIENT_ID,
+  GOVEE_PASSWORD,
+  GOVEE_USERNAME, IOT_ACCOUNT_TOPIC,
+} from '../../util/const';
 import {Emits, Handles} from '../../util/events';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
@@ -17,7 +22,10 @@ const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1
 const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
 
 @singleton()
-@Emits<RestClient>('Authenticated')
+@Emits<RestClient>(
+  'Authenticated',
+  'Subscribe',
+)
 export class RestClient extends GoveeClient {
   private token?: string;
   private topic?: string;
@@ -25,7 +33,7 @@ export class RestClient extends GoveeClient {
   constructor(
     @inject(GOVEE_USERNAME) private username: string,
     @inject(GOVEE_PASSWORD) private password: string,
-    private clientId: string,
+    @inject(GOVEE_CLIENT_ID) private clientId: string,
     @inject(GOVEE_API_KEY) private apiKey?: string,
   ) {
     super();
@@ -60,7 +68,10 @@ export class RestClient extends GoveeClient {
     }
 
     this.token = response.clientInfo.bearerToken;
-    this.topic = response.clientInfo.iotAccountTopic;
+    container.registerInstance(
+      IOT_ACCOUNT_TOPIC,
+      response.clientInfo.iotAccountTopic,
+    );
 
     this.emit('Authenticated');
   }

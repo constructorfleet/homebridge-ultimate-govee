@@ -1,6 +1,9 @@
-import {Expose, Type} from 'class-transformer';
+import {Exclude, Expose, Type} from 'class-transformer';
 
 export class IotMessage {
+  @Exclude()
+  public topic!: string;
+
   @Expose({name: 'msg'})
   @Type(() => MessagePayload)
   public messagePayload!: MessagePayload;
