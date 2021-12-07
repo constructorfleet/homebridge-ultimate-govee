@@ -10,9 +10,15 @@ class EventHandler<ListenerType> {
   }
 }
 
+export interface EventDataMatcher<DataType, ListenerType> {
+  field: string;
+
+  is: DataType | ((listener: ListenerType) => DataType);
+}
+
 export function Handles<ListenerType, EventDataType>(
   eventName: string,
-  eventDataMatcher?: Record<string, unknown>,
+  ...matchers: EventDataMatcher<unknown, ListenerType>[]
 ) {
   return (
     target: ListenerType,
@@ -27,16 +33,20 @@ export function Handles<ListenerType, EventDataType>(
       if (eventName !== event) {
         return;
       }
-      if (!eventDataMatcher) {
+      if (!matchers || matchers.length === 0) {
         return value.apply(eventData);
       }
 
-      const matches = Object.entries(eventDataMatcher).
-        filter(([dataKey, dataValue]) => {
-          return eventData![dataKey] === dataValue;
-        }).length > 0;
+      if (!eventData) {
+        return;
+      }
 
-      if (matches) {
+      if (matchers.filter((matcher) => {
+        const dataValue = eventData[matcher.field];
+        return (typeof matcher.is === 'function')
+          ? matcher.is(target) === dataValue
+          : matcher.is === dataValue;
+      }).length === matchers.length) {
         return value.apply(eventData);
       }
     };
