@@ -1,6 +1,6 @@
-import 'reflect-metadata';
 import {EventEmitter} from 'events';
 import {container} from 'tsyringe';
+import {Constructor} from './types';
 
 export function Emits<ClassType extends EventEmitter>(
   ...events: string[]
