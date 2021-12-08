@@ -5,14 +5,14 @@ export class ApiDeviceListResponse extends BaseResponse {
     super();
   }
 
-  public data!: DeviceListData;
+  public data!: ApiDeviceListData;
 }
 
-class DeviceListData {
-  public devices!: Device[];
+export class ApiDeviceListData {
+  public devices!: ApiDevice[];
 }
 
-class Device {
+export class ApiDevice {
   public device!: string;
 
   public model!: string;
@@ -25,18 +25,18 @@ class Device {
 
   public supportCmds!: string[];
 
-  public properties!: DeviceProperties;
+  public properties!: ApiDeviceProperties;
 }
 
-class DeviceProperties {
-  public colorTem!: ColorTemperature;
+export class ApiDeviceProperties {
+  public colorTem!: ApiColorTemperature;
 }
 
-class ColorTemperature {
-  public range!: Range;
+export class ApiColorTemperature {
+  public range!: ApiRange;
 }
 
-class Range {
+export class ApiRange {
   public min!: number;
 
   public max!: number;

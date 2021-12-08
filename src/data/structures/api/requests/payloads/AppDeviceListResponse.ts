@@ -1,11 +1,17 @@
 import {BaseResponse} from './base/BaseResponse';
-import {Expose, plainToInstance} from 'class-transformer';
+import {
+  Expose,
+  instanceToPlain,
+  plainToInstance,
+  Transform,
+  Type,
+} from 'class-transformer';
 
 export class AppDeviceListResponse extends BaseResponse {
-  public devices!: DeviceInformation[];
+  public devices!: AppDevice[];
 }
 
-class DeviceInformation {
+export class AppDevice {
   public groupId!: number;
 
   public device!: string;
@@ -29,21 +35,26 @@ class DeviceInformation {
   public deviceExt!: DeviceExtensionProperties;
 }
 
-class DeviceExtensionProperties {
-  public get settings(): DeviceSettings {
-    return plainToInstance(DeviceSettings, JSON.parse(this.deviceSettings));
-  }
-
-  public get deviceData(): DeviceData {
-    return plainToInstance(DeviceData, JSON.parse(this.lastDeviceData));
-  }
-
-  public get externalResources(): DeviceExternalResources {
-    return plainToInstance(DeviceExternalResources,
-      JSON.parse(this.extResources));
-  }
-
-  @Expose({toPlainOnly: true})
+export class DeviceExtensionProperties {
+  @Type(() => AppDeviceSettings)
+  @Transform(
+    (params) => JSON.stringify(
+      instanceToPlain(params.value),
+    ),
+    {
+      toPlainOnly: true,
+    },
+  )
+  @Transform(
+    (params) =>
+      plainToInstance<AppDeviceSettings, string>(
+        AppDeviceSettings,
+        JSON.parse(params.value),
+      ),
+    {
+      toClassOnly: true,
+    },
+  )
   public deviceSettings!: string;
 
   @Expose({toPlainOnly: true})
@@ -53,7 +64,7 @@ class DeviceExtensionProperties {
   public extResources!: string;
 }
 
-class DeviceSettings {
+export class AppDeviceSettings {
   @Expose({name: 'wifiName'})
   public wifiSSID?: string;
 
@@ -106,7 +117,7 @@ class DeviceSettings {
   public waterShortage?: number;
 }
 
-class DeviceData {
+export class AppDeviceData {
   @Expose({name: 'online'})
   public isOnline!: boolean;
 
@@ -114,7 +125,7 @@ class DeviceData {
   public isOnOff?: number;
 }
 
-class DeviceExternalResources {
+export class AppDeviceExternalResources {
   @Expose({name: 'skuUrl'})
   public skuImageUrl?: string;
 
