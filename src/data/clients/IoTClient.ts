@@ -4,24 +4,27 @@ import {GoveeClient} from './GoveeClient';
 import {Emits} from '../../util/events';
 import {IotMessage} from '../structures/iot/device/IotMessage';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {container} from 'tsyringe';
-import {IOT_ACCOUNT_TOPIC} from '../../util/const';
+import {autoInjectable, container, inject} from 'tsyringe';
+import {
+  GOVEE_CLIENT_ID,
+  IOT_ACCOUNT_TOPIC,
+  IOT_CA_CERTIFICATE,
+  IOT_CERTIFICATE, IOT_HOST,
+  IOT_KEY,
+} from '../../util/const';
 import {IoTAccountMessage} from '../structures/iot/account/IoTAccountMessage';
 
-@Emits<IoTClient>(
-  'IoTConnected',
-  'IoTDisconnected',
-  'IoTMessageReceived',
-)
+
+@autoInjectable()
 export class IoTClient extends GoveeClient {
   private awsIOTDevice: device;
 
   constructor(
-    keyPath: string,
-    certificatePath: string,
-    caPath: string,
-    clientId: string,
-    host: string,
+    @inject(IOT_KEY) keyPath: string,
+    @inject(IOT_CERTIFICATE) certificatePath: string,
+    @inject(IOT_CA_CERTIFICATE) caPath: string,
+    @inject(GOVEE_CLIENT_ID) clientId: string,
+    @inject(IOT_HOST) host: string,
   ) {
     super();
     this.awsIOTDevice = new device({

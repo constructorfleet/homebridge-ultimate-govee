@@ -13,17 +13,16 @@
       rr: Red
       gg: Green
       bb: Blue
-    04: Scene
-      ID: Identifier
-  05: Color Temp (RGB From Kelvin)
-    02:
-      ff:
+      ff: ColorTempKelvin
         ff:
           ff:
             01:
               rr:
               gg:
               bb:
+    04: Scene
+      ID: Identifier
+
 a3: SEQUENCE/EFFECT
   00:
     01:

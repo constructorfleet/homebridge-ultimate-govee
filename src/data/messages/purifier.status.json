@@ -1,0 +1,38 @@
+[
+  {
+    "msg": {
+      "cmd": "status",
+      "cmdVersion": 0,
+      "transaction": "u_1638273784347195",
+      "type": 0
+    }
+  },
+  {
+    "proType": 2,
+    "sku": "H7121",
+    "device": "29:E0:D4:AD:FC:04:34:96",
+    "softVersion": "1.00.20",
+    "wifiSoftVersion": "1.00.20",
+    "cmd": "status",
+    "type": 0,
+    "transaction": "u_1638273784347195",
+    "pactType": 1,
+    "pactCode": 1,
+    "state": {
+      "onOff": 1,
+      "result": 1
+    },
+    "op": {
+      "command": [
+        "qhIBAAAAAAAAAAAAAAAAAAAAALk=",
+        "qhMAAAIAAAAAAAAAAAAAAAAAALs=",
+        "qhEAAAAAAAAAAAAAAAAAAAAAALs=",
+        "qgUBAAAAAAAAAAAAAAAAAAAAAK4=",
+        "qhAAAAAAAAAAAAAAAAAAAAAAALo=",
+        "qhYB/////wAAAAAAAAAAAAAAAL0=",
+        "qhkAAAAAAAAAAAAAAAAAAAAAALM=",
+        "qhgAZAAAAAAAAAAAAAAAAAAAANY="
+      ]
+    }
+  }
+]

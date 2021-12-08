@@ -1,7 +1,7 @@
 import {EventEmitter} from 'events';
 
-export abstract class GoveeClient extends EventEmitter {
-  protected constructor() {
+export class GoveeClient extends EventEmitter {
+  constructor() {
     super();
   }
 }

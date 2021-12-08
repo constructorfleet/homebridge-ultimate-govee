@@ -1,0 +1,62 @@
+[
+  {
+    "proType": 2,
+    "sku": "H7141",
+    "device": "2A:7E:9C:04:A0:9B:A6:33",
+    "softVersion": "1.00.18",
+    "wifiSoftVersion": "1.00.18",
+    "cmd": "status",
+    "type": 0,
+    "transaction": "u_1638273784547195",
+    "pactType": 1,
+    "pactCode": 1,
+    "state": {
+      "onOff": 0,
+      "result": 1
+    },
+    "op": {
+      "command": [
+        "qhIAAAAAAAAAAAAAAAAAAAAAALg=",
+        "qhEAAAAAAAAAAAAAAAAAAAAAALs=",
+        "qgUABAEAAAAAAAAAAAAAAAAAAKo=",
+        "qgUBAQAAAAAAAAAAAAAAAAAAAK8=",
+        "qgUCAAgAPAA8BQA8ADwB/////6E=",
+        "qgUDMgAAAAAAAAAAAAAAAAAAAJ4=",
+        "qhYB/////wAAAAAAAAAAAAAAAL0=",
+        "qggAAAAAAAAAAAAAAAAAAAAAAKI=",
+        "qhAA////AAAAAAAAAAAAAAAAAEU=",
+        "qhgB/////wAAAAAAAAAAAAAAALM="
+      ]
+    }
+  },
+  {
+    "proType": 2,
+    "sku": "H7141",
+    "device": "2A:7E:9C:04:A0:9B:A6:33",
+    "softVersion": "1.00.18",
+    "wifiSoftVersion": "1.00.18",
+    "cmd": "status",
+    "type": 0,
+    "transaction": "a_1638908223381",
+    "pactType": 1,
+    "pactCode": 1,
+    "state": {
+      "onOff": 0,
+      "result": 1
+    },
+    "op": {
+      "command": [
+        "qhIAAAAAAAAAAAAAAAAAAAAAALg=",
+        "qhEAAAAAAAAAAAAAAAAAAAAAALs=",
+        "qgUABAEAAAAAAAAAAAAAAAAAAKo=",
+        "qgUBAQAAAAAAAAAAAAAAAAAAAK8=",
+        "qgUCAAgAPAA8BQA8ADwB/////6E=",
+        "qgUDMgAAAAAAAAAAAAAAAAAAAJ4=",
+        "qhYB/////wAAAAAAAAAAAAAAAL0=",
+        "qggAAAAAAAAAAAAAAAAAAAAAAKI=",
+        "qhAA////AAAAAAAAAAAAAAAAAEU=",
+        "qhgB/////wAAAAAAAAAAAAAAALM="
+      ]
+    }
+  }
+],
