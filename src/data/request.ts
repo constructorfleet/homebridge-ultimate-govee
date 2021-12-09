@@ -26,10 +26,7 @@ class Request<PayloadType extends BaseRequest,
   ) {
   }
 
-  async get(): Promise<ResponseType> {
-    console.log(this.url);
-    console.log(this.headers);
-    console.log(this.payload || {});
+  async get(): Promise<AxiosResponse<ResponseType>> {
     return await axios.get(
       this.url,
       {
@@ -37,22 +34,10 @@ class Request<PayloadType extends BaseRequest,
         headers: this.headers,
         params: this.payload,
       },
-    )
-      .then(
-        (res: AxiosResponse<ResponseType>) => res.data,
-      )
-      .then(
-        (res) => {
-          console.log(res);
-          return res;
-        },
-      );
+    );
   }
 
-  async post(): Promise<ResponseType> {
-    console.log(this.url);
-    console.log(this.headers);
-    console.log(this.payload || {});
+  async post(): Promise<AxiosResponse<ResponseType>> {
     return await axios.post(
       this.url,
       this.payload,
@@ -60,15 +45,6 @@ class Request<PayloadType extends BaseRequest,
         timeout: 10000,
         headers: this.headers,
       },
-    )
-      .then(
-        (res: AxiosResponse<ResponseType>) => res.data,
-      )
-      .then(
-        (res) => {
-          console.log(JSON.stringify(res));
-          return res;
-        },
-      );
+    );
   }
 }

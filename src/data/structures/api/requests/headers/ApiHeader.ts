@@ -1,8 +1,8 @@
 import {BaseHeaders} from './BaseHeaders';
 
-export function ApiHeader(apiKey: string) {
-  const baseHeaders = BaseHeaders;
-  baseHeaders['Govee-API-Key'] = apiKey;
+export function ApiHeader(apiKey: string): Record<string, string> {
+  const headers = BaseHeaders();
+  headers['Govee-API-Key'] = apiKey;
 
-  return baseHeaders;
+  return headers;
 }
