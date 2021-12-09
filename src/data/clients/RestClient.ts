@@ -19,7 +19,8 @@ import {
 } from '../structures/api/requests/payloads/ApiDeviceListResponse';
 import {autoInjectable, container, inject} from 'tsyringe';
 import {
-  DEVICE_SETTINGS_EVENT, DEVICE_STATE_EVENT,
+  DEVICE_SETTINGS_EVENT,
+  DEVICE_STATE_EVENT,
   GOVEE_API_KEY,
   GOVEE_CLIENT_ID,
   GOVEE_PASSWORD,
@@ -28,6 +29,15 @@ import {
 } from '../../util/const';
 import {Emits} from '../../util/events';
 import util from 'util';
+import {
+  apiDeviceStateRequest,
+  ApiDeviceStateRequest,
+} from '../structures/api/requests/payloads/ApiDeviceStateRequest';
+import {
+  ApiDeviceState,
+  ApiDeviceStateResponse,
+} from '../structures/api/requests/payloads/ApiDeviceStateResponse';
+import {instanceToPlain} from 'class-transformer';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
@@ -40,7 +50,8 @@ type DeviceResponse = ApiDevice | AppDevice;
   DEVICE_STATE_EVENT,
 )
 @autoInjectable()
-export class RestClient extends GoveeClient {
+export class RestClient
+  extends GoveeClient {
   private token?: string;
 
   constructor(
@@ -61,59 +72,79 @@ export class RestClient extends GoveeClient {
         this.password,
         this.clientId,
       ),
-    ).post().then((response: LoginResponse) => {
-      this.token = response.client.token;
-      container.register(
-        IOT_ACCOUNT_TOPIC,
-        {
-          useValue: response.client.topic,
-        },
-      );
+    )
+      .post()
+      .then((response: LoginResponse) => {
+        this.token = response.client.token;
+        container.register(
+          IOT_ACCOUNT_TOPIC,
+          {
+            useValue: response.client.topic,
+          },
+        );
 
-      return this;
-    });
+        return this;
+      });
   }
 
   async getDevices(): Promise<DeviceResponse[]> {
     return await Promise.all([
       this.getAppDevices(),
       this.getApiDevices(),
-    ]).then(
-      ([
-        appDevices,
-        apiDevices,
-      ]) => {
-        const devices: DeviceResponse[] = [];
-        devices.concat(
-          !util.types.isNativeError(appDevices)
-            ? appDevices as DeviceResponse[]
-            : [] as DeviceResponse[]);
-        devices.concat(
-          !util.types.isNativeError(apiDevices)
-            ? apiDevices as DeviceResponse[]
-            : [] as DeviceResponse[]);
-        return devices;
-      });
+    ])
+      .then(
+        ([
+          appDevices,
+          apiDevices,
+        ]) => {
+          console.log(appDevices);
+          console.log(apiDevices);
+          const devices: DeviceResponse[] = [];
+          devices.concat(
+            !util.types.isNativeError(appDevices)
+              ? appDevices as DeviceResponse[]
+              : [] as DeviceResponse[]);
+          devices.concat(
+            !util.types.isNativeError(apiDevices)
+              ? apiDevices as DeviceResponse[]
+              : [] as DeviceResponse[]);
+          return devices;
+        });
   }
 
-  async getAppDevices(): Promise<AppDevice[] | Error> {
+  async getAppDevices(): Promise<AppDevice[]> {
     return await request<BaseRequest, AppDeviceListResponse>(
       `${BASE_GOVEE_APP_DEVICE_URL}/list`,
       AuthenticatedHeader(this.token!),
-    ).post().then(
-      (response) => response.devices,
-      (err) => Error(err),
-    );
+    )
+      .post()
+      .then((response) => response.devices);
   }
 
-  async getApiDevices(): Promise<ApiDevice[] | Error> {
+  async getApiDevices(): Promise<ApiDevice[]> {
     return await request<BaseRequest, ApiDeviceListResponse>(
-      `${GOVEE_API_BASE_URL}`,
+      GOVEE_API_BASE_URL,
       ApiHeader(this.apiKey!),
       new BaseRequest(),
-    ).get().then(
-      (response) => response.data.devices,
-      (err) => Error(err),
-    );
+    )
+      .get()
+      .then((response) => response.data.devices);
+  }
+
+  getApiDevice(apiKey: string, device: ApiDevice): Promise<ApiDeviceState> {
+    console.log(device);
+    return request<ApiDeviceStateRequest, ApiDeviceStateResponse>(
+      `${GOVEE_API_BASE_URL}/state`,
+      ApiHeader(apiKey),
+      apiDeviceStateRequest(
+        device.device,
+        device.model,
+      ),
+    )
+      .get()
+      .then((res) => {
+        console.log(instanceToPlain(res));
+        return res.data;
+      });
   }
 }

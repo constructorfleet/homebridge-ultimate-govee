@@ -1,7 +1,6 @@
 import {device} from 'aws-iot-device-sdk';
 import path from 'path';
 import {GoveeClient} from './GoveeClient';
-import {Emits} from '../../util/events';
 import {IotMessage} from '../structures/iot/device/IotMessage';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {autoInjectable, container, inject} from 'tsyringe';
@@ -9,14 +8,15 @@ import {
   GOVEE_CLIENT_ID,
   IOT_ACCOUNT_TOPIC,
   IOT_CA_CERTIFICATE,
-  IOT_CERTIFICATE, IOT_HOST,
+  IOT_CERTIFICATE,
+  IOT_HOST,
   IOT_KEY,
 } from '../../util/const';
 import {IoTAccountMessage} from '../structures/iot/account/IoTAccountMessage';
 
-
 @autoInjectable()
-export class IoTClient extends GoveeClient {
+export class IoTClient
+  extends GoveeClient {
   private awsIOTDevice: device;
 
   constructor(

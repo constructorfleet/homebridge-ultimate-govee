@@ -13,7 +13,8 @@ export function loginRequest(
   return request;
 }
 
-export class LoginRequest extends BaseRequest {
+export class LoginRequest
+  extends BaseRequest {
   constructor() {
     super();
   }

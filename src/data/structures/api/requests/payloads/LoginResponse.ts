@@ -1,6 +1,7 @@
 import {BaseResponse} from './base/BaseResponse';
 
-export class LoginResponse extends BaseResponse {
+export class LoginResponse
+  extends BaseResponse {
   constructor() {
     super();
   }

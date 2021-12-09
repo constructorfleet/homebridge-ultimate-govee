@@ -1,6 +1,7 @@
 import {BaseResponse} from './base/BaseResponse';
 
-export class ApiDeviceListResponse extends BaseResponse {
+export class ApiDeviceListResponse
+  extends BaseResponse {
   constructor() {
     super();
   }

@@ -20,6 +20,7 @@ import {
   HAP_CHARACTERISTICS,
   HAP_SERVICES,
 } from './util/const';
+import {RestClient} from './data/clients/RestClient';
 
 /**
  * HomebridgePlatform
@@ -35,6 +36,8 @@ export class UltimateGoveePlatform
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
 
+  private restClient: RestClient;
+
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
@@ -49,8 +52,11 @@ export class UltimateGoveePlatform
 
     container.registerInstance(GOVEE_USERNAME, config.username);
     container.registerInstance(GOVEE_PASSWORD, config.password);
-    container.registerInstance(GOVEE_CLIENT_ID, machineIdSync().slice(0, 10));
+    container.registerInstance(GOVEE_CLIENT_ID, machineIdSync()
+      .slice(0, 10));
     container.registerInstance(GOVEE_API_KEY, config.apiKey);
+
+    this.restClient = container.resolve<RestClient>(RestClient);
 
     this.log.debug('Finished initializing platform:', this.config.name);
 
@@ -60,8 +66,10 @@ export class UltimateGoveePlatform
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
-
-      this.discoverDevices();
+      return this.restClient.login()
+        .then((client) => client.getDevices())
+        .then((devices) => log.info(JSON.stringify(devices)))
+        .catch(this.log.error);
     });
   }
 
@@ -84,7 +92,7 @@ export class UltimateGoveePlatform
   discoverDevices() {
 
     // EXAMPLE ONLY
-    // A real plugin you would discover accessories from the local network, cloud services
+    // A real plugin you would discover accessories from the local network, cloud states
     // or a user-defined array in the platform config.
     const exampleDevices = [
       {

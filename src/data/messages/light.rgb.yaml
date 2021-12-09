@@ -10,9 +10,9 @@
     ff: 255 (100%)
   05: Color
     02:
-     rr: Red
-     gg: Green
-     bb: Blue
+      rr: Red
+      gg: Green
+      bb: Blue
   05: Color Temp (RGB From Kelvin)
     02:
       ff:

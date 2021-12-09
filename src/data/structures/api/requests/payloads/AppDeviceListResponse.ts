@@ -7,31 +7,46 @@ import {
   Type,
 } from 'class-transformer';
 
-export class AppDeviceListResponse extends BaseResponse {
+export class AppDeviceListResponse
+  extends BaseResponse {
+  @Expose({name: 'devices'})
+  @Type(() => AppDevice)
   public devices!: AppDevice[];
 }
 
 export class AppDevice {
+  @Expose({name: 'groupId'})
   public groupId!: number;
 
+  @Expose({name: 'device'})
   public device!: string;
 
+  @Expose({name: 'sku'})
   public sku!: string;
 
+  @Expose({name: 'spec'})
   public spec!: string;
 
+  @Expose({name: 'versionHard'})
   public versionHard!: string;
 
+  @Expose({name: 'versionSoft'})
   public versionSoft!: string;
 
+  @Expose({name: 'deviceName'})
   public deviceName!: string;
 
+  @Expose({name: 'pactType'})
   public pactType!: number;
 
+  @Expose({name: 'pactCode'})
   public pactCode!: number;
 
+  @Expose({name: 'goodsType'})
   public goodsType!: number;
 
+  @Expose({name: 'deviceExt'})
+  @Type(() => DeviceExtensionProperties)
   public deviceExt!: DeviceExtensionProperties;
 }
 
