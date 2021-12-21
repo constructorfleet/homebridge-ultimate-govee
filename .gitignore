@@ -120,3 +120,4 @@ dist
 .pnp.*
 
 .idea
+test.ts
