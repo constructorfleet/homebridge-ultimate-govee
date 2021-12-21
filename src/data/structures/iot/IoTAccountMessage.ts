@@ -1,6 +1,7 @@
 import {Expose, Type} from 'class-transformer';
+import {IoTMessage} from './IoTMessage';
 
-export class IoTAccountMessage {
+export class IoTAccountMessage implements IoTMessage {
   @Expose({name: 'proType'})
   public proType!: number;
 

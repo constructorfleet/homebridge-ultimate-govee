@@ -1,5 +1,5 @@
-import {BaseRequest} from './structures/api/requests/payloads/base/BaseRequest';
-import {BaseResponse} from './structures/api/requests/payloads/base/BaseResponse';
+import {BaseRequest} from './structures/api/requests/payloads/BaseRequest';
+import {BaseResponse} from './structures/api/responses/payloads/BaseResponse';
 import axios, {AxiosResponse} from 'axios';
 
 export function request<PayloadType extends BaseRequest,

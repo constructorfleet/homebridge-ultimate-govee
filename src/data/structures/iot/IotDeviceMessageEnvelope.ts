@@ -1,15 +1,16 @@
 import {Exclude, Expose, Type} from 'class-transformer';
+import {IoTMessage} from './IoTMessage';
 
-export class IotMessage {
+export class IotDeviceMessageEnvelope {
   @Exclude()
   public topic!: string;
 
   @Expose({name: 'msg'})
-  @Type(() => MessagePayload)
-  public messagePayload!: MessagePayload;
+  @Type(() => IoTDeviceMessage)
+  public messagePayload!: IoTDeviceMessage;
 }
 
-class MessagePayload {
+export class IoTDeviceMessage implements IoTMessage {
   @Expose({name: 'cmd'})
   public command!: string;
 

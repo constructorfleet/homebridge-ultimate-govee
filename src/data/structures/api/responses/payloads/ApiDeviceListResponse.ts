@@ -1,4 +1,5 @@
-import {BaseResponse} from './base/BaseResponse';
+import {BaseResponse} from './BaseResponse';
+import {DeviceResponse} from '../DeviceResponse';
 
 export class ApiDeviceListResponse
   extends BaseResponse {
@@ -13,7 +14,9 @@ export class ApiDeviceListData {
   public devices!: ApiDevice[];
 }
 
-export class ApiDevice {
+export class ApiDevice implements DeviceResponse {
+  public kind!: 'ApiDevice';
+
   public device!: string;
 
   public model!: string;

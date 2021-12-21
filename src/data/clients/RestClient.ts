@@ -4,19 +4,13 @@ import {
   loginRequest,
   LoginRequest,
 } from '../structures/api/requests/payloads/LoginRequest';
-import {LoginResponse} from '../structures/api/requests/payloads/LoginResponse';
+import {LoginResponse} from '../structures/api/responses/payloads/LoginResponse';
 import {AuthenticatedHeader} from '../structures/api/requests/headers/AuthenticatedHeader';
-import {BaseRequest} from '../structures/api/requests/payloads/base/BaseRequest';
-import {
-  AppDevice,
-  AppDeviceListResponse,
-} from '../structures/api/requests/payloads/AppDeviceListResponse';
+import {BaseRequest} from '../structures/api/requests/payloads/BaseRequest';
+import {AppDeviceListResponse} from '../structures/api/responses/payloads/AppDeviceListResponse';
 import {GoveeClient} from './GoveeClient';
 import {ApiHeader} from '../structures/api/requests/headers/ApiHeader';
-import {
-  ApiDevice,
-  ApiDeviceListResponse,
-} from '../structures/api/requests/payloads/ApiDeviceListResponse';
+import {ApiDeviceListResponse} from '../structures/api/responses/payloads/ApiDeviceListResponse';
 import {autoInjectable, container, inject} from 'tsyringe';
 import {
   DEVICE_SETTINGS_EVENT,
@@ -35,14 +29,13 @@ import {
 import {
   ApiDeviceState,
   ApiDeviceStateResponse,
-} from '../structures/api/requests/payloads/ApiDeviceStateResponse';
+} from '../structures/api/responses/payloads/ApiDeviceStateResponse';
 import {flatten} from 'rambda';
+import {DeviceResponse} from '../structures/api/responses/DeviceResponse';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
 const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
-
-type DeviceResponse = ApiDevice | AppDevice;
 
 @Emits<RestClient>(
   DEVICE_SETTINGS_EVENT,
@@ -62,7 +55,7 @@ export class RestClient
     super();
   }
 
-  async login(): Promise<RestClient> {
+  async login(): Promise<this> {
     const response = await request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
       BaseHeaders(),

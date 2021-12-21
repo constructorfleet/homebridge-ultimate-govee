@@ -1,4 +1,4 @@
-import {BaseResponse} from './base/BaseResponse';
+import {BaseResponse} from './BaseResponse';
 import {
   Expose,
   instanceToPlain,
@@ -6,6 +6,7 @@ import {
   Transform,
   Type,
 } from 'class-transformer';
+import {DeviceResponse} from '../DeviceResponse';
 
 export class AppDeviceListResponse
   extends BaseResponse {
@@ -14,7 +15,9 @@ export class AppDeviceListResponse
   public devices!: AppDevice[];
 }
 
-export class AppDevice {
+export class AppDevice implements DeviceResponse {
+  public kind!: 'AppDevice';
+
   @Expose({name: 'groupId'})
   public groupId!: number;
 

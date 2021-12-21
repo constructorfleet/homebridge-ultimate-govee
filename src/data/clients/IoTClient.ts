@@ -1,7 +1,10 @@
 import {device} from 'aws-iot-device-sdk';
 import path from 'path';
 import {GoveeClient} from './GoveeClient';
-import {IotMessage} from '../structures/iot/device/IotMessage';
+import {
+  IoTDeviceMessage,
+  IotDeviceMessageEnvelope,
+} from '../structures/iot/IotDeviceMessageEnvelope';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
 import {autoInjectable, container, inject} from 'tsyringe';
 import {
@@ -9,15 +12,34 @@ import {
   IOT_ACCOUNT_TOPIC,
   IOT_CA_CERTIFICATE,
   IOT_CERTIFICATE,
+  IOT_CONNECTED_EVENT,
+  IOT_DISCONNECTED_EVENT,
   IOT_HOST,
   IOT_KEY,
 } from '../../util/const';
-import {IoTAccountMessage} from '../structures/iot/account/IoTAccountMessage';
+import {IoTAccountMessage} from '../structures/iot/IoTAccountMessage';
+import {IoTMessage} from '../structures/iot/IoTMessage';
+import {ExtendedSet} from '../../util/extendedSet';
+import {Emits} from '../../util/events';
 
+export interface MessageHandler<MessageType extends IoTMessage> {
+  topic: string;
+
+  handleMessage(
+    topic: string,
+    message: MessageType,
+  );
+}
+
+@Emits(
+  IOT_CONNECTED_EVENT,
+  IOT_DISCONNECTED_EVENT,
+)
 @autoInjectable()
 export class IoTClient
   extends GoveeClient {
   private awsIOTDevice: device;
+  private messageHandlers = new ExtendedSet<MessageHandler<IoTDeviceMessage | IoTAccountMessage>>();
 
   constructor(
     @inject(IOT_KEY) keyPath: string,
@@ -37,33 +59,69 @@ export class IoTClient
 
     this.awsIOTDevice.on(
       'connect',
-      () => this.emit('IoTConnected'),
+      () => this.emit(IOT_CONNECTED_EVENT),
     );
 
     this.awsIOTDevice.on(
       'close',
-      () => this.emit('IoTDisconnected'),
+      () => this.emit(IOT_DISCONNECTED_EVENT),
     );
 
     this.awsIOTDevice.on(
       'message',
-      (topic, payload) => this.emit(
-        'IoTMessageReceived',
-        topic === container.resolve<string>(IOT_ACCOUNT_TOPIC)
-          ? plainToInstance(IoTAccountMessage, JSON.parse(payload.toString()))
-          : plainToInstance(IotMessage, JSON.parse(payload.toString())),
-      ),
+      (topic, payload) => {
+        const message =
+          topic === container.resolve<string>(IOT_ACCOUNT_TOPIC)
+            ? plainToInstance(
+              IoTAccountMessage,
+              JSON.parse(payload.toString()),
+            )
+            : plainToInstance(
+              IoTDeviceMessage,
+              JSON.parse(payload.toString()),
+            );
+
+        this.handlersFor(topic)
+          .forEach(
+            (handler) => handler.handleMessage(
+              topic,
+              message,
+            ),
+          );
+      },
     );
   }
 
-  subscribeTo(topic: string) {
-    this.awsIOTDevice.subscribe(topic);
+  unsubscribe(
+    handler: MessageHandler<IoTDeviceMessage | IoTAccountMessage>,
+  ) {
+    this.messageHandlers.delete(handler);
+    if (!this.hasHandlerFor(handler.topic)) {
+      this.awsIOTDevice.unsubscribe(handler.topic);
+    }
   }
 
-  publishTo(message: IotMessage) {
+  subscribe(
+    handler: MessageHandler<IoTDeviceMessage | IoTAccountMessage>,
+  ) {
+    if (!this.hasHandlerFor(handler.topic)) {
+      this.awsIOTDevice.subscribe(handler.topic);
+    }
+    this.messageHandlers.add(handler);
+  }
+
+  publishTo(message: IotDeviceMessageEnvelope) {
     this.awsIOTDevice.publish(
       message.topic,
       JSON.stringify(instanceToPlain(message)),
     );
+  }
+
+  private handlersFor(topic: string): ExtendedSet<MessageHandler<IoTMessage>> {
+    return this.messageHandlers.filter((handler) => handler.topic === topic);
+  }
+
+  private hasHandlerFor(topic: string): boolean {
+    return this.messageHandlers.some((handler) => handler.topic === topic);
   }
 }

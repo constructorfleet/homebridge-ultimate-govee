@@ -1,4 +1,4 @@
-import {BaseResponse} from './base/BaseResponse';
+import {BaseResponse} from './BaseResponse';
 import {Expose, Type} from 'class-transformer';
 
 export class ApiDeviceStateResponse

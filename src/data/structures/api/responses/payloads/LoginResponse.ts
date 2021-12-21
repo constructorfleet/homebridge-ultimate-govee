@@ -1,4 +1,4 @@
-import {BaseResponse} from './base/BaseResponse';
+import {BaseResponse} from './BaseResponse';
 
 export class LoginResponse
   extends BaseResponse {

@@ -1,14 +1,34 @@
-import {EventEmitter} from 'events';
-import {API, PlatformAccessory} from 'homebridge';
+import {DeviceConfig} from './configs/DeviceConfig';
 
-export abstract class GoveeDevice extends EventEmitter {
+export abstract class GoveeDevice
+  implements DeviceConfig {
+  static MODELS: string[] = [];
+
   protected constructor(
-    public api: API,
-    public accessory: PlatformAccessory,
-    public name: string,
-    public deviceId: string,
-    public model: string,
+    {
+      deviceId,
+      model,
+      name,
+      pactCode,
+      pactType,
+      hardwareVersion,
+      softwareVersion,
+    }: DeviceConfig,
   ) {
-    super();
+    this.deviceId = deviceId;
+    this.model = model;
+    this.name = name;
+    this.pactCode = pactCode;
+    this.pactType = pactType;
+    this.hardwareVersion = hardwareVersion;
+    this.softwareVersion = softwareVersion;
   }
+
+  public deviceId: string;
+  public model: string;
+  public name: string;
+  public pactCode: number;
+  public pactType: number;
+  public hardwareVersion?: string;
+  public softwareVersion?: string;
 }

@@ -14,3 +14,6 @@ export const IOT_HOST = 'IOT_Host';
 
 export const DEVICE_SETTINGS_EVENT = 'Device_Settings_Event';
 export const DEVICE_STATE_EVENT = 'Device_State_Event';
+
+export const IOT_DISCONNECTED_EVENT = 'IoT_Disconnected_Event';
+export const IOT_CONNECTED_EVENT = 'IoT_Connected_Event';

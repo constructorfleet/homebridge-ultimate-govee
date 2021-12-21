@@ -1,4 +1,4 @@
-import {BaseRequest} from './base/BaseRequest';
+import {BaseRequest} from './BaseRequest';
 
 export function apiDeviceStateRequest(
   device: string,
