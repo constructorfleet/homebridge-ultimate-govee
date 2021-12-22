@@ -1,0 +1,148 @@
+# TODO WATER LEVEL!
+# Maybe Timer
+
+messages:
+  - code: 0x01
+    key: device
+    children:
+      - key: device.active
+        minimum: 0
+        maximum: 1
+        on_set:
+          service: HumidifierDehumidifier
+          characteristic: Active
+        on_change:
+          service: HumidifierDehumidifier
+          characteristic: Active
+          commands:
+            - ref: device.active
+  - code: 0x05
+    key: state
+    children:
+      - code: 0x00
+        key: state.mode
+        children:
+          - options:
+              - code: 0x01
+                key: state.mode.simple
+                ref: state.simple.level
+              - code: 0x02
+                key: state.mode.program
+                ref: state.program
+              - code: 0x04
+                key: Error
+      - code: 0x01
+        key: state.simple
+        children:
+          - on_set:
+              service: HumidifierDehumidifier
+              characteristic: RelativeHumidityHumidifierThreshold
+            on_change:
+              service: HumidifierDehumidifier
+              characteristic: RelativeHumidityHumidifierThreshold
+              commands:
+                - ref: state.mode.simple
+                - ref: state.simple.level
+            key: state.simple.level
+            minimum: 1
+            maximum: 8
+      - code: 0x02
+        key: state.program
+        children:
+          - key: state.program.id
+            options:
+              - code: 0x00
+                ref: state.program.1.level
+              - code: 0x11
+                ref: state.program.2.level
+              - code: 0x22
+                ref: state.program.3.level
+            children:
+              - key: state.prorgram.1.level
+                on_change:
+                  service: HumidifierDehumidifier
+                  characteristic: RelativeHumidityHumidifierThreshold
+                minimum: 1
+                maximum: 8
+              - key: state.program.1.duration
+                width: 4
+              - key: state.prorgram.2.level
+                on_change:
+                  service: HumidifierDehumidifier
+                  characteristic: RelativeHumidityHumidifierThreshold
+                minimum: 1
+                maximum: 8
+              - key: state.program.2.duration
+                width: 4
+              - key: state.prorgram.3.level
+                on_change:
+                  service: HumidifierDehumidifier
+                  characteristic: RelativeHumidityHumidifierThreshold
+                minimum: 1
+                maximum: 8
+              - key: state.program.3.duration
+                width: 4
+  - code: 0x10
+    key: controls
+    children:
+      - key: controls.locked
+        minimum: 0
+        maximum: 1
+        on_set:
+          service: HumidifierDehumidifier
+          characteristic: LockPhysicalControls
+        on_change:
+          service: HumidifierDehumidifier
+          characteristic: LockPhysicalControls
+#33:
+#  05:
+#    00:
+#      01: Simple Mist
+#      02: Custom Program
+#      04: Error
+#        02:
+#      01: Tank Present
+#    01: Manual
+#      mistLevel
+#    02: Custom
+#      00: Custom 1
+#      11: Custom 2
+#      22: Custom 3
+#        01: Mist 1
+#        ..:
+#        08: Mist 8
+#          0000: 0 Minutes
+#          ..:
+#          0168: 360 Minutes
+#    03: ??
+#  08: ??
+#  10:
+#  13: Schedule
+#  #mon*2^0+tue*2^1+wed*2^2+thur*2^3+fri*2^4+sat*2^5+sun*2^6
+#  #
+#  #  MON
+#  #  33 13 00 81 05 00 81 00 00 00 00 00 00 00 00 00 00 00 00 25
+#  #    TUES
+#  #    33 13 00 81 05 00 83 00 00 00 00 00 00 00 00 00 00 00 00 27
+#  #      WED
+#  #      33 13 00 81 05 00 87 00 00 00 00 00 00 00 00 00 00 00 00 23
+#  #    WED
+#  #    33 13 00 81 05 00 85 00 00 00 00 00 00 00 00 00 00 00 00 21
+#  #  TUES
+#  #  33 13 00 81 05 00 82 00 00 00 00 00 00 00 00 00 00 00 00 26
+#  #    WED
+#  #    33 13 00 81 05 00 86 00 00 00 00 00 00 00 00 00 00 00 00 22
+#  #      THUR
+#  #      33 13 00 81 05 00 8e 00 00 00 00 00 00 00 00 00 00 00 00 2a
+#  #    THUR
+#  #    33 13 00 81 05 00 8a 00 00 00 00 00 00 00 00 00 00 00 00 2e
+#  16: Indicator Light (or 18)
+#    onOff:
+#      startHour:
+#        startMinute:
+#          endHour:
+#            endMinute:
+#
+#
+#
+#  <aa 13 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 bb>,

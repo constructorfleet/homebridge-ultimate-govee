@@ -6,7 +6,7 @@ import {
   IotDeviceMessageEnvelope,
 } from '../structures/iot/IotDeviceMessageEnvelope';
 import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {autoInjectable, container, inject} from 'tsyringe';
+import {autoInjectable, container, delay, inject} from 'tsyringe';
 import {
   GOVEE_CLIENT_ID,
   IOT_ACCOUNT_TOPIC,
@@ -18,11 +18,11 @@ import {
   IOT_KEY,
 } from '../../util/const';
 import {IoTAccountMessage} from '../structures/iot/IoTAccountMessage';
-import {IoTMessage} from '../structures/iot/IoTMessage';
 import {ExtendedSet} from '../../util/extendedSet';
 import {Emits} from '../../util/events';
+import {AccountIoTListener} from '../../test';
 
-export interface MessageHandler<MessageType extends IoTMessage> {
+export interface MessageHandler<MessageType> {
   topic: string;
 
   handleMessage(
@@ -40,6 +40,8 @@ export class IoTClient
   extends GoveeClient {
   private awsIOTDevice: device;
   private messageHandlers = new ExtendedSet<MessageHandler<IoTDeviceMessage | IoTAccountMessage>>();
+  private accountTopic: string;
+  private listener: AccountIoTListener;
 
   constructor(
     @inject(IOT_KEY) keyPath: string,
@@ -47,8 +49,13 @@ export class IoTClient
     @inject(IOT_CA_CERTIFICATE) caPath: string,
     @inject(GOVEE_CLIENT_ID) clientId: string,
     @inject(IOT_HOST) host: string,
+    @inject(IOT_ACCOUNT_TOPIC) accountTopic: string,
+    @inject(delay(() => AccountIoTListener)) listener: AccountIoTListener,
   ) {
     super();
+    this.accountTopic = accountTopic;
+    this.listener = listener;
+
     this.awsIOTDevice = new device({
       clientId: clientId,
       certPath: path.resolve(certificatePath),
@@ -59,17 +66,25 @@ export class IoTClient
 
     this.awsIOTDevice.on(
       'connect',
-      () => this.emit(IOT_CONNECTED_EVENT),
+      () => {
+        console.log('CONNECTED');
+        this.emit(IOT_CONNECTED_EVENT);
+        this.subscribe(this.listener);
+      },
     );
 
     this.awsIOTDevice.on(
       'close',
-      () => this.emit(IOT_DISCONNECTED_EVENT),
+      () => {
+        console.log('CLOSED');
+        this.emit(IOT_DISCONNECTED_EVENT);
+      },
     );
 
     this.awsIOTDevice.on(
       'message',
       (topic, payload) => {
+        console.log('MESSAGE');
         const message =
           topic === container.resolve<string>(IOT_ACCOUNT_TOPIC)
             ? plainToInstance(
@@ -105,6 +120,7 @@ export class IoTClient
     handler: MessageHandler<IoTDeviceMessage | IoTAccountMessage>,
   ) {
     if (!this.hasHandlerFor(handler.topic)) {
+      console.log(`Subscribing to ${handler.topic}`);
       this.awsIOTDevice.subscribe(handler.topic);
     }
     this.messageHandlers.add(handler);
@@ -117,7 +133,7 @@ export class IoTClient
     );
   }
 
-  private handlersFor(topic: string): ExtendedSet<MessageHandler<IoTMessage>> {
+  private handlersFor(topic: string): ExtendedSet<MessageHandler<unknown>> {
     return this.messageHandlers.filter((handler) => handler.topic === topic);
   }
 

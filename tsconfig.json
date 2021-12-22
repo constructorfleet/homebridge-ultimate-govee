@@ -20,7 +20,8 @@
     "noImplicitAny": false
   },
   "include": [
-    "src/"
+    "src/",
+    "assets/"
   ],
   "exclude": [
     "**/*.spec.ts"

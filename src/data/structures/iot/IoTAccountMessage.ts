@@ -1,7 +1,46 @@
-import {Expose, Type} from 'class-transformer';
-import {IoTMessage} from './IoTMessage';
+import {Expose, Transform, Type} from 'class-transformer';
+import {decode, encode} from 'base64-arraybuffer';
+import {base64ToHex} from '../../../util/encodingUtils';
 
-export class IoTAccountMessage implements IoTMessage {
+export const decodeCommand = (
+  ...commands: string[]
+): ArrayBuffer[] => commands.map(decode);
+
+class State {
+  @Expose({name: 'onOff'})
+  public onOff?: number;
+
+  @Expose({name: 'result'})
+  public result!: number;
+}
+
+class OperatingState {
+  @Expose({name: 'command'})
+  @Transform(
+    (params) =>
+      params.value
+        .map(base64ToHex),
+    {
+      toClassOnly: true,
+    },
+  )
+  public commands!: string[];
+}
+
+interface IoTMessage {
+  command: string;
+
+  messageType: number;
+
+  transaction: string;
+}
+
+export const encodeCommand = (
+  ...commands: ArrayBuffer[]
+): string[] => commands.map(encode);
+
+export class IoTAccountMessage
+  implements IoTMessage {
   @Expose({name: 'proType'})
   public proType!: number;
 
@@ -39,17 +78,4 @@ export class IoTAccountMessage implements IoTMessage {
   @Expose({name: 'op'})
   @Type(() => OperatingState)
   public operatingState?: OperatingState;
-}
-
-class State {
-  @Expose({name: 'onOff'})
-  public onOff?: number;
-
-  @Expose({name: 'result'})
-  public result!: number;
-}
-
-class OperatingState {
-  @Expose({name: 'command'})
-  public commands!: string[];
 }

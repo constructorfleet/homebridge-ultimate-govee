@@ -1,14 +1,14 @@
 import {GoveeDevice} from './GoveeDevice';
 import {DeviceConfig} from './configs/DeviceConfig';
 import {PowerStateConstructor} from './states/PowerState';
-import {PurifierFanStateConstructor} from './states/FanModeState';
+import {HumidifierStateConstructor} from './states/HumidifierState';
 
-export class GoveeAirPurifier
+export class GoveeHumidifier
   extends GoveeDevice {
-  static MODELS: string[] = ['H7121', 'H7122'];
+  static MODELS: string[] = ['H7141', 'H7142'];
 
   private powerState = new PowerStateConstructor();
-  private fanModeState = new PurifierFanStateConstructor();
+  private humidifierState = new HumidifierStateConstructor();
 
   constructor(
     deviceConfig: DeviceConfig,

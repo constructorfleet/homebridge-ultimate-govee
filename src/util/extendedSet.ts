@@ -1,4 +1,5 @@
-export class ExtendedSet<T> implements Set<T> {
+export class ExtendedSet<T>
+  implements Set<T> {
   private readonly items = new Set<T>();
 
   constructor(values?: readonly T[] | null | undefined) {

@@ -1,7 +1,20 @@
-export interface ColorTemperatureState {
-  colorTemperature: number;
+import {ModeStateConfig} from './ModeState';
+import {KELVIN_MAXIMUM, KELVIN_MINIMUM} from '../../util/colorUtils';
 
-  minimumTemperature: number;
+const clampValue =
+  (val: number): number =>
+    Math.min(
+      Math.max(
+        val,
+        KELVIN_MINIMUM,
+      ),
+      KELVIN_MAXIMUM,
+    );
 
-  maximumTemperature: number;
-}
+export const ColorTemperatureStateConstructor = ModeStateConfig<number>(
+  0,
+  clampValue,
+  clampValue,
+);
+
+export type ColorTemperatureState = typeof ColorTemperatureStateConstructor;

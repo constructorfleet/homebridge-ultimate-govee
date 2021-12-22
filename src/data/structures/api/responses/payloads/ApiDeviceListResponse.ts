@@ -14,7 +14,8 @@ export class ApiDeviceListData {
   public devices!: ApiDevice[];
 }
 
-export class ApiDevice implements DeviceResponse {
+export class ApiDevice
+  implements DeviceResponse {
   public kind!: 'ApiDevice';
 
   public device!: string;

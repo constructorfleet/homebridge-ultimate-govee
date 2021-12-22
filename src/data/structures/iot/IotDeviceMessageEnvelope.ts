@@ -1,16 +1,30 @@
-import {Exclude, Expose, Type} from 'class-transformer';
-import {IoTMessage} from './IoTMessage';
+import {Exclude, Expose, Transform, Type} from 'class-transformer';
+import {base64ToHex} from '../../../util/encodingUtils';
 
-export class IotDeviceMessageEnvelope {
-  @Exclude()
-  public topic!: string;
+interface IoTMessage {
+  command: string;
 
-  @Expose({name: 'msg'})
-  @Type(() => IoTDeviceMessage)
-  public messagePayload!: IoTDeviceMessage;
+  messageType: number;
+
+  transaction: string;
 }
 
-export class IoTDeviceMessage implements IoTMessage {
+class CommandData {
+  @Expose({name: 'command'})
+  @Transform(
+    (params) => params.value.map(base64ToHex),
+    {
+      toClassOnly: true,
+    },
+  )
+  public commands?: string[];
+}
+
+export class IoTDeviceMessage
+  implements IoTMessage {
+  constructor() {
+  }
+
   @Expose({name: 'cmd'})
   public command!: string;
 
@@ -31,7 +45,11 @@ export class IoTDeviceMessage implements IoTMessage {
   public commandData?: CommandData;
 }
 
-class CommandData {
-  @Expose({name: 'command'})
-  public commands?: string[];
+export class IotDeviceMessageEnvelope {
+  @Exclude()
+  public topic!: string;
+
+  @Expose({name: 'msg'})
+  @Type(() => IoTDeviceMessage)
+  public messagePayload!: IoTDeviceMessage;
 }

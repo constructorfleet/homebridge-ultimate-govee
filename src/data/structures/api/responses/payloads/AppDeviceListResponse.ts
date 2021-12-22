@@ -15,7 +15,8 @@ export class AppDeviceListResponse
   public devices!: AppDevice[];
 }
 
-export class AppDevice implements DeviceResponse {
+export class AppDevice
+  implements DeviceResponse {
   public kind!: 'AppDevice';
 
   @Expose({name: 'groupId'})

@@ -1,6 +1,6 @@
-import {GoveeAirPurifier} from './GoveeAirPurifier';
+// import {GoveeAirPurifier} from './GoveeAirPurifier';
 import {DeviceResponse} from '../data/structures/api/responses/DeviceResponse';
-import {GoveeDevice} from './GoveeDevice';
+// import {GoveeDevice} from './GoveeDevice';
 import {ApiDevice} from '../data/structures/api/responses/payloads/ApiDeviceListResponse';
 
 export class DeviceFactory {

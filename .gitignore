@@ -121,3 +121,5 @@ dist
 
 .idea
 test.ts
+
+.DS_Store

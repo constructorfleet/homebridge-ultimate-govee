@@ -1,3 +1,6 @@
+export const ENABLED = 0x01;
+export const DISABLED = 0x00;
+
 export const HAP_SERVICES = 'Hap_Services';
 export const HAP_CHARACTERISTICS = 'Hap_Characteristics';
 export const GOVEE_CLIENT_ID = 'Goveee_Client_Id';
