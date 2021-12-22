@@ -1,5 +1,4 @@
-import {Exclude, Expose, Transform, Type} from 'class-transformer';
-import {base64ToHex} from '../../../util/encodingUtils';
+import {Exclude, Expose, Type} from 'class-transformer';
 
 interface IoTMessage {
   command: string;
@@ -11,12 +10,6 @@ interface IoTMessage {
 
 class CommandData {
   @Expose({name: 'command'})
-  @Transform(
-    (params) => params.value.map(base64ToHex),
-    {
-      toClassOnly: true,
-    },
-  )
   public commands?: string[];
 }
 

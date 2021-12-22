@@ -1,10 +1,4 @@
-import {Expose, Transform, Type} from 'class-transformer';
-import {decode, encode} from 'base64-arraybuffer';
-import {base64ToHex} from '../../../util/encodingUtils';
-
-export const decodeCommand = (
-  ...commands: string[]
-): ArrayBuffer[] => commands.map(decode);
+import {Expose, Type} from 'class-transformer';
 
 class State {
   @Expose({name: 'onOff'})
@@ -16,15 +10,17 @@ class State {
 
 class OperatingState {
   @Expose({name: 'command'})
-  @Transform(
-    (params) =>
-      params.value
-        .map(base64ToHex),
-    {
-      toClassOnly: true,
-    },
-  )
   public commands!: string[];
+  @Expose({name: 'opcode'})
+  public opCode!: string;
+  @Expose({name: 'modeValue'})
+  public modeValue!: string[];
+  @Expose({name: 'sleepValue'})
+  public sleepValue!: string[];
+  @Expose({name: 'wakeupValue'})
+  public wakeupValue!: string[];
+  @Expose({name: 'timerValue'})
+  public timerValue!: string[];
 }
 
 interface IoTMessage {
@@ -34,10 +30,6 @@ interface IoTMessage {
 
   transaction: string;
 }
-
-export const encodeCommand = (
-  ...commands: ArrayBuffer[]
-): string[] => commands.map(encode);
 
 export class IoTAccountMessage
   implements IoTMessage {
