@@ -9,7 +9,7 @@ import {AuthenticatedHeader} from '../structures/api/requests/headers/Authentica
 import {BaseRequest} from '../structures/api/requests/payloads/BaseRequest';
 import {
   AppDeviceListResponse,
-  AppDeviceResponse, AppDeviceSettings,
+  AppDeviceResponse,
 } from '../structures/api/responses/payloads/AppDeviceListResponse';
 import {GoveeClient} from './GoveeClient';
 import {autoInjectable, container, inject} from 'tsyringe';
@@ -78,12 +78,13 @@ export class RestClient
     )
       .post();
 
-    response.data.devices.map(
-      (resp) => this.emit(
-        DEVICE_SETTINGS_EVENT,
-        plainToInstance(AppDeviceResponse, resp).deviceExt.deviceSettings,
-      ),
-    );
+    response.data.devices
+      .map(
+        (resp) => this.emit(
+          DEVICE_SETTINGS_EVENT,
+          plainToInstance(AppDeviceResponse, resp).deviceExt.deviceSettings,
+        ),
+      );
 
     return response.data.devices;
   }

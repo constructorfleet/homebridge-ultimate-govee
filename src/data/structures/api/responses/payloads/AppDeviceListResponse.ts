@@ -7,7 +7,7 @@ import {
   Type,
 } from 'class-transformer';
 
-export class AppDeviceSettings {
+export class AppDeviceSettingsResponse {
   @Expose({name: 'wifiName'})
   public wifiSSID?: string;
 
@@ -86,7 +86,7 @@ export class AppDeviceExternalResources {
 }
 
 export class DeviceExtensionProperties {
-  @Type(() => AppDeviceSettings)
+  @Type(() => AppDeviceSettingsResponse)
   @Transform(
     (params) => JSON.stringify(
       instanceToPlain(params.value),
@@ -97,8 +97,8 @@ export class DeviceExtensionProperties {
   )
   @Transform(
     (params) =>
-      plainToInstance<AppDeviceSettings, string>(
-        AppDeviceSettings,
+      plainToInstance<AppDeviceSettingsResponse, string>(
+        AppDeviceSettingsResponse,
         JSON.parse(params.value),
       ),
     {

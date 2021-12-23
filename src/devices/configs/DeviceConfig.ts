@@ -12,4 +12,6 @@ export interface DeviceConfig {
   hardwareVersion?: string;
 
   softwareVersion?: string;
+
+  connections: ConnectionConfig[];
 }

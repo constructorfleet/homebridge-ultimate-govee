@@ -1,15 +1,19 @@
 import {DeviceConfig} from './configs/DeviceConfig';
-import {Constructor} from '../util/types';
 import {container} from 'tsyringe';
+import {constructor} from 'tsyringe/dist/typings/types';
 
 export function Models<DeviceType extends GoveeDevice>(
   ...models: string[]
-): (target: Constructor<DeviceType>) => void {
+): (target: constructor<DeviceType>) => void {
   console.log(`Models decorator: ${models}`);
-  return function(target: Constructor<DeviceType>) {
+  return function(target: constructor<DeviceType>) {
     models.forEach(
       (model) =>
-        container.register(model, target));
+        container.registerInstance<constructor<DeviceType>>(
+          model,
+          target,
+        ),
+    );
     return target;
   };
 }

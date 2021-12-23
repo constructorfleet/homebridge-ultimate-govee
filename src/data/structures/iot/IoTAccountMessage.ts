@@ -1,14 +1,53 @@
-import {Expose, Type} from 'class-transformer';
+import {Expose, Transform, Type} from 'class-transformer';
 
-class State {
+export class RGBColor {
+  @Expose({name: 'r'})
+  red!: number;
+
+  @Expose({name: 'g'})
+  green!: number;
+
+  @Expose({name: 'b'})
+  blue!: number;
+}
+
+export class IoTStateResponse {
   @Expose({name: 'onOff'})
+  @Transform(
+    (params) => params.value as boolean,
+    {
+      toClassOnly: true,
+    },
+  )
+  @Transform(
+    (params) => params.value ? 1 : 0,
+    {
+      toPlainOnly: true,
+    },
+  )
   public onOff?: number;
+
+  @Expose({name: 'connected'})
+  public connected?: boolean;
+
+  @Expose({name: 'brightness'})
+  public brightness?: number;
+
+  @Expose({name: 'colorTemInKelvin'})
+  public colorTemperature?: number;
+
+  @Expose({name: 'color'})
+  @Type(() => RGBColor)
+  public color?: RGBColor;
+
+  @Expose({name: 'mode'})
+  public mode?: number;
 
   @Expose({name: 'result'})
   public result!: number;
 }
 
-class OperatingState {
+export class IoTOperatingStateResponse {
   @Expose({name: 'command'})
   public commands!: string[];
   @Expose({name: 'opcode'})
@@ -64,10 +103,10 @@ export class IoTAccountMessage
   public wifiSoftwareVersion?: string;
 
   @Expose({name: 'state'})
-  @Type(() => State)
-  public state!: State;
+  @Type(() => IoTStateResponse)
+  public state!: IoTStateResponse;
 
   @Expose({name: 'op'})
-  @Type(() => OperatingState)
-  public operatingState?: OperatingState;
+  @Type(() => IoTOperatingStateResponse)
+  public operatingState?: IoTOperatingStateResponse;
 }

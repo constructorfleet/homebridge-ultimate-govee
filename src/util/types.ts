@@ -1,7 +1,7 @@
-export type Constructor<TypeClass> = new (...args) => TypeClass;
+import {ExtendedSet} from './extendedSet';
 
 export abstract class Observable {
-  observers = new Set<Observer>();
+  observers = new ExtendedSet<Observer>();
 
   public attach(observer: Observer): this {
     this.observers.add(observer);
