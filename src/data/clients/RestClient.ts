@@ -7,10 +7,11 @@ import {
 import {LoginResponse} from '../structures/api/responses/payloads/LoginResponse';
 import {AuthenticatedHeader} from '../structures/api/requests/headers/AuthenticatedHeader';
 import {BaseRequest} from '../structures/api/requests/payloads/BaseRequest';
-import {AppDeviceListResponse} from '../structures/api/responses/payloads/AppDeviceListResponse';
+import {
+  AppDeviceListResponse,
+  AppDeviceResponse, AppDeviceSettings,
+} from '../structures/api/responses/payloads/AppDeviceListResponse';
 import {GoveeClient} from './GoveeClient';
-import {ApiHeader} from '../structures/api/requests/headers/ApiHeader';
-import {ApiDeviceListResponse} from '../structures/api/responses/payloads/ApiDeviceListResponse';
 import {autoInjectable, container, inject} from 'tsyringe';
 import {
   DEVICE_SETTINGS_EVENT,
@@ -22,20 +23,12 @@ import {
   IOT_ACCOUNT_TOPIC,
 } from '../../util/const';
 import {Emits} from '../../util/events';
-import {
-  apiDeviceStateRequest,
-  ApiDeviceStateRequest,
-} from '../structures/api/requests/payloads/ApiDeviceStateRequest';
-import {
-  ApiDeviceState,
-  ApiDeviceStateResponse,
-} from '../structures/api/responses/payloads/ApiDeviceStateResponse';
-import {flatten} from 'rambda';
-import {DeviceResponse} from '../structures/api/responses/DeviceResponse';
+import {plainToInstance} from 'class-transformer';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
-const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
+
+// const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
 
 @Emits<RestClient>(
   DEVICE_SETTINGS_EVENT,
@@ -78,48 +71,20 @@ export class RestClient
     return this;
   }
 
-  async getDevices(): Promise<DeviceResponse[]> {
-    return flatten(await Promise.all([
-      (async () => await this.getAppDevices())(),
-      (async () => await this.getApiDevices())(),
-    ]));
-  }
-
-  async getAppDevices(): Promise<DeviceResponse[]> {
+  async getDevices(): Promise<AppDeviceResponse[]> {
     const response = await request<BaseRequest, AppDeviceListResponse>(
       `${BASE_GOVEE_APP_DEVICE_URL}/list`,
       AuthenticatedHeader(this.token!),
     )
       .post();
 
-    return response.data.devices;
-  }
-
-  async getApiDevices(): Promise<DeviceResponse[]> {
-    const response = await request<BaseRequest, ApiDeviceListResponse>(
-      GOVEE_API_BASE_URL,
-      ApiHeader(this.apiKey!),
-      new BaseRequest(),
-    )
-      .get();
-
-    return response.data.data.devices;
-  }
-
-  async getApiDevice(
-    deviceId: string,
-    model: string,
-  ): Promise<ApiDeviceState> {
-    const response = await request<ApiDeviceStateRequest, ApiDeviceStateResponse>(
-      `${GOVEE_API_BASE_URL}/state`,
-      ApiHeader(this.apiKey!),
-      apiDeviceStateRequest(
-        deviceId,
-        model,
+    response.data.devices.map(
+      (resp) => this.emit(
+        DEVICE_SETTINGS_EVENT,
+        plainToInstance(AppDeviceResponse, resp).deviceExt.deviceSettings,
       ),
-    )
-      .get();
+    );
 
-    return response.data.data;
+    return response.data.devices;
   }
 }

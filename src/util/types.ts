@@ -1,10 +1,27 @@
 export type Constructor<TypeClass> = new (...args) => TypeClass;
 
-export type EnumType<T> =
-  { [key in string]: T | number; }
-  | { [key in number]: string; };
+export abstract class Observable {
+  observers = new Set<Observer>();
 
-interface IConstruct<TypeClass, TypeConstructor extends Constructor<TypeClass>> {
-  // we can use built-in InstanceType to infer instance type from class type
-  type: new (...args: ConstructorParameters<TypeConstructor>) => InstanceType<TypeConstructor>;
+  public attach(observer: Observer): this {
+    this.observers.add(observer);
+    return this;
+  }
+
+  public detach(observer: Observer): this {
+    this.observers.delete(observer);
+    return this;
+  }
+
+  public notify(): this {
+    this.observers
+      .forEach(
+        (observer) => observer.onUpdate(this),
+      );
+    return this;
+  }
+}
+
+export interface Observer {
+  onUpdate(subject: Observable);
 }

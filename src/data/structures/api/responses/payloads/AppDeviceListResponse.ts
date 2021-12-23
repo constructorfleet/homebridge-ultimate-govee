@@ -6,82 +6,6 @@ import {
   Transform,
   Type,
 } from 'class-transformer';
-import {DeviceResponse} from '../DeviceResponse';
-
-export class AppDeviceListResponse
-  extends BaseResponse {
-  @Expose({name: 'devices'})
-  @Type(() => AppDevice)
-  public devices!: AppDevice[];
-}
-
-export class AppDevice
-  implements DeviceResponse {
-  public kind!: 'AppDevice';
-
-  @Expose({name: 'groupId'})
-  public groupId!: number;
-
-  @Expose({name: 'device'})
-  public device!: string;
-
-  @Expose({name: 'sku'})
-  public sku!: string;
-
-  @Expose({name: 'spec'})
-  public spec!: string;
-
-  @Expose({name: 'versionHard'})
-  public versionHard!: string;
-
-  @Expose({name: 'versionSoft'})
-  public versionSoft!: string;
-
-  @Expose({name: 'deviceName'})
-  public deviceName!: string;
-
-  @Expose({name: 'pactType'})
-  public pactType!: number;
-
-  @Expose({name: 'pactCode'})
-  public pactCode!: number;
-
-  @Expose({name: 'goodsType'})
-  public goodsType!: number;
-
-  @Expose({name: 'deviceExt'})
-  @Type(() => DeviceExtensionProperties)
-  public deviceExt!: DeviceExtensionProperties;
-}
-
-export class DeviceExtensionProperties {
-  @Type(() => AppDeviceSettings)
-  @Transform(
-    (params) => JSON.stringify(
-      instanceToPlain(params.value),
-    ),
-    {
-      toPlainOnly: true,
-    },
-  )
-  @Transform(
-    (params) =>
-      plainToInstance<AppDeviceSettings, string>(
-        AppDeviceSettings,
-        JSON.parse(params.value),
-      ),
-    {
-      toClassOnly: true,
-    },
-  )
-  public deviceSettings!: string;
-
-  @Expose({toPlainOnly: true})
-  public lastDeviceData!: string;
-
-  @Expose({toPlainOnly: true})
-  public extResources!: string;
-}
 
 export class AppDeviceSettings {
   @Expose({name: 'wifiName'})
@@ -159,4 +83,112 @@ export class AppDeviceExternalResources {
 
   @Expose({name: 'ic'})
   public ic?: number;
+}
+
+export class DeviceExtensionProperties {
+  @Type(() => AppDeviceSettings)
+  @Transform(
+    (params) => JSON.stringify(
+      instanceToPlain(params.value),
+    ),
+    {
+      toPlainOnly: true,
+    },
+  )
+  @Transform(
+    (params) =>
+      plainToInstance<AppDeviceSettings, string>(
+        AppDeviceSettings,
+        JSON.parse(params.value),
+      ),
+    {
+      toClassOnly: true,
+    },
+  )
+  public deviceSettings!: string;
+
+  @Type(() => AppDeviceData)
+  @Transform(
+    (params) => JSON.stringify(
+      instanceToPlain(params.value),
+    ),
+    {
+      toPlainOnly: true,
+    },
+  )
+  @Transform(
+    (params) =>
+      plainToInstance<AppDeviceData, string>(
+        AppDeviceData,
+        JSON.parse(params.value),
+      ),
+    {
+      toClassOnly: true,
+    },
+  )
+  public lastDeviceData!: string;
+
+  @Type(() => AppDeviceExternalResources)
+  @Transform(
+    (params) => JSON.stringify(
+      instanceToPlain(params.value),
+    ),
+    {
+      toPlainOnly: true,
+    },
+  )
+  @Transform(
+    (params) =>
+      plainToInstance<AppDeviceExternalResources, string>(
+        AppDeviceExternalResources,
+        JSON.parse(params.value),
+      ),
+    {
+      toClassOnly: true,
+    },
+  )
+  public extResources!: string;
+}
+
+export class AppDeviceResponse {
+  @Expose({name: 'groupId'})
+  public groupId!: number;
+
+  @Expose({name: 'device'})
+  public device!: string;
+
+  @Expose({name: 'sku'})
+  public sku!: string;
+
+  @Expose({name: 'spec'})
+  public spec!: string;
+
+  @Expose({name: 'versionHard'})
+  public versionHard!: string;
+
+  @Expose({name: 'versionSoft'})
+  public versionSoft!: string;
+
+  @Expose({name: 'deviceName'})
+  public deviceName!: string;
+
+  @Expose({name: 'pactType'})
+  public pactType!: number;
+
+  @Expose({name: 'pactCode'})
+  public pactCode!: number;
+
+  @Expose({name: 'goodsType'})
+  public goodsType!: number;
+
+  @Expose({name: 'deviceExt'})
+  @Type(() => DeviceExtensionProperties)
+  public deviceExt!: DeviceExtensionProperties;
+}
+
+export class AppDeviceListResponse
+  extends BaseResponse {
+  @Expose({name: 'devices'})
+  @Type(() => AppDeviceResponse)
+  public devices!: AppDeviceResponse[];
 }

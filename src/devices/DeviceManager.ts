@@ -1,9 +1,19 @@
 import {autoInjectable, inject} from 'tsyringe';
 import {RestClient} from '../data/clients/RestClient';
 import {GoveeDevice} from './GoveeDevice';
+import {GoveeHumidifier} from './GoveeHumidifier';
+import {GoveeAirPurifier} from './GoveeAirPurifier';
+import {DEVICE_SETTINGS_EVENT, DEVICE_STATE_EVENT} from '../util/const';
+import {EventEmitter} from 'events';
+import {EventHandler, Handles} from '../util/events';
 
 @autoInjectable()
-export class DeviceManage {
+@EventHandler()
+export class DeviceManager {
+  private static readonly DEVICE_CLASSES = [
+    GoveeHumidifier,
+    GoveeAirPurifier,
+  ];
   private devices: GoveeDevice[] = [];
 
   constructor(
@@ -16,11 +26,13 @@ export class DeviceManage {
 
   }
 
-  async onDeviceSetting(data) {
-
+  @Handles(DEVICE_SETTINGS_EVENT)
+  onDeviceSetting(deviceSettings) {
+    console.log(deviceSettings);
   }
 
-  async onDeviceState(data) {
-
+  @Handles(DEVICE_STATE_EVENT)
+  onDeviceState(deviceState) {
+    console.log(deviceState);
   }
 }
