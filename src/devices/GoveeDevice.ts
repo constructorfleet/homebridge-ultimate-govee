@@ -1,6 +1,7 @@
 import {DeviceConfig} from './configs/DeviceConfig';
 import {container} from 'tsyringe';
 import {constructor} from 'tsyringe/dist/typings/types';
+import {supportsIoT} from './configs/IoTConfig';
 
 export function Models<DeviceType extends GoveeDevice>(
   ...models: string[]
@@ -29,6 +30,8 @@ export abstract class GoveeDevice {
     this.name = deviceConfig.name;
     this.pactCode = deviceConfig.pactCode;
     this.pactType = deviceConfig.pactType;
+    console.log(`${this} ${deviceConfig}`);
+    this.iotTopic = supportsIoT(deviceConfig)?.deviceTopic ?? undefined;
     this.hardwareVersion = deviceConfig.hardwareVersion;
     this.softwareVersion = deviceConfig.softwareVersion;
   }
@@ -38,6 +41,10 @@ export abstract class GoveeDevice {
   public name: string;
   public pactCode: number;
   public pactType: number;
+  public iotTopic?: string;
   public hardwareVersion?: string;
   public softwareVersion?: string;
+
+  public abstract send(payload: unknown): void;
+  public abstract receive(payload: unknown): void;
 }

@@ -1,4 +1,5 @@
 import {Expose, Transform, Type} from 'class-transformer';
+import {base64ToHex} from '../../../util/encodingUtils';
 
 export class RGBColor {
   @Expose({name: 'r'})
@@ -49,6 +50,13 @@ export class IoTStateResponse {
 
 export class IoTOperatingStateResponse {
   @Expose({name: 'command'})
+  @Transform(
+    (params) =>
+      base64ToHex(...params.value),
+    {
+      toClassOnly: true,
+    },
+  )
   public commands!: string[];
   @Expose({name: 'opcode'})
   public opCode!: string;

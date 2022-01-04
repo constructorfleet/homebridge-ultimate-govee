@@ -66,8 +66,7 @@ export class UltimateGoveePlatform
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
-      return this.restClient.login()
-        .then((client) => client.getDevices())
+      return this.restClient.getDevices()
         .then((devices) => log.info(JSON.stringify(devices)))
         .catch(this.log.error);
     });

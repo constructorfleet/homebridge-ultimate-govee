@@ -13,4 +13,10 @@ export class GoveeHumidifier
   ) {
     super(deviceConfig);
   }
+
+  receive(payload: unknown): void {
+  }
+
+  send(payload: unknown): void {
+  }
 }

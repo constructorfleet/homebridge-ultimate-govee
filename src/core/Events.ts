@@ -1,6 +1,6 @@
-import {EventEmitter} from 'events';
+import {EventEmitter} from 'src/core/events';
 import {container} from 'tsyringe';
-import {METADATA_KEY_EVENT_HANDLER} from './const';
+import {METADATA_KEY_EVENT_HANDLER} from '../util/const';
 import {constructor} from 'tsyringe/dist/typings/types';
 
 export function Emits<ClassType extends EventEmitter>(
@@ -16,7 +16,7 @@ export function Emits<ClassType extends EventEmitter>(
         );
 
         if (container.isRegistered(`${event}_Handler`)) {
-          console.log('EMITS - addingListeners', event);
+          console.log(`EMITS - addingListeners ${event}`);
           container.resolveAll<(...args: unknown[]) => void>(`${event}_Handler`)
             .forEach(
               (handler) => {
@@ -43,7 +43,6 @@ export function Emits<ClassType extends EventEmitter>(
 export function EventHandler<ClassType>(): (target: constructor<ClassType>) => void {
   return function(target: constructor<ClassType>) {
     const constructorWrapper = function(...args): ClassType {
-      console.log(`CREATING ${target}`);
       const handler = new target(...args);
       const properties: string[] = Reflect.getMetadata(
         METADATA_KEY_EVENT_HANDLER,
@@ -60,16 +59,16 @@ export function EventHandler<ClassType>(): (target: constructor<ClassType>) => v
           );
 
           if (container.isRegistered(`${event}_Emitter`)) {
-            console.log('EVENTHANDLER - Adding handlers');
+            console.log(`EVENTHANDLER - Adding handlers ${event}`);
             container.resolveAll<EventEmitter>(
               `${event}_Emitter`,
             )
               .forEach((emitter) =>
-                  emitter.listeners(event)
-                    .includes(handler[propertyKey])
+                emitter.listeners(event)
+                  .includes(handler[propertyKey])
                   || emitter.on(
                     event,
-                    handler[propertyKey],
+                    handler[propertyKey].bind(handler),
                   ),
               );
           }
@@ -89,13 +88,12 @@ export function Handles(
 ): (
   target: unknown,
   propertyKey: string,
-  descriptor: PropertyDescriptor,
 ) => void {
   return function(
     target: unknown,
     propertyKey: string,
   ) {
-    console.log(`HANDLES ${target}`);
+    console.log(`HANDLES ${target} ${event}`);
     const properties: string[] = Reflect.getMetadata(
       METADATA_KEY_EVENT_HANDLER,
       target as Record<string, unknown>,

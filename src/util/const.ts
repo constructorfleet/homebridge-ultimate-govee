@@ -2,6 +2,7 @@ export const ENABLED = 0x01;
 export const DISABLED = 0x00;
 
 export const METADATA_KEY_EVENT_HANDLER = 'Event_Handler';
+export const EVENT_BUS = 'Event_Bus';
 
 export const HAP_SERVICES = 'Hap_Services';
 export const HAP_CHARACTERISTICS = 'Hap_Characteristics';
@@ -20,5 +21,11 @@ export const IOT_HOST = 'IOT_Host';
 export const DEVICE_SETTINGS_EVENT = 'Device_Settings_Event';
 export const DEVICE_STATE_EVENT = 'Device_State_Event';
 
+export const IOT_CLIENT_CREATED = 'IoT_Client_Created';
 export const IOT_DISCONNECTED_EVENT = 'IoT_Disconnected_Event';
 export const IOT_CONNECTED_EVENT = 'IoT_Connected_Event';
+export const IOT_PUBLISH_EVENT = 'IoT_Publish_Event';
+export const IOT_SUBSCRIBE_EVENT = 'IoT_Subscribe_Event';
+
+export const CONNECTION_BLE = 'BLE';
+export const CONNECTION_IOT = 'IOT';

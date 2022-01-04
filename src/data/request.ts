@@ -27,6 +27,8 @@ class Request<PayloadType extends BaseRequest,
   }
 
   async get(): Promise<AxiosResponse<ResponseType>> {
+    console.log(this.url);
+    console.log(this.payload);
     return await axios.get(
       this.url,
       {
@@ -38,6 +40,8 @@ class Request<PayloadType extends BaseRequest,
   }
 
   async post(): Promise<AxiosResponse<ResponseType>> {
+    console.log(this.url);
+    console.log(this.payload);
     return await axios.post(
       this.url,
       this.payload,
