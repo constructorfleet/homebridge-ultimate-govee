@@ -26,10 +26,8 @@ class Request<PayloadType extends BaseRequest,
   ) {
   }
 
-  async get(): Promise<AxiosResponse<ResponseType>> {
-    console.log(this.url);
-    console.log(this.payload);
-    return await axios.get(
+  get(): Promise<AxiosResponse<ResponseType>> {
+    return axios.get(
       this.url,
       {
         timeout: 10000,
@@ -39,10 +37,8 @@ class Request<PayloadType extends BaseRequest,
     );
   }
 
-  async post(): Promise<AxiosResponse<ResponseType>> {
-    console.log(this.url);
-    console.log(this.payload);
-    return await axios.post(
+  post(): Promise<AxiosResponse<ResponseType>> {
+    return axios.post(
       this.url,
       this.payload,
       {

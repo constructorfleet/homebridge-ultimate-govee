@@ -33,7 +33,11 @@
     "govee"
   ],
   "dependencies": {
-    "@types/aws-iot-device-sdk": "^2.2.3",
+    "@nestjs/common": "^8.2.4",
+    "@nestjs/config": "^1.1.6",
+    "@nestjs/core": "^8.2.4",
+    "@nestjs/event-emitter": "^1.0.0",
+    "@types/aws-iot-device-sdk": "^2.2.4",
     "aws-iot-device-sdk": "^2.2.11",
     "axios": "^0.24.0",
     "base64-arraybuffer": "^1.0.1",
@@ -46,7 +50,7 @@
     "rambda": "^6.9.0",
     "reflect-metadata": "^0.1.13",
     "retrobus": "^1.8.0",
-    "tsyringe": "^4.6.0",
+    "rxjs": "^7.5.1",
     "util": "^0.12.4"
   },
   "devDependencies": {

@@ -1,10 +1,22 @@
-import {GoveeDevice, Models} from './GoveeDevice';
-import {DeviceConfig} from './configs/DeviceConfig';
+import {GoveeDevice} from './GoveeDevice';
+import {DeviceConfig} from '../core/events/devices/configs/DeviceConfig';
+import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 
-@Models(
-  'H7141',
-  'H7142',
-)
+export const humidifierProviders: Provider[] = [
+  {
+    provide: 'H7141',
+    useValue: function() {
+      return (config) => new GoveeHumidifier(config);
+    },
+  },
+  {
+    provide: 'H7142',
+    useValue: function() {
+      return (config) => new GoveeHumidifier(config);
+    },
+  },
+];
+
 export class GoveeHumidifier
   extends GoveeDevice {
 

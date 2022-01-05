@@ -12,6 +12,8 @@ export const GOVEE_USERNAME = 'Govee_Username';
 export const GOVEE_PASSWORD = 'Govee_Password';
 export const GOVEE_API_KEY = 'Govee_Api_Key';
 
+export const DEVICE_FACTORY = 'Device_Factory';
+
 export const IOT_ACCOUNT_TOPIC = 'IOT_Account_Topic';
 export const IOT_CERTIFICATE = 'IOT_Certificate';
 export const IOT_KEY = 'IOT_Key';
@@ -23,7 +25,7 @@ export const DEVICE_STATE_EVENT = 'Device_State_Event';
 
 export const IOT_CLIENT_CREATED = 'IoT_Client_Created';
 export const IOT_DISCONNECTED_EVENT = 'IoT_Disconnected_Event';
-export const IOT_CONNECTED_EVENT = 'IoT_Connected_Event';
+export const IOT_CONNECTED_EVENT = 'D';
 export const IOT_PUBLISH_EVENT = 'IoT_Publish_Event';
 export const IOT_SUBSCRIBE_EVENT = 'IoT_Subscribe_Event';
 

@@ -74,7 +74,7 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+dist/.env
 .env.test
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -123,3 +123,4 @@ dist
 test.ts
 
 .DS_Store
+.env

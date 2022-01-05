@@ -1,27 +1,20 @@
-import {ExtendedSet} from './extendedSet';
+import {EventEmitter2} from '@nestjs/event-emitter';
+import {Event} from '../core/events/Event';
 
-export abstract class Observable {
-  observers = new ExtendedSet<Observer>();
+export type Constructor<TypeClass> = new (...args) => TypeClass;
 
-  public attach(observer: Observer): this {
-    this.observers.add(observer);
-    return this;
+export abstract class Emitter {
+  protected constructor(
+    private eventEmitter: EventEmitter2,
+  ) {
   }
 
-  public detach(observer: Observer): this {
-    this.observers.delete(observer);
-    return this;
+  public emit<EventData, EventType extends Event<EventData>>(
+    event: EventType,
+  ) {
+    this.eventEmitter.emit(
+      event.eventName,
+      event.eventData,
+    );
   }
-
-  public notify(): this {
-    this.observers
-      .forEach(
-        (observer) => observer.onUpdate(this),
-      );
-    return this;
-  }
-}
-
-export interface Observer {
-  onUpdate(subject: Observable);
 }

@@ -1,5 +1,5 @@
 import {IoTAccountMessage} from '../../data/structures/iot/IoTAccountMessage';
-import {DeviceState} from '../../devices/configs/DeviceState';
+import {DeviceState} from '../../core/events/devices/configs/DeviceState';
 
 export function parseIoTResponse(
   message: IoTAccountMessage,

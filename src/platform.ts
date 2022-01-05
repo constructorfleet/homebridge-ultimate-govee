@@ -1,26 +1,7 @@
-import {machineIdSync} from 'node-machine-id';
-import {container} from 'tsyringe';
-import {
-  API,
-  Characteristic,
-  DynamicPlatformPlugin,
-  Logger,
-  PlatformAccessory,
-  PlatformConfig,
-  Service,
-} from 'homebridge';
+import {API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service} from 'homebridge';
 
 import {PLATFORM_NAME, PLUGIN_NAME} from './settings';
 import {ExamplePlatformAccessory} from './platformAccessory';
-import {
-  GOVEE_API_KEY,
-  GOVEE_CLIENT_ID,
-  GOVEE_PASSWORD,
-  GOVEE_USERNAME,
-  HAP_CHARACTERISTICS,
-  HAP_SERVICES,
-} from './util/const';
-import {RestClient} from './data/clients/RestClient';
 
 /**
  * HomebridgePlatform
@@ -36,7 +17,7 @@ export class UltimateGoveePlatform
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
 
-  private restClient: RestClient;
+  // private restClient: RestClient;
 
   constructor(
     public readonly log: Logger,
@@ -46,30 +27,30 @@ export class UltimateGoveePlatform
     if (!config?.username || !config?.password) {
       throw Error('Both Username and Password are required');
     }
-
-    container.registerInstance(HAP_SERVICES, this.Service);
-    container.registerInstance(HAP_CHARACTERISTICS, this.Characteristic);
-
-    container.registerInstance(GOVEE_USERNAME, config.username);
-    container.registerInstance(GOVEE_PASSWORD, config.password);
-    container.registerInstance(GOVEE_CLIENT_ID, machineIdSync()
-      .slice(0, 10));
-    container.registerInstance(GOVEE_API_KEY, config.apiKey);
-
-    this.restClient = container.resolve<RestClient>(RestClient);
-
-    this.log.debug('Finished initializing platform:', this.config.name);
-
-    // When this event is fired it means Homebridge has restored all cached accessories from disk.
-    // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to homebridge already. This event can also be used
-    // to start discovery of new accessories.
-    this.api.on('didFinishLaunching', () => {
-      log.debug('Executed didFinishLaunching callback');
-      return this.restClient.getDevices()
-        .then((devices) => log.info(JSON.stringify(devices)))
-        .catch(this.log.error);
-    });
+    //
+    // container.registerInstance(HAP_SERVICES, this.Service);
+    // container.registerInstance(HAP_CHARACTERISTICS, this.Characteristic);
+    //
+    // container.registerInstance(GOVEE_USERNAME, config.username);
+    // container.registerInstance(GOVEE_PASSWORD, config.password);
+    // container.registerInstance(GOVEE_CLIENT_ID, machineIdSync()
+    //   .slice(0, 10));
+    // container.registerInstance(GOVEE_API_KEY, config.apiKey);
+    //
+    // this.restClient = container.resolve<RestClient>(RestClient);
+    //
+    // this.log.debug('Finished initializing platform:', this.config.name);
+    //
+    // // When this event is fired it means Homebridge has restored all cached accessories from disk.
+    // // Dynamic Platform plugins should only register new accessories after this event was fired,
+    // // in order to ensure they weren't added to homebridge already. This event can also be used
+    // // to start discovery of new accessories.
+    // this.api.on('didFinishLaunching', () => {
+    //   log.debug('Executed didFinishLaunching callback');
+    //   return this.restClient.getDevices()
+    //     .then((devices) => log.info(JSON.stringify(devices)))
+    //     .catch(this.log.error);
+    // });
   }
 
   /**

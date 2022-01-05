@@ -1,6 +1,5 @@
 import {AppDeviceSettingsResponse} from '../../data/structures/api/responses/payloads/AppDeviceListResponse';
-import {DeviceConfig} from '../../devices/configs/DeviceConfig';
-import {set} from 'rambda';
+import {DeviceConfig} from '../../core/events/devices/configs/DeviceConfig';
 
 export function parseRestResponse(
   settings: AppDeviceSettingsResponse,

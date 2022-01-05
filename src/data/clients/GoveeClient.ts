@@ -1,8 +1,5 @@
-import {EventEmitter} from 'events';
+import {Emitter} from '../../util/types';
 
-export class GoveeClient
-  extends EventEmitter {
-  constructor() {
-    super();
-  }
+export class GoveeClient extends Emitter {
+
 }

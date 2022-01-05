@@ -1,11 +1,5 @@
 import {BaseResponse} from './BaseResponse';
-import {
-  Expose,
-  instanceToPlain,
-  plainToInstance,
-  Transform,
-  Type,
-} from 'class-transformer';
+import {Expose, instanceToPlain, plainToInstance, Transform, Type} from 'class-transformer';
 
 export class AppDeviceSettingsResponse {
   @Expose({name: 'wifiName'})

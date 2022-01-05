@@ -1,120 +1,73 @@
 import {request} from '../request';
 import {BaseHeaders} from '../structures/api/requests/headers/BaseHeaders';
-import {
-  loginRequest,
-  LoginRequest,
-} from '../structures/api/requests/payloads/LoginRequest';
+import {loginRequest, LoginRequest} from '../structures/api/requests/payloads/LoginRequest';
 import {LoginResponse} from '../structures/api/responses/payloads/LoginResponse';
 import {AuthenticatedHeader} from '../structures/api/requests/headers/AuthenticatedHeader';
 import {BaseRequest} from '../structures/api/requests/payloads/BaseRequest';
-import {
-  AppDeviceListResponse,
-  AppDeviceResponse,
-} from '../structures/api/responses/payloads/AppDeviceListResponse';
+import {AppDeviceListResponse, AppDeviceSettingsResponse} from '../structures/api/responses/payloads/AppDeviceListResponse';
 import {GoveeClient} from './GoveeClient';
-import {autoInjectable, container, inject, singleton} from 'tsyringe';
-import {
-  DEVICE_SETTINGS_EVENT,
-  DEVICE_STATE_EVENT,
-  GOVEE_API_KEY,
-  GOVEE_CLIENT_ID,
-  GOVEE_PASSWORD,
-  GOVEE_USERNAME,
-  IOT_ACCOUNT_TOPIC,
-  IOT_CONNECTED_EVENT,
-  IOT_SUBSCRIBE_EVENT,
-} from '../../util/const';
-import {Emits, EventHandler, Handles} from '../../core/events';
+import {GOVEE_API_KEY, GOVEE_CLIENT_ID, GOVEE_PASSWORD, GOVEE_USERNAME} from '../../util/const';
 import {plainToInstance} from 'class-transformer';
-import {IoTClient} from './IoTClient';
+import {Inject} from '@nestjs/common';
+import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
+import {OAuthData} from '../../core/structures/AuthenticationData';
+import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {ExtendedDate} from '../../util/extendedDate';
+import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
+import {RestAuthenticatedEvent} from '../../core/events/dataClients/rest/RestAuthentication';
+import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
+import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
 
 // const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
 
-class OAuthTokenData {
-  constructor(
-    protected token: string,
-    protected refreshToken: string,
-    private tokenExpirationMinutes: number,
-    private timestampIssued: number = ExtendedDate.now(),
-  ) {
-  }
-
-  as<ResultType>(transform: (authData: OAuthTokenData) => ResultType): ResultType {
-    return transform(this);
-  }
-
-  get bearerToken(): string {
-    return this.token;
-  }
-
-  update(
-    token: string,
-    refreshToken: string,
-    expiresInMinutes: number,
-  ): this {
-    this.token = token;
-    this.refreshToken = refreshToken;
-    this.tokenExpirationMinutes = expiresInMinutes;
-    this.timestampIssued = ExtendedDate.now();
-
-    return this;
-  }
-
-  get isValid(): boolean {
-    return new ExtendedDate(
-      Date.now(),
-    )
-      .addHours(-this.tokenExpirationMinutes)
-      .getTime() < Date.now();
-  }
-}
-
-@singleton()
-@Emits<RestClient>(
-  DEVICE_SETTINGS_EVENT,
-  DEVICE_STATE_EVENT,
-  IOT_SUBSCRIBE_EVENT,
-)
-@EventHandler()
-@autoInjectable()
 export class RestClient
   extends GoveeClient {
-  private oauthData?: OAuthTokenData;
+  private oauthData?: OAuthData;
   private accountTopic?: string;
 
-  constructor(
-    @inject(GOVEE_USERNAME) private username: string,
-    @inject(GOVEE_PASSWORD) private password: string,
-    @inject(GOVEE_CLIENT_ID) private clientId: string,
-    @inject(GOVEE_API_KEY) private apiKey?: string,
-  ) {
-    super();
-    console.log('RestClient const');
+  private get isValidToken(): boolean {
+    if (!this.oauthData) {
+      console.log('No auth data invalid');
+      return false;
+    }
+    return this.oauthData.tokenExpiration > Date.now();
   }
 
-  @Handles(IOT_CONNECTED_EVENT)
-  onIoTConnected = (): void => {
-    if (this.accountTopic && !container.isRegistered(IOT_ACCOUNT_TOPIC)) {
-      container.register(
-        IOT_ACCOUNT_TOPIC,
-        {
-          useValue: this.accountTopic,
-        },
-      );
+  constructor(
+    eventEmitter: EventEmitter2,
+    @Inject(GOVEE_USERNAME) private username: string,
+    @Inject(GOVEE_PASSWORD) private password: string,
+    @Inject(GOVEE_CLIENT_ID) private clientId: string,
+    @Inject(GOVEE_API_KEY) private apiKey?: string,
+  ) {
+    super(eventEmitter);
+  }
+
+  @OnEvent('IOT.Connection')
+  onIoTConnected(connection: ConnectionState) {
+    if (connection !== ConnectionState.Connected ||
+      !this.oauthData?.accountIoTTopic) {
+      return;
     }
-
     this.emit(
-      IOT_SUBSCRIBE_EVENT,
-      container.resolve<IoTClient>(IoTClient),
+      new IoTSubscribeToEvent(this.oauthData?.accountIoTTopic),
     );
-  };
+  }
 
-  async login(): Promise<OAuthTokenData> {
-    const response = await request<LoginRequest, LoginResponse>(
+  @OnEvent(
+    'REST.Authenticate',
+    {
+      async: true,
+    },
+  )
+  login(): Promise<OAuthData> {
+    if (this.isValidToken) {
+      return Promise.resolve(this.oauthData!);
+    }
+    return request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
       BaseHeaders(),
       loginRequest(
@@ -123,53 +76,68 @@ export class RestClient
         this.clientId,
       ),
     )
-      .post();
-
-    const authData = new OAuthTokenData(
-      response.data.client.token,
-      response.data.client.refreshToken,
-      response.data.client.tokenExpireCycle,
-    );
-
-    if (!this.accountTopic && response.data.client.topic) {
-      this.accountTopic = response.data.client.topic;
-      console.log('SUBSCRIBING TO ACCOUNT');
-      container.register(
-        IOT_ACCOUNT_TOPIC,
-        {
-          useValue: this.accountTopic,
+      .post()
+      .then((res) => res.data.client)
+      .then((client): OAuthData => {
+        return {
+          token: client.token,
+          accountIoTTopic: client.topic,
+          refreshToken: client.refreshToken,
+          tokenExpiration: new ExtendedDate(Date.now()).addHours(
+            client.tokenExpireCycle)
+            .getTime(),
+        };
+      })
+      .then(
+        (authData) => {
+          this.oauthData = authData;
+          console.log(authData);
+          this.emit(
+            new IoTSubscribeToEvent(authData?.accountIoTTopic || ''),
+          );
+          this.emit(new RestAuthenticatedEvent(authData));
+          this.emit(new RestRequestDevices());
+          return authData;
         },
       );
-      this.emit(
-        IOT_SUBSCRIBE_EVENT,
-        container.resolve<IoTClient>(IoTClient),
-      );
-    }
-
-    return authData;
   }
 
-  async getDevices(): Promise<AppDeviceResponse[]> {
-    console.log('getDevices');
-    await this.login();
-    console.log('loggedin');
-    const response = await request<BaseRequest, AppDeviceListResponse>(
-      `${BASE_GOVEE_APP_DEVICE_URL}/list`,
-      AuthenticatedHeader(this.oauthData?.bearerToken || ''),
-    )
-      .post();
-
-    console.log(response);
-    response.data.devices
-      .map(
-        (resp) => {
-          this.emit(
-            DEVICE_SETTINGS_EVENT,
-            plainToInstance(AppDeviceResponse, resp).deviceExt.deviceSettings,
+  @OnEvent(
+    'REST.REQUEST.Devices',
+    {
+      async: true,
+    },
+  )
+  getDevices(): Promise<AppDeviceSettingsResponse[]> {
+    return this.login()
+      .then((authData) =>
+        request<BaseRequest, AppDeviceListResponse>(
+          `${BASE_GOVEE_APP_DEVICE_URL}/list`,
+          AuthenticatedHeader(authData.token || ''),
+        ),
+      )
+      .then((req) => req.post())
+      .then(
+        (resp) => resp.data.devices,
+      )
+      .then((devices) =>
+        devices.map(
+          (device) =>
+            plainToInstance(
+              AppDeviceSettingsResponse,
+              JSON.parse(device.deviceExt.deviceSettings),
+            ) as AppDeviceSettingsResponse,
+        ),
+      )
+      .then((deviceSettings) => {
+          deviceSettings.forEach(
+            (device) =>
+              this.emit(
+                new DeviceSettingsReceived(device),
+              ),
           );
+          return deviceSettings;
         },
       );
-
-    return response.data.devices;
   }
 }

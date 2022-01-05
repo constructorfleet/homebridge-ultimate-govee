@@ -1,38 +1,18 @@
-import {autoInjectable, container, inject, singleton} from 'tsyringe';
-import {constructor} from 'tsyringe/dist/typings/types';
 import {GoveeDevice} from './GoveeDevice';
 import {GoveeHumidifier} from './GoveeHumidifier';
 import {GoveeAirPurifier} from './GoveeAirPurifier';
-import {
-  DEVICE_SETTINGS_EVENT,
-  DEVICE_STATE_EVENT,
-  IOT_CLIENT_CREATED,
-  IOT_CONNECTED_EVENT,
-  IOT_PUBLISH_EVENT,
-} from '../util/const';
-import {AppDeviceSettingsResponse} from '../data/structures/api/responses/payloads/AppDeviceListResponse';
+import {Injectable} from '@nestjs/common';
+import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
+import {DeviceStateReceived} from '../core/events/devices/DeviceReceived';
+import {Emitter} from '../util/types';
+import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
+import {AppDeviceData, AppDeviceSettingsResponse} from '../data/structures/api/responses/payloads/AppDeviceListResponse';
 import {parseRestResponse} from '../interactors/fromData/ParseRestReponse';
-import {IoTAccountMessage} from '../data/structures/iot/IoTAccountMessage';
-import {parseIoTResponse} from '../interactors/fromData/ParseIoTResponse';
-import {EventEmitter} from 'events';
-import {plainToInstance} from 'class-transformer';
-import {IotDeviceMessageEnvelope} from '../data/structures/iot/IotDeviceMessageEnvelope';
-import {RestClient} from '../data/clients/RestClient';
-import {IoTClient} from '../data/clients/IoTClient';
-import {Emits, EventHandler, Handles} from '../core/events';
+import {ModuleRef} from '@nestjs/core';
 
-@singleton()
-@Emits(
-  IOT_PUBLISH_EVENT,
-  IOT_CLIENT_CREATED,
-  IOT_CONNECTED_EVENT,
-  DEVICE_SETTINGS_EVENT,
-  DEVICE_STATE_EVENT,
-)
-@EventHandler()
-@autoInjectable()
-export class DeviceManager
-  extends EventEmitter {
+
+@Injectable()
+export class DeviceManager extends Emitter {
   private static readonly DEVICE_CLASSES = [
     GoveeHumidifier,
     GoveeAirPurifier,
@@ -41,26 +21,27 @@ export class DeviceManager
   private readonly devices = new Map<string, GoveeDevice>();
 
   constructor(
-    @inject(RestClient) private readonly restClient: RestClient,
-    @inject(IoTClient) private readonly iotClient: IoTClient,
+    eventEmitter: EventEmitter2,
+    public moduleRef: ModuleRef,
   ) {
-    super();
-    console.log('DeviceManager const');
+    super(eventEmitter);
   }
 
   get knownDevices(): GoveeDevice[] {
     return Array.from(this.devices.values());
   }
 
-  @Handles(DEVICE_SETTINGS_EVENT)
-  onDeviceSetting(deviceSettings: AppDeviceSettingsResponse): void {
+  @OnEvent('DEVICE.RECEIVED.Settings')
+  onDeviceSetting(deviceSettings: AppDeviceSettingsResponse) {
+    if (!deviceSettings) {
+      console.log('No device settings');
+      return;
+    }
     if (!this.devices.has(deviceSettings.deviceId)) {
-      if (container.isRegistered(deviceSettings.deviceModel)) {
-        const ctor = container.resolve<constructor<GoveeDevice>>(
-          deviceSettings.deviceModel,
-        );
-
-        const device = new ctor(parseRestResponse(deviceSettings));
+      try {
+        // @ts-ignore
+        const deviceCtor = this.moduleRef.get(deviceSettings.deviceModel)();
+        const device = deviceCtor(parseRestResponse(deviceSettings));
         this.devices.set(
           deviceSettings.deviceId,
           device,
@@ -69,19 +50,17 @@ export class DeviceManager
         this.pollDeviceStates(
           device,
         );
+      } catch (err) {
+        console.log(err);
       }
     }
-  };
+  }
 
-  @Handles(DEVICE_STATE_EVENT)
-  onDeviceState = (deviceState: IoTAccountMessage): void => {
+  @OnEvent('DEVICE.RECEIVED.State')
+  onDeviceState(deviceState) {
     console.log(deviceState);
-    if (!this.devices.has(deviceState.deviceId)) {
-      return;
-    }
-
-    console.log(parseIoTResponse(deviceState));
-  };
+    return;
+  }
 
   pollDeviceStates = (
     device?: GoveeDevice,
@@ -91,7 +70,7 @@ export class DeviceManager
     (
       device
         ? [device]
-        : Array.from(this.devices)
+        : Array.from(this.devices.values())
     )
       ?.forEach(
         (device) => {
@@ -101,10 +80,9 @@ export class DeviceManager
           }
           console.log(`publishing device message to ${device.iotTopic}`);
           this.emit(
-            IOT_PUBLISH_EVENT,
-            plainToInstance(
-              IotDeviceMessageEnvelope,
-              {
+            new IoTPublishTo(
+              device.iotTopic,
+              JSON.stringify({
                 topic: device.iotTopic,
                 msg: {
                   cmd: 'status',
@@ -112,7 +90,7 @@ export class DeviceManager
                   transaction: `u_${Date.now()}`,
                   type: 0,
                 },
-              },
+              }),
             ),
           );
           if (!device) {
