@@ -18,7 +18,7 @@ import path from 'path';
 import {machineIdSync} from 'node-machine-id';
 import {humidifierProviders} from '../devices/GoveeHumidifier';
 import {purifierProviders} from '../devices/GoveeAirPurifier';
-import {IoTMessageProcessor} from '../interactors/fromData/StateFromIoTMessage';
+import {IoTMessageProcessor} from '../interactors/IoTMessageProcessor';
 
 const modules = [
   ConfigModule.forRoot({
