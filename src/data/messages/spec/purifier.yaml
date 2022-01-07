@@ -1,90 +1,37 @@
-messages:
-  - code: 0x01
-    key: device
-    children:
-      - key: device.active
-        minimum: 0
-        maximum: 1
-        on_set:
-          service: AirPurifier
-          characteristic: Active
-        on_change:
-          service: AirPurifier
-          characteristic: Active
-          commands:
-            - ref: device.active
-  - code: 0x05
+op_code_states:
+  - code:
+      - 33
+      - 170
     key: state
     children:
-      - on_set:
-          service: AirPurifier
-          characteristic: RotationSpeed
-          transform:
-            op: eq
-            mapping:
-              - from: 0x11
-                to: 25
-              - from: 0x01
-                to: 50
-              - from: 0x02
-                to: 75
-              - from: 0x03
-                to: 100
-        on_change:
-          service: AirPurifier
-          characteristic: RotationalSpeed
-          commands:
-            - ref: device.active
-            - ref: state.level
-          transform:
-            op: lte
-            mapping:
-              - from: 25
-                to: 0x11
-              - from: 50
-                to: 0x01
-              - from: 75
-                to: 0x02
-              - from: 100
-                to: 0x03
-        key: state.level
-  - code: 0x10
-    key: controls
-    children:
-      - key: controls.locked
-        minimum: 0
-        maximum: 1
-        on_set:
-          service: HumidifierDehumidifier
-          characteristic: LockPhysicalControls
-        on_change:
-          service: HumidifierDehumidifier
-          characteristic: LockPhysicalControls
-
-
-#
-#05: Fan Speed
-#  level:
-#10: LockDevice
-#  onOff:
-#11: Timer
-#  01: OnOff
-#    0000: 0 Minutes
-#    ..:
-#      0168: 360 Minutes
-#12: ??
-#13: Schedule
-#  identifier:
-#    onOff:
-#      hour:
-#        minute:
-#16: Display
-#  onOff:
-#    startHour:
-#      startMinute:
-#        endHour:
-#          endMinute:
-#18: NightLight
-#  onOff:
-#    brightness:
-#19: ?? (Maybe Filter?)
+      - code: 1
+        key: device
+        values:
+          - key: active
+      - code: 5
+        key: state
+        values:
+          - key: fanSpeed
+      - code: 10
+        key: controls
+        values:
+          - key: locked
+      - code: 11
+        key: timer
+        values:
+          - key: on
+          - key: duration
+            count: 2
+      - code: 16
+        key: display
+        values:
+          - key: on
+          - key: start.hour
+          - key: start.minute
+          - key: end.hour
+          - key: end.minute
+      - code: 18
+        key: nightLight
+        values:
+          - key: on
+          - key: brigntess

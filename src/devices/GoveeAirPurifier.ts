@@ -1,6 +1,11 @@
 import {GoveeDevice} from './GoveeDevice';
-import {DeviceConfig} from '../core/events/devices/configs/DeviceConfig';
+import {DeviceConfig} from '../core/structures/devices/configs/DeviceConfig';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
+import {OnOff} from './states/OnOff';
+import {FanSpeed} from './states/FanSpeed';
+import {Active} from './states/Active';
+import {Timer} from './states/Timer';
+import {DeviceState} from '../core/structures/devices/DeviceState';
 
 export const purifierProviders: Provider[] = [
   {
@@ -18,7 +23,7 @@ export const purifierProviders: Provider[] = [
 ];
 
 export class GoveeAirPurifier
-  extends GoveeDevice {
+  extends FanSpeed(Timer(Active(OnOff(GoveeDevice)))) {
 
   constructor(
     deviceConfig: DeviceConfig,
@@ -26,11 +31,8 @@ export class GoveeAirPurifier
     super(deviceConfig);
   }
 
-  receive(payload: unknown): void {
+  receive(state: DeviceState): void {
+    super.receive(state);
+    console.log(this);
   }
-
-  send(payload: unknown): void {
-  }
-
-
 }

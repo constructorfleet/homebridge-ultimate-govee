@@ -1,8 +1,10 @@
-import {DeviceConfig} from '../core/events/devices/configs/DeviceConfig';
-import {supportsIoT} from '../core/events/devices/configs/IoTConfig';
+import {DeviceConfig} from '../core/structures/devices/configs/DeviceConfig';
+import {supportsIoT} from '../core/structures/devices/configs/IoTConfig';
 import {Constructor} from '../util/types';
-import {applyDecorators, Global, Module} from '@nestjs/common';
+import {applyDecorators, Module} from '@nestjs/common';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
+import {DeviceState} from '../core/structures/devices/DeviceState';
+import {State} from './states/State';
 
 export function Models<DeviceType extends GoveeDevice>(
   ...models: string[]
@@ -27,29 +29,13 @@ export function Models<DeviceType extends GoveeDevice>(
   };
 }
 
-// export function Models<DeviceType extends GoveeDevice>(
-//   ...models: string[]
-// ): (target: Constructor<DeviceType>) => void {
-//   console.log(`Models decorator: ${models}`);
-//   return function(target: Constructor<DeviceType>) {
-//     models.forEach(
-//       (model) =>
-//         container.registerInstance<Constructor<DeviceType>>(
-//           model,
-//           target,
-//         ),
-//     );
-//     return target;
-//   };
-// }
-
-export abstract class GoveeDevice {
+export class GoveeDevice extends State {
   static MODELS: string[] = [];
 
-  protected constructor(
+  constructor(
     deviceConfig: DeviceConfig,
   ) {
-    console.log(deviceConfig);
+    super();
     this.deviceId = deviceConfig.deviceId;
     this.model = deviceConfig.model;
     this.name = deviceConfig.name;
@@ -69,7 +55,10 @@ export abstract class GoveeDevice {
   public hardwareVersion?: string;
   public softwareVersion?: string;
 
-  public abstract send(payload: unknown): void;
+  public send(state: DeviceState): void {
+  }
 
-  public abstract receive(payload: unknown): void;
+  public receive(state: DeviceState) {
+    this.parse(state);
+  }
 }

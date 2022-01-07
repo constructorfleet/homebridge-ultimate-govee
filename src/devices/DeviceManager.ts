@@ -3,12 +3,12 @@ import {GoveeHumidifier} from './GoveeHumidifier';
 import {GoveeAirPurifier} from './GoveeAirPurifier';
 import {Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {DeviceStateReceived} from '../core/events/devices/DeviceReceived';
 import {Emitter} from '../util/types';
 import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
-import {AppDeviceData, AppDeviceSettingsResponse} from '../data/structures/api/responses/payloads/AppDeviceListResponse';
-import {parseRestResponse} from '../interactors/fromData/ParseRestReponse';
+import {AppDeviceSettingsResponse} from '../data/structures/api/responses/payloads/AppDeviceListResponse';
 import {ModuleRef} from '@nestjs/core';
+import {DeviceState} from '../core/structures/devices/DeviceState';
+import {configFromRESTResponse} from '../interactors/fromData/ParseRestReponse';
 
 
 @Injectable()
@@ -41,7 +41,7 @@ export class DeviceManager extends Emitter {
       try {
         // @ts-ignore
         const deviceCtor = this.moduleRef.get(deviceSettings.deviceModel)();
-        const device = deviceCtor(parseRestResponse(deviceSettings));
+        const device = deviceCtor(configFromRESTResponse(deviceSettings));
         this.devices.set(
           deviceSettings.deviceId,
           device,
@@ -57,8 +57,11 @@ export class DeviceManager extends Emitter {
   }
 
   @OnEvent('DEVICE.RECEIVED.State')
-  onDeviceState(deviceState) {
-    console.log(deviceState);
+  onDeviceState(deviceState: DeviceState) {
+    if (!this.devices.has(deviceState.deviceId)) {
+      console.log('Unknown Device');
+    }
+    this.devices.get(deviceState.deviceId)?.receive(deviceState);
     return;
   }
 
@@ -74,11 +77,9 @@ export class DeviceManager extends Emitter {
     )
       ?.forEach(
         (device) => {
-          console.log(device);
           if (!device.iotTopic) {
             return;
           }
-          console.log(`publishing device message to ${device.iotTopic}`);
           this.emit(
             new IoTPublishTo(
               device.iotTopic,

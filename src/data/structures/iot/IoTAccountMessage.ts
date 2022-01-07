@@ -1,31 +1,18 @@
-import {Expose, Transform, Type} from 'class-transformer';
-import {base64ToHex} from '../../../util/encodingUtils';
+import {Expose, Type} from 'class-transformer';
 
 export class RGBColor {
   @Expose({name: 'r'})
-  red!: number;
+    red!: number;
 
   @Expose({name: 'g'})
-  green!: number;
+    green!: number;
 
   @Expose({name: 'b'})
-  blue!: number;
+    blue!: number;
 }
 
 export class IoTStateResponse {
   @Expose({name: 'onOff'})
-  @Transform(
-    (params) => params.value as boolean,
-    {
-      toClassOnly: true,
-    },
-  )
-  @Transform(
-    (params) => params.value ? 1 : 0,
-    {
-      toPlainOnly: true,
-    },
-  )
   public onOff?: number;
 
   @Expose({name: 'connected'})
@@ -50,22 +37,20 @@ export class IoTStateResponse {
 
 export class IoTOperatingStateResponse {
   @Expose({name: 'command'})
-  @Transform(
-    (params) =>
-      base64ToHex(...params.value),
-    {
-      toClassOnly: true,
-    },
-  )
   public commands!: string[];
+
   @Expose({name: 'opcode'})
   public opCode!: string;
+
   @Expose({name: 'modeValue'})
   public modeValue!: string[];
+
   @Expose({name: 'sleepValue'})
   public sleepValue!: string[];
+
   @Expose({name: 'wakeupValue'})
   public wakeupValue!: string[];
+
   @Expose({name: 'timerValue'})
   public timerValue!: string[];
 }
@@ -79,7 +64,7 @@ interface IoTMessage {
 }
 
 export class IoTAccountMessage
-  implements IoTMessage {
+implements IoTMessage {
   @Expose({name: 'proType'})
   public proType!: number;
 

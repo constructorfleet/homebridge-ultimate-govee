@@ -1,6 +1,12 @@
 import {GoveeDevice} from './GoveeDevice';
-import {DeviceConfig} from '../core/events/devices/configs/DeviceConfig';
+import {DeviceConfig} from '../core/structures/devices/configs/DeviceConfig';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
+import {OnOff} from './states/OnOff';
+import {Active} from './states/Active';
+import {StatusMode} from './states/StatusMode';
+import {MistLevel} from './states/MistLevel';
+import {ProgrammableMistLevel} from './states/ProgrammableMistLevel';
+import {DeviceState} from '../core/structures/devices/DeviceState';
 
 export const humidifierProviders: Provider[] = [
   {
@@ -18,7 +24,7 @@ export const humidifierProviders: Provider[] = [
 ];
 
 export class GoveeHumidifier
-  extends GoveeDevice {
+  extends ProgrammableMistLevel(MistLevel(StatusMode(Active(OnOff(GoveeDevice))))) {
 
   constructor(
     deviceConfig: DeviceConfig,
@@ -26,9 +32,9 @@ export class GoveeHumidifier
     super(deviceConfig);
   }
 
-  receive(payload: unknown): void {
-  }
 
-  send(payload: unknown): void {
+  receive(state: DeviceState): void {
+    super.receive(state);
+    console.log(this);
   }
 }

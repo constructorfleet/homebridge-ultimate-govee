@@ -1,8 +1,9 @@
 import {decode} from 'base64-arraybuffer';
 
 export const hexStringToArray =
-  (hexString: string): string[] =>
-    hexString.split(' ');
+  (hexString: string): number[] =>
+    hexString.split(' ')
+      .map((x) => parseInt(`0x${x}`));
 
 export const uint8ToHex =
   (uint8Array: Uint8Array): string =>
@@ -15,8 +16,12 @@ export const toUint8Array =
     new Uint8Array(buffer);
 
 export const base64ToHex =
-  (...b64Strings: string[]): string[] =>
-    b64Strings
-      .map(decode)
-      .map(toUint8Array)
-      .map(uint8ToHex);
+  (b64String: string): number[] =>
+    hexStringToArray(
+      uint8ToHex(
+        toUint8Array(
+          decode(b64String),
+        ),
+      ),
+    );
+

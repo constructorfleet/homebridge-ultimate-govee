@@ -1,5 +1,6 @@
 import {DeviceEvent} from './DeviceEvent';
 import {AppDeviceData, AppDeviceSettingsResponse} from '../../../data/structures/api/responses/payloads/AppDeviceListResponse';
+import {DeviceState} from '../../structures/devices/DeviceState';
 
 export abstract class DeviceReceivedEvent<DataType>
   extends DeviceEvent<DataType> {
@@ -18,9 +19,9 @@ export class DeviceSettingsReceived
 }
 
 export class DeviceStateReceived
-  extends DeviceReceivedEvent<AppDeviceData> {
+  extends DeviceReceivedEvent<DeviceState> {
 
-  constructor(eventData: AppDeviceData) {
+  constructor(eventData: DeviceState) {
     super('State', eventData);
   }
 }

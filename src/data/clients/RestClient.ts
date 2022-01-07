@@ -26,11 +26,9 @@ const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1
 export class RestClient
   extends GoveeClient {
   private oauthData?: OAuthData;
-  private accountTopic?: string;
 
   private get isValidToken(): boolean {
     if (!this.oauthData) {
-      console.log('No auth data invalid');
       return false;
     }
     return this.oauthData.tokenExpiration > Date.now();
@@ -91,7 +89,6 @@ export class RestClient
       .then(
         (authData) => {
           this.oauthData = authData;
-          console.log(authData);
           this.emit(
             new IoTSubscribeToEvent(authData?.accountIoTTopic || ''),
           );
@@ -130,14 +127,14 @@ export class RestClient
         ),
       )
       .then((deviceSettings) => {
-          deviceSettings.forEach(
-            (device) =>
-              this.emit(
-                new DeviceSettingsReceived(device),
-              ),
-          );
-          return deviceSettings;
-        },
+        deviceSettings.forEach(
+          (device) =>
+            this.emit(
+              new DeviceSettingsReceived(device),
+            ),
+        );
+        return deviceSettings;
+      },
       );
   }
 }

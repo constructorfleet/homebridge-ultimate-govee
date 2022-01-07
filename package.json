@@ -38,6 +38,7 @@
     "@nestjs/core": "^8.2.4",
     "@nestjs/event-emitter": "^1.0.0",
     "@types/aws-iot-device-sdk": "^2.2.4",
+    "@types/js-yaml": "^4.0.5",
     "aws-iot-device-sdk": "^2.2.11",
     "axios": "^0.24.0",
     "base64-arraybuffer": "^1.0.1",

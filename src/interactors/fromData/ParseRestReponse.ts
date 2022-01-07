@@ -1,7 +1,7 @@
 import {AppDeviceSettingsResponse} from '../../data/structures/api/responses/payloads/AppDeviceListResponse';
-import {DeviceConfig} from '../../core/events/devices/configs/DeviceConfig';
+import {DeviceConfig} from '../../core/structures/devices/configs/DeviceConfig';
 
-export function parseRestResponse(
+export function configFromRESTResponse(
   settings: AppDeviceSettingsResponse,
 ): DeviceConfig {
   return {
