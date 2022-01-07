@@ -4,8 +4,6 @@ import {GoveeAirPurifier} from './GoveeAirPurifier';
 import {Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {Emitter} from '../util/types';
-import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
-import {AppDeviceSettingsResponse} from '../data/structures/api/responses/payloads/AppDeviceListResponse';
 import {ModuleRef} from '@nestjs/core';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {DeviceConfig} from '../core/structures/devices/DeviceConfig';

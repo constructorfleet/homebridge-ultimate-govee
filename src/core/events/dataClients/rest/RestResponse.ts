@@ -1,5 +1,5 @@
 import {RestEvent} from './RestEvent';
-import {AppDeviceListResponse, AppDeviceResponse} from '../../../../data/structures/api/responses/payloads/AppDeviceListResponse';
+import {AppDeviceListResponse} from '../../../../data/structures/api/responses/payloads/AppDeviceListResponse';
 
 export abstract class RestResponseEvent<DataType>
   extends RestEvent<DataType> {

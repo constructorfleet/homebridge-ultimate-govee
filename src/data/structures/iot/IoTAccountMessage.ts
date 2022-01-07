@@ -2,13 +2,13 @@ import {Expose, Type} from 'class-transformer';
 
 export class RGBColor {
   @Expose({name: 'r'})
-    red!: number;
+  red!: number;
 
   @Expose({name: 'g'})
-    green!: number;
+  green!: number;
 
   @Expose({name: 'b'})
-    blue!: number;
+  blue!: number;
 }
 
 export class IoTStateResponse {
@@ -64,7 +64,7 @@ interface IoTMessage {
 }
 
 export class IoTAccountMessage
-implements IoTMessage {
+  implements IoTMessage {
   @Expose({name: 'proType'})
   public proType!: number;
 
