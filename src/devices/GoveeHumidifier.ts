@@ -1,5 +1,5 @@
 import {GoveeDevice} from './GoveeDevice';
-import {DeviceConfig} from '../core/structures/devices/configs/DeviceConfig';
+import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {OnOff} from './states/OnOff';
 import {Active} from './states/Active';

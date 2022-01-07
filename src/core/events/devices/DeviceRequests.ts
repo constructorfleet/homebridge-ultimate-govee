@@ -1,10 +1,11 @@
 import {DeviceEvent} from './DeviceEvent';
+import {GoveeDevice} from '../../../devices/GoveeDevice';
 
 export abstract class DeviceRequestEvent<DataType>
   extends DeviceEvent<DataType> {
 
   protected constructor(eventName: string, eventData: DataType) {
-    super(`Request.${eventName}`, eventData);
+    super(`REQUEST.${eventName}`, eventData);
   }
 }
 
@@ -17,9 +18,14 @@ export class DeviceSettingRequest
 }
 
 export class DeviceStateRequest
-  extends DeviceEvent<string | undefined> {
+  extends DeviceRequestEvent<GoveeDevice> {
 
-  constructor(eventData: string | undefined = undefined) {
-    super('State', eventData);
+  constructor(
+    eventData: GoveeDevice,
+  ) {
+    super(
+      'State',
+      eventData,
+    );
   }
 }

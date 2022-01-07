@@ -19,6 +19,7 @@ import {machineIdSync} from 'node-machine-id';
 import {humidifierProviders} from '../devices/GoveeHumidifier';
 import {purifierProviders} from '../devices/GoveeAirPurifier';
 import {IoTMessageProcessor} from '../interactors/IoTMessageProcessor';
+import {RestPayloadProcessor} from '../interactors/RestPayloadProcessor';
 
 const modules = [
   ConfigModule.forRoot({
@@ -82,6 +83,7 @@ const modules = [
     ...humidifierProviders,
     IoTMessageProcessor,
     IoTClient,
+    RestPayloadProcessor,
     RestClient,
     DeviceManager,
   ],
@@ -92,6 +94,7 @@ const modules = [
     IoTMessageProcessor,
     ConfigService,
     IoTClient,
+    RestPayloadProcessor,
     RestClient,
     DeviceManager,
   ],

@@ -1,6 +1,6 @@
-import {BLEConfig} from './BLEConfig';
-import {WiFiConfig} from './WiFiConfig';
-import {IoTConfig} from './IoTConfig';
+import {BLEConfig} from './configs/BLEConfig';
+import {WiFiConfig} from './configs/WiFiConfig';
+import {IoTConfig} from './configs/IoTConfig';
 
 export interface DeviceConfig extends BLEConfig, WiFiConfig, IoTConfig {
   deviceId: string;

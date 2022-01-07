@@ -8,7 +8,8 @@ import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
 import {AppDeviceSettingsResponse} from '../data/structures/api/responses/payloads/AppDeviceListResponse';
 import {ModuleRef} from '@nestjs/core';
 import {DeviceState} from '../core/structures/devices/DeviceState';
-import {configFromRESTResponse} from '../interactors/fromData/ParseRestReponse';
+import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
+import {DeviceStateRequest} from '../core/events/devices/DeviceRequests';
 
 
 @Injectable()
@@ -32,7 +33,7 @@ export class DeviceManager extends Emitter {
   }
 
   @OnEvent('DEVICE.RECEIVED.Settings')
-  onDeviceSetting(deviceSettings: AppDeviceSettingsResponse) {
+  onDeviceSetting(deviceSettings: DeviceConfig) {
     if (!deviceSettings) {
       console.log('No device settings');
       return;
@@ -40,8 +41,8 @@ export class DeviceManager extends Emitter {
     if (!this.devices.has(deviceSettings.deviceId)) {
       try {
         // @ts-ignore
-        const deviceCtor = this.moduleRef.get(deviceSettings.deviceModel)();
-        const device = deviceCtor(configFromRESTResponse(deviceSettings));
+        const deviceCtor = this.moduleRef.get(deviceSettings.model)();
+        const device = deviceCtor(deviceSettings);
         this.devices.set(
           deviceSettings.deviceId,
           device,
@@ -77,22 +78,8 @@ export class DeviceManager extends Emitter {
     )
       ?.forEach(
         (device) => {
-          if (!device.iotTopic) {
-            return;
-          }
           this.emit(
-            new IoTPublishTo(
-              device.iotTopic,
-              JSON.stringify({
-                topic: device.iotTopic,
-                msg: {
-                  cmd: 'status',
-                  cmdVersion: 2,
-                  transaction: `u_${Date.now()}`,
-                  type: 0,
-                },
-              }),
-            ),
+            new DeviceStateRequest(device),
           );
           if (!device) {
             console.log('Setting timeout');

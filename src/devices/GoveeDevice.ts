@@ -1,4 +1,4 @@
-import {DeviceConfig} from '../core/structures/devices/configs/DeviceConfig';
+import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
 import {supportsIoT} from '../core/structures/devices/configs/IoTConfig';
 import {Constructor} from '../util/types';
 import {applyDecorators, Module} from '@nestjs/common';

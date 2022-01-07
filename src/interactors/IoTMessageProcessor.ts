@@ -7,6 +7,8 @@ import {IoTEventData} from '../core/events/dataClients/iot/IoTEvent';
 import {plainToInstance} from 'class-transformer';
 import {DeviceStateReceived} from '../core/events/devices/DeviceReceived';
 import {base64ToHex} from '../util/encodingUtils';
+import {GoveeDevice} from '../devices/GoveeDevice';
+import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
 
 @Injectable()
 export class IoTMessageProcessor extends Emitter {
@@ -16,7 +18,12 @@ export class IoTMessageProcessor extends Emitter {
     super(eventEmitter);
   }
 
-  @OnEvent('IOT.Received')
+  @OnEvent(
+    'IOT.Received',
+    {
+      async: true,
+    },
+  )
   onIoTMessage(message: IoTEventData) {
     try {
       const acctMessage = plainToInstance(
@@ -24,15 +31,43 @@ export class IoTMessageProcessor extends Emitter {
         message.payload,
       );
       this.emit(
-        new DeviceStateReceived(ioTMessageProcessor(acctMessage)),
+        new DeviceStateReceived(toDeviceState(acctMessage)),
       );
     } catch (err) {
       console.log(err);
     }
   }
+
+  @OnEvent(
+    'DEVICE.REQUEST.State',
+    {
+      async: true,
+    },
+  )
+  onRequestDeviceState(
+    device: GoveeDevice,
+  ) {
+    if (!device.iotTopic) {
+      return;
+    }
+    this.emit(
+      new IoTPublishTo(
+        device.iotTopic,
+        JSON.stringify({
+          topic: device.iotTopic,
+          msg: {
+            cmd: 'status',
+            cmdVersion: 2,
+            transaction: `u_${Date.now()}`,
+            type: 0,
+          },
+        }),
+      ),
+    );
+  }
 }
 
-export function ioTMessageProcessor(
+export function toDeviceState(
   message: IoTAccountMessage,
 ): DeviceState {
   return {

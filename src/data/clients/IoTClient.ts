@@ -71,7 +71,12 @@ export class IoTClient
     );
   }
 
-  @OnEvent('IOT.Unsubscribe')
+  @OnEvent(
+    'IOT.Unsubscribe',
+    {
+      async: true,
+    },
+  )
   unsubscribe(message: IoTEventData) {
     if (!message.topic) {
       console.log('No topic to unsubscribe from');
@@ -89,7 +94,12 @@ export class IoTClient
     );
   }
 
-  @OnEvent('IOT.Subscribe')
+  @OnEvent(
+    'IOT.Subscribe',
+    {
+      async: true,
+    },
+  )
   subscribe(message: IoTEventData) {
     if (!message.topic) {
       console.log('No topic to subscribe to');
@@ -109,7 +119,12 @@ export class IoTClient
     );
   }
 
-  @OnEvent('IOT.Publish')
+  @OnEvent(
+    'IOT.Publish',
+    {
+      async: true,
+    },
+  )
   publishTo(message: IoTEventData) {
     if (!this.awsIOTDevice || !this.connected) {
       console.log('Not Connected to publish');

@@ -4,19 +4,18 @@ import {loginRequest, LoginRequest} from '../structures/api/requests/payloads/Lo
 import {LoginResponse} from '../structures/api/responses/payloads/LoginResponse';
 import {AuthenticatedHeader} from '../structures/api/requests/headers/AuthenticatedHeader';
 import {BaseRequest} from '../structures/api/requests/payloads/BaseRequest';
-import {AppDeviceListResponse, AppDeviceSettingsResponse} from '../structures/api/responses/payloads/AppDeviceListResponse';
+import {AppDeviceListResponse} from '../structures/api/responses/payloads/AppDeviceListResponse';
 import {GoveeClient} from './GoveeClient';
 import {GOVEE_API_KEY, GOVEE_CLIENT_ID, GOVEE_PASSWORD, GOVEE_USERNAME} from '../../util/const';
-import {plainToInstance} from 'class-transformer';
 import {Inject} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {ExtendedDate} from '../../util/extendedDate';
-import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
 import {RestAuthenticatedEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
+import {RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
@@ -105,7 +104,7 @@ export class RestClient
       async: true,
     },
   )
-  getDevices(): Promise<AppDeviceSettingsResponse[]> {
+  getDevices(): Promise<void> {
     return this.login()
       .then((authData) =>
         request<BaseRequest, AppDeviceListResponse>(
@@ -115,26 +114,10 @@ export class RestClient
       )
       .then((req) => req.post())
       .then(
-        (resp) => resp.data.devices,
-      )
-      .then((devices) =>
-        devices.map(
-          (device) =>
-            plainToInstance(
-              AppDeviceSettingsResponse,
-              JSON.parse(device.deviceExt.deviceSettings),
-            ) as AppDeviceSettingsResponse,
-        ),
-      )
-      .then((deviceSettings) => {
-        deviceSettings.forEach(
-          (device) =>
-            this.emit(
-              new DeviceSettingsReceived(device),
-            ),
-        );
-        return deviceSettings;
-      },
+        (resp) =>
+          this.emit(
+            new RestResponseDeviceList(resp.data),
+          ),
       );
   }
 }
