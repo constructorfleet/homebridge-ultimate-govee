@@ -16,8 +16,8 @@ import {
 } from '../util/const';
 import path from 'path';
 import {machineIdSync} from 'node-machine-id';
-import {humidifierProviders} from '../devices/GoveeHumidifier';
-import {purifierProviders} from '../devices/GoveeAirPurifier';
+import {GoveeHumidifier, humidifierProviders} from '../devices/GoveeHumidifier';
+import {GoveeAirPurifier, purifierProviders} from '../devices/GoveeAirPurifier';
 import {IoTMessageProcessor} from '../interactors/IoTMessageProcessor';
 import {RestPayloadProcessor} from '../interactors/RestPayloadProcessor';
 
@@ -41,6 +41,8 @@ const modules = [
     // disable throwing uncaughtException if an error event is emitted and it has no listeners
     ignoreErrors: false,
   }),
+  // GoveeHumidifier,
+  // GoveeAirPurifier,
 ];
 
 @Module({

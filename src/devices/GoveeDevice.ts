@@ -1,33 +1,7 @@
+import {State} from './states/State';
 import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
 import {supportsIoT} from '../core/structures/devices/configs/IoTConfig';
-import {Constructor} from '../util/types';
-import {applyDecorators, Module} from '@nestjs/common';
-import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {DeviceState} from '../core/structures/devices/DeviceState';
-import {State} from './states/State';
-
-export function Models<DeviceType extends GoveeDevice>(
-  ...models: string[]
-): (target: Constructor<DeviceType>) => void {
-  console.log(`MODELS ${models}`);
-  return function(target: Constructor<DeviceType>) {
-    console.log('Apply decorator');
-    return applyDecorators(
-      Module({
-          providers: models.map(
-            (model): Provider => {
-              return {
-                provide: model,
-                useFactory: (config) => new target(config),
-              };
-            },
-          ),
-          exports: models,
-        },
-      ),
-    );
-  };
-}
 
 export class GoveeDevice extends State {
   static MODELS: string[] = [];

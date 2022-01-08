@@ -56,6 +56,10 @@ export class State {
       )[0]?.slice(identifier.length);
   }
 
+
+  public constructor(...args) {
+  }
+
   parse(deviceState: DeviceState): ThisType<this> {
     return this;
   }

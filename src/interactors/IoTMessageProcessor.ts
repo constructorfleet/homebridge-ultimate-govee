@@ -7,8 +7,8 @@ import {IoTEventData} from '../core/events/dataClients/iot/IoTEvent';
 import {plainToInstance} from 'class-transformer';
 import {DeviceStateReceived} from '../core/events/devices/DeviceReceived';
 import {base64ToHex} from '../util/encodingUtils';
-import {GoveeDevice} from '../devices/GoveeDevice';
 import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
+import {GoveeDevice} from '../devices/GoveeDevice';
 
 @Injectable()
 export class IoTMessageProcessor extends Emitter {

@@ -2,12 +2,19 @@ import {API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, P
 
 import {PLATFORM_NAME, PLUGIN_NAME} from './settings';
 import {ExamplePlatformAccessory} from './platformAccessory';
+import {Module} from '@nestjs/common';
+import {GoveePluginModule} from './core/GoveePluginModule';
 
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
+@Module(
+  {
+    imports: [GoveePluginModule],
+  },
+)
 export class UltimateGoveePlatform
   implements DynamicPlatformPlugin {
 

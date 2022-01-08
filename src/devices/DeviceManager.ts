@@ -1,4 +1,3 @@
-import {GoveeDevice} from './GoveeDevice';
 import {GoveeHumidifier} from './GoveeHumidifier';
 import {GoveeAirPurifier} from './GoveeAirPurifier';
 import {Injectable} from '@nestjs/common';
@@ -8,6 +7,7 @@ import {ModuleRef} from '@nestjs/core';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
 import {DeviceStateRequest} from '../core/events/devices/DeviceRequests';
+import {GoveeDevice} from './GoveeDevice';
 
 
 @Injectable()
