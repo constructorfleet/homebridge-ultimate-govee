@@ -1,17 +1,17 @@
-import {IoTAccountMessage} from '../data/structures/iot/IoTAccountMessage';
-import {DeviceState} from '../core/structures/devices/DeviceState';
+import {IoTAccountMessage} from '../../data/structures/iot/IoTAccountMessage';
+import {DeviceState} from '../../core/structures/devices/DeviceState';
 import {Injectable} from '@nestjs/common';
-import {Emitter} from '../util/types';
+import {Emitter} from '../../util/types';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {IoTEventData} from '../core/events/dataClients/iot/IoTEvent';
+import {IoTEventData} from '../../core/events/dataClients/iot/IoTEvent';
 import {plainToInstance} from 'class-transformer';
-import {DeviceStateReceived} from '../core/events/devices/DeviceReceived';
-import {base64ToHex} from '../util/encodingUtils';
-import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
-import {GoveeDevice} from '../devices/GoveeDevice';
+import {DeviceStateReceived} from '../../core/events/devices/DeviceReceived';
+import {base64ToHex} from '../../util/encodingUtils';
+import {IoTPublishTo} from '../../core/events/dataClients/iot/IoTPublish';
+import {GoveeDevice} from '../../devices/GoveeDevice';
 
 @Injectable()
-export class IoTMessageProcessor extends Emitter {
+export class IoTPayloadProcessor extends Emitter {
   constructor(
     eventEmitter: EventEmitter2,
   ) {

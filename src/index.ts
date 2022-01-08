@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import {API} from 'homebridge';
 
 import {PLATFORM_NAME} from './settings';
-import {UltimateGoveePlatform} from './platform';
+import {UltimateGoveePlatform} from './platform/UltimateGoveePlatform';
 
 /**
  * This method registers the platform with Homebridge

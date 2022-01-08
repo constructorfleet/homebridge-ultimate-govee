@@ -1,10 +1,10 @@
-import {AppDeviceListResponse, AppDeviceSettingsResponse} from '../data/structures/api/responses/payloads/AppDeviceListResponse';
-import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
+import {AppDeviceListResponse, AppDeviceSettingsResponse} from '../../data/structures/api/responses/payloads/AppDeviceListResponse';
+import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
 import {Injectable} from '@nestjs/common';
-import {Emitter} from '../util/types';
+import {Emitter} from '../../util/types';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {plainToInstance} from 'class-transformer';
-import {DeviceSettingsReceived} from '../core/events/devices/DeviceReceived';
+import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
 
 @Injectable()
 export class RestPayloadProcessor extends Emitter {

@@ -94,7 +94,7 @@ This will launch an instance of Homebridge in debug mode which will restart ever
 
 You can now start customising the plugin template to suit your requirements.
 
-* [`src/platform.ts`](./src/platform.ts) - this is where your device setup and discovery should go.
+* [`src/platform.ts`](src/platform/platform.ts) - this is where your device setup and discovery should go.
 * [`src/platformAccessory.ts`](./src/platformAccessory.ts) - this is where your accessory control logic should go, you can rename or create multiple instances of this file for each accessory type you need to implement as part of your platform plugin. You can refer to the [developer documentation](https://developers.homebridge.io/) to see what characteristics you need to implement for each service type.
 * [`config.schema.json`](./config.schema.json) - update the config schema to match the config you expect from the user. See the [Plugin Config Schema Documentation](https://developers.homebridge.io/#/config-schema).
 

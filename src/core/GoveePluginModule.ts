@@ -16,10 +16,10 @@ import {
 } from '../util/const';
 import path from 'path';
 import {machineIdSync} from 'node-machine-id';
-import {GoveeHumidifier, humidifierProviders} from '../devices/GoveeHumidifier';
-import {GoveeAirPurifier, purifierProviders} from '../devices/GoveeAirPurifier';
-import {IoTMessageProcessor} from '../interactors/IoTMessageProcessor';
-import {RestPayloadProcessor} from '../interactors/RestPayloadProcessor';
+import {humidifierProviders} from '../devices/GoveeHumidifier';
+import {purifierProviders} from '../devices/GoveeAirPurifier';
+import {IoTPayloadProcessor} from '../interactors/data/IoTPayloadProcessor';
+import {RestPayloadProcessor} from '../interactors/data/RestPayloadProcessor';
 
 const modules = [
   ConfigModule.forRoot({
@@ -41,8 +41,6 @@ const modules = [
     // disable throwing uncaughtException if an error event is emitted and it has no listeners
     ignoreErrors: false,
   }),
-  // GoveeHumidifier,
-  // GoveeAirPurifier,
 ];
 
 @Module({
@@ -83,7 +81,7 @@ const modules = [
     },
     ...purifierProviders,
     ...humidifierProviders,
-    IoTMessageProcessor,
+    IoTPayloadProcessor,
     IoTClient,
     RestPayloadProcessor,
     RestClient,
@@ -93,7 +91,15 @@ const modules = [
     ...modules,
     ...purifierProviders,
     ...humidifierProviders,
-    IoTMessageProcessor,
+    IOT_CA_CERTIFICATE,
+    IOT_CERTIFICATE,
+    IOT_KEY,
+    IOT_HOST,
+    GOVEE_USERNAME,
+    GOVEE_PASSWORD,
+    GOVEE_CLIENT_ID,
+    GOVEE_API_KEY,
+    IoTPayloadProcessor,
     ConfigService,
     IoTClient,
     RestPayloadProcessor,

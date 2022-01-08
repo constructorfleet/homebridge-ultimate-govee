@@ -31,3 +31,10 @@ export const IOT_SUBSCRIBE_EVENT = 'IoT_Subscribe_Event';
 
 export const CONNECTION_BLE = 'BLE';
 export const CONNECTION_IOT = 'IOT';
+
+export const PLATFORM_CONFIG = 'Platform_Config';
+export const PLATFORM_LOGGER = 'Platform_Logger';
+export const PLATFORM_SERVICES = 'Platform_Services';
+export const PLATFORM_CHARACTERISTICS = 'Platform_Characteristics';
+export const PLATFORM_UUID_GENERATOR = 'Platform_UUID_Generator';
+export const PLATFORM_ACCESSORY_FACTORY = 'Platform_Accessory_Factory';

@@ -49,6 +49,7 @@ export class RestClient
       !this.oauthData?.accountIoTTopic) {
       return;
     }
+    console.log('EMITTING AccountIoTTopic');
     this.emit(
       new IoTSubscribeToEvent(this.oauthData?.accountIoTTopic),
     );
