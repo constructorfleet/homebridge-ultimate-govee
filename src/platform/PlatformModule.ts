@@ -12,6 +12,9 @@ import {
 import {PlatformService} from './PlatformService';
 import {AccessoryManager} from './accessories/AccessoryManager';
 import {BinaryLike} from 'hap-nodejs/dist/lib/util/uuid';
+import {InformationService} from './accessories/services/InformationService';
+import {HumidifierService} from './accessories/services/HumidifierService';
+import {PurifierService} from './accessories/services/PurifierService';
 
 export interface PlatformModuleConfig {
   Service: typeof Service;
@@ -69,6 +72,9 @@ export class PlatformModule {
           },
           inject: [PLATFORM_CONFIG],
         },
+        InformationService,
+        HumidifierService,
+        PurifierService,
         AccessoryManager,
         PlatformService,
       ],

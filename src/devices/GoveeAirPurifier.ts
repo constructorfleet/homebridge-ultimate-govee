@@ -30,9 +30,4 @@ export class GoveeAirPurifier
   ) {
     super(deviceConfig);
   }
-
-  receive(state: DeviceState): void {
-    super.updateState(state);
-    console.log(this);
-  }
 }

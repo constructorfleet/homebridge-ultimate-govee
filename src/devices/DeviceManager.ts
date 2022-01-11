@@ -9,6 +9,7 @@ import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
 import {DeviceStateRequest} from '../core/events/devices/DeviceRequests';
 import {GoveeDevice} from './GoveeDevice';
 import {DeviceDiscoveredEvent} from '../core/events/devices/DeviceDiscovered';
+import {DeviceUpdatedEvent} from '../core/events/devices/DeviceUpdated';
 
 
 @Injectable()
@@ -63,7 +64,13 @@ export class DeviceManager extends Emitter {
     if (!this.devices.has(deviceState.deviceId)) {
       console.log('Unknown Device');
     }
-    this.devices.get(deviceState.deviceId)?.updateState(deviceState);
+    const device = this.devices.get(deviceState.deviceId);
+    if (device) {
+      device.updateState(deviceState);
+      this.emit(
+        new DeviceUpdatedEvent(device),
+      );
+    }
     return;
   }
 
