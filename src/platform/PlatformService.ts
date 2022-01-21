@@ -14,9 +14,6 @@ export class PlatformService extends Emitter {
     eventEmitter: EventEmitter2,
     private readonly accessoryManager: AccessoryManager,
     @Inject(PLATFORM_LOGGER) private readonly log: Logging,
-    @Inject(GOVEE_USERNAME) private readonly goveeUsername: string,
-    @Inject(GOVEE_PASSWORD) private readonly goveePassword: string,
-    @Inject(GOVEE_CLIENT_ID) private readonly goveeClientId: string,
   ) {
     super(eventEmitter);
   }
@@ -38,14 +35,9 @@ export class PlatformService extends Emitter {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
+    console.log("DISCOVER DEVICES");
     this.emit(
-      new RestAuthenticateEvent(
-        {
-          username: this.goveeUsername,
-          password: this.goveePassword,
-          clientId: this.goveeClientId,
-        },
-      ),
+      new RestAuthenticateEvent(),
     );
     // const eventEmitter = this.context.get(EventEmitter2);
     // eventEmitter

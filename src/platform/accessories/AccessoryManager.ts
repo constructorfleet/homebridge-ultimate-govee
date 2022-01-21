@@ -1,14 +1,22 @@
 import {Inject, Injectable} from '@nestjs/common';
 import {Emitter} from '../../util/types';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {PlatformAccessory} from 'homebridge';
+import {PlatformAccessory, PlatformName} from 'homebridge';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {Logging} from 'homebridge/lib/logger';
-import {PLATFORM_ACCESSORY_FACTORY, PLATFORM_LOGGER, PLATFORM_UUID_GENERATOR} from '../../util/const';
+import {
+  PLATFORM_ACCESSORY_FACTORY,
+  PLATFORM_LOGGER,
+  PLATFORM_REGISTER_ACCESSORY,
+  PLATFORM_UPDATE_ACCESSORY,
+  PLATFORM_UUID_GENERATOR,
+} from '../../util/const';
 import {BinaryLike} from 'crypto';
 import {InformationService} from './services/InformationService';
 import {HumidifierService} from './services/HumidifierService';
 import {PurifierService} from './services/PurifierService';
+import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
+import {AccessoryName, AccessoryPluginConstructor, PluginIdentifier} from 'homebridge/lib/api';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -21,6 +29,12 @@ export class AccessoryManager extends Emitter {
     private readonly purifierService: PurifierService,
     @Inject(PLATFORM_LOGGER) private readonly log: Logging,
     @Inject(PLATFORM_ACCESSORY_FACTORY) private readonly accessoryFactory: typeof PlatformAccessory,
+    @Inject(PLATFORM_REGISTER_ACCESSORY) private readonly registerAccessory: (
+      pluginIdentifier: PluginIdentifier,
+      platformName: PlatformName,
+      accessories: PlatformAccessory[]
+    ) => void,
+    @Inject(PLATFORM_UPDATE_ACCESSORY) private readonly updateAccessory: (accessories: PlatformAccessory[]) => void,
     @Inject(PLATFORM_UUID_GENERATOR) private readonly generateUUID: (data: BinaryLike) => string,
   ) {
     super(eventEmitter);
@@ -32,7 +46,6 @@ export class AccessoryManager extends Emitter {
       async: true,
     },
   )
-
   onDeviceDiscovered(device: GoveeDevice) {
     const deviceUUID = this.generateUUID(device.deviceId);
     this.log.info('DISCOVERED', device.deviceId, deviceUUID);
@@ -50,6 +63,7 @@ export class AccessoryManager extends Emitter {
       deviceUUID,
       accessory,
     );
+    this.registerAccessory(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
   }
 
   @OnEvent(
@@ -71,5 +85,7 @@ export class AccessoryManager extends Emitter {
     this.informationService.updateAccessory(accessory, device);
     this.humidifierService.updateAccessory(accessory, device);
     this.purifierService.updateAccessory(accessory, device);
+
+    this.updateAccessory([accessory]);
   }
 }

@@ -35,6 +35,5 @@ export class GoveeHumidifier
 
   receive(state: DeviceState): void {
     super.updateState(state);
-    console.log(this);
   }
 }

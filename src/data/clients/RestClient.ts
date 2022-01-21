@@ -16,6 +16,7 @@ import {RestAuthenticatedEvent} from '../../core/events/dataClients/rest/RestAut
 import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
 import {RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
+import {ConfigurationService} from '../../config/ConfigurationService';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
@@ -36,10 +37,8 @@ export class RestClient
 
   constructor(
     eventEmitter: EventEmitter2,
-    @Inject(GOVEE_USERNAME) private username: string,
-    @Inject(GOVEE_PASSWORD) private password: string,
+    private config: ConfigurationService,
     @Inject(GOVEE_CLIENT_ID) private clientId: string,
-    @Inject(GOVEE_API_KEY) private apiKey?: string,
   ) {
     super(eventEmitter);
   }
@@ -65,12 +64,13 @@ export class RestClient
     if (this.isValidToken) {
       return Promise.resolve(this.oauthData!);
     }
+
     return request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
       BaseHeaders(),
       loginRequest(
-        this.username,
-        this.password,
+        this.config.username,
+        this.config.password,
         this.clientId,
       ),
     )

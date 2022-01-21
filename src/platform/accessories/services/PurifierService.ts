@@ -94,6 +94,5 @@ export class PurifierService extends AccessoryService {
           ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
           : this.CHARACTERISTICS.CurrentAirPurifierState.IDLE,
       );
-    console.log(service);
   }
 }

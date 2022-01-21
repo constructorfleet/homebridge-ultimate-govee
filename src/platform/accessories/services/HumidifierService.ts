@@ -71,7 +71,5 @@ export class HumidifierService extends AccessoryService {
     service
       .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityHumidifierThreshold)
       .updateValue(((device as MistLevelState).mistLevel ?? 0) / 8 * 100);
-
-    console.log(service);
   }
 }

@@ -34,6 +34,5 @@ export class GoveeDevice extends State {
 
   public updateState(state: DeviceState) {
     this.parse(state);
-    console.log(this);
   }
 }

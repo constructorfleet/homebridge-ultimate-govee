@@ -35,6 +35,8 @@ export class UltimateGoveePlatform
         logger: this.log,
         generateUUID: this.api.hap.uuid.generate,
         accessoryFactory: this.api.platformAccessory,
+        registerAccessory: this.api.registerPlatformAccessories,
+        updateAccessory: this.api.updatePlatformAccessories,
         credentials: {
           username: goveeConfig.username,
           password: goveeConfig.password,

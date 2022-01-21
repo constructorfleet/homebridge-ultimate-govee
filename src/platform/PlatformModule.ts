@@ -2,14 +2,12 @@ import {Characteristic, Logger, PlatformAccessory, Service} from 'homebridge';
 import {DynamicModule, Module} from '@nestjs/common';
 import {GoveePluginModule} from '../core/GoveePluginModule';
 import {
-  GOVEE_API_KEY,
-  GOVEE_PASSWORD,
-  GOVEE_USERNAME,
   PLATFORM_ACCESSORY_FACTORY,
   PLATFORM_CHARACTERISTICS,
   PLATFORM_CONFIG,
   PLATFORM_LOGGER,
-  PLATFORM_SERVICES,
+  PLATFORM_REGISTER_ACCESSORY,
+  PLATFORM_SERVICES, PLATFORM_UPDATE_ACCESSORY,
   PLATFORM_UUID_GENERATOR,
 } from '../util/const';
 import {PlatformService} from './PlatformService';
@@ -18,12 +16,14 @@ import {BinaryLike} from 'hap-nodejs/dist/lib/util/uuid';
 import {InformationService} from './accessories/services/InformationService';
 import {HumidifierService} from './accessories/services/HumidifierService';
 import {PurifierService} from './accessories/services/PurifierService';
+import {PlatformName, PluginIdentifier} from 'homebridge/lib/api';
 
 export interface GoveeCredentials {
   username: string;
   password: string;
-  apiKey: string;
+  apiKey?: string;
 }
+
 
 export interface PlatformModuleConfig {
   Service: typeof Service;
@@ -31,6 +31,8 @@ export interface PlatformModuleConfig {
   logger: Logger;
   generateUUID: (data: BinaryLike) => string;
   accessoryFactory: typeof PlatformAccessory;
+  registerAccessory: (pluginIdentifier: PluginIdentifier, platformName: PlatformName, accessories: PlatformAccessory[]) => void,
+  updateAccessory: (accessories: PlatformAccessory[]) => void,
   credentials: GoveeCredentials;
 }
 
@@ -40,25 +42,13 @@ export class PlatformModule {
     return {
       module: PlatformModule,
       imports: [
-        GoveePluginModule,
+        GoveePluginModule.register({
+          username: config.credentials.username,
+          password: config.credentials.password,
+          apiKey: config.credentials.username,
+        }),
       ],
       providers: [
-        {
-          provide: GOVEE_USERNAME,
-          useValue: config.credentials.username,
-        },
-        {
-          provide: GOVEE_PASSWORD,
-          useValue: config.credentials.password,
-        },
-        {
-          provide: GOVEE_API_KEY,
-          useValue: config.credentials.apiKey,
-        },
-        {
-          provide: PLATFORM_CONFIG,
-          useValue: config,
-        },
         {
           provide: PLATFORM_LOGGER,
           useFactory: (config) => {
@@ -93,6 +83,24 @@ export class PlatformModule {
             return config.accessoryFactory;
           },
           inject: [PLATFORM_CONFIG],
+        },
+        {
+          provide: PLATFORM_REGISTER_ACCESSORY,
+          useFactory: (config) => {
+            return config.registerAccessory;
+          },
+          inject: [PLATFORM_CONFIG],
+        },
+        {
+          provide: PLATFORM_UPDATE_ACCESSORY,
+          useFactory: (config) => {
+            return config.updateAccessory;
+          },
+          inject: [PLATFORM_CONFIG],
+        },
+        {
+          provide: PLATFORM_CONFIG,
+          useValue: config,
         },
         InformationService,
         HumidifierService,
