@@ -4,17 +4,20 @@ import {PLATFORM_CHARACTERISTICS, PLATFORM_LOGGER, PLATFORM_SERVICES} from '../.
 import {Characteristic, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {Logging} from 'homebridge/lib/logger';
+import {EventEmitter2} from '@nestjs/event-emitter';
 
 @Injectable()
 export class InformationService extends AccessoryService {
   protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.AccessoryInformation;
 
   constructor(
+    eventEmitter: EventEmitter2,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
     @Inject(PLATFORM_LOGGER) log: Logging,
   ) {
     super(
+      eventEmitter,
       SERVICES,
       CHARACTERISTICS,
       log,

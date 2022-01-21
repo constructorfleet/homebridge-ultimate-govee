@@ -7,7 +7,7 @@ import {BaseRequest} from '../structures/api/requests/payloads/BaseRequest';
 import {AppDeviceListResponse} from '../structures/api/responses/payloads/AppDeviceListResponse';
 import {GoveeClient} from './GoveeClient';
 import {GOVEE_API_KEY, GOVEE_CLIENT_ID, GOVEE_PASSWORD, GOVEE_USERNAME} from '../../util/const';
-import {Inject} from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
@@ -22,6 +22,7 @@ const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1
 
 // const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
 
+@Injectable()
 export class RestClient
   extends GoveeClient {
   private oauthData?: OAuthData;

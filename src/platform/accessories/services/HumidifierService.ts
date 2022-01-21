@@ -6,17 +6,20 @@ import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {Logging} from 'homebridge/lib/logger';
 import {ActiveState} from '../../../devices/states/Active';
 import {MistLevelState} from '../../../devices/states/MistLevel';
+import {EventEmitter2} from '@nestjs/event-emitter';
 
 @Injectable()
 export class HumidifierService extends AccessoryService {
   protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
 
   constructor(
+    eventEmitter: EventEmitter2,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
     @Inject(PLATFORM_LOGGER) log: Logging,
   ) {
     super(
+      eventEmitter,
       SERVICES,
       CHARACTERISTICS,
       log,
@@ -61,10 +64,10 @@ export class HumidifierService extends AccessoryService {
   ) {
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
-      .updateValue((device as ActiveState).isActive ?? false);
+      .updateValue((device as unknown as ActiveState).isActive ?? false);
     service
       .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
-      .updateValue((device as ActiveState).isActive ? 0 : 2);
+      .updateValue((device as unknown as ActiveState).isActive ? 0 : 2);
     service
       .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityHumidifierThreshold)
       .updateValue(((device as MistLevelState).mistLevel ?? 0) / 8 * 100);

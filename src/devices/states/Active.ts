@@ -5,8 +5,14 @@ const commandIdentifiers = [
   1,
 ];
 
+export interface ActiveStateChange {
+  command: number[];
+}
+
 export interface ActiveState {
   isActive?: boolean;
+
+  get activeStateChange(): ActiveStateChange;
 }
 
 export function Active<StateType extends State>(
@@ -14,7 +20,11 @@ export function Active<StateType extends State>(
 ) {
   // @ts-ignore
   return class extends stateType implements ActiveState {
-    public isActive?: boolean;
+    isActive?: boolean;
+
+    public set active(value: boolean) {
+      this.isActive = value;
+    }
 
     public constructor(...args) {
       super(...args);
@@ -30,6 +40,16 @@ export function Active<StateType extends State>(
       }
 
       return super.parse(deviceState);
+    }
+
+    public get activeStateChange(): ActiveStateChange {
+      return {
+        command: this.getCommandCodes(
+          0x33,
+          commandIdentifiers,
+          this.isActive ? 1 : 0,
+        ),
+      };
     }
   };
 }

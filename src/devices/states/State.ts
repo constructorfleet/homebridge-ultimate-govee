@@ -4,18 +4,16 @@ export interface OpCodeSpec {
   val: number;
 }
 
-export type OpCode = OpCodeSpec | number;
-
 export class State {
   getCommandCodes(
     opCode: number,
     identifier: number[],
-    ...values: number[][]
+    ...values: number[]
   ): number[] {
     const cmdFrame = Buffer.from([
       opCode,
       ...identifier,
-      ...values.flat(),
+      ...values,
     ]);
     const cmdPaddedFrame = Buffer.concat([
       cmdFrame,
@@ -57,7 +55,9 @@ export class State {
   }
 
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public constructor(...args) {
+
   }
 
   parse(deviceState: DeviceState): ThisType<this> {
