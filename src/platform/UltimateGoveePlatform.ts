@@ -1,12 +1,16 @@
-import {API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service} from 'homebridge';
+import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, PlatformIdentifier, PlatformName} from 'homebridge';
 import {INestApplicationContext} from '@nestjs/common';
 import {NestFactory} from '@nestjs/core';
-import {RestAuthenticateEvent} from '../core/events/dataClients/rest/RestAuthentication';
-import {GOVEE_CLIENT_ID, GOVEE_PASSWORD, GOVEE_USERNAME} from '../util/const';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {GoveeDevice} from '../devices/GoveeDevice';
 import {PlatformModule} from './PlatformModule';
 import {PlatformService} from './PlatformService';
+
+interface UltimateGoveePlatformConfig {
+  platform: PlatformName | PlatformIdentifier;
+  name?: string;
+  username: string;
+  password: string;
+  apiKey: string;
+}
 
 /**
  * HomebridgePlatform
@@ -23,11 +27,7 @@ export class UltimateGoveePlatform
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
-    // log.info(JSON.stringify(config));
-    // process.env[GOVEE_USERNAME]
-    // if (!config?.username || !config?.password) {
-    //   throw Error('Both Username and Password are required');
-    // }
+    const goveeConfig = config as UltimateGoveePlatformConfig;
     NestFactory.createApplicationContext(
       PlatformModule.register({
         Service: this.api.hap.Service,
@@ -35,6 +35,11 @@ export class UltimateGoveePlatform
         logger: this.log,
         generateUUID: this.api.hap.uuid.generate,
         accessoryFactory: this.api.platformAccessory,
+        credentials: {
+          username: goveeConfig.username,
+          password: goveeConfig.password,
+          apiKey: goveeConfig.apiKey,
+        },
       }),
       {
         logger: console,

@@ -2,6 +2,9 @@ import {Characteristic, Logger, PlatformAccessory, Service} from 'homebridge';
 import {DynamicModule, Module} from '@nestjs/common';
 import {GoveePluginModule} from '../core/GoveePluginModule';
 import {
+  GOVEE_API_KEY,
+  GOVEE_PASSWORD,
+  GOVEE_USERNAME,
   PLATFORM_ACCESSORY_FACTORY,
   PLATFORM_CHARACTERISTICS,
   PLATFORM_CONFIG,
@@ -16,12 +19,19 @@ import {InformationService} from './accessories/services/InformationService';
 import {HumidifierService} from './accessories/services/HumidifierService';
 import {PurifierService} from './accessories/services/PurifierService';
 
+export interface GoveeCredentials {
+  username: string;
+  password: string;
+  apiKey: string;
+}
+
 export interface PlatformModuleConfig {
   Service: typeof Service;
   Characteristic: typeof Characteristic;
   logger: Logger;
   generateUUID: (data: BinaryLike) => string;
   accessoryFactory: typeof PlatformAccessory;
+  credentials: GoveeCredentials;
 }
 
 @Module({})
@@ -33,6 +43,18 @@ export class PlatformModule {
         GoveePluginModule,
       ],
       providers: [
+        {
+          provide: GOVEE_USERNAME,
+          useValue: config.credentials.username,
+        },
+        {
+          provide: GOVEE_PASSWORD,
+          useValue: config.credentials.password,
+        },
+        {
+          provide: GOVEE_API_KEY,
+          useValue: config.credentials.apiKey,
+        },
         {
           provide: PLATFORM_CONFIG,
           useValue: config,
