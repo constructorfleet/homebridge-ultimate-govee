@@ -63,6 +63,7 @@ export class DeviceManager extends Emitter {
   onDeviceState(deviceState: DeviceState) {
     if (!this.devices.has(deviceState.deviceId)) {
       console.log('Unknown Device');
+      return;
     }
     const device = this.devices.get(deviceState.deviceId);
     if (device) {

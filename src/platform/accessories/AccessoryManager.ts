@@ -16,7 +16,7 @@ import {InformationService} from './services/InformationService';
 import {HumidifierService} from './services/HumidifierService';
 import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
-import {AccessoryName, AccessoryPluginConstructor, PluginIdentifier} from 'homebridge/lib/api';
+import {PluginIdentifier} from 'homebridge/lib/api';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -32,12 +32,22 @@ export class AccessoryManager extends Emitter {
     @Inject(PLATFORM_REGISTER_ACCESSORY) private readonly registerAccessory: (
       pluginIdentifier: PluginIdentifier,
       platformName: PlatformName,
-      accessories: PlatformAccessory[]
+      accessories: PlatformAccessory[],
     ) => void,
     @Inject(PLATFORM_UPDATE_ACCESSORY) private readonly updateAccessory: (accessories: PlatformAccessory[]) => void,
     @Inject(PLATFORM_UUID_GENERATOR) private readonly generateUUID: (data: BinaryLike) => string,
   ) {
     super(eventEmitter);
+  }
+
+  onAccessoryLoaded(
+    accessory: PlatformAccessory
+  ) {
+    const deviceUUID = this.generateUUID(accessory.context.device.deviceId);
+    this.accessories.set(
+      deviceUUID,
+      accessory,
+    );
   }
 
   @OnEvent(
@@ -52,10 +62,12 @@ export class AccessoryManager extends Emitter {
     if (this.accessories.has(deviceUUID)) {
       return;
     }
-    const accessory = new this.accessoryFactory(
-      device.name,
-      deviceUUID,
-    );
+    const accessory = this.accessories.has(deviceUUID)
+      ? this.accessories.get(deviceUUID)!
+      : new this.accessoryFactory(
+        device.name,
+        deviceUUID,
+      );
     this.informationService.initializeAccessory(accessory, device);
     this.humidifierService.initializeAccessory(accessory, device);
     this.purifierService.initializeAccessory(accessory, device);

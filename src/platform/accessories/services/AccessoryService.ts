@@ -23,7 +23,10 @@ export abstract class AccessoryService extends Emitter {
     if (!this.supports(device)) {
       return accessory;
     }
-    accessory.context.device = device;
+
+    if (!accessory.context.device) {
+      accessory.context.device = device;
+    }
 
     const service = this.get(accessory);
     this.initializeServiceCharacteristics(

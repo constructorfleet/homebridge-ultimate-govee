@@ -65,6 +65,8 @@ export class RestClient
       return Promise.resolve(this.oauthData!);
     }
 
+    console.log(this);
+
     return request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
       BaseHeaders(),
@@ -75,8 +77,12 @@ export class RestClient
       ),
     )
       .post()
-      .then((res) => res.data.client)
+      .then((res) => {
+        console.log(res);
+        return res.data.client;
+      })
       .then((client): OAuthData => {
+        console.log(this);
         return {
           token: client.token,
           accountIoTTopic: client.topic,

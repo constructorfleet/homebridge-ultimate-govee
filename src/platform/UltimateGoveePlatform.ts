@@ -21,6 +21,7 @@ export class UltimateGoveePlatform
   implements DynamicPlatformPlugin {
   private context!: INestApplicationContext;
   private service!: PlatformService;
+  private loaded = false;
 
   constructor(
     public readonly log: Logger,
@@ -28,6 +29,7 @@ export class UltimateGoveePlatform
     public readonly api: API,
   ) {
     const goveeConfig = config as UltimateGoveePlatformConfig;
+    console.log(goveeConfig);
     NestFactory.createApplicationContext(
       PlatformModule.register({
         Service: this.api.hap.Service,
@@ -50,7 +52,9 @@ export class UltimateGoveePlatform
     ).then((context) => {
       this.context = context;
       this.service = context.get(PlatformService);
-      this.service.discoverDevices();
+      if (this.loaded) {
+        this.service.discoverDevices();
+      }
     });
 
     this.log.debug('Finished initializing platform:', this.config.name);
@@ -60,8 +64,11 @@ export class UltimateGoveePlatform
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', () => {
+      if (this.service) {
+        this.service.discoverDevices();
+      }
       log.debug('Executed didFinishLaunching callback');
-
+      this.loaded = true;
     });
   }
 
