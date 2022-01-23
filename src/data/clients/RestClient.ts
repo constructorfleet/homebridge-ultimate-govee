@@ -1,12 +1,12 @@
 import {request} from '../request';
-import {BaseHeaders} from '../structures/api/requests/headers/BaseHeaders';
-import {loginRequest, LoginRequest} from '../structures/api/requests/payloads/LoginRequest';
-import {LoginResponse} from '../structures/api/responses/payloads/LoginResponse';
-import {AuthenticatedHeader} from '../structures/api/requests/headers/AuthenticatedHeader';
-import {BaseRequest} from '../structures/api/requests/payloads/BaseRequest';
-import {AppDeviceListResponse} from '../structures/api/responses/payloads/AppDeviceListResponse';
+import {BaseHeaders} from '../../core/structures/api/requests/headers/BaseHeaders';
+import {loginRequest, LoginRequest} from '../../core/structures/api/requests/payloads/LoginRequest';
+import {LoginResponse} from '../../core/structures/api/responses/payloads/LoginResponse';
+import {AuthenticatedHeader} from '../../core/structures/api/requests/headers/AuthenticatedHeader';
+import {BaseRequest} from '../../core/structures/api/requests/payloads/BaseRequest';
+import {AppDeviceListResponse} from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
 import {GoveeClient} from './GoveeClient';
-import {GOVEE_API_KEY, GOVEE_CLIENT_ID, GOVEE_PASSWORD, GOVEE_USERNAME} from '../../util/const';
+import {GOVEE_CLIENT_ID} from '../../util/const';
 import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
@@ -17,6 +17,9 @@ import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscrip
 import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
 import {RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
 import {ConfigurationService} from '../../config/ConfigurationService';
+import {TokenRefreshRequest, tokenRefreshRequest} from '../../core/structures/api/requests/payloads/TokenRefreshRequest';
+import {TokenRefreshResponse} from '../../core/structures/api/responses/payloads/TokenRefreshResponse';
+import {PersistService} from '../../persist/PersistService';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
@@ -38,9 +41,11 @@ export class RestClient
   constructor(
     eventEmitter: EventEmitter2,
     private config: ConfigurationService,
+    private persist: PersistService,
     @Inject(GOVEE_CLIENT_ID) private clientId: string,
   ) {
     super(eventEmitter);
+    console.log(this.oauthData);
   }
 
   @OnEvent('IOT.Connection')
@@ -65,8 +70,27 @@ export class RestClient
       return Promise.resolve(this.oauthData!);
     }
 
-    console.log(this);
+    return (this.oauthData?.refreshToken
+      ? this.refreshToken()
+      : this.authenticate())
+      .then(
+        (authData) => {
+          this.oauthData = authData;
+          const persistedData = this.persist.persistedData;
+          persistedData.oauthData = authData;
+          this.persist.persistedData = persistedData;
+          this.emit(
+            new IoTSubscribeToEvent(authData?.accountIoTTopic || ''),
+          );
+          this.emit(new RestAuthenticatedEvent(authData));
+          this.emit(new RestRequestDevices());
+          return authData;
+        },
+      );
+  }
 
+  private async authenticate(): Promise<OAuthData> {
+    console.log('Authenticating');
     return request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
       BaseHeaders(),
@@ -82,7 +106,6 @@ export class RestClient
         return res.data.client;
       })
       .then((client): OAuthData => {
-        console.log(this);
         return {
           token: client.token,
           accountIoTTopic: client.topic,
@@ -100,6 +123,40 @@ export class RestClient
           );
           this.emit(new RestAuthenticatedEvent(authData));
           this.emit(new RestRequestDevices());
+          return authData;
+        },
+      );
+  }
+
+  private async refreshToken(): Promise<OAuthData> {
+    console.log('REFRESH TOKEN');
+    return request<TokenRefreshRequest, TokenRefreshResponse>(
+      `${BASE_GOVEE_APP_ACCOUNT_URL}/refresh-tokens`,
+      AuthenticatedHeader(this.oauthData?.token || ''),
+      tokenRefreshRequest(
+        this.oauthData?.token || '',
+      ),
+    )
+      .post()
+      .then((res) => {
+        return {
+          token: res.data.token,
+          accountIoTTopic: this.oauthData?.accountIoTTopic,
+          refreshToken: res.data.refreshToken,
+          tokenExpiration: new ExtendedDate(Date.now()).addHours(
+            res.data.tokenExpireCycle)
+            .getTime(),
+        };
+      })
+      .then(
+        (authData) => {
+          this.oauthData = authData;
+          const persistedData = this.persist.persistedData;
+          persistedData.oauthData = authData;
+          this.persist.persistedData = persistedData;
+          this.emit(
+            new IoTSubscribeToEvent(authData?.accountIoTTopic || ''),
+          );
           return authData;
         },
       );

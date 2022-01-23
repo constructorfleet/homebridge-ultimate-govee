@@ -29,12 +29,12 @@ export class UltimateGoveePlatform
     public readonly api: API,
   ) {
     const goveeConfig = config as UltimateGoveePlatformConfig;
-    console.log(goveeConfig);
     NestFactory.createApplicationContext(
       PlatformModule.register({
         Service: this.api.hap.Service,
         Characteristic: this.api.hap.Characteristic,
         logger: this.log,
+        storagePath: this.api.user.persistPath(),
         generateUUID: this.api.hap.uuid.generate,
         accessoryFactory: this.api.platformAccessory,
         registerAccessory: this.api.registerPlatformAccessories,

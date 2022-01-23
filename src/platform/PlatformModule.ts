@@ -7,16 +7,18 @@ import {
   PLATFORM_CONFIG,
   PLATFORM_LOGGER,
   PLATFORM_REGISTER_ACCESSORY,
-  PLATFORM_SERVICES, PLATFORM_UPDATE_ACCESSORY,
+  PLATFORM_SERVICES,
+  PLATFORM_UPDATE_ACCESSORY,
   PLATFORM_UUID_GENERATOR,
 } from '../util/const';
-import {PlatformService} from './PlatformService';
 import {AccessoryManager} from './accessories/AccessoryManager';
 import {BinaryLike} from 'hap-nodejs/dist/lib/util/uuid';
 import {InformationService} from './accessories/services/InformationService';
 import {HumidifierService} from './accessories/services/HumidifierService';
 import {PurifierService} from './accessories/services/PurifierService';
 import {PlatformName, PluginIdentifier} from 'homebridge/lib/api';
+import {PersistModule} from '../persist/PersistModule';
+import {PlatformService} from './PlatformService';
 
 export interface GoveeCredentials {
   username: string;
@@ -29,6 +31,7 @@ export interface PlatformModuleConfig {
   Service: typeof Service;
   Characteristic: typeof Characteristic;
   logger: Logger;
+  storagePath: string;
   generateUUID: (data: BinaryLike) => string;
   accessoryFactory: typeof PlatformAccessory;
   registerAccessory: (pluginIdentifier: PluginIdentifier, platformName: PlatformName, accessories: PlatformAccessory[]) => void,
@@ -43,10 +46,13 @@ export class PlatformModule {
       module: PlatformModule,
       imports: [
         GoveePluginModule.register({
-          username: config.credentials.username,
-          password: config.credentials.password,
-          apiKey: config.credentials.username,
-        }),
+            username: config.credentials.username,
+            password: config.credentials.password,
+            apiKey: config.credentials.username,
+          },
+          {
+            storagePath: config.storagePath,
+          }),
       ],
       providers: [
         {
@@ -106,7 +112,7 @@ export class PlatformModule {
         HumidifierService,
         PurifierService,
         AccessoryManager,
-        PlatformService,
+        PlatformService
       ],
       exports: [
         GoveePluginModule,

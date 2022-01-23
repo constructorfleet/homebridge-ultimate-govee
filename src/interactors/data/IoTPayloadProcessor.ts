@@ -1,4 +1,4 @@
-import {IoTAccountMessage} from '../../data/structures/iot/IoTAccountMessage';
+import {IoTAccountMessage} from '../../core/structures/iot/IoTAccountMessage';
 import {DeviceState} from '../../core/structures/devices/DeviceState';
 import {Injectable} from '@nestjs/common';
 import {Emitter} from '../../util/types';

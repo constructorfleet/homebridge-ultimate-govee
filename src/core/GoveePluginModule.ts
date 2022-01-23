@@ -21,11 +21,16 @@ import {IoTPayloadProcessor} from '../interactors/data/IoTPayloadProcessor';
 import {RestPayloadProcessor} from '../interactors/data/RestPayloadProcessor';
 import {ConfigurationModule} from '../config/ConfigurationModule';
 import {GoveeConfiguration} from '../config/GoveeConfiguration';
+import {PersistConfiguration} from '../persist/PersistConfiguration';
+import {PersistModule} from '../persist/PersistModule';
 
 
 @Module({})
 export class GoveePluginModule {
-  public static register(config: GoveeConfiguration): DynamicModule {
+  public static register(
+    config: GoveeConfiguration,
+    persistConfig: PersistConfiguration,
+  ): DynamicModule {
     return {
       module: GoveePluginModule,
       imports: [
@@ -45,6 +50,7 @@ export class GoveePluginModule {
           // disable throwing uncaughtException if an error event is emitted and it has no listeners
           ignoreErrors: false,
         }),
+        PersistModule.register(persistConfig),
         ConfigurationModule.register(config),
       ],
       providers: [
@@ -90,6 +96,7 @@ export class GoveePluginModule {
         RestClient,
         DeviceManager,
         ConfigurationModule,
+        PersistModule,
       ],
     };
   }

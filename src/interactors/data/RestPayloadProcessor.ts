@@ -1,4 +1,4 @@
-import {AppDeviceListResponse, AppDeviceSettingsResponse} from '../../data/structures/api/responses/payloads/AppDeviceListResponse';
+import {AppDeviceListResponse, AppDeviceSettingsResponse} from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
 import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
 import {Injectable} from '@nestjs/common';
 import {Emitter} from '../../util/types';

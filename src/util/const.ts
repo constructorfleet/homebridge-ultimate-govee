@@ -9,6 +9,7 @@ export const HAP_CHARACTERISTICS = 'Hap_Characteristics';
 export const GOVEE_CLIENT_ID = 'Goveee_Client_Id';
 
 export const GOVEE_CONFIGURATION = 'Govee_Configuration';
+export const PERSIST_CONFIGURATION = 'Persist_Configuration';
 
 export const GOVEE_USERNAME = 'Govee_Username';
 export const GOVEE_PASSWORD = 'Govee_Password';
@@ -42,3 +43,5 @@ export const PLATFORM_UUID_GENERATOR = 'Platform_UUID_Generator';
 export const PLATFORM_ACCESSORY_FACTORY = 'Platform_Accessory_Factory';
 export const PLATFORM_REGISTER_ACCESSORY = 'Platform_Register_Accessory';
 export const PLATFORM_UPDATE_ACCESSORY = 'Platform_Update_Accessory';
+
+export const STORAGE_PATH = 'Storage_Path';
