@@ -66,19 +66,6 @@ export abstract class AccessoryService extends Emitter {
     service: Service,
   );
 
-  protected setCharacteristicValueHandler(
-    characteristic: Characteristic,
-    handler: (device: GoveeDevice, value: CharacteristicValue) => void,
-  ): Characteristic {
-    characteristic.onSet(
-      (
-        value: CharacteristicValue,
-        context: { device: GoveeDevice },
-      ) => handler(context.device, value),
-    );
-    return characteristic;
-  }
-
   protected get(
     accessory: PlatformAccessory,
   ): Service {

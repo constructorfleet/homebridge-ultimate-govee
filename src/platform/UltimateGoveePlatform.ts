@@ -22,6 +22,7 @@ export class UltimateGoveePlatform
   private context!: INestApplicationContext;
   private service!: PlatformService;
   private loaded = false;
+  private cachedAccessories: PlatformAccessory[] = [];
 
   constructor(
     public readonly log: Logger,
@@ -31,6 +32,7 @@ export class UltimateGoveePlatform
     const goveeConfig = config as UltimateGoveePlatformConfig;
     NestFactory.createApplicationContext(
       PlatformModule.register({
+        api: this.api,
         Service: this.api.hap.Service,
         Characteristic: this.api.hap.Characteristic,
         logger: this.log,
@@ -52,6 +54,12 @@ export class UltimateGoveePlatform
     ).then((context) => {
       this.context = context;
       this.service = context.get(PlatformService);
+      while (this.cachedAccessories.length) {
+        const acc = this.cachedAccessories.pop();
+        if (acc) {
+          this.service.configureAccessory(acc);
+        }
+      }
       if (this.loaded) {
         this.service.discoverDevices();
       }
@@ -77,5 +85,10 @@ export class UltimateGoveePlatform
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory): void {
+    if (this.service) {
+      this.service.configureAccessory(accessory);
+    } else {
+      this.cachedAccessories.push(accessory);
+    }
   }
 }

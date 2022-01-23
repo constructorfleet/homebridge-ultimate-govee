@@ -35,6 +35,19 @@ export class PurifierService extends AccessoryService {
     service: Service,
   ) {
     service
+      .getCharacteristic(this.CHARACTERISTICS.Active)
+      .updateValue(this.CHARACTERISTICS.Active.INACTIVE)
+      .onSet((value: CharacteristicValue, context: { device: GoveeDevice }) =>
+        this.emit(
+          new DeviceCommandEvent(
+            'Active',
+            {
+              deviceId: context.device.deviceId,
+              active: value === this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR,
+            }),
+        ),
+      );
+    service
       .getCharacteristic(this.CHARACTERISTICS.TargetAirPurifierState)
       .setProps({
         minValue: 1,
@@ -42,37 +55,36 @@ export class PurifierService extends AccessoryService {
         validValues: [1],
       })
       .updateValue(1);
-    this.setCharacteristicValueHandler(
-      service
-        .getCharacteristic(this.CHARACTERISTICS.CurrentAirPurifierState)
-        .updateValue(this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE),
-      (device: GoveeDevice, value: CharacteristicValue) =>
+    service
+      .getCharacteristic(this.CHARACTERISTICS.CurrentAirPurifierState)
+      .updateValue(this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE)
+      .onSet((value: CharacteristicValue, context: { device: GoveeDevice }) =>
         this.emit(
           new DeviceCommandEvent(
             'Active',
             {
-              deviceId: device.deviceId,
+              deviceId: context.device.deviceId,
               active: value === this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR,
             }),
         ),
-    );
-    this.setCharacteristicValueHandler(
-      service
-        .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
-        .setProps({
-          minValue: 0,
-          maxValue: 100,
-        }),
-      (device: GoveeDevice, value: CharacteristicValue) =>
+      );
+    service
+      .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
+      .setProps({
+        minValue: 0,
+        maxValue: 100,
+      })
+      .updateValue(0)
+      .onSet((value: CharacteristicValue, context: { device: GoveeDevice }) =>
         this.emit(
           new DeviceCommandEvent(
             'FanSpeed',
             {
-              deviceId: device.deviceId,
+              deviceId: context.device.deviceId,
               fanSpeed: Math.floor(((value as number) ?? 0) / 4) || 16,
             }),
         ),
-    );
+      );
   }
 
   protected updateServiceCharacteristics(
@@ -93,6 +105,13 @@ export class PurifierService extends AccessoryService {
         ((device as unknown as ActiveState)?.isActive ?? false)
           ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
           : this.CHARACTERISTICS.CurrentAirPurifierState.IDLE,
+      );
+    service
+      .getCharacteristic(this.CHARACTERISTICS.Active)
+      .updateValue(
+        ((device as unknown as ActiveState)?.isActive ?? false)
+          ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
+          : this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE,
       );
   }
 }

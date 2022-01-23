@@ -29,13 +29,9 @@ const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1
 @Injectable()
 export class RestClient
   extends GoveeClient {
-  private oauthData?: OAuthData;
 
   private get isValidToken(): boolean {
-    if (!this.oauthData) {
-      return false;
-    }
-    return this.oauthData.tokenExpiration > Date.now();
+    return (this.persist.oauthData?.tokenExpiration || 0) > Date.now();
   }
 
   constructor(
@@ -45,17 +41,17 @@ export class RestClient
     @Inject(GOVEE_CLIENT_ID) private clientId: string,
   ) {
     super(eventEmitter);
-    console.log(this.oauthData);
   }
 
   @OnEvent('IOT.Connection')
   onIoTConnected(connection: ConnectionState) {
+    const accountTopic = this.persist.oauthData?.accountIoTTopic;
     if (connection !== ConnectionState.Connected ||
-      !this.oauthData?.accountIoTTopic) {
+      !accountTopic) {
       return;
     }
     this.emit(
-      new IoTSubscribeToEvent(this.oauthData?.accountIoTTopic),
+      new IoTSubscribeToEvent(accountTopic),
     );
   }
 
@@ -65,25 +61,31 @@ export class RestClient
       async: true,
     },
   )
-  login(): Promise<OAuthData> {
+  login(requestDevices: boolean = false): Promise<OAuthData> {
     if (this.isValidToken) {
-      return Promise.resolve(this.oauthData!);
+      const oauthData = this.persist.oauthData!;
+      this.emit(
+        new IoTSubscribeToEvent(oauthData.accountIoTTopic || ''),
+      );
+      if (requestDevices) {
+        this.emit(new RestAuthenticatedEvent(oauthData));
+        this.emit(new RestRequestDevices());
+      }
+      return Promise.resolve(oauthData);
     }
 
-    return (this.oauthData?.refreshToken
+    return (this.persist.oauthData?.refreshToken
       ? this.refreshToken()
       : this.authenticate())
       .then(
         (authData) => {
-          this.oauthData = authData;
-          const persistedData = this.persist.persistedData;
-          persistedData.oauthData = authData;
-          this.persist.persistedData = persistedData;
           this.emit(
             new IoTSubscribeToEvent(authData?.accountIoTTopic || ''),
           );
-          this.emit(new RestAuthenticatedEvent(authData));
-          this.emit(new RestRequestDevices());
+          if (requestDevices) {
+            this.emit(new RestAuthenticatedEvent(authData));
+            this.emit(new RestRequestDevices());
+          }
           return authData;
         },
       );
@@ -117,12 +119,7 @@ export class RestClient
       })
       .then(
         (authData) => {
-          this.oauthData = authData;
-          this.emit(
-            new IoTSubscribeToEvent(authData?.accountIoTTopic || ''),
-          );
-          this.emit(new RestAuthenticatedEvent(authData));
-          this.emit(new RestRequestDevices());
+          this.persist.oauthData = authData;
           return authData;
         },
       );
@@ -132,16 +129,16 @@ export class RestClient
     console.log('REFRESH TOKEN');
     return request<TokenRefreshRequest, TokenRefreshResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/refresh-tokens`,
-      AuthenticatedHeader(this.oauthData?.token || ''),
+      AuthenticatedHeader(this.persist.oauthData?.token || ''),
       tokenRefreshRequest(
-        this.oauthData?.token || '',
+        this.persist.oauthData?.token || '',
       ),
     )
       .post()
       .then((res) => {
         return {
           token: res.data.token,
-          accountIoTTopic: this.oauthData?.accountIoTTopic,
+          accountIoTTopic: this.persist.oauthData?.accountIoTTopic,
           refreshToken: res.data.refreshToken,
           tokenExpiration: new ExtendedDate(Date.now()).addHours(
             res.data.tokenExpireCycle)
@@ -150,10 +147,7 @@ export class RestClient
       })
       .then(
         (authData) => {
-          this.oauthData = authData;
-          const persistedData = this.persist.persistedData;
-          persistedData.oauthData = authData;
-          this.persist.persistedData = persistedData;
+          this.persist.oauthData = authData;
           this.emit(
             new IoTSubscribeToEvent(authData?.accountIoTTopic || ''),
           );
@@ -169,7 +163,7 @@ export class RestClient
     },
   )
   getDevices(): Promise<void> {
-    return this.login()
+    return this.login(false)
       .then((authData) =>
         request<BaseRequest, AppDeviceListResponse>(
           `${BASE_GOVEE_APP_DEVICE_URL}/list`,

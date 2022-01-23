@@ -15,6 +15,7 @@ export class IoTClient
   extends GoveeClient {
   private readonly awsIOTDevice: device;
   private connected = false;
+  private readonly subcriptions: Set<string> = new Set<string>();
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -88,6 +89,7 @@ export class IoTClient
         if (err) {
           this.emit(new IoTErrorEvent(err));
         } else {
+          this.subcriptions.delete(message.topic);
           this.emit(new IoTUnsubscribedFromEvent(message.topic));
         }
       },
@@ -105,6 +107,9 @@ export class IoTClient
       console.log('No topic to subscribe to');
       return;
     }
+    if (this.subcriptions.has(message.topic)) {
+      return;
+    }
 
     this.awsIOTDevice.subscribe(
       message.topic,
@@ -113,6 +118,7 @@ export class IoTClient
         if (err) {
           this.emit(new IoTErrorEvent(err));
         } else {
+          this.subcriptions.add(message.topic);
           this.emit(new IoTSubscribedToEvent(message.topic));
         }
       },

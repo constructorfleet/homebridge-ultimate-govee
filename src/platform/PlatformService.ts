@@ -1,6 +1,6 @@
 import {Inject, Injectable} from '@nestjs/common';
-import {GOVEE_CLIENT_ID, GOVEE_PASSWORD, GOVEE_USERNAME, PLATFORM_LOGGER} from '../util/const';
-import {PlatformAccessory} from 'homebridge';
+import {HOMEBRIDGE_API, PLATFORM_LOGGER} from '../util/const';
+import {API, PlatformAccessory} from 'homebridge';
 import {Emitter} from '../util/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {RestAuthenticateEvent} from '../core/events/dataClients/rest/RestAuthentication';
@@ -12,6 +12,7 @@ export class PlatformService extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
+    @Inject(HOMEBRIDGE_API) private readonly api: API,
     private readonly accessoryManager: AccessoryManager,
     @Inject(PLATFORM_LOGGER) private readonly log: Logging,
   ) {
@@ -26,7 +27,11 @@ export class PlatformService extends Emitter {
     this.log.info('Loading accessory from cache:', accessory.displayName);
 
     // add the restored accessory to the accessories cache so we can track if it has already been registered
-    this.accessoryManager.onDeviceDiscovered(accessory.context.device);
+    this.accessoryManager.onAccessoryLoaded(accessory);
+  }
+
+  updateAccessory(accessory: PlatformAccessory) {
+    this.api.updatePlatformAccessories([accessory]);
   }
 
   /**
@@ -35,7 +40,7 @@ export class PlatformService extends Emitter {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
-    console.log("DISCOVER DEVICES");
+    console.log('DISCOVER DEVICES');
     this.emit(
       new RestAuthenticateEvent(),
     );

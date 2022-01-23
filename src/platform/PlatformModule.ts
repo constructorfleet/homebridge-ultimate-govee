@@ -1,14 +1,13 @@
-import {Characteristic, Logger, PlatformAccessory, Service} from 'homebridge';
+import {API, Characteristic, Logger, PlatformAccessory, Service} from 'homebridge';
 import {DynamicModule, Module} from '@nestjs/common';
 import {GoveePluginModule} from '../core/GoveePluginModule';
 import {
+  HOMEBRIDGE_API,
   PLATFORM_ACCESSORY_FACTORY,
   PLATFORM_CHARACTERISTICS,
   PLATFORM_CONFIG,
   PLATFORM_LOGGER,
-  PLATFORM_REGISTER_ACCESSORY,
   PLATFORM_SERVICES,
-  PLATFORM_UPDATE_ACCESSORY,
   PLATFORM_UUID_GENERATOR,
 } from '../util/const';
 import {AccessoryManager} from './accessories/AccessoryManager';
@@ -17,7 +16,6 @@ import {InformationService} from './accessories/services/InformationService';
 import {HumidifierService} from './accessories/services/HumidifierService';
 import {PurifierService} from './accessories/services/PurifierService';
 import {PlatformName, PluginIdentifier} from 'homebridge/lib/api';
-import {PersistModule} from '../persist/PersistModule';
 import {PlatformService} from './PlatformService';
 
 export interface GoveeCredentials {
@@ -28,14 +26,15 @@ export interface GoveeCredentials {
 
 
 export interface PlatformModuleConfig {
+  api: API;
   Service: typeof Service;
   Characteristic: typeof Characteristic;
   logger: Logger;
   storagePath: string;
   generateUUID: (data: BinaryLike) => string;
   accessoryFactory: typeof PlatformAccessory;
-  registerAccessory: (pluginIdentifier: PluginIdentifier, platformName: PlatformName, accessories: PlatformAccessory[]) => void,
-  updateAccessory: (accessories: PlatformAccessory[]) => void,
+  registerAccessory: (pluginIdentifier: PluginIdentifier, platformName: PlatformName, accessories: PlatformAccessory[]) => void;
+  updateAccessory: (accessories: PlatformAccessory[]) => void;
   credentials: GoveeCredentials;
 }
 
@@ -46,15 +45,19 @@ export class PlatformModule {
       module: PlatformModule,
       imports: [
         GoveePluginModule.register({
-            username: config.credentials.username,
-            password: config.credentials.password,
-            apiKey: config.credentials.username,
-          },
-          {
-            storagePath: config.storagePath,
-          }),
+          username: config.credentials.username,
+          password: config.credentials.password,
+          apiKey: config.credentials.username,
+        },
+        {
+          storagePath: config.storagePath,
+        }),
       ],
       providers: [
+        {
+          provide: HOMEBRIDGE_API,
+          useValue: config.api,
+        },
         {
           provide: PLATFORM_LOGGER,
           useFactory: (config) => {
@@ -91,20 +94,6 @@ export class PlatformModule {
           inject: [PLATFORM_CONFIG],
         },
         {
-          provide: PLATFORM_REGISTER_ACCESSORY,
-          useFactory: (config) => {
-            return config.registerAccessory;
-          },
-          inject: [PLATFORM_CONFIG],
-        },
-        {
-          provide: PLATFORM_UPDATE_ACCESSORY,
-          useFactory: (config) => {
-            return config.updateAccessory;
-          },
-          inject: [PLATFORM_CONFIG],
-        },
-        {
           provide: PLATFORM_CONFIG,
           useValue: config,
         },
@@ -112,7 +101,7 @@ export class PlatformModule {
         HumidifierService,
         PurifierService,
         AccessoryManager,
-        PlatformService
+        PlatformService,
       ],
       exports: [
         GoveePluginModule,
