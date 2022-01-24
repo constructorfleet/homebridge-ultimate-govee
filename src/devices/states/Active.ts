@@ -31,6 +31,10 @@ export function Active<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
+      if (deviceState.on !== undefined) {
+        this.isActive = deviceState.on;
+        return super.parse(deviceState);
+      }
       const commandValues = this.getCommandValues(
         [170, ...commandIdentifiers],
         deviceState.commands,

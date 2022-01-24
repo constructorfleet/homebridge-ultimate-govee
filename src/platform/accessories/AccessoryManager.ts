@@ -32,6 +32,11 @@ export class AccessoryManager extends Emitter {
       accessory.UUID,
       accessory,
     );
+    const device = accessory.context.device;
+    this.informationService.initializeAccessory(accessory, device);
+    this.humidifierService.initializeAccessory(accessory, device);
+    this.purifierService.initializeAccessory(accessory, device);
+    this.api.updatePlatformAccessories([accessory]);
   }
 
   @OnEvent(
@@ -51,15 +56,20 @@ export class AccessoryManager extends Emitter {
       );
 
     if (!this.accessories.has(deviceUUID)) {
+      this.informationService.initializeAccessory(accessory, device);
+      this.humidifierService.initializeAccessory(accessory, device);
+      this.purifierService.initializeAccessory(accessory, device);
       this.accessories.set(
         deviceUUID,
         accessory,
       );
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    } else {
+      this.informationService.updateAccessory(accessory, device);
+      this.humidifierService.updateAccessory(accessory, device);
+      this.purifierService.updateAccessory(accessory, device);
+      this.api.updatePlatformAccessories([accessory]);
     }
-    this.informationService.initializeAccessory(accessory, device);
-    this.humidifierService.initializeAccessory(accessory, device);
-    this.purifierService.initializeAccessory(accessory, device);
   }
 
   @OnEvent(

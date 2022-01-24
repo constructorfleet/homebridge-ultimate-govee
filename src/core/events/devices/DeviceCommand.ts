@@ -1,13 +1,12 @@
 import {DeviceEvent} from './DeviceEvent';
-import {DeviceStateTransition} from '../../structures/devices/DeviceStateTransition';
+import {DeviceTransition} from '../../structures/devices/DeviceTransition';
 
-export class DeviceCommandEvent<StateType extends DeviceStateTransition>
+export class DeviceCommandEvent<StateType extends DeviceTransition>
   extends DeviceEvent<StateType> {
 
   constructor(
-    command: string,
     eventData: StateType,
   ) {
-    super(`Command.${command}`, eventData);
+    super('Command', eventData);
   }
 }

@@ -62,6 +62,7 @@ export class IoTClient
         topic: string,
         payload: Record<string, unknown>,
       ) => {
+        console.log(JSON.parse(payload.toString()));
         this.emit(
           new IotReceive(
             topic,
@@ -132,6 +133,7 @@ export class IoTClient
     },
   )
   publishTo(message: IoTEventData) {
+    console.log(message);
     if (!this.awsIOTDevice || !this.connected) {
       console.log('Not Connected to publish');
       return;

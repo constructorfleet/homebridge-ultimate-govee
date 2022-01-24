@@ -1,4 +1,4 @@
-import {decode} from 'base64-arraybuffer';
+import {decode, encode} from 'base64-arraybuffer';
 
 export const hexStringToArray =
   (hexString: string): number[] =>
@@ -24,4 +24,11 @@ export const base64ToHex =
         ),
       ),
     );
+
+export const hexToBase64 =
+  (codes: number[]): string =>
+    encode(
+      Uint8Array.of(...codes),
+    );
+
 

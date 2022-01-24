@@ -27,13 +27,14 @@ export class HumidifierService extends AccessoryService {
     );
   }
 
-
   protected supports(device: GoveeDevice): boolean {
     return Reflect.has(device, 'mistLevel');
   }
 
-
-  protected initializeServiceCharacteristics(service: Service) {
+  protected initializeServiceCharacteristics(
+    service: Service,
+    device: GoveeDevice,
+  ) {
     service
       .getCharacteristic(this.CHARACTERISTICS.TargetHumidifierDehumidifierState)
       .setProps({
@@ -54,15 +55,26 @@ export class HumidifierService extends AccessoryService {
           this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING,
         ],
       })
-      .updateValue(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE)
+      .updateValue(
+        ((device as unknown as ActiveState).isActive && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0)
+          ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
+          : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
+      );
+    service
+      .getCharacteristic(this.CHARACTERISTICS.Active)
+      .updateValue(
+        (device as unknown as ActiveState).isActive
+          ? this.CHARACTERISTICS.Active.ACTIVE
+          : this.CHARACTERISTICS.Active.INACTIVE,
+      )
       .onSet(
-        (value: CharacteristicValue, context: { device: GoveeDevice }) =>
+        async (value: CharacteristicValue) =>
           this.emit(
             new DeviceCommandEvent(
-              'Active',
               {
-                deviceId: context.device.deviceId,
-                active: value === this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING,
+                action: 'Active',
+                deviceId: device.deviceId,
+                active: value === this.CHARACTERISTICS.Active.ACTIVE,
               },
             ),
           ),
@@ -73,15 +85,15 @@ export class HumidifierService extends AccessoryService {
         minValue: 0,
         maxValue: 100,
       })
-      .updateValue(0)
+      .updateValue(((device as unknown as MistLevelState).mistLevel ?? 0) / 8 * 100)
       .onSet(
-        (value: CharacteristicValue, context: { device: GoveeDevice }) =>
+        async (value: CharacteristicValue) =>
           this.emit(
             new DeviceCommandEvent(
-              'MistLevel',
               {
-                deviceId: context.device.deviceId,
-                mistLevel: Math.floor((value as number || 0) / 100 * 8),
+                action: 'MistLevel',
+                deviceId: device.deviceId,
+                mistLevel: Math.ceil((value as number || 0) / 12.5),
               },
             ),
           ),
@@ -102,11 +114,12 @@ export class HumidifierService extends AccessoryService {
     service
       .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
       .updateValue(
-        (device as unknown as ActiveState).isActive
+        ((device as unknown as ActiveState).isActive && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0)
           ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
-          : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE);
+          : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
+      );
     service
       .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityHumidifierThreshold)
-      .updateValue(((device as MistLevelState).mistLevel ?? 0) / 8 * 100);
+      .updateValue(((device as unknown as MistLevelState).mistLevel ?? 0) / 8 * 100);
   }
 }

@@ -7,6 +7,12 @@ const commandIdentifiers = [
 
 export interface FanSpeedState {
   fanSpeed?: number;
+
+  get fanSpeedChange(): FanSpeedChange;
+}
+
+export interface FanSpeedChange {
+  command: number[];
 }
 
 export function FanSpeed<StateType extends State>(
@@ -30,6 +36,16 @@ export function FanSpeed<StateType extends State>(
       }
 
       return super.parse(deviceState);
+    }
+
+    public get fanSpeedChange(): FanSpeedChange {
+      return {
+        command: this.getCommandCodes(
+          0x33,
+          commandIdentifiers,
+          this.fanSpeed || 16,
+        ),
+      };
     }
   };
 }

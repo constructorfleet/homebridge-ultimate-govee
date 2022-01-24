@@ -31,6 +31,7 @@ export abstract class AccessoryService extends Emitter {
     const service = this.get(accessory);
     this.initializeServiceCharacteristics(
       service,
+      device,
     );
     this.updateServiceCharacteristics(
       service,
@@ -64,6 +65,7 @@ export abstract class AccessoryService extends Emitter {
 
   protected abstract initializeServiceCharacteristics(
     service: Service,
+    device: GoveeDevice,
   );
 
   protected get(

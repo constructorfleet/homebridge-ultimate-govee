@@ -8,6 +8,7 @@ import {ActiveState} from '../../../devices/states/Active';
 import {FanSpeedState} from '../../../devices/states/FanSpeed';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
+import {OnOffState} from '../../../devices/states/OnOff';
 
 @Injectable()
 export class PurifierService extends AccessoryService {
@@ -33,17 +34,22 @@ export class PurifierService extends AccessoryService {
 
   protected initializeServiceCharacteristics(
     service: Service,
+    device: GoveeDevice,
   ) {
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
-      .updateValue(this.CHARACTERISTICS.Active.INACTIVE)
-      .onSet((value: CharacteristicValue, context: { device: GoveeDevice }) =>
+      .updateValue(
+        (device as unknown as ActiveState)?.isActive
+          ? this.CHARACTERISTICS.Active.ACTIVE
+          : this.CHARACTERISTICS.Active.INACTIVE,
+      )
+      .onSet(async (value: CharacteristicValue) =>
         this.emit(
           new DeviceCommandEvent(
-            'Active',
             {
-              deviceId: context.device.deviceId,
-              active: value === this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR,
+              action: 'Active',
+              deviceId: device.deviceId,
+              active: value === this.CHARACTERISTICS.Active.ACTIVE,
             }),
         ),
       );
@@ -57,31 +63,39 @@ export class PurifierService extends AccessoryService {
       .updateValue(1);
     service
       .getCharacteristic(this.CHARACTERISTICS.CurrentAirPurifierState)
-      .updateValue(this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE)
-      .onSet((value: CharacteristicValue, context: { device: GoveeDevice }) =>
+      .updateValue(
+        (device as unknown as ActiveState)?.isActive
+          ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
+          : this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE,
+      )
+      .onSet(async (value: CharacteristicValue) =>
         this.emit(
           new DeviceCommandEvent(
-            'Active',
             {
-              deviceId: context.device.deviceId,
+              action: 'Active',
+              deviceId: device.deviceId,
               active: value === this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR,
             }),
         ),
       );
+    const fanSpeed = (device as unknown as FanSpeedState)?.fanSpeed ?? 0;
     service
       .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
       .setProps({
         minValue: 0,
         maxValue: 100,
       })
-      .updateValue(0)
-      .onSet((value: CharacteristicValue, context: { device: GoveeDevice }) =>
+      .updateValue(
+        fanSpeed === 16
+          ? 25
+          : ((fanSpeed + 1) * 25))
+      .onSet(async (value: CharacteristicValue) =>
         this.emit(
           new DeviceCommandEvent(
-            'FanSpeed',
             {
-              deviceId: context.device.deviceId,
-              fanSpeed: Math.floor(((value as number) ?? 0) / 4) || 16,
+              action: 'FanSpeed',
+              deviceId: device.deviceId,
+              fanSpeed: Math.max(Math.ceil((value as number ?? 0) / 25) - 1, 0) || 16,
             }),
         ),
       );
@@ -91,7 +105,8 @@ export class PurifierService extends AccessoryService {
     service: Service,
     device: GoveeDevice,
   ) {
-    const fanSpeed = (device as FanSpeedState).fanSpeed ?? 0;
+    const fanSpeed = (device as unknown as FanSpeedState).fanSpeed ?? 0;
+    console.log('FANSPEED', fanSpeed, device);
     service
       .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
       .updateValue(
@@ -104,14 +119,14 @@ export class PurifierService extends AccessoryService {
       .updateValue(
         ((device as unknown as ActiveState)?.isActive ?? false)
           ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
-          : this.CHARACTERISTICS.CurrentAirPurifierState.IDLE,
+          : this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE,
       );
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
       .updateValue(
         ((device as unknown as ActiveState)?.isActive ?? false)
-          ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
-          : this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE,
+          ? this.CHARACTERISTICS.Active.ACTIVE
+          : this.CHARACTERISTICS.Active.INACTIVE,
       );
   }
 }
