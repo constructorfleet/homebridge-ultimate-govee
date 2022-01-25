@@ -8,7 +8,8 @@ import {ActiveState} from '../../../devices/states/Active';
 import {FanSpeedState} from '../../../devices/states/FanSpeed';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
-import {OnOffState} from '../../../devices/states/OnOff';
+import {DeviceActiveTransition} from '../../../core/structures/devices/transitions/DeviceActiveTransition';
+import {DeviceFanSpeedTransition} from '../../../core/structures/devices/transitions/DeviceFanSpeedTransition';
 
 @Injectable()
 export class PurifierService extends AccessoryService {
@@ -46,11 +47,11 @@ export class PurifierService extends AccessoryService {
       .onSet(async (value: CharacteristicValue) =>
         this.emit(
           new DeviceCommandEvent(
-            {
-              action: 'Active',
-              deviceId: device.deviceId,
-              active: value === this.CHARACTERISTICS.Active.ACTIVE,
-            }),
+            new DeviceActiveTransition(
+              device.deviceId,
+              value === this.CHARACTERISTICS.Active.ACTIVE,
+            ),
+          ),
         ),
       );
     service
@@ -71,11 +72,11 @@ export class PurifierService extends AccessoryService {
       .onSet(async (value: CharacteristicValue) =>
         this.emit(
           new DeviceCommandEvent(
-            {
-              action: 'Active',
-              deviceId: device.deviceId,
-              active: value === this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR,
-            }),
+            new DeviceActiveTransition(
+              device.deviceId,
+              value === this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR,
+            ),
+          ),
         ),
       );
     const fanSpeed = (device as unknown as FanSpeedState)?.fanSpeed ?? 0;
@@ -92,11 +93,11 @@ export class PurifierService extends AccessoryService {
       .onSet(async (value: CharacteristicValue) =>
         this.emit(
           new DeviceCommandEvent(
-            {
-              action: 'FanSpeed',
-              deviceId: device.deviceId,
-              fanSpeed: Math.max(Math.ceil((value as number ?? 0) / 25) - 1, 0) || 16,
-            }),
+            new DeviceFanSpeedTransition(
+              device.deviceId,
+              Math.max(Math.ceil((value as number ?? 0) / 25) - 1, 0) || 16,
+            ),
+          ),
         ),
       );
   }

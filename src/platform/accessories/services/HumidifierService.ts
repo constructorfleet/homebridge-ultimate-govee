@@ -8,6 +8,8 @@ import {ActiveState} from '../../../devices/states/Active';
 import {MistLevelState} from '../../../devices/states/MistLevel';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
+import {DeviceActiveTransition} from '../../../core/structures/devices/transitions/DeviceActiveTransition';
+import {DeviceMistLevelTransition} from '../../../core/structures/devices/transitions/DeviceMistLevelTransition';
 
 @Injectable()
 export class HumidifierService extends AccessoryService {
@@ -71,11 +73,10 @@ export class HumidifierService extends AccessoryService {
         async (value: CharacteristicValue) =>
           this.emit(
             new DeviceCommandEvent(
-              {
-                action: 'Active',
-                deviceId: device.deviceId,
-                active: value === this.CHARACTERISTICS.Active.ACTIVE,
-              },
+              new DeviceActiveTransition(
+                device.deviceId,
+                value === this.CHARACTERISTICS.Active.ACTIVE,
+              ),
             ),
           ),
       );
@@ -90,11 +91,10 @@ export class HumidifierService extends AccessoryService {
         async (value: CharacteristicValue) =>
           this.emit(
             new DeviceCommandEvent(
-              {
-                action: 'MistLevel',
-                deviceId: device.deviceId,
-                mistLevel: Math.ceil((value as number || 0) / 12.5),
-              },
+              new DeviceMistLevelTransition(
+                device.deviceId,
+                Math.ceil((value as number || 0) / 12.5),
+              ),
             ),
           ),
       );

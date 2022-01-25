@@ -1,6 +1,5 @@
 import {State} from './State';
 import {DeviceState} from '../../core/structures/devices/DeviceState';
-import {FanSpeedChange} from './FanSpeed';
 
 const commandIdentifiers = [
   5,
@@ -10,11 +9,7 @@ const commandIdentifiers = [
 export interface MistLevelState {
   mistLevel?: number;
 
-  get mistLevelChange(): MistLevelChange;
-}
-
-export interface MistLevelChange {
-  command: number[];
+  get mistLevelChange(): number[];
 }
 
 export function MistLevel<StateType extends State>(
@@ -40,14 +35,12 @@ export function MistLevel<StateType extends State>(
       return super.parse(deviceState);
     }
 
-    public get mistLevelChange(): MistLevelChange {
-      return {
-        command: this.getCommandCodes(
-          0x33,
-          commandIdentifiers,
-          this.mistLevel || 0,
-        ),
-      };
+    public get mistLevelChange(): number[] {
+      return this.getCommandCodes(
+        0x33,
+        commandIdentifiers,
+        this.mistLevel || 0,
+      );
     }
   };
 }
