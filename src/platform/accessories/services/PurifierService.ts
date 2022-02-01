@@ -1,6 +1,6 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject, Injectable} from '@nestjs/common';
-import {LOGGER, PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
+import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {ActiveState} from '../../../devices/states/Active';
@@ -10,6 +10,8 @@ import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {DeviceActiveTransition} from '../../../core/structures/devices/transitions/DeviceActiveTransition';
 import {DeviceFanSpeedTransition} from '../../../core/structures/devices/transitions/DeviceFanSpeedTransition';
 import {LoggingService} from '../../../logging/LoggingService';
+import {ControlLockState} from '../../../devices/states/ControlLock';
+import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 
 @Injectable()
 export class PurifierService extends AccessoryService {
@@ -37,6 +39,23 @@ export class PurifierService extends AccessoryService {
     service: Service,
     device: GoveeDevice,
   ) {
+    service
+      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
+      .updateValue(
+        (device as unknown as ControlLockState).areControlsLocked
+          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
+          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED)
+      .onSet(
+        async (value: CharacteristicValue) =>
+          this.emit(
+            new DeviceCommandEvent(
+              new DeviceControlLockTransition(
+                device.deviceId,
+                value === this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED,
+              ),
+            ),
+          ),
+      );
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
       .updateValue(
@@ -107,6 +126,12 @@ export class PurifierService extends AccessoryService {
     device: GoveeDevice,
   ) {
     const fanSpeed = (device as unknown as FanSpeedState).fanSpeed ?? 0;
+    service
+      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
+      .updateValue(
+        (device as unknown as ControlLockState).areControlsLocked
+          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
+          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED);
     service
       .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
       .updateValue(

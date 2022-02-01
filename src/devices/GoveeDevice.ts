@@ -5,8 +5,6 @@ import {DeviceState} from '../core/structures/devices/DeviceState';
 import {supportsBLE} from '../core/structures/devices/configs/BLEConfig';
 import {Emitter} from '../util/types';
 import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
-import {hexToBase64} from '../util/encodingUtils';
-import {FanSpeedState} from './states/FanSpeed';
 
 export class GoveeDevice extends State {
   static MODELS: string[] = [];

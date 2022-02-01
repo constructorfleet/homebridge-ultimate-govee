@@ -27,9 +27,7 @@ export class IoTPayloadProcessor extends Emitter {
     },
   )
   onIoTMessage(message: IoTEventData) {
-    this.log.info('RECEIVED', message.payload);
     try {
-      this.log.info('RECEIVED', message.payload);
       const acctMessage = plainToInstance(
         IoTAccountMessage,
         message.payload,
