@@ -1,6 +1,6 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject, Injectable} from '@nestjs/common';
-import {LOGGER, PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
+import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {ActiveState} from '../../../devices/states/Active';
@@ -11,6 +11,8 @@ import {DeviceActiveTransition} from '../../../core/structures/devices/transitio
 import {DeviceMistLevelTransition} from '../../../core/structures/devices/transitions/DeviceMistLevelTransition';
 import {StatusModeState} from '../../../devices/states/StatusMode';
 import {LoggingService} from '../../../logging/LoggingService';
+import {ControlLockState} from '../../../devices/states/ControlLock';
+import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 
 @Injectable()
 export class HumidifierService extends AccessoryService {
@@ -51,6 +53,24 @@ export class HumidifierService extends AccessoryService {
       })
       .updateValue(100);
     service
+      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
+      .updateValue(
+        (device as unknown as ControlLockState).areControlsLocked
+          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
+          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED)
+      .onSet(
+        async (value: CharacteristicValue) =>
+          this.emit(
+            new DeviceCommandEvent(
+              new DeviceControlLockTransition(
+                device.deviceId,
+                value === this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED,
+              ),
+            ),
+          ),
+      );
+
+    service
       .getCharacteristic(this.CHARACTERISTICS.WaterLevel)
       .setProps({
         validValues: [0, 100],
@@ -59,6 +79,12 @@ export class HumidifierService extends AccessoryService {
         ((device as unknown as StatusModeState).statusMode === 4)
           ? 0
           : 100);
+    service
+      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
+      .updateValue(
+        (device as unknown as ControlLockState).areControlsLocked
+          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
+          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED);
     service
       .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
       .setProps({

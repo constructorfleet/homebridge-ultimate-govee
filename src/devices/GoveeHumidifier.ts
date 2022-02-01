@@ -7,6 +7,7 @@ import {ProgrammableMistLevel} from './states/ProgrammableMistLevel';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {GoveeDevice} from './GoveeDevice';
+import {ControlLock} from './states/ControlLock';
 
 export const humidifierProviders: Provider[] = [
   {
@@ -24,7 +25,7 @@ export const humidifierProviders: Provider[] = [
 ];
 
 export class GoveeHumidifier
-  extends ProgrammableMistLevel(MistLevel(StatusMode(Active(OnOff(GoveeDevice))))) {
+  extends ControlLock(ProgrammableMistLevel(MistLevel(StatusMode(Active(OnOff(GoveeDevice)))))) {
 
   constructor(
     deviceConfig: DeviceConfig,
