@@ -37,6 +37,7 @@ export class UltimateGoveePlatform
         Characteristic: this.api.hap.Characteristic,
         logger: this.log,
         storagePath: this.api.user.persistPath(),
+        configPath: this.api.user.configPath(),
         generateUUID: this.api.hap.uuid.generate,
         accessoryFactory: this.api.platformAccessory,
         registerAccessory: this.api.registerPlatformAccessories,
