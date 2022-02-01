@@ -1,8 +1,8 @@
-import {Characteristic, CharacteristicValue, PlatformAccessory, Service, WithUUID} from 'homebridge';
+import {Characteristic, PlatformAccessory, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {Logging} from 'homebridge/lib/logger';
 import {Emitter} from '../../../util/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
+import {LoggingService} from '../../../logging/LoggingService';
 
 export abstract class AccessoryService extends Emitter {
   protected abstract readonly ServiceType: WithUUID<typeof Service>;
@@ -11,7 +11,7 @@ export abstract class AccessoryService extends Emitter {
     eventEmitter: EventEmitter2,
     protected readonly SERVICES: typeof Service,
     protected readonly CHARACTERISTICS: typeof Characteristic,
-    protected readonly log: Logging,
+    protected readonly log: LoggingService,
   ) {
     super(eventEmitter);
   }

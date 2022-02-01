@@ -3,12 +3,12 @@ import {Emitter} from '../../util/types';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {API, PlatformAccessory} from 'homebridge';
 import {GoveeDevice} from '../../devices/GoveeDevice';
-import {Logging} from 'homebridge/lib/logger';
-import {HOMEBRIDGE_API, PLATFORM_LOGGER} from '../../util/const';
+import {HOMEBRIDGE_API} from '../../util/const';
 import {InformationService} from './services/InformationService';
 import {HumidifierService} from './services/HumidifierService';
 import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
+import {LoggingService} from '../../logging/LoggingService';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -19,8 +19,8 @@ export class AccessoryManager extends Emitter {
     private readonly informationService: InformationService,
     private readonly humidifierService: HumidifierService,
     private readonly purifierService: PurifierService,
+    private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
-    @Inject(PLATFORM_LOGGER) private readonly log: Logging,
   ) {
     super(eventEmitter);
   }
@@ -47,7 +47,6 @@ export class AccessoryManager extends Emitter {
   )
   onDeviceDiscovered(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
-    this.log.info('DISCOVERED', device.deviceId, deviceUUID);
     const accessory =
       this.accessories.get(deviceUUID)
       || new this.api.platformAccessory(
@@ -88,6 +87,8 @@ export class AccessoryManager extends Emitter {
     if (!accessory) {
       return;
     }
+    this.log.info(device);
+
     this.informationService.updateAccessory(accessory, device);
     this.humidifierService.updateAccessory(accessory, device);
     this.purifierService.updateAccessory(accessory, device);

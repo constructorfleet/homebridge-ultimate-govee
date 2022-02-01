@@ -9,10 +9,12 @@ import {DeviceStateReceived} from '../../core/events/devices/DeviceReceived';
 import {base64ToHex} from '../../util/encodingUtils';
 import {IoTPublishTo} from '../../core/events/dataClients/iot/IoTPublish';
 import {GoveeDevice} from '../../devices/GoveeDevice';
+import {LoggingService} from '../../logging/LoggingService';
 
 @Injectable()
 export class IoTPayloadProcessor extends Emitter {
   constructor(
+    private readonly log: LoggingService,
     eventEmitter: EventEmitter2,
   ) {
     super(eventEmitter);
@@ -25,16 +27,19 @@ export class IoTPayloadProcessor extends Emitter {
     },
   )
   onIoTMessage(message: IoTEventData) {
+    this.log.info('RECEIVED', message.payload);
     try {
+      this.log.info('RECEIVED', message.payload);
       const acctMessage = plainToInstance(
         IoTAccountMessage,
         message.payload,
       );
+      const devState = toDeviceState(acctMessage);
       this.emit(
-        new DeviceStateReceived(toDeviceState(acctMessage)),
+        new DeviceStateReceived(devState),
       );
     } catch (err) {
-      console.log(err);
+      this.log.error(err);
     }
   }
 

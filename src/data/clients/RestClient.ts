@@ -20,6 +20,7 @@ import {ConfigurationService} from '../../config/ConfigurationService';
 import {TokenRefreshRequest, tokenRefreshRequest} from '../../core/structures/api/requests/payloads/TokenRefreshRequest';
 import {TokenRefreshResponse} from '../../core/structures/api/responses/payloads/TokenRefreshResponse';
 import {PersistService} from '../../persist/PersistService';
+import {LoggingService} from '../../logging/LoggingService';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
@@ -38,12 +39,18 @@ export class RestClient
     eventEmitter: EventEmitter2,
     private config: ConfigurationService,
     private persist: PersistService,
+    private readonly log: LoggingService,
     @Inject(GOVEE_CLIENT_ID) private clientId: string,
   ) {
     super(eventEmitter);
   }
 
-  @OnEvent('IOT.Connection')
+  @OnEvent(
+    'IOT.Connection',
+    {
+      async: true,
+    },
+  )
   onIoTConnected(connection: ConnectionState) {
     const accountTopic = this.persist.oauthData?.accountIoTTopic;
     if (connection !== ConnectionState.Connected ||
@@ -61,7 +68,7 @@ export class RestClient
       async: true,
     },
   )
-  login(requestDevices: boolean = false): Promise<OAuthData> {
+  login(requestDevices = false): Promise<OAuthData> {
     if (this.isValidToken) {
       const oauthData = this.persist.oauthData!;
       this.emit(
@@ -92,7 +99,7 @@ export class RestClient
   }
 
   private async authenticate(): Promise<OAuthData> {
-    console.log('Authenticating');
+    this.log.info('Authenticating');
     return request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
       BaseHeaders(),
@@ -104,7 +111,7 @@ export class RestClient
     )
       .post()
       .then((res) => {
-        console.log(res);
+        this.log.debug(res);
         return res.data.client;
       })
       .then((client): OAuthData => {
@@ -126,7 +133,7 @@ export class RestClient
   }
 
   private async refreshToken(): Promise<OAuthData> {
-    console.log('REFRESH TOKEN');
+    this.log.debug('REFRESH TOKEN');
     return request<TokenRefreshRequest, TokenRefreshResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/refresh-tokens`,
       AuthenticatedHeader(this.persist.oauthData?.token || ''),

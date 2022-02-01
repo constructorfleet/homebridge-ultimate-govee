@@ -1,10 +1,10 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject, Injectable} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_LOGGER, PLATFORM_SERVICES} from '../../../util/const';
+import {LOGGER, PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {Logging} from 'homebridge/lib/logger';
 import {EventEmitter2} from '@nestjs/event-emitter';
+import {LoggingService} from '../../../logging/LoggingService';
 
 @Injectable()
 export class InformationService extends AccessoryService {
@@ -14,7 +14,7 @@ export class InformationService extends AccessoryService {
     eventEmitter: EventEmitter2,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
-    @Inject(PLATFORM_LOGGER) log: Logging,
+    log: LoggingService,
   ) {
     super(
       eventEmitter,
@@ -25,6 +25,7 @@ export class InformationService extends AccessoryService {
   }
 
   protected initializeServiceCharacteristics(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     service: Service,
   ) {
     return;

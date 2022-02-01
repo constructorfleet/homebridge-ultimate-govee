@@ -18,7 +18,7 @@ interface UltimateGoveePlatformConfig {
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class UltimateGoveePlatform
-  implements DynamicPlatformPlugin {
+implements DynamicPlatformPlugin {
   private context!: INestApplicationContext;
   private service!: PlatformService;
   private loaded = false;

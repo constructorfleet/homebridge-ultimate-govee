@@ -1,15 +1,15 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject, Injectable} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_LOGGER, PLATFORM_SERVICES} from '../../../util/const';
+import {LOGGER, PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {Logging} from 'homebridge/lib/logger';
 import {ActiveState} from '../../../devices/states/Active';
 import {FanSpeedState} from '../../../devices/states/FanSpeed';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {DeviceActiveTransition} from '../../../core/structures/devices/transitions/DeviceActiveTransition';
 import {DeviceFanSpeedTransition} from '../../../core/structures/devices/transitions/DeviceFanSpeedTransition';
+import {LoggingService} from '../../../logging/LoggingService';
 
 @Injectable()
 export class PurifierService extends AccessoryService {
@@ -19,7 +19,7 @@ export class PurifierService extends AccessoryService {
     eventEmitter: EventEmitter2,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
-    @Inject(PLATFORM_LOGGER) log: Logging,
+    log: LoggingService,
   ) {
     super(
       eventEmitter,
@@ -107,7 +107,6 @@ export class PurifierService extends AccessoryService {
     device: GoveeDevice,
   ) {
     const fanSpeed = (device as unknown as FanSpeedState).fanSpeed ?? 0;
-    console.log('FANSPEED', fanSpeed, device);
     service
       .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
       .updateValue(

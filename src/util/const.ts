@@ -13,7 +13,6 @@ export const IOT_CA_CERTIFICATE = 'IOT_CA_Certificate';
 export const IOT_HOST = 'IOT_Host';
 
 export const PLATFORM_CONFIG = 'Platform_Config';
-export const PLATFORM_LOGGER = 'Platform_Logger';
 export const PLATFORM_SERVICES = 'Platform_Services';
 export const PLATFORM_CHARACTERISTICS = 'Platform_Characteristics';
 export const PLATFORM_UUID_GENERATOR = 'Platform_UUID_Generator';
@@ -22,5 +21,5 @@ export const PLATFORM_REGISTER_ACCESSORY = 'Platform_Register_Accessory';
 export const PLATFORM_UPDATE_ACCESSORY = 'Platform_Update_Accessory';
 
 export const STORAGE_PATH = 'Storage_Path';
-
+export const LOGGER = 'Logger';
 export const HOMEBRIDGE_API = 'Homebridge_Api';

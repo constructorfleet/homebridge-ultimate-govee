@@ -6,6 +6,7 @@ import {Timer} from './states/Timer';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {GoveeDevice} from './GoveeDevice';
+import {StatusMode} from './states/StatusMode';
 
 export const purifierProviders: Provider[] = [
   {
@@ -23,7 +24,7 @@ export const purifierProviders: Provider[] = [
 ];
 
 export class GoveeAirPurifier
-  extends FanSpeed(Timer(Active(OnOff(GoveeDevice)))) {
+  extends StatusMode(FanSpeed(Timer(Active(OnOff(GoveeDevice))))) {
 
   constructor(
     deviceConfig: DeviceConfig,

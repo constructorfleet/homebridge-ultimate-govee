@@ -3,16 +3,7 @@ import {EventEmitterModule} from '@nestjs/event-emitter';
 import {DeviceManager} from '../devices/DeviceManager';
 import {IoTClient} from '../data/clients/IoTClient';
 import {RestClient} from '../data/clients/RestClient';
-import {
-  GOVEE_API_KEY,
-  GOVEE_CLIENT_ID, GOVEE_CONFIGURATION,
-  GOVEE_PASSWORD,
-  GOVEE_USERNAME,
-  IOT_CA_CERTIFICATE,
-  IOT_CERTIFICATE,
-  IOT_HOST,
-  IOT_KEY,
-} from '../util/const';
+import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../util/const';
 import path from 'path';
 import {machineIdSync} from 'node-machine-id';
 import {humidifierProviders} from '../devices/GoveeHumidifier';
@@ -23,6 +14,8 @@ import {ConfigurationModule} from '../config/ConfigurationModule';
 import {GoveeConfiguration} from '../config/GoveeConfiguration';
 import {PersistConfiguration} from '../persist/PersistConfiguration';
 import {PersistModule} from '../persist/PersistModule';
+import {LoggingModule} from '../logging/LoggingModule';
+import {Logger} from '../logging/Logger';
 
 
 @Module({})
@@ -30,10 +23,12 @@ export class GoveePluginModule {
   public static register(
     config: GoveeConfiguration,
     persistConfig: PersistConfiguration,
+    logger: Logger,
   ): DynamicModule {
     return {
       module: GoveePluginModule,
       imports: [
+        LoggingModule.register(logger),
         EventEmitterModule.forRoot({
           // set this to `true` to use wildcards
           wildcard: true,
@@ -90,6 +85,7 @@ export class GoveePluginModule {
         IOT_KEY,
         IOT_HOST,
         GOVEE_CLIENT_ID,
+        LoggingModule,
         IoTPayloadProcessor,
         IoTClient,
         RestPayloadProcessor,
@@ -97,6 +93,7 @@ export class GoveePluginModule {
         DeviceManager,
         ConfigurationModule,
         PersistModule,
+        LoggingModule,
       ],
     };
   }

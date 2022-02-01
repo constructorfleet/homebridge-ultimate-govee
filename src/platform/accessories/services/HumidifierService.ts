@@ -1,15 +1,16 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject, Injectable} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_LOGGER, PLATFORM_SERVICES} from '../../../util/const';
+import {LOGGER, PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {Logging} from 'homebridge/lib/logger';
 import {ActiveState} from '../../../devices/states/Active';
 import {MistLevelState} from '../../../devices/states/MistLevel';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {DeviceActiveTransition} from '../../../core/structures/devices/transitions/DeviceActiveTransition';
 import {DeviceMistLevelTransition} from '../../../core/structures/devices/transitions/DeviceMistLevelTransition';
+import {StatusModeState} from '../../../devices/states/StatusMode';
+import {LoggingService} from '../../../logging/LoggingService';
 
 @Injectable()
 export class HumidifierService extends AccessoryService {
@@ -19,7 +20,7 @@ export class HumidifierService extends AccessoryService {
     eventEmitter: EventEmitter2,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
-    @Inject(PLATFORM_LOGGER) log: Logging,
+    log: LoggingService,
   ) {
     super(
       eventEmitter,
@@ -50,6 +51,15 @@ export class HumidifierService extends AccessoryService {
       })
       .updateValue(100);
     service
+      .getCharacteristic(this.CHARACTERISTICS.WaterLevel)
+      .setProps({
+        validValues: [0, 100],
+      })
+      .updateValue(
+        ((device as unknown as StatusModeState).statusMode === 4)
+          ? 0
+          : 100);
+    service
       .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
       .setProps({
         validValues: [
@@ -58,14 +68,19 @@ export class HumidifierService extends AccessoryService {
         ],
       })
       .updateValue(
-        ((device as unknown as ActiveState).isActive && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0)
+        (
+          ((device as unknown as ActiveState).isActive
+            && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
+            && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
           ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
           : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
       );
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
       .updateValue(
-        (device as unknown as ActiveState).isActive
+        (
+          ((device as unknown as ActiveState).isActive ?? false)
+          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
           ? this.CHARACTERISTICS.Active.ACTIVE
           : this.CHARACTERISTICS.Active.INACTIVE,
       )
@@ -104,17 +119,28 @@ export class HumidifierService extends AccessoryService {
     service: Service,
     device: GoveeDevice,
   ) {
+    this.log.info(device);
+    service.getCharacteristic(this.CHARACTERISTICS.WaterLevel)
+      .updateValue(
+        ((device as unknown as StatusModeState).statusMode === 4)
+          ? 0
+          : 100);
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
       .updateValue(
-        ((device as unknown as ActiveState).isActive ?? false)
+        (
+          ((device as unknown as ActiveState).isActive ?? false)
+          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
           ? this.CHARACTERISTICS.Active.ACTIVE
           : this.CHARACTERISTICS.Active.INACTIVE,
       );
     service
       .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
       .updateValue(
-        ((device as unknown as ActiveState).isActive && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0)
+        (
+          ((device as unknown as ActiveState).isActive
+            && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
+            && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
           ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
           : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
       );

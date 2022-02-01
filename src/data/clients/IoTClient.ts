@@ -9,13 +9,14 @@ import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {IotReceive} from '../../core/events/dataClients/iot/IotReceive';
 import {IoTSubscribedToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 import {IoTUnsubscribedFromEvent} from '../../core/events/dataClients/iot/IotRemoveSubscription';
+import {LoggingService} from '../../logging/LoggingService';
 
 @Injectable()
 export class IoTClient
   extends GoveeClient {
   private readonly awsIOTDevice: device;
   private connected = false;
-  private readonly subcriptions: Set<string> = new Set<string>();
+  private readonly subscriptions: Set<string> = new Set<string>();
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -24,6 +25,7 @@ export class IoTClient
     @Inject(IOT_CA_CERTIFICATE) caPath: string,
     @Inject(GOVEE_CLIENT_ID) clientId: string,
     @Inject(IOT_HOST) host: string,
+    private readonly log: LoggingService,
   ) {
     super(eventEmitter);
     this.awsIOTDevice = new device({
@@ -47,8 +49,16 @@ export class IoTClient
     );
 
     this.awsIOTDevice.on(
+      'error',
+      (error: Error | string) => {
+        this.log.error('ERROR', error);
+      },
+    );
+
+    this.awsIOTDevice.on(
       'close',
       () => {
+        this.log.info('CLOSED');
         if (this.connected) {
           this.connected = false;
           this.emit(new IoTConnectionStateEvent(ConnectionState.Closed));
@@ -58,11 +68,7 @@ export class IoTClient
 
     this.awsIOTDevice.on(
       'message',
-      (
-        topic: string,
-        payload: Record<string, unknown>,
-      ) => {
-        console.log(JSON.parse(payload.toString()));
+      (topic: string, payload: string) => {
         this.emit(
           new IotReceive(
             topic,
@@ -81,7 +87,7 @@ export class IoTClient
   )
   unsubscribe(message: IoTEventData) {
     if (!message.topic) {
-      console.log('No topic to unsubscribe from');
+      this.log.info('No topic to unsubscribe from');
       return;
     }
     this.awsIOTDevice.unsubscribe(
@@ -90,7 +96,7 @@ export class IoTClient
         if (err) {
           this.emit(new IoTErrorEvent(err));
         } else {
-          this.subcriptions.delete(message.topic);
+          this.subscriptions.delete(message.topic);
           this.emit(new IoTUnsubscribedFromEvent(message.topic));
         }
       },
@@ -105,13 +111,14 @@ export class IoTClient
   )
   subscribe(message: IoTEventData) {
     if (!message.topic) {
-      console.log('No topic to subscribe to');
+      this.log.info('No topic to subscribe to');
       return;
     }
-    if (this.subcriptions.has(message.topic)) {
+    if (this.subscriptions.has(message.topic)) {
+      this.log.info('Topic Subscribed', message.topic);
       return;
     }
-
+    this.log.info('Subscribing', message.topic);
     this.awsIOTDevice.subscribe(
       message.topic,
       undefined,
@@ -119,7 +126,7 @@ export class IoTClient
         if (err) {
           this.emit(new IoTErrorEvent(err));
         } else {
-          this.subcriptions.add(message.topic);
+          this.subscriptions.add(message.topic);
           this.emit(new IoTSubscribedToEvent(message.topic));
         }
       },
@@ -133,15 +140,11 @@ export class IoTClient
     },
   )
   publishTo(message: IoTEventData) {
-    console.log(message);
-    if (!this.awsIOTDevice || !this.connected) {
-      console.log('Not Connected to publish');
-      return;
-    }
     if (!message.topic) {
-      console.log('No topic to publish to');
+      this.log.info('No topic to publish to');
       return;
     }
+    this.log.info('Publishing', message.topic, message.payload);
     this.awsIOTDevice.publish(
       message.topic,
       message.payload,

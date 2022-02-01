@@ -6,7 +6,6 @@ import {
   PLATFORM_ACCESSORY_FACTORY,
   PLATFORM_CHARACTERISTICS,
   PLATFORM_CONFIG,
-  PLATFORM_LOGGER,
   PLATFORM_SERVICES,
   PLATFORM_UUID_GENERATOR,
 } from '../util/const';
@@ -51,19 +50,14 @@ export class PlatformModule {
         },
         {
           storagePath: config.storagePath,
-        }),
+        },
+        config.logger,
+        ),
       ],
       providers: [
         {
           provide: HOMEBRIDGE_API,
           useValue: config.api,
-        },
-        {
-          provide: PLATFORM_LOGGER,
-          useFactory: (config) => {
-            return config.logger;
-          },
-          inject: [PLATFORM_CONFIG],
         },
         {
           provide: PLATFORM_UUID_GENERATOR,
