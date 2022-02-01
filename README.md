@@ -15,10 +15,12 @@ A Homebridge plugin to provide comprehensive and intuitive control of Govee devi
   - Air Purifiers (H7121, H7122)
     - Control Device Power
     - Control Device Fan Speed (Low, Medium, High, Night-mode)
+    - Lock/Unlock the Physical Controls on the Device
   - Humidifiers (H7141, H7142)
     - Control Device Power
     - Control Device Mist Output Level
     - Reports Device Water Level
+    - Lock/Unlock the Physical Controls on the Device
 - Required Information
   - Govee Account Credentials (Username, Password)
 
