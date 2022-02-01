@@ -13,52 +13,52 @@ op_code_states:
   170:
     ref: common
 
-    - code:
-        - 51
-        - 170
-      key: state
-      children:
-        - code: 1
-          key: device
-          values:
-            - key: activ
-        - code: 5
-          key: state
-          children:
-            - code: 0
-              key: current
-              values:
-                - key: status
-            - code: 1
-              key: simple
-              values:
-                - key: mistLevel
-            - code: 2
-              key: program
-              values:
-                - key: programId
-                - key: program0.mistLevel
-                - key: program0.duration
-                  count: 2
-                - key: program0.remaining
-                  count: 2
-                - key: program1.mistLevel
-                - key: program1.duration
-                  count: 2
-                - key: program1.remaining
-                  count: 2
-                - key: program2.mistLevel
-                - key: program2.duration
-                  count: 2
-                - key: program2.remaining
-                  count: 2
-        - code: 10
-          key: controls
-          values:
-            - key: locked
-        - code: 11
-          key: timer
-          values:
-            - key: on
-            - key: duration
-              count: 2
+      - code:
+          - 51
+          - 170
+        key: state
+        children:
+          - code: 1
+            key: device
+            values:
+              - key: activ
+          - code: 5
+            key: state
+            children:
+              - code: 0
+                key: current
+                values:
+                  - key: status
+              - code: 1
+                key: simple
+                values:
+                  - key: mistLevel
+              - code: 2
+                key: program
+                values:
+                  - key: programId
+                  - key: program0.mistLevel
+                  - key: program0.duration
+                    count: 2
+                  - key: program0.remaining
+                    count: 2
+                  - key: program1.mistLevel
+                  - key: program1.duration
+                    count: 2
+                  - key: program1.remaining
+                    count: 2
+                  - key: program2.mistLevel
+                  - key: program2.duration
+                    count: 2
+                  - key: program2.remaining
+                    count: 2
+          - code: 10
+            key: controls
+            values:
+              - key: locked
+          - code: 11
+            key: timer
+            values:
+              - key: on
+              - key: duration
+                count: 2

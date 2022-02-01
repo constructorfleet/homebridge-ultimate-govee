@@ -1,5 +1,5 @@
 import {Inject, Injectable} from '@nestjs/common';
-import {HOMEBRIDGE_API, LOGGER} from '../util/const';
+import {HOMEBRIDGE_API} from '../util/const';
 import {API, PlatformAccessory} from 'homebridge';
 import {Emitter} from '../util/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
