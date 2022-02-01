@@ -9,6 +9,7 @@ import {HumidifierService} from './services/HumidifierService';
 import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 import {LoggingService} from '../../logging/LoggingService';
+import {PlatformConfigService} from '../config/PlatformConfigService';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -19,6 +20,7 @@ export class AccessoryManager extends Emitter {
     private readonly informationService: InformationService,
     private readonly humidifierService: HumidifierService,
     private readonly purifierService: PurifierService,
+    private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
   ) {
@@ -69,6 +71,7 @@ export class AccessoryManager extends Emitter {
       this.purifierService.updateAccessory(accessory, device);
       this.api.updatePlatformAccessories([accessory]);
     }
+    this.platformConfigService.updateConfigurationWithDevices(device);
   }
 
   @OnEvent(
