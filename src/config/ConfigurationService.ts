@@ -18,8 +18,4 @@ export class ConfigurationService {
   get password(): string {
     return this.config.password;
   }
-
-  get apiKey(): string {
-    return this.config.apiKey;
-  }
 }

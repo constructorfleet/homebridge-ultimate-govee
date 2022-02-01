@@ -44,14 +44,13 @@ export class PlatformModule {
       module: PlatformModule,
       imports: [
         GoveePluginModule.register({
-            username: config.credentials.username,
-            password: config.credentials.password,
-            apiKey: config.credentials.username,
-          },
-          {
-            storagePath: config.storagePath,
-          },
-          config.logger,
+          username: config.credentials.username,
+          password: config.credentials.password,
+        },
+        {
+          storagePath: config.storagePath,
+        },
+        config.logger,
         ),
       ],
       providers: [
