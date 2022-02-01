@@ -1,7 +1,6 @@
 import {DeviceTransition} from '../DeviceTransition';
 import {MistLevelState} from '../../../../devices/states/MistLevel';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
-import {FanSpeedState} from '../../../../devices/states/FanSpeed';
 import {hexToBase64} from '../../../../util/encodingUtils';
 
 export class DeviceMistLevelTransition extends DeviceTransition<MistLevelState & GoveeDevice> {

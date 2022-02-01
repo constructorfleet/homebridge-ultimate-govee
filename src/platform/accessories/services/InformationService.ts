@@ -1,6 +1,6 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject, Injectable} from '@nestjs/common';
-import {LOGGER, PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
+import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {EventEmitter2} from '@nestjs/event-emitter';

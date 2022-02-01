@@ -1,5 +1,5 @@
 import {DynamicModule, Module} from '@nestjs/common';
-import {GOVEE_API_KEY, GOVEE_CONFIGURATION, GOVEE_PASSWORD, GOVEE_USERNAME} from '../util/const';
+import {GOVEE_CONFIGURATION} from '../util/const';
 import {GoveeConfiguration} from './GoveeConfiguration';
 import {ConfigurationService} from './ConfigurationService';
 
