@@ -123,4 +123,18 @@ sudo npm install -g homebridge-example-plugin@beta
 
 ### Setup Plugin within Homebridge
 
-TODO
+#### Configuration Fields
+
+`username` - Your Govee Home username  
+`password` - Your Govee Home password  
+
+##### Device Overrides
+
+These fields are available once the plugin has detected Govee devices associated with your account.
+
+Once available, each device will display:
+
+`deviceId` - The Govee device identifier (READ-ONLY)  
+`model` - The Govee device model identifier (READ-ONLY)  
+`ignore` - Check this box to prevent this device from being exposed to Apple HomeKit  
+`displayName` - Defaults to the device name set in Govee Home, change this to update the device name reported to HomeKit  
