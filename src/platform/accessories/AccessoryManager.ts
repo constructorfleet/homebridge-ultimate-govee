@@ -82,7 +82,6 @@ export class AccessoryManager extends Emitter {
   )
   onDeviceUpdated(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
-    this.log.info('UPDATED', device.deviceId, deviceUUID);
     if (!this.accessories.has(deviceUUID)) {
       return;
     }
@@ -90,7 +89,6 @@ export class AccessoryManager extends Emitter {
     if (!accessory) {
       return;
     }
-    this.log.info(device);
 
     this.informationService.updateAccessory(accessory, device);
     this.humidifierService.updateAccessory(accessory, device);

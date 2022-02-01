@@ -145,7 +145,6 @@ export class HumidifierService extends AccessoryService {
     service: Service,
     device: GoveeDevice,
   ) {
-    this.log.info(device);
     service.getCharacteristic(this.CHARACTERISTICS.WaterLevel)
       .updateValue(
         ((device as unknown as StatusModeState).statusMode === 4)

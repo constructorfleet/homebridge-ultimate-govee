@@ -16,6 +16,7 @@ import {PersistConfiguration} from '../persist/PersistConfiguration';
 import {PersistModule} from '../persist/PersistModule';
 import {LoggingModule} from '../logging/LoggingModule';
 import {Logger} from '../logging/Logger';
+import {BLEClient} from '../data/clients/BLEClient';
 
 
 @Module({})
@@ -75,6 +76,7 @@ export class GoveePluginModule {
         IoTClient,
         RestPayloadProcessor,
         RestClient,
+        BLEClient,
         DeviceManager,
       ],
       exports: [
@@ -90,6 +92,7 @@ export class GoveePluginModule {
         IoTClient,
         RestPayloadProcessor,
         RestClient,
+        BLEClient,
         DeviceManager,
         ConfigurationModule,
         PersistModule,

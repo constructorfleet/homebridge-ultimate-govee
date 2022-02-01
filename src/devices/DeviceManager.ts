@@ -10,6 +10,7 @@ import {DeviceDiscoveredEvent} from '../core/events/devices/DeviceDiscovered';
 import {DeviceUpdatedEvent} from '../core/events/devices/DeviceUpdated';
 import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
 import {LoggingService} from '../logging/LoggingService';
+import {BLESubscribeToDevice} from '../core/events/dataClients/ble/BLESubscription';
 
 
 @Injectable()
@@ -52,6 +53,14 @@ export class DeviceManager extends Emitter {
         this.emit(
           new DeviceDiscoveredEvent(device),
         );
+        if (device.bleAddress) {
+          this.emit(
+            new BLESubscribeToDevice(
+              device.bleAddress,
+              device.deviceId,
+            ),
+          );
+        }
         this.pollDeviceStates(
           device,
         );

@@ -14,8 +14,8 @@ export abstract class Emitter {
   ) {
   }
 
-  public getHandlers(eventName: string) {
-    return this.eventEmitter.listeners(eventName);
+  public get emitter(): EventEmitter2 {
+    return this.eventEmitter;
   }
 
   public emit<EventData, EventType extends Event<EventData>>(
