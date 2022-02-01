@@ -3,9 +3,8 @@ import {DynamicModule, Module} from '@nestjs/common';
 import {GoveePluginModule} from '../core/GoveePluginModule';
 import {
   HOMEBRIDGE_API,
-  PLATFORM_ACCESSORY_FACTORY,
   PLATFORM_CHARACTERISTICS,
-  PLATFORM_CONFIG,
+  PLATFORM_CONFIG, PLATFORM_CONFIG_FILE,
   PLATFORM_SERVICES,
   PLATFORM_UUID_GENERATOR,
 } from '../util/const';
@@ -16,6 +15,7 @@ import {HumidifierService} from './accessories/services/HumidifierService';
 import {PurifierService} from './accessories/services/PurifierService';
 import {PlatformName, PluginIdentifier} from 'homebridge/lib/api';
 import {PlatformService} from './PlatformService';
+import {PlatformConfigService} from './config/PlatformConfigService';
 
 export interface GoveeCredentials {
   username: string;
@@ -30,6 +30,7 @@ export interface PlatformModuleConfig {
   Characteristic: typeof Characteristic;
   logger: Logger;
   storagePath: string;
+  configPath: string;
   generateUUID: (data: BinaryLike) => string;
   accessoryFactory: typeof PlatformAccessory;
   registerAccessory: (pluginIdentifier: PluginIdentifier, platformName: PlatformName, accessories: PlatformAccessory[]) => void;
@@ -80,21 +81,19 @@ export class PlatformModule {
           inject: [PLATFORM_CONFIG],
         },
         {
-          provide: PLATFORM_ACCESSORY_FACTORY,
-          useFactory: (config) => {
-            return config.accessoryFactory;
-          },
-          inject: [PLATFORM_CONFIG],
-        },
-        {
           provide: PLATFORM_CONFIG,
           useValue: config,
+        },
+        {
+          provide: PLATFORM_CONFIG_FILE,
+          useValue: config.configPath,
         },
         InformationService,
         HumidifierService,
         PurifierService,
         AccessoryManager,
         PlatformService,
+        PlatformConfigService,
       ],
       exports: [
         GoveePluginModule,
