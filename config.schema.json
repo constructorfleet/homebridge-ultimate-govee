@@ -21,12 +21,12 @@
         "type": "object",
         "properties": {
           "airPurifiers": {
-            "condition": {
-              "functionBody": "return (model.airPurifiers && model.airPurifiers[arrayIndices] && model.airPurifiers[arrayIndices].deviceId && model.airPurifiers[arrayIndices].model);"
-            },
             "type": "array",
             "items": {
               "type": "object",
+              "condition": {
+                "functionBody": "return (model.devices.airPurifiers && model.devices.airPurifiers[arrayIndices] && model.devices.airPurifiers[arrayIndices].deviceId && model.devices.airPurifiers[arrayIndices].model);"
+              },
               "properties": {
                 "deviceId": {
                   "title": "Govee Device ID",
@@ -50,13 +50,13 @@
             }
           },
           "humidifiers": {
-            "condition": {
-              "functionBody": "return (model.humidifiers && model.humidifiers[arrayIndices] && model.humidifiers[arrayIndices].deviceId && model.humidifiers[arrayIndices].model);"
-            },
             "title": "Humidifier Overrides",
             "type": "array",
-            "minItems": 0,
             "items": {
+              "type": "object",
+              "condition": {
+                "functionBody": "return (model.devices.humidifiers && model.devices.humidifiers[arrayIndices] && model.devices.humidifiers[arrayIndices].deviceId && model.devices.humidifiers[arrayIndices].model);"
+              },
               "properties": {
                 "deviceId": {
                   "title": "Govee Device ID",
@@ -94,6 +94,7 @@
     },
     {
       "type": "section",
+      "key": "devices",
       "items": [
         {
           "type": "section",
