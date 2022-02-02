@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "displayName": "Govee Ultimate",
   "name": "homebridge-ultimate-govee",
   "author": {
