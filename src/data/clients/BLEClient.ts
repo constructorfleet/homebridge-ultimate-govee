@@ -108,11 +108,11 @@ export class BLEClient
   async onPeripheralConnection(connectionState: PeripheralConnectionState) {
     if (connectionState.connectionState === ConnectionState.Connected) {
       this.connections.set(connectionState.bleAddress, connectionState.connection);
+    } else {
+      this.connections.delete(connectionState.bleAddress);
       if (!this.scanning) {
         await noble.startScanningAsync();
       }
-    } else {
-      this.connections.delete(connectionState.bleAddress);
     }
   }
 }
