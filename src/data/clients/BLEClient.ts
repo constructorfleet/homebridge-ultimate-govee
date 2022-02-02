@@ -79,6 +79,9 @@ export class BLEClient
 
   @OnEvent(
     'BLE.PERIPHERAL.Discovered',
+    {
+      async: true
+    },
   )
   async onPeripheralDiscovered(peripheral: Peripheral) {
     if (!this.subscriptions.has(peripheral.address)) {
@@ -103,6 +106,9 @@ export class BLEClient
 
   @OnEvent(
     'BLE.PERIPHERAL.Connection',
+    {
+      async: true
+    },
   )
   async onPeripheralConnection(connectionState: PeripheralConnectionState) {
     if (connectionState.connectionState === ConnectionState.Connected) {
