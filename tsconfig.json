@@ -21,7 +21,7 @@
   },
   "include": [
     "src/",
-    "assets/"
+    "src/assets/"
   ],
   "exclude": [
     "**/*.spec.ts"
