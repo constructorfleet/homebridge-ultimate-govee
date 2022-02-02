@@ -78,11 +78,11 @@ export class BLEClient
       async: true,
     },
   )
-  async onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
+  onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
     this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
     if (this.online && !this.scanning) {
-      await noble.startScanningAsync();
+      noble.startScanning([], false);
     }
   }
 
@@ -92,7 +92,7 @@ export class BLEClient
       async: true,
     },
   )
-  async onPeripheralDiscovered(peripheral: Peripheral) {
+  onPeripheralDiscovered(peripheral: Peripheral) {
     if (!this.subscriptions.has(peripheral.address)) {
       this.log.info('BLEClient', 'Unknown Address', peripheral.address);
       return;
@@ -109,8 +109,8 @@ export class BLEClient
       this.log,
     );
     this.log.info('BLEClient', 'Stop Scanning', peripheral.address);
-    await noble.stopScanningAsync();
-    await peripheralConnection.connect();
+    noble.stopScanning();
+    peripheralConnection.connect();
   }
 
   @OnEvent(
@@ -186,45 +186,45 @@ export class BLEPeripheralConnection
     );
   }
 
-  async connect() {
+  connect() {
     const path = `/tmp/${this.peripheral.address}/`;
     if (fs.existsSync(path)) {
       return;
     }
-    await this.peripheral.connectAsync();
-    await fs.mkdir.__promisify__(path);
-    await fs.writeFile.__promisify__(
+    this.peripheral.connect();
+    fs.mkdirSync(path);
+    fs.writeFileSync(
       `${path}advertisement.json`,
       JSON.stringify(this.peripheral.advertisement, null, 2),
       {encoding: 'utf8'},
     );
 
-    const services = await this.peripheral.discoverServicesAsync();
-    for (let i = 0; i < services.length; i++) {
-      await this.discoverServiceCharacteristics(path, services[i]);
+    this.peripheral.discoverServices();
+    for (let i = 0; i < this.peripheral.services.length; i++) {
+      this.discoverServiceCharacteristics(path, this.peripheral.services[i]);
     }
 
-    await this.peripheral.disconnectAsync();
+    this.peripheral.disconnect();
   }
 
-  async discoverServiceCharacteristics(path: string, service: Service) {
+  discoverServiceCharacteristics(path: string, service: Service) {
     const servicePath = `${path}/${service.uuid}/`;
-    await fs.mkdir.__promisify__(servicePath);
-    await fs.writeFile.__promisify__(
+    fs.mkdirSync(servicePath);
+    fs.writeFileSync(
       `${servicePath}${service.name}.json`,
       JSON.stringify(service, null, 2),
       {encoding: 'utf8'},
     );
-    const characteristics: Characteristic[] = await service.discoverCharacteristicsAsync();
-    for (let i = 0; i < characteristics.length; i++) {
-      await this.inspectCharacteristic(servicePath, characteristics[i]);
+    service.discoverCharacteristics();
+    for (let i = 0; i < service.characteristics.length; i++) {
+      this.inspectCharacteristic(servicePath, service.characteristics[i]);
     }
   }
 
-  async inspectCharacteristic(path: string, characteristic: Characteristic) {
+  inspectCharacteristic(path: string, characteristic: Characteristic) {
     const charPath = `${path}/${characteristic.uuid}/`;
-    await fs.mkdir.__promisify__(charPath);
-    await fs.writeFile.__promisify__(
+    fs.mkdirSync(charPath);
+    fs.writeFileSync(
       `${charPath}${characteristic.name}.json`,
       JSON.stringify(characteristic, null, 2),
       {encoding: 'utf8'},
