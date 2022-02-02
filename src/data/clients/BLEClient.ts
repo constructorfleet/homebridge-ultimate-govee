@@ -6,7 +6,6 @@ import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 import {Emitter} from '../../util/types';
-import {platform} from 'os';
 import {
   BLEPeripheralConnectionEvent,
   BLEPeripheralDiscoveredEvent,
@@ -20,7 +19,6 @@ export class BLEClient
 
   private subscriptions: Map<string, BLEDeviceIdentification> = new Map<string, BLEDeviceIdentification>();
   private connections: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
-  private online = false;
   private scanning = false;
 
   constructor(
