@@ -33,9 +33,15 @@ export class BLEClient
       async (state) => {
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
-          await noble.startScanningAsync();
+          this.online = true;
+          if (this.subscriptions && !this.scanning) {
+            await noble.startScanningAsync();
+          }
         } else {
-          await noble.stopScanningAsync();
+          this.online = false;
+          if (this.scanning) {
+            await noble.stopScanningAsync();
+          }
         }
       },
     );
@@ -72,9 +78,12 @@ export class BLEClient
       async: true,
     },
   )
-  onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
+  async onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
     this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
+    if (this.online && !this.scanning) {
+      await noble.startScanningAsync();
+    }
   }
 
   @OnEvent(
