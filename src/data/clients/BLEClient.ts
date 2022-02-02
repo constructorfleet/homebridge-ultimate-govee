@@ -1,5 +1,6 @@
 import {GoveeClient} from './GoveeClient';
 import {Injectable} from '@nestjs/common';
+import {AsyncLock} from 'async-lock';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {LoggingService} from '../../logging/LoggingService';
@@ -187,7 +188,6 @@ export class BLEPeripheralConnection
     const characteristics: Characteristic[] = await service.discoverCharacteristicsAsync();
     for (let i = 0; i < characteristics.length; i++) {
       await this.inspectCharacteristic(characteristics[i]);
-
     }
   }
 
@@ -202,6 +202,5 @@ export class BLEPeripheralConnection
       }),
       {encoding: 'utf8'},
     );
-    this.log.info('BLEPeripheralConnection', 'Characteristic', characteristic.name, characteristic.uuid);
   }
 }
