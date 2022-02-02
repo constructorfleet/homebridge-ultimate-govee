@@ -77,6 +77,7 @@ export class GoveePluginModule {
         IoTClient,
         RestPayloadProcessor,
         RestClient,
+        BLEClient,
         DeviceManager,
       ],
       exports: [
@@ -92,6 +93,7 @@ export class GoveePluginModule {
         IoTClient,
         RestPayloadProcessor,
         RestClient,
+        BLEClient,
         DeviceManager,
         ConfigurationModule,
         PersistModule,

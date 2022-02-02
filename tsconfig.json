@@ -21,8 +21,6 @@
   },
   "include": [
     "src/",
-    "**/*.pem",
-    "**/*.pkey"
   ],
   "exclude": [
     "**/*.spec.ts"
