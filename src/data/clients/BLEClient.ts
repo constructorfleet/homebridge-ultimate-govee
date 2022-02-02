@@ -3,10 +3,10 @@ import {Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {LoggingService} from '../../logging/LoggingService';
-import noble, {startScanning} from '@abandonware/noble';
-import {Characteristic, Peripheral, Service} from '@abandonware/noble';
-import {BLEConnectionStateEvent, BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
+import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
+import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 import {Emitter} from '../../util/types';
+import {platform} from 'os';
 import {
   BLEPeripheralConnectionEvent,
   BLEPeripheralDiscoveredEvent,
@@ -69,20 +69,17 @@ export class BLEClient
 
   @OnEvent(
     'BLE.Subscribe',
-    // {
-    //   async: true,
-    // },
+    {
+      async: true,
+    },
   )
-  async onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
+  onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
     this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
   }
 
   @OnEvent(
     'BLE.PERIPHERAL.Discovered',
-    // {
-    //   async: true,
-    // },
   )
   async onPeripheralDiscovered(peripheral: Peripheral) {
     if (!this.subscriptions.has(peripheral.address)) {
@@ -107,9 +104,6 @@ export class BLEClient
 
   @OnEvent(
     'BLE.PERIPHERAL.Connection',
-    {
-      async: true,
-    },
   )
   async onPeripheralConnection(connectionState: PeripheralConnectionState) {
     if (connectionState.connectionState === ConnectionState.Connected) {
@@ -121,7 +115,6 @@ export class BLEClient
       this.connections.delete(connectionState.bleAddress);
     }
   }
-
 }
 
 export class BLEPeripheralConnection
@@ -177,11 +170,6 @@ export class BLEPeripheralConnection
       'rssiUpdate',
       async (rssi: number) => this.log.info(rssi),
     );
-
-    // peripheral.on(
-    //   'servicesDiscover',
-    //   async (services: Service[]) => services.forEach((x) => x.),
-    // );
   }
 
   async connect() {
