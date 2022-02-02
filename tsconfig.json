@@ -21,7 +21,7 @@
   },
   "include": [
     "src/",
-    "assets/"
+    "src/data/clients/assets/"
   ],
   "exclude": [
     "**/*.spec.ts"
