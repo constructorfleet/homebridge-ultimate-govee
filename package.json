@@ -33,7 +33,6 @@
     "govee"
   ],
   "dependencies": {
-    "@abandonware/noble": "^1.9.2-15",
     "@nestjs/common": "^8.2.4",
     "@nestjs/config": "^1.1.6",
     "@nestjs/core": "^8.2.4",
@@ -54,6 +53,10 @@
     "retrobus": "^1.8.0",
     "rxjs": "^7.5.1",
     "util": "^0.12.4"
+  },
+  "optionalDependencies": {
+    "@abandonware/noble": "^1.9.2-15",
+    "@abandonware/bluetooth-hci-socket": "^0.5.3-8"
   },
   "devDependencies": {
     "@types/node": "^16.10.9",
