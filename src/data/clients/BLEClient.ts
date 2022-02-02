@@ -59,7 +59,6 @@ export class BLEClient
     noble.on(
       'discover',
       async (peripheral: Peripheral) => {
-        this.log.info('BLEClient', 'Discovered', peripheral);
         this.emit(
           new BLEPeripheralDiscoveredEvent(peripheral),
         );
@@ -173,33 +172,46 @@ export class BLEPeripheralConnection
   }
 
   async connect() {
+    const path = `/tmp/${this.peripheral.address}/`;
+    if (fs.existsSync(path)) {
+      return;
+    }
     await this.peripheral.connectAsync();
+    await fs.mkdir.__promisify__(path);
+    await fs.writeFile.__promisify__(
+      `${path}advertisement.json`,
+      JSON.stringify(this.peripheral.advertisement, null, 2),
+      {encoding: 'utf8'},
+    );
 
     const services = await this.peripheral.discoverServicesAsync();
     for (let i = 0; i < services.length; i++) {
-      await this.discoverServiceCharacteristics(services[i]);
+      await this.discoverServiceCharacteristics(path, services[i]);
     }
 
     await this.peripheral.disconnectAsync();
   }
 
-  async discoverServiceCharacteristics(service: Service) {
-    this.log.info('BLEPeripheralConnection', 'Service', service.name, service.uuid);
+  async discoverServiceCharacteristics(path: string, service: Service) {
+    const servicePath = `${path}/${service.uuid}/`;
+    await fs.mkdir.__promisify__(servicePath);
+    await fs.writeFile.__promisify__(
+      `${servicePath}${service.name}.json`,
+      JSON.stringify(service, null, 2),
+      {encoding: 'utf8'},
+    );
     const characteristics: Characteristic[] = await service.discoverCharacteristicsAsync();
     for (let i = 0; i < characteristics.length; i++) {
-      await this.inspectCharacteristic(characteristics[i]);
+      await this.inspectCharacteristic(servicePath, characteristics[i]);
     }
   }
 
-  async inspectCharacteristic(characteristic: Characteristic) {
+  async inspectCharacteristic(path: string, characteristic: Characteristic) {
+    const charPath = `${path}/${characteristic.uuid}/`;
+    await fs.mkdir.__promisify__(charPath);
     await fs.writeFile.__promisify__(
-      `/tmp/${this.peripheral.address}`,
-      JSON.stringify({
-        peripheral: this.peripheral.address,
-        characteristic: characteristic,
-        name: characteristic.name,
-        uuid: characteristic.uuid,
-      }),
+      `${charPath}${characteristic.name}.json`,
+      JSON.stringify(characteristic, null, 2),
       {encoding: 'utf8'},
     );
   }
