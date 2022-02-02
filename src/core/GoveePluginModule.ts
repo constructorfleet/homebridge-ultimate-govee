@@ -26,7 +26,7 @@ export class GoveePluginModule {
     persistConfig: PersistConfiguration,
     logger: Logger,
   ): DynamicModule {
-    console.log(path.join('assets', 'testiot.cert.pkey'));
+    logger.error(path.join('assets', 'testiot.cert.pkey'));
     return {
       module: GoveePluginModule,
       imports: [
