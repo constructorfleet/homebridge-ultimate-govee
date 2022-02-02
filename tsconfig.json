@@ -15,13 +15,14 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "assets": "./assets/**/*",
     "strict": true,
     "esModuleInterop": true,
     "noImplicitAny": false
   },
   "include": [
     "src/",
-    "src/assets/"
+    "assets/"
   ],
   "exclude": [
     "**/*.spec.ts"
