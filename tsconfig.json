@@ -21,7 +21,8 @@
   },
   "include": [
     "src/",
-    "src/data/clients/assets/"
+    "**/*.pem",
+    "**/*.pkey"
   ],
   "exclude": [
     "**/*.spec.ts"

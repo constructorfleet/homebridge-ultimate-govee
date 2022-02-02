@@ -30,9 +30,9 @@ export class IoTClient
     super(eventEmitter);
     this.awsIOTDevice = new device({
       clientId: clientId,
-      certPath: path.resolve(path.join(__dirname, certificatePath)),
-      keyPath: path.resolve(path.join(__dirname, keyPath)),
-      caPath: path.resolve(path.join(__dirname, caPath)),
+      certPath: path.resolve(path.join(__dirname, 'assets', certificatePath)),
+      keyPath: path.resolve(path.join(__dirname, 'assets', keyPath)),
+      caPath: path.resolve(path.join(__dirname, 'assets', caPath)),
       host: host,
     });
 

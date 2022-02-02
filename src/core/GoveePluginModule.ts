@@ -57,15 +57,15 @@ export class GoveePluginModule {
         },
         {
           provide: IOT_KEY,
-          useValue: path.join('assets', 'testiot.cert.pkey'),
+          useValue: 'testiot.cert.pkey',
         },
         {
           provide: IOT_CERTIFICATE,
-          useValue: path.join('assets', 'testiot.cert.pem'),
+          useValue: 'testiot.cert.pem',
         },
         {
           provide: IOT_CA_CERTIFICATE,
-          useValue: path.join('assets', 'AmazonRootCA1.pem'),
+          useValue: 'AmazonRootCA1.pem',
         },
         {
           provide: GOVEE_CLIENT_ID,
