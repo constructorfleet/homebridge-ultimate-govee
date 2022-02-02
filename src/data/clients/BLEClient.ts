@@ -58,9 +58,9 @@ export class BLEClient
       'discover',
       async (peripheral: Peripheral) => {
         this.log.info('BLEClient', 'Discovered', peripheral);
-        this.emit(
-          new BLEPeripheralDiscoveredEvent(peripheral),
-        );
+        // this.emit(
+        //   new BLEPeripheralDiscoveredEvent(peripheral),
+        // );
       },
     );
   }
