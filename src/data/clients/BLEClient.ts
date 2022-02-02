@@ -11,6 +11,7 @@ import {
   BLEPeripheralDiscoveredEvent,
   PeripheralConnectionState,
 } from '../../core/events/dataClients/ble/BLEPeripheral';
+import fs from 'fs';
 
 @Injectable()
 export class BLEClient
@@ -191,6 +192,16 @@ export class BLEPeripheralConnection
   }
 
   async inspectCharacteristic(characteristic: Characteristic) {
+    fs.writeFileSync(
+      `/tmp/${this.peripheral.address}`,
+      JSON.stringify({
+        peripheral: this.peripheral.address,
+        characteristic: characteristic,
+        name: characteristic.name,
+        uuid: characteristic.uuid,
+      }),
+      {encoding: 'utf8'},
+    );
     this.log.info('BLEPeripheralConnection', 'Characteristic', characteristic.name, characteristic.uuid);
   }
 }
