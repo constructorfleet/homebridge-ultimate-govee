@@ -4,7 +4,8 @@ import {GoveePluginModule} from '../core/GoveePluginModule';
 import {
   HOMEBRIDGE_API,
   PLATFORM_CHARACTERISTICS,
-  PLATFORM_CONFIG, PLATFORM_CONFIG_FILE,
+  PLATFORM_CONFIG,
+  PLATFORM_CONFIG_FILE,
   PLATFORM_SERVICES,
   PLATFORM_UUID_GENERATOR,
 } from '../util/const';
@@ -25,6 +26,7 @@ export interface GoveeCredentials {
 
 
 export interface PlatformModuleConfig {
+  rootPath: string;
   api: API;
   Service: typeof Service;
   Characteristic: typeof Characteristic;
@@ -51,6 +53,7 @@ export class PlatformModule {
         {
           storagePath: config.storagePath,
         },
+        config.rootPath,
         config.logger,
         ),
       ],

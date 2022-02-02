@@ -1,5 +1,4 @@
 import {device} from 'aws-iot-device-sdk';
-import path from 'path';
 import {GoveeClient} from './GoveeClient';
 import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../../util/const';
 import {Inject, Injectable} from '@nestjs/common';
@@ -30,9 +29,9 @@ export class IoTClient
     super(eventEmitter);
     this.awsIOTDevice = new device({
       clientId: clientId,
-      certPath: path.resolve(path.join(__dirname, 'assets', certificatePath)),
-      keyPath: path.resolve(path.join(__dirname, 'assets', keyPath)),
-      caPath: path.resolve(path.join(__dirname, 'assets', caPath)),
+      certPath: certificatePath,
+      keyPath: keyPath,
+      caPath: caPath,
       host: host,
     });
 

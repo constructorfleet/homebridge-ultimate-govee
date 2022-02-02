@@ -24,6 +24,7 @@ export class GoveePluginModule {
   public static register(
     config: GoveeConfiguration,
     persistConfig: PersistConfiguration,
+    rootPath: string,
     logger: Logger,
   ): DynamicModule {
     logger.error(path.join('assets', 'testiot.cert.pkey'));
@@ -57,15 +58,15 @@ export class GoveePluginModule {
         },
         {
           provide: IOT_KEY,
-          useValue: 'testiot.cert.pkey',
+          useValue: path.resolve(path.join(rootPath, 'assets', 'testiot.cert.pkey')),
         },
         {
           provide: IOT_CERTIFICATE,
-          useValue: 'testiot.cert.pem',
+          useValue:  path.resolve(path.join(rootPath, 'assets', 'testiot.cert.pem')),
         },
         {
           provide: IOT_CA_CERTIFICATE,
-          useValue: 'AmazonRootCA1.pem',
+          useValue:  path.resolve(path.join(rootPath, 'assets', 'AmazonRootCA1.pem')),
         },
         {
           provide: GOVEE_CLIENT_ID,

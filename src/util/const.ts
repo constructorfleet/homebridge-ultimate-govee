@@ -3,6 +3,7 @@ export const GOVEE_CLIENT_ID = 'Goveee_Client_Id';
 export const GOVEE_CONFIGURATION = 'Govee_Configuration';
 export const PERSIST_CONFIGURATION = 'Persist_Configuration';
 
+export const ASSET_PATH = 'Asset_Path';
 
 export const IOT_CERTIFICATE = 'IOT_Certificate';
 export const IOT_KEY = 'IOT_Key';

@@ -3,8 +3,10 @@ import {INestApplicationContext} from '@nestjs/common';
 import {NestFactory} from '@nestjs/core';
 import {PlatformModule} from './PlatformModule';
 import {PlatformService} from './PlatformService';
+import path from 'path';
 
 interface UltimateGoveePlatformConfig {
+  rootPath: string;
   platform: PlatformName | PlatformIdentifier;
   name?: string;
   username: string;
@@ -19,7 +21,7 @@ interface UltimateGoveePlatformConfig {
  */
 export class UltimateGoveePlatform
   implements DynamicPlatformPlugin {
-  private context!: INestApplicationContext;
+  private appContext!: INestApplicationContext;
   private service!: PlatformService;
   private loaded = false;
   private cachedAccessories: PlatformAccessory[] = [];
@@ -32,6 +34,7 @@ export class UltimateGoveePlatform
     const goveeConfig = config as UltimateGoveePlatformConfig;
     NestFactory.createApplicationContext(
       PlatformModule.register({
+        rootPath: path.resolve(path.join(__dirname, '..')),
         api: this.api,
         Service: this.api.hap.Service,
         Characteristic: this.api.hap.Characteristic,
@@ -53,7 +56,7 @@ export class UltimateGoveePlatform
         abortOnError: false,
       },
     ).then((context) => {
-      this.context = context;
+      this.appContext = context;
       this.service = context.get(PlatformService);
       while (this.cachedAccessories.length) {
         const acc = this.cachedAccessories.pop();
