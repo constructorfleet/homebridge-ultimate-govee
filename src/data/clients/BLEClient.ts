@@ -192,7 +192,7 @@ export class BLEPeripheralConnection
   }
 
   async inspectCharacteristic(characteristic: Characteristic) {
-    fs.writeFileSync(
+    await fs.writeFile.__promisify__(
       `/tmp/${this.peripheral.address}`,
       JSON.stringify({
         peripheral: this.peripheral.address,
