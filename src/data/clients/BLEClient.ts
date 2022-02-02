@@ -1,6 +1,5 @@
 import {GoveeClient} from './GoveeClient';
 import {Injectable} from '@nestjs/common';
-import {AsyncLock} from 'async-lock';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {LoggingService} from '../../logging/LoggingService';
@@ -22,6 +21,7 @@ export class BLEClient
   private subscriptions: Map<string, BLEDeviceIdentification> = new Map<string, BLEDeviceIdentification>();
   private connections: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
   private scanning = false;
+  private online = false;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -33,7 +33,7 @@ export class BLEClient
       async (state) => {
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
-          await noble.startScanningAsync([], false);
+          await noble.startScanningAsync();
         } else {
           await noble.stopScanningAsync();
         }
@@ -80,7 +80,7 @@ export class BLEClient
   @OnEvent(
     'BLE.PERIPHERAL.Discovered',
     {
-      async: true
+      async: true,
     },
   )
   async onPeripheralDiscovered(peripheral: Peripheral) {
@@ -107,7 +107,7 @@ export class BLEClient
   @OnEvent(
     'BLE.PERIPHERAL.Connection',
     {
-      async: true
+      async: true,
     },
   )
   async onPeripheralConnection(connectionState: PeripheralConnectionState) {
