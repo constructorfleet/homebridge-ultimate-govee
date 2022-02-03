@@ -128,44 +128,51 @@ export class BLEPeripheralConnection
 
     peripheral.on(
       'connect',
-      async (error: string) => {
-        if (error) {
-          this.log.info('TODO?');
-          return;
-        }
-        this.emit(
-          new BLEPeripheralConnectionEvent(
-            new PeripheralConnectionState(
-              peripheral.address.toLowerCase(),
-              deviceIdentification.deviceId,
-              ConnectionState.Connected,
-              this,
-            ),
-          ),
-        );
-      },
+      this.onConnect,
     );
 
     peripheral.on(
       'disconnect',
-      async (error: string) =>
-        error
-          ? this.log.info('TODO?')
-          : this.emit(
-            new BLEPeripheralConnectionEvent(
-              new PeripheralConnectionState(
-                peripheral.address.toLowerCase(),
-                this.deviceIdentification.deviceId,
-                ConnectionState.Closed,
-                this,
-              ),
-            ),
-          ),
+      this.onDisconnect,
     );
 
     peripheral.on(
       'rssiUpdate',
       async (rssi: number) => this.log.info(rssi),
+    );
+  }
+
+  async onConnect(error?: string) {
+    if (error) {
+      this.log.info('TODO?');
+      return;
+    }
+    this.emit(
+      new BLEPeripheralConnectionEvent(
+        new PeripheralConnectionState(
+          this.peripheral.address.toLowerCase(),
+          this.deviceIdentification.deviceId,
+          ConnectionState.Connected,
+          this,
+        ),
+      ),
+    );
+  }
+
+  async onDisconnect(error?: string) {
+    if (error) {
+      this.log.info('TODO?');
+      return;
+    }
+    this.emit(
+      new BLEPeripheralConnectionEvent(
+        new PeripheralConnectionState(
+          peripheral.address.toLowerCase(),
+          this.deviceIdentification.deviceId,
+          ConnectionState.Closed,
+          this,
+        ),
+      ),
     );
   }
 
