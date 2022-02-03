@@ -6,11 +6,7 @@ import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 import {Emitter} from '../../util/types';
-import {
-  BLEPeripheralConnectionEvent,
-  BLEPeripheralDiscoveredEvent,
-  PeripheralConnectionState,
-} from '../../core/events/dataClients/ble/BLEPeripheral';
+import {BLEPeripheralConnectionEvent, PeripheralConnectionState} from '../../core/events/dataClients/ble/BLEPeripheral';
 
 @Injectable()
 export class BLEClient
@@ -63,22 +59,22 @@ export class BLEClient
     noble.on(
       'discover',
       async (peripheral: Peripheral) => {
-        if (!this.subscriptions.has(peripheral.address)) {
+        if (!this.subscriptions.has(peripheral.address.toLowerCase())) {
           this.log.info('BLEClient', 'Unknown Address', peripheral.address);
           return;
         }
-        if (this.connections.has(peripheral.address)) {
+        if (this.connections.has(peripheral.address.toLocaleLowerCase())) {
           this.log.info('BLEClient', 'Already Connected', peripheral.address);
           return;
         }
-        if (this.devices.has(peripheral.address)) {
+        if (this.devices.has(peripheral.address.toLowerCase())) {
           return;
         }
-        this.devices.add(peripheral.address);
+        this.devices.add(peripheral.address.toLocaleLowerCase());
         this.log.info('BLEClient', 'Creating Connection', peripheral.address);
         const peripheralConnection = new BLEPeripheralConnection(
           this.emitter,
-          this.subscriptions[peripheral.address],
+          this.subscriptions[peripheral.address.toLowerCase()],
           peripheral,
           this.log,
         );
@@ -97,7 +93,7 @@ export class BLEClient
   )
   onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
-    this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
+    this.subscriptions.set(bleDeviceId.bleAddress.toLocaleLowerCase(), bleDeviceId);
   }
 
   @OnEvent(
@@ -108,9 +104,9 @@ export class BLEClient
   )
   onPeripheralConnection(connectionState: PeripheralConnectionState) {
     if (connectionState.connectionState === ConnectionState.Connected) {
-      this.connections.set(connectionState.bleAddress, connectionState.connection);
+      this.connections.set(connectionState.bleAddress.toLowerCase(), connectionState.connection);
     } else {
-      this.connections.delete(connectionState.bleAddress);
+      this.connections.delete(connectionState.bleAddress.toLocaleLowerCase());
       if (!this.scanning) {
         noble.startScanning([], true);
       }
@@ -140,7 +136,7 @@ export class BLEPeripheralConnection
         this.emit(
           new BLEPeripheralConnectionEvent(
             new PeripheralConnectionState(
-              this.deviceIdentification.bleAddress,
+              this.deviceIdentification.bleAddress.toLowerCase(),
               this.deviceIdentification.deviceId,
               ConnectionState.Connected,
               this,
@@ -158,7 +154,7 @@ export class BLEPeripheralConnection
           : this.emit(
             new BLEPeripheralConnectionEvent(
               new PeripheralConnectionState(
-                this.deviceIdentification.bleAddress,
+                this.deviceIdentification.bleAddress.toLowerCase(),
                 this.deviceIdentification.deviceId,
                 ConnectionState.Closed,
                 this,
@@ -178,7 +174,7 @@ export class BLEPeripheralConnection
     const services = await this.peripheral.discoverServicesAsync();
     this.log.info(this.peripheral.advertisement);
     for (let i = 0; i < services.length; i++) {
-      this.discoverServiceCharacteristics(services[i]);
+      await this.discoverServiceCharacteristics(services[i]);
     }
 
     await this.peripheral.disconnectAsync();
