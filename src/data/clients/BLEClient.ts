@@ -154,7 +154,7 @@ export class BLEPeripheralConnection
           : this.emit(
             new BLEPeripheralConnectionEvent(
               new PeripheralConnectionState(
-                this.deviceIdentification.bleAddress.toLowerCase(),
+                peripheral.address.toLowerCase(),
                 this.deviceIdentification.deviceId,
                 ConnectionState.Closed,
                 this,
@@ -188,6 +188,7 @@ export class BLEPeripheralConnection
   }
 
   inspectCharacteristic(characteristic: Characteristic) {
-    this.log.info(JSON.stringify(characteristic));
+    this.log.info(JSON.stringify(characteristic.properties));
+    this.log.info(JSON.stringify(characteristic.descriptors));
   }
 }
