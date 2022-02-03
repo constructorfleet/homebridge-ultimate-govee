@@ -11,7 +11,6 @@ import {
   BLEPeripheralDiscoveredEvent,
   PeripheralConnectionState,
 } from '../../core/events/dataClients/ble/BLEPeripheral';
-import fs from 'fs';
 
 @Injectable()
 export class BLEClient
@@ -35,9 +34,7 @@ export class BLEClient
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
           this.online = true;
-          if (this.subscriptions.size && !this.scanning) {
-            await noble.startScanningAsync();
-          }
+          await noble.startScanningAsync();
         } else {
           this.online = false;
           if (this.scanning) {
@@ -66,9 +63,28 @@ export class BLEClient
     noble.on(
       'discover',
       async (peripheral: Peripheral) => {
-        this.emit(
-          new BLEPeripheralDiscoveredEvent(peripheral),
+        if (!this.subscriptions.has(peripheral.address)) {
+          this.log.info('BLEClient', 'Unknown Address', peripheral.address);
+          return;
+        }
+        if (this.connections.has(peripheral.address)) {
+          this.log.info('BLEClient', 'Already Connected', peripheral.address);
+          return;
+        }
+        if (this.devices.has(peripheral.address)) {
+          return;
+        }
+        this.devices.add(peripheral.address);
+        this.log.info('BLEClient', 'Creating Connection', peripheral.address);
+        const peripheralConnection = new BLEPeripheralConnection(
+          this.emitter,
+          this.subscriptions[peripheral.address],
+          peripheral,
+          this.log,
         );
+        this.log.info('BLEClient', 'Stop Scanning', peripheral.address);
+        await noble.stopScanningAsync();
+        await peripheralConnection.connect();
       },
     );
   }
@@ -82,40 +98,6 @@ export class BLEClient
   onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
     this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
-    if (this.online && !this.scanning) {
-      noble.startScanning([], false);
-    }
-  }
-
-  @OnEvent(
-    'BLE.PERIPHERAL.Discovered',
-    {
-      async: true,
-    },
-  )
-  onPeripheralDiscovered(peripheral: Peripheral) {
-    if (!this.subscriptions.has(peripheral.address)) {
-      this.log.info('BLEClient', 'Unknown Address', peripheral.address);
-      return;
-    }
-    if (this.connections.has(peripheral.address)) {
-      this.log.info('BLEClient', 'Already Connected', peripheral.address);
-      return;
-    }
-    if (this.devices.has(peripheral.address)) {
-      return;
-    }
-    this.devices.add(peripheral.address);
-    this.log.info('BLEClient', 'Creating Connection', peripheral.address);
-    const peripheralConnection = new BLEPeripheralConnection(
-      this.emitter,
-      this.subscriptions[peripheral.address],
-      peripheral,
-      this.log,
-    );
-    this.log.info('BLEClient', 'Stop Scanning', peripheral.address);
-    noble.stopScanning();
-    peripheralConnection.connect();
   }
 
   @OnEvent(
@@ -130,7 +112,7 @@ export class BLEClient
     } else {
       this.connections.delete(connectionState.bleAddress);
       if (!this.scanning) {
-        noble.startScanning([], false);
+        noble.startScanning([], true);
       }
     }
   }
@@ -191,21 +173,21 @@ export class BLEPeripheralConnection
     );
   }
 
-  connect() {
-    this.peripheral.connect();
-    this.peripheral.discoverServices();
+  async connect() {
+    await this.peripheral.connectAsync();
+    const services = await this.peripheral.discoverServicesAsync();
     this.log.info(this.peripheral.advertisement);
-    for (let i = 0; i < this.peripheral.services.length; i++) {
-      this.discoverServiceCharacteristics(this.peripheral.services[i]);
+    for (let i = 0; i < services.length; i++) {
+      this.discoverServiceCharacteristics(services[i]);
     }
 
-    this.peripheral.disconnect();
+    await this.peripheral.disconnectAsync();
   }
 
-  discoverServiceCharacteristics(service: Service) {
-    service.discoverCharacteristics();
-    for (let i = 0; i < service.characteristics.length; i++) {
-      this.inspectCharacteristic(service.characteristics[i]);
+  async discoverServiceCharacteristics(service: Service) {
+    const characteristics = await service.discoverCharacteristicsAsync();
+    for (let i = 0; i < characteristics.length; i++) {
+      this.inspectCharacteristic(characteristics[i]);
     }
   }
 
