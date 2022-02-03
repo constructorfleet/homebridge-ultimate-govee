@@ -20,6 +20,7 @@ export class BLEClient
 
   private subscriptions: Map<string, BLEDeviceIdentification> = new Map<string, BLEDeviceIdentification>();
   private connections: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
+  private devices: Set<string> = new Set<string>();
   private scanning = false;
   private online = false;
 
@@ -34,7 +35,7 @@ export class BLEClient
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
           this.online = true;
-          if (this.subscriptions && !this.scanning) {
+          if (this.subscriptions.size && !this.scanning) {
             await noble.startScanningAsync();
           }
         } else {
@@ -101,6 +102,10 @@ export class BLEClient
       this.log.info('BLEClient', 'Already Connected', peripheral.address);
       return;
     }
+    if (this.devices.has(peripheral.address)) {
+      return;
+    }
+    this.devices.add(peripheral.address);
     this.log.info('BLEClient', 'Creating Connection', peripheral.address);
     const peripheralConnection = new BLEPeripheralConnection(
       this.emitter,
@@ -119,13 +124,13 @@ export class BLEClient
       async: true,
     },
   )
-  async onPeripheralConnection(connectionState: PeripheralConnectionState) {
+  onPeripheralConnection(connectionState: PeripheralConnectionState) {
     if (connectionState.connectionState === ConnectionState.Connected) {
       this.connections.set(connectionState.bleAddress, connectionState.connection);
     } else {
       this.connections.delete(connectionState.bleAddress);
       if (!this.scanning) {
-        await noble.startScanningAsync();
+        noble.startScanning([], false);
       }
     }
   }
@@ -187,47 +192,24 @@ export class BLEPeripheralConnection
   }
 
   connect() {
-    const path = `/tmp/${this.peripheral.address}/`;
-    if (fs.existsSync(path)) {
-      return;
-    }
     this.peripheral.connect();
-    fs.mkdirSync(path);
-    fs.writeFileSync(
-      `${path}advertisement.json`,
-      JSON.stringify(this.peripheral.advertisement, null, 2),
-      {encoding: 'utf8'},
-    );
-
     this.peripheral.discoverServices();
+    this.log.info(this.peripheral.advertisement);
     for (let i = 0; i < this.peripheral.services.length; i++) {
-      this.discoverServiceCharacteristics(path, this.peripheral.services[i]);
+      this.discoverServiceCharacteristics(this.peripheral.services[i]);
     }
 
     this.peripheral.disconnect();
   }
 
-  discoverServiceCharacteristics(path: string, service: Service) {
-    const servicePath = `${path}/${service.uuid}/`;
-    fs.mkdirSync(servicePath);
-    fs.writeFileSync(
-      `${servicePath}${service.name}.json`,
-      JSON.stringify(service, null, 2),
-      {encoding: 'utf8'},
-    );
+  discoverServiceCharacteristics(service: Service) {
     service.discoverCharacteristics();
     for (let i = 0; i < service.characteristics.length; i++) {
-      this.inspectCharacteristic(servicePath, service.characteristics[i]);
+      this.inspectCharacteristic(service.characteristics[i]);
     }
   }
 
-  inspectCharacteristic(path: string, characteristic: Characteristic) {
-    const charPath = `${path}/${characteristic.uuid}/`;
-    fs.mkdirSync(charPath);
-    fs.writeFileSync(
-      `${charPath}${characteristic.name}.json`,
-      JSON.stringify(characteristic, null, 2),
-      {encoding: 'utf8'},
-    );
+  inspectCharacteristic(characteristic: Characteristic) {
+    this.log.info(JSON.stringify(characteristic));
   }
 }
