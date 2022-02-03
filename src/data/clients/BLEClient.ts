@@ -136,8 +136,8 @@ export class BLEPeripheralConnection
         this.emit(
           new BLEPeripheralConnectionEvent(
             new PeripheralConnectionState(
-              this.deviceIdentification.bleAddress.toLowerCase(),
-              this.deviceIdentification.deviceId,
+              peripheral.address.toLowerCase(),
+              deviceIdentification.deviceId,
               ConnectionState.Connected,
               this,
             ),
