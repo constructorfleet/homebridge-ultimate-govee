@@ -124,3 +124,5 @@ test.ts
 
 .DS_Store
 .env
+.idea/
+.vscode/
