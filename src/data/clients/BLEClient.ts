@@ -5,6 +5,7 @@ import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 import {Emitter} from '../../util/types';
+import {uuid} from 'homebridge';
 
 @Injectable()
 export class BLEClient
@@ -129,8 +130,9 @@ export class BLEPeripheralConnection
 
   async connect() {
     await this.peripheral.connectAsync();
+    this.log.info(this.peripheral.advertisement);
     const services = await this.peripheral.discoverServicesAsync(
-      [this.controlServiceUUID],
+      [],
     );
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
@@ -140,16 +142,28 @@ export class BLEPeripheralConnection
 
   async discoverServiceCharacteristics(service: Service) {
     const characteristics = await service.discoverCharacteristicsAsync(
-      [this.controlCharacteristicUUID],
+      [],
     );
     for (let i = 0; i < characteristics.length; i++) {
-      await this.readCharacteristicValue(characteristics[i]);
+      await this.readCharacteristicValue(service, characteristics[i]);
     }
   }
 
-  async readCharacteristicValue(characteristic: Characteristic) {
+  async readCharacteristicValue(service: Service, characteristic: Characteristic) {
     const characteristicValue = await characteristic.readAsync();
-    this.log.info(characteristicValue);
+    this.log.info(
+      {
+        peripheral: this.peripheral.address.toLowerCase(),
+        service: {
+          name: service.name,
+          uuid: service.uuid,
+        },
+        characteristic: {
+          name: characteristic.name,
+          uuid: characteristic.uuid,
+          value: characteristicValue,
+        },
+      });
     try {
       this.log.info(characteristicValue.toString('hex'));
     } catch (e) {
