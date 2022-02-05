@@ -70,6 +70,7 @@ export class BLEClient
         if (this.devices.has(peripheral.address.toLowerCase())) {
           return;
         }
+        await noble.stopScanningAsync();
         this.devices.add(peripheral.address.toLocaleLowerCase());
         this.log.info('BLEClient', 'Creating Connection', peripheral.address);
         const peripheralConnection = new BLEPeripheralConnection(
@@ -79,7 +80,6 @@ export class BLEClient
           this.log,
         );
         this.log.info('BLEClient', 'Stop Scanning', peripheral.address);
-        await noble.stopScanningAsync();
         await peripheralConnection.connect();
         await peripheralConnection.onDisconnect();
       },
@@ -126,21 +126,6 @@ export class BLEPeripheralConnection
   ) {
     super(eventEmitter);
     peripheral.removeAllListeners();
-
-    peripheral.on(
-      'connect',
-      this.onConnect,
-    );
-
-    // peripheral.on(
-    //   'disconnect',
-    //   this.onDisconnect,
-    // );
-
-    peripheral.on(
-      'rssiUpdate',
-      async (rssi: number) => this.log.info(rssi),
-    );
   }
 
   onConnect(error?: string) {
