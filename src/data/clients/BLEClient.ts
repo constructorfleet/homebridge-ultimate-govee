@@ -5,8 +5,6 @@ import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
-import {Emitter} from '../../util/types';
-import {BLEPeripheralConnectionEvent, PeripheralConnectionState} from '../../core/events/dataClients/ble/BLEPeripheral';
 
 @Injectable()
 export class BLEClient
@@ -14,7 +12,6 @@ export class BLEClient
   private static readonly STATE_POWERED_ON = 'poweredOn';
 
   private subscriptions: Map<string, BLEDeviceIdentification> = new Map<string, BLEDeviceIdentification>();
-  private connections: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
   private devices: Set<string> = new Set<string>();
   private scanning = false;
   private online = false;
@@ -61,10 +58,6 @@ export class BLEClient
       async (peripheral: Peripheral) => {
         if (!this.subscriptions.has(peripheral.address.toLowerCase())) {
           this.log.info('BLEClient', 'Unknown Address', peripheral.address);
-          return;
-        }
-        if (this.connections.has(peripheral.address.toLocaleLowerCase())) {
-          this.log.info('BLEClient', 'Already Connected', peripheral.address);
           return;
         }
         if (this.devices.has(peripheral.address.toLowerCase())) {
