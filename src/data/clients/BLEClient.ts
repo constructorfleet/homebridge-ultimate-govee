@@ -86,15 +86,8 @@ export class BLEClient
       this.log,
     );
     this.connections.set(peripheral.address.toLowerCase(), peripheralConnection);
-    if (this.scanning) {
-      await noble.stopScanningAsync();
-    }
 
     await peripheralConnection.connect();
-    this.connections.delete(peripheral.address.toLowerCase());
-    if (!this.scanning) {
-      await noble.startScanningAsync([], true);
-    }
   }
 
   @OnEvent(
@@ -158,6 +151,7 @@ export class BLEPeripheralConnection
       }));
     }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
+      characteristic.on('data', (data: Buffer, isNotification: boolean) => console.log(data));
       await characteristic.writeAsync(
         Buffer.from(
           [0xaa, 0x05, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xba],
