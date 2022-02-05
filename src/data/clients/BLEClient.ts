@@ -154,9 +154,11 @@ export class BLEPeripheralConnection
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
     }
+    if (characteristic.uuid === '000102030405060708090a0b0c0d2b10') {
+      await characteristic.subscribeAsync();
+    }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
-      await characteristic.broadcastAsync(true);
-      characteristic.on('data', (data: Buffer, isNotification: boolean) => console.log(data));
+      await characteristic.subscribeAsync();
       await characteristic.writeAsync(
         Buffer.from(
           [0xaa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab],
