@@ -5,6 +5,7 @@ import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 import {Emitter} from '../../util/types';
+import {curry} from 'rambda';
 
 @Injectable()
 export class BLEClient
@@ -175,7 +176,14 @@ export class BLEPeripheralConnection
     }
     characteristic.on(
       'data',
-      this.dataCallback(this.deviceIdentification, characteristic, this.log),
+      curry(
+        this.dataCallback)(
+        this.deviceIdentification.deviceId,
+        this.peripheral.address.toLowerCase(),
+        characteristic.uuid,
+        characteristic.name,
+        this.log,
+      ),
     );
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
@@ -204,17 +212,22 @@ export class BLEPeripheralConnection
   }
 
   dataCallback(
-    deviceIdentification: BLEDeviceIdentification,
-    characteristic: Characteristic,
+    deviceId: string,
+    bleAddress: string,
+    charUUID: string,
+    charName: string,
     log: LoggingService,
-  ): (data: Buffer) => void {
-    return (data: Buffer) =>
-      log.info('OnData', {
-        deviceId: deviceIdentification.deviceId,
-        bleAddress: deviceIdentification.bleAddress.toLowerCase(),
-        charUUID: characteristic.uuid,
-        charName: characteristic.name,
+    data: Buffer,
+  ) {
+    log.info(
+      'OnData',
+      {
+        deviceId: deviceId,
+        bleAddress: bleAddress,
+        charUUID: charUUID,
+        charName: charName,
         data: data,
-      });
+      },
+    );
   }
 }
