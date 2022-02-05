@@ -14,7 +14,7 @@ export class BLEClient
   private static readonly CHARACTERISTIC_CONTROL_UUID = '000102030405060708090a0b0c0d2b11';
 
   private subscriptions: Map<string, BLEDeviceIdentification> = new Map<string, BLEDeviceIdentification>();
-  private connections: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
+  private peripherals: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
   private devices: Set<string> = new Set<string>();
   private scanning = false;
   private online = false;
@@ -63,8 +63,8 @@ export class BLEClient
           this.log.info('BLEClient', 'Unknown Address', peripheral.address);
           return;
         }
-        if (this.connections.has(peripheral.address.toLowerCase())) {
-          await this.connections[peripheral.address.toLowerCase()].read();
+        if (this.peripherals.has(peripheral.address.toLocaleLowerCase())) {
+          this.log.info('BLEClient', 'Already Connected', peripheral.address);
           return;
         }
 
@@ -85,8 +85,11 @@ export class BLEClient
       peripheral,
       this.log,
     );
-    this.connections.set(peripheral.address.toLowerCase(), peripheralConnection);
+    this.peripherals.set(peripheral.address.toLowerCase(), peripheralConnection);
     await peripheralConnection.connect();
+    if (!this.scanning) {
+      await noble.startScanningAsync();
+    }
   }
 
   @OnEvent(
@@ -118,10 +121,6 @@ export class BLEPeripheralConnection
 
   async connect() {
     await this.peripheral.connectAsync();
-    await this.read();
-  }
-
-  async read() {
     this.log.info(this.peripheral.advertisement);
     const services = await this.peripheral.discoverServicesAsync(
       [],
@@ -151,6 +150,10 @@ export class BLEPeripheralConnection
         type: descriptors[i].type,
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
+    }
+    if (characteristic.uuid === '000102030405060708090a0b0c0d2b10') {
+      characteristic.on('data', (data) => console.log(data));
+      await characteristic.subscribeAsync();
     }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
