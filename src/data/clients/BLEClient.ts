@@ -182,7 +182,7 @@ export class BLEPeripheralConnection
 
   async inspectCharacteristic(characteristic: Characteristic) {
     const descriptors = characteristic.discoverDescriptorsAsync();
-    this.log.info(JSON.stringify(characteristic.properties));
-    this.log.info(JSON.stringify(descriptors));
+    this.log.info(characteristic);
+    this.log.info(descriptors);
   }
 }
