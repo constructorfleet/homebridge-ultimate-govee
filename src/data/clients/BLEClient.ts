@@ -5,7 +5,6 @@ import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 import {Emitter} from '../../util/types';
-import {uuid} from 'homebridge';
 
 @Injectable()
 export class BLEClient
@@ -150,6 +149,18 @@ export class BLEPeripheralConnection
   }
 
   async readCharacteristicValue(service: Service, characteristic: Characteristic) {
+    if (characteristic.uuid === this.controlCharacteristicUUID) {
+      await characteristic.writeAsync(
+        Buffer.from(
+          [
+            170, 7, 3, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 174,
+          ],
+        ),
+        true,
+      );
+    }
     const characteristicValue = await characteristic.readAsync();
     this.log.info(
       {
