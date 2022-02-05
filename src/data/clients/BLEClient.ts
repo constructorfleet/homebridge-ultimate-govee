@@ -86,9 +86,9 @@ export class BLEClient
       this.log,
     );
     this.connections.set(peripheral.address.toLowerCase(), peripheralConnection);
-
     await peripheralConnection.connect();
     await peripheral.disconnectAsync();
+    this.connections.delete(peripheral.address.toLowerCase());
     if (!this.scanning) {
       await noble.startScanningAsync();
     }
