@@ -80,6 +80,10 @@ export class BLEClient
         );
         this.log.info('BLEClient', 'Stop Scanning', peripheral.address);
         await noble.stopScanningAsync();
+        peripheral.on(
+          'disconnect',
+          peripheralConnection.onDisconnect,
+        );
         await peripheralConnection.connect();
       },
     );
@@ -130,11 +134,11 @@ export class BLEPeripheralConnection
       'connect',
       this.onConnect,
     );
-
-    peripheral.on(
-      'disconnect',
-      this.onDisconnect,
-    );
+    //
+    // peripheral.on(
+    //   'disconnect',
+    //   this.onDisconnect,
+    // );
 
     peripheral.on(
       'rssiUpdate',
