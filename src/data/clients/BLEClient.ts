@@ -82,6 +82,7 @@ export class BLEClient
           this.subscriptions[peripheral.address.toLowerCase()],
           peripheral,
         );
+        await noble.startScanningAsync();
       },
     );
   }
@@ -101,18 +102,7 @@ export class BLEClient
     deviceIdentification: BLEDeviceIdentification,
     peripheral: Peripheral,
   ) {
-    peripheral.on(
-      'disconnect',
-      async (error?: string) => {
-        if (error) {
-          this.log.error(error);
-          return;
-        }
-
-        await noble.startScanningAsync();
-      },
-    );
-
+    this.log.info('BLEClient', 'explorePeripheral', 'DiscoverServices');
     const services = await peripheral.discoverServicesAsync([]);
 
     for (const service of services) {
@@ -122,7 +112,7 @@ export class BLEClient
         serviceInfo += ` (${service.name})`;
       }
 
-      this.log.info('BLEClient', 'peripheralService', serviceInfo);
+      this.log.info('BLEClient', 'explorePeripheral ServiceInfo', serviceInfo);
 
       const characteristics = await service.discoverCharacteristicsAsync([]);
 
@@ -133,6 +123,7 @@ export class BLEClient
           characteristicInfo += ` (${characteristic.name})`;
         }
 
+        this.log.info('BLEClient', 'explorePeripheral', 'DiscoverDescriptors');
         const descriptors = await characteristic.discoverDescriptorsAsync();
 
         const userDescriptionDescriptor = descriptors.find((descriptor) => descriptor.uuid === '2901');
@@ -161,106 +152,5 @@ export class BLEClient
     }
 
     await peripheral.disconnectAsync();
-  }
-
-  @OnEvent(
-    'BLE.PERIPHERAL.Connection',
-    {
-      async: true,
-    },
-  )
-  onPeripheralConnection(connectionState: PeripheralConnectionState) {
-    if (connectionState.connectionState === ConnectionState.Connected) {
-      this.connections.set(connectionState.bleAddress.toLowerCase(), connectionState.connection);
-    } else {
-      this.connections.delete(connectionState.bleAddress.toLocaleLowerCase());
-      if (!this.scanning) {
-        noble.startScanning([], true);
-      }
-    }
-  }
-}
-
-export class BLEPeripheralConnection
-  extends Emitter {
-
-  constructor(
-    eventEmitter: EventEmitter2,
-    private readonly deviceIdentification: BLEDeviceIdentification,
-    private readonly peripheral: Peripheral,
-    private readonly log: LoggingService,
-  ) {
-    super(eventEmitter);
-    peripheral.removeAllListeners();
-
-    peripheral.on(
-      'connect',
-      this.onConnect,
-    );
-
-    // peripheral.on(
-    //   'disconnect',
-    //   this.onDisconnect,
-    // );
-
-    peripheral.on(
-      'rssiUpdate',
-      async (rssi: number) => this.log.info(rssi),
-    );
-  }
-
-  onConnect(error?: string) {
-    if (error) {
-      this.log.info('TODO?');
-      return;
-    }
-    this.emit(
-      new BLEPeripheralConnectionEvent(
-        new PeripheralConnectionState(
-          this.deviceIdentification.bleAddress.toLowerCase(),
-          this.deviceIdentification.deviceId,
-          ConnectionState.Connected,
-          this,
-        ),
-      ),
-    );
-  }
-
-  onDisconnect(error?: string) {
-    if (error) {
-      this.log.info('TODO?');
-      return;
-    }
-    this.emit(
-      new BLEPeripheralConnectionEvent(
-        new PeripheralConnectionState(
-          this.deviceIdentification.bleAddress,
-          this.deviceIdentification.deviceId,
-          ConnectionState.Closed,
-          this,
-        ),
-      ),
-    );
-  }
-
-  async connect() {
-    await this.peripheral.connectAsync();
-    const services = await this.peripheral.discoverServicesAsync();
-    this.log.info(this.peripheral.advertisement);
-    for (let i = 0; i < services.length; i++) {
-      await this.discoverServiceCharacteristics(services[i]);
-    }
-  }
-
-  async discoverServiceCharacteristics(service: Service) {
-    const characteristics = await service.discoverCharacteristicsAsync();
-    for (let i = 0; i < characteristics.length; i++) {
-      this.inspectCharacteristic(characteristics[i]);
-    }
-  }
-
-  inspectCharacteristic(characteristic: Characteristic) {
-    this.log.info(JSON.stringify(characteristic.properties));
-    this.log.info(JSON.stringify(characteristic.descriptors));
   }
 }
