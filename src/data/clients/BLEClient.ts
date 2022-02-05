@@ -181,8 +181,22 @@ export class BLEPeripheralConnection
   }
 
   async inspectCharacteristic(characteristic: Characteristic) {
-    const descriptors = characteristic.discoverDescriptorsAsync();
-    this.log.info(characteristic);
-    this.log.info(descriptors);
+    const descriptors = await characteristic.discoverDescriptorsAsync();
+
+    this.log.info({
+      name: characteristic.name,
+      uuid: characteristic.uuid,
+      type: characteristic.type,
+      properties: characteristic.properties,
+      descriptors: descriptors.map(
+        (descriptor) => {
+          return {
+            name: descriptor.name,
+            type: descriptor.type,
+            uuid: descriptor.uuid,
+          };
+        },
+      ),
+    });
   }
 }
