@@ -94,7 +94,7 @@ export class BLEClient
     const connectPromises = Array.from(
       this.peripherals.values(),
     ).filter(
-      (peripheral) => !this.connections.has(peripheral.peripheral.address.toLowerCase())
+      (peripheral) => !this.connections.has(peripheral.peripheral.address.toLowerCase()),
     ).map(
       (peripheral) => {
         this.connections.add(peripheral.peripheral.address.toLowerCase());
@@ -173,10 +173,10 @@ export class BLEPeripheralConnection
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
     }
-    if (characteristic.uuid === '000102030405060708090a0b0c0d2b10') {
-      characteristic.on('data', (data) => console.log(data));
-      await characteristic.subscribeAsync();
-    }
+    characteristic.on(
+      'data',
+      this.dataCallback(this.deviceIdentification, characteristic, this.log),
+    );
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
         Buffer.from(
@@ -200,6 +200,21 @@ export class BLEPeripheralConnection
           properties: characteristic.properties,
           descriptors: descriptorLogs,
         },
+      });
+  }
+
+  dataCallback(
+    deviceIdentification: BLEDeviceIdentification,
+    characteristic: Characteristic,
+    log: LoggingService,
+  ): (data: Buffer) => void {
+    return (data: Buffer) =>
+      log.info('OnData', {
+        deviceId: deviceIdentification.deviceId,
+        bleAddress: deviceIdentification.bleAddress.toLowerCase(),
+        charUUID: characteristic.uuid,
+        charName: characteristic.name,
+        data: data,
       });
   }
 }
