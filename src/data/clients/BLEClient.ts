@@ -136,6 +136,7 @@ export class BLEPeripheralConnection
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
     }
+    this.log.info(this.peripheral.advertisement);
     await this.peripheral.disconnectAsync();
   }
 
@@ -150,6 +151,15 @@ export class BLEPeripheralConnection
 
   async readCharacteristicValue(service: Service, characteristic: Characteristic) {
     const descriptors = await characteristic.discoverDescriptorsAsync();
+    const descriptorLogs: Record<string, unknown>[] = [];
+    for (let i = 0; i < descriptors.length; i++) {
+      descriptorLogs.push({
+        name: descriptors[i].name,
+        uuid: descriptors[i].uuid,
+        type: descriptors[i].type,
+        value: await descriptors[i].readValueAsync(),
+      });
+    }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
         Buffer.from(
@@ -170,14 +180,7 @@ export class BLEPeripheralConnection
           name: characteristic.name,
           uuid: characteristic.uuid,
           value: characteristicValue,
-          descriptors: descriptors.map(async (descriptor) => {
-            return {
-              name: descriptor.name,
-              uuid: descriptor.uuid,
-              type: descriptor.type,
-              value: await descriptor.readValueAsync(),
-            };
-          }),
+          descriptors: descriptorLogs,
         },
       });
     try {
