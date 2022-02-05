@@ -88,6 +88,10 @@ export class BLEClient
     this.connections.set(peripheral.address.toLowerCase(), peripheralConnection);
 
     await peripheralConnection.connect();
+    await peripheral.disconnectAsync();
+    if (!this.scanning) {
+      await noble.startScanningAsync();
+    }
   }
 
   @OnEvent(
@@ -151,6 +155,7 @@ export class BLEPeripheralConnection
       }));
     }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
+      await characteristic.broadcastAsync(true);
       characteristic.on('data', (data: Buffer, isNotification: boolean) => console.log(data));
       await characteristic.writeAsync(
         Buffer.from(
