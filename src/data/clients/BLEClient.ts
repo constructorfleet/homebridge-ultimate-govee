@@ -180,6 +180,7 @@ export class BLEPeripheralConnection
           name: characteristic.name,
           uuid: characteristic.uuid,
           value: characteristicValue,
+          properties: characteristic.properties,
           descriptors: descriptorLogs,
         },
       });
