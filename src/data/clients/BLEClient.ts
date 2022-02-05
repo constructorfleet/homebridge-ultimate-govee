@@ -174,16 +174,24 @@ export class BLEPeripheralConnection
   }
 
   async discoverServiceCharacteristics(service: Service) {
+    this.log.info({
+      peripheral: this.peripheral.address.toLowerCase(),
+      service: {
+        name: service.name,
+        uuid: service.uuid,
+        type: service.type,
+      },
+    });
     const characteristics = await service.discoverCharacteristicsAsync();
     for (let i = 0; i < characteristics.length; i++) {
-      await this.inspectCharacteristic(characteristics[i]);
+      await this.inspectCharacteristic(service, characteristics[i]);
     }
   }
 
-  async inspectCharacteristic(characteristic: Characteristic) {
+  async inspectCharacteristic(service: Service, characteristic: Characteristic) {
     const descriptors = await characteristic.discoverDescriptorsAsync();
-
     this.log.info({
+      service: service.uuid,
       name: characteristic.name,
       uuid: characteristic.uuid,
       type: characteristic.type,
