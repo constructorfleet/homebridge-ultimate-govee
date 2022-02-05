@@ -87,8 +87,6 @@ export class BLEClient
     );
     this.connections.set(peripheral.address.toLowerCase(), peripheralConnection);
     await peripheralConnection.connect();
-    await peripheral.disconnectAsync();
-    this.connections.delete(peripheral.address.toLowerCase());
     if (!this.scanning) {
       await noble.startScanningAsync();
     }
@@ -131,7 +129,6 @@ export class BLEPeripheralConnection
       await this.discoverServiceCharacteristics(services[i]);
     }
     this.log.info(this.peripheral.advertisement);
-    await this.peripheral.disconnectAsync();
   }
 
   async discoverServiceCharacteristics(service: Service) {
