@@ -155,9 +155,11 @@ export class BLEPeripheralConnection
       }));
     }
     if (characteristic.uuid === '000102030405060708090a0b0c0d2b10') {
+      characteristic.on('data', (data) => console.log(data));
       await characteristic.subscribeAsync();
     }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
+      characteristic.on('data', (data) => console.log(data));
       await characteristic.subscribeAsync();
       await characteristic.writeAsync(
         Buffer.from(
