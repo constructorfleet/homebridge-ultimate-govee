@@ -30,7 +30,7 @@ export class BLEClient
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
           this.online = true;
-          await noble.startScanningAsync();
+          await noble.startScanningAsync([], true);
         } else {
           this.online = false;
           if (this.scanning) {
@@ -67,9 +67,6 @@ export class BLEClient
           this.log.info('BLEClient', 'Already Connected', peripheral.address);
           return;
         }
-        if (this.devices.has(peripheral.address.toLowerCase())) {
-          return;
-        }
 
         await this.connectTo(peripheral);
       },
@@ -96,7 +93,7 @@ export class BLEClient
     await peripheralConnection.connect();
     this.connections.delete(peripheral.address.toLowerCase());
     if (!this.scanning) {
-      await noble.startScanningAsync();
+      await noble.startScanningAsync([], true);
     }
   }
 
@@ -151,14 +148,14 @@ export class BLEPeripheralConnection
 
   async readCharacteristicValue(service: Service, characteristic: Characteristic) {
     const descriptors = await characteristic.discoverDescriptorsAsync();
-    const descriptorLogs: Record<string, unknown>[] = [];
+    const descriptorLogs: string[] = [];
     for (let i = 0; i < descriptors.length; i++) {
-      descriptorLogs.push({
+      descriptorLogs.push(JSON.stringify({
         name: descriptors[i].name,
         uuid: descriptors[i].uuid,
         type: descriptors[i].type,
-        value: await descriptors[i].readValueAsync(),
-      });
+        value: (await descriptors[i].readValueAsync()).toString('hex'),
+      }));
     }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
