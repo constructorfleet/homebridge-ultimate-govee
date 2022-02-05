@@ -63,8 +63,8 @@ export class BLEClient
           this.log.info('BLEClient', 'Unknown Address', peripheral.address);
           return;
         }
-        if (this.connections.has(peripheral.address.toLocaleLowerCase())) {
-          this.log.info('BLEClient', 'Already Connected', peripheral.address);
+        if (this.connections.has(peripheral.address.toLowerCase())) {
+          await this.connections[peripheral.address.toLowerCase()].read();
           return;
         }
 
@@ -87,9 +87,6 @@ export class BLEClient
     );
     this.connections.set(peripheral.address.toLowerCase(), peripheralConnection);
     await peripheralConnection.connect();
-    if (!this.scanning) {
-      await noble.startScanningAsync();
-    }
   }
 
   @OnEvent(
@@ -121,6 +118,10 @@ export class BLEPeripheralConnection
 
   async connect() {
     await this.peripheral.connectAsync();
+    await this.read();
+  }
+
+  async read() {
     this.log.info(this.peripheral.advertisement);
     const services = await this.peripheral.discoverServicesAsync(
       [],
@@ -151,13 +152,7 @@ export class BLEPeripheralConnection
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
     }
-    if (characteristic.uuid === '000102030405060708090a0b0c0d2b10') {
-      characteristic.on('data', (data) => console.log(data));
-      await characteristic.subscribeAsync();
-    }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
-      characteristic.on('data', (data) => console.log(data));
-      await characteristic.subscribeAsync();
       await characteristic.writeAsync(
         Buffer.from(
           [0xaa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab],
