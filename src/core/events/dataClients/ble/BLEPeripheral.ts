@@ -41,15 +41,3 @@ export class BLEPeripheralDiscoveredEvent
     );
   }
 }
-
-export class BLEPeripheralConnectionEvent
-  extends BLEPeripheralEvent<PeripheralConnectionState> {
-
-
-  constructor(eventData: PeripheralConnectionState) {
-    super(
-      'Connection',
-      eventData,
-    );
-  }
-}
