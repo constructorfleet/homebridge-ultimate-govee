@@ -166,6 +166,7 @@ export class BLEPeripheralConnection
     await this.peripheral.connectAsync();
     const services = await this.peripheral.discoverServicesAsync();
     this.log.info(this.peripheral.advertisement);
+    this.log.info(this.peripheral.advertisement.manufacturerData.toString('hex'));
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
     }
@@ -175,12 +176,13 @@ export class BLEPeripheralConnection
   async discoverServiceCharacteristics(service: Service) {
     const characteristics = await service.discoverCharacteristicsAsync();
     for (let i = 0; i < characteristics.length; i++) {
-      this.inspectCharacteristic(characteristics[i]);
+      await this.inspectCharacteristic(characteristics[i]);
     }
   }
 
-  inspectCharacteristic(characteristic: Characteristic) {
+  async inspectCharacteristic(characteristic: Characteristic) {
+    const descriptors = characteristic.discoverDescriptorsAsync();
     this.log.info(JSON.stringify(characteristic.properties));
-    this.log.info(JSON.stringify(characteristic.descriptors));
+    this.log.info(JSON.stringify(descriptors));
   }
 }
