@@ -174,16 +174,21 @@ export class BLEPeripheralConnection
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
     }
+    const dataCallback = ((data) => {
+      this.log.info(
+        'OnData',
+        {
+          deviceId: this.deviceIdentification.deviceId,
+          bleAddress: this.deviceIdentification.bleAddress,
+          charUUID: characteristic.uuid,
+          charName: characteristic.name,
+          data: data,
+        },
+      );
+    }).bind(this);
     characteristic.on(
       'data',
-      curry(
-        this.dataCallback)(
-        this.deviceIdentification.deviceId,
-        this.peripheral.address.toLowerCase(),
-        characteristic.uuid,
-        characteristic.name,
-        this.log,
-      ),
+      dataCallback,
     );
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
@@ -209,25 +214,5 @@ export class BLEPeripheralConnection
           descriptors: descriptorLogs,
         },
       });
-  }
-
-  dataCallback(
-    deviceId: string,
-    bleAddress: string,
-    charUUID: string,
-    charName: string,
-    log: LoggingService,
-    data: Buffer,
-  ) {
-    log.info(
-      'OnData',
-      {
-        deviceId: deviceId,
-        bleAddress: bleAddress,
-        charUUID: charUUID,
-        charName: charName,
-        data: data,
-      },
-    );
   }
 }
