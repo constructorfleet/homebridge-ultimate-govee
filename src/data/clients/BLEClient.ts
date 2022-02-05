@@ -80,11 +80,8 @@ export class BLEClient
         );
         this.log.info('BLEClient', 'Stop Scanning', peripheral.address);
         await noble.stopScanningAsync();
-        peripheral.on(
-          'disconnect',
-          peripheralConnection.onDisconnect,
-        );
         await peripheralConnection.connect();
+        await peripheralConnection.onDisconnect();
       },
     );
   }
@@ -134,7 +131,7 @@ export class BLEPeripheralConnection
       'connect',
       this.onConnect,
     );
-    //
+
     // peripheral.on(
     //   'disconnect',
     //   this.onDisconnect,
@@ -146,7 +143,7 @@ export class BLEPeripheralConnection
     );
   }
 
-  async onConnect(error?: string) {
+  onConnect(error?: string) {
     if (error) {
       this.log.info('TODO?');
       return;
@@ -163,7 +160,7 @@ export class BLEPeripheralConnection
     );
   }
 
-  async onDisconnect(error?: string) {
+  onDisconnect(error?: string) {
     if (error) {
       this.log.info('TODO?');
       return;
@@ -187,8 +184,6 @@ export class BLEPeripheralConnection
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
     }
-
-    await this.peripheral.disconnectAsync();
   }
 
   async discoverServiceCharacteristics(service: Service) {
