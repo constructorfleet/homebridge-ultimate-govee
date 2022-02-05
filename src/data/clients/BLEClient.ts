@@ -15,6 +15,7 @@ export class BLEClient
 
   private subscriptions: Map<string, BLEDeviceIdentification> = new Map<string, BLEDeviceIdentification>();
   private peripherals: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
+  private connections: Set<string> = new Set<string>();
   private devices: Set<string> = new Set<string>();
   private scanning = false;
   private online = false;
@@ -64,32 +65,43 @@ export class BLEClient
           return;
         }
         if (this.peripherals.has(peripheral.address.toLocaleLowerCase())) {
-          this.log.info('BLEClient', 'Already Connected', peripheral.address);
+          this.log.info('BLEClient', 'Already Known', peripheral.address);
           return;
         }
+        this.devices.add(peripheral.address.toLocaleLowerCase());
 
-        await this.connectTo(peripheral);
+        this.log.info('BLEClient', 'Creating Connection', peripheral.address);
+        const peripheralConnection = new BLEPeripheralConnection(
+          this.emitter,
+          BLEClient.SERVICE_CONTROL_UUID,
+          BLEClient.CHARACTERISTIC_CONTROL_UUID,
+          this.subscriptions[peripheral.address.toLowerCase()],
+          peripheral,
+          this.log,
+        );
+        this.peripherals.set(peripheral.address.toLowerCase(), peripheralConnection);
+        if (this.peripherals.size === this.subscriptions.size) {
+          await this.connectToPeripherals();
+        }
       },
     );
   }
 
-  async connectTo(peripheral: Peripheral) {
-    this.devices.add(peripheral.address.toLocaleLowerCase());
-
-    this.log.info('BLEClient', 'Creating Connection', peripheral.address);
-    const peripheralConnection = new BLEPeripheralConnection(
-      this.emitter,
-      BLEClient.SERVICE_CONTROL_UUID,
-      BLEClient.CHARACTERISTIC_CONTROL_UUID,
-      this.subscriptions[peripheral.address.toLowerCase()],
-      peripheral,
-      this.log,
-    );
-    this.peripherals.set(peripheral.address.toLowerCase(), peripheralConnection);
-    await peripheralConnection.connect();
-    if (!this.scanning) {
-      await noble.startScanningAsync();
+  async connectToPeripherals() {
+    if (this.scanning) {
+      await noble.stopScanningAsync();
     }
+    const connectPromises = Array.from(
+      this.peripherals.values(),
+    ).filter(
+      (peripheral) => !this.connections.has(peripheral.peripheral.address.toLowerCase())
+    ).map(
+      (peripheral) => {
+        this.connections.add(peripheral.peripheral.address.toLowerCase());
+        return peripheral.connect();
+      },
+    );
+    await Promise.all(connectPromises);
   }
 
   @OnEvent(
@@ -101,6 +113,16 @@ export class BLEClient
   onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
     this.subscriptions.set(bleDeviceId.bleAddress.toLocaleLowerCase(), bleDeviceId);
+    if (!this.scanning) {
+      noble.startScanning(
+        [],
+        true,
+        (error?: Error) => {
+          if (error) {
+            this.log.error(error);
+          }
+        });
+    }
   }
 }
 
@@ -112,7 +134,7 @@ export class BLEPeripheralConnection
     private readonly controlServiceUUID: string,
     private readonly controlCharacteristicUUID: string,
     private readonly deviceIdentification: BLEDeviceIdentification,
-    private readonly peripheral: Peripheral,
+    public readonly peripheral: Peripheral,
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
@@ -179,10 +201,5 @@ export class BLEPeripheralConnection
           descriptors: descriptorLogs,
         },
       });
-    try {
-      this.log.info(characteristicValue.toString('hex'));
-    } catch (e) {
-      this.log.error(e);
-    }
   }
 }
