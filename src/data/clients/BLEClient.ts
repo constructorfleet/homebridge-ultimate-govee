@@ -166,7 +166,6 @@ export class BLEPeripheralConnection
     await this.peripheral.connectAsync();
     const services = await this.peripheral.discoverServicesAsync();
     this.log.info(this.peripheral.advertisement);
-    this.log.info(this.peripheral.advertisement.manufacturerData.toString('hex'));
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
     }
