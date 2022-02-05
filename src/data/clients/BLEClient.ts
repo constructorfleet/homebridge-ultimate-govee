@@ -71,17 +71,17 @@ export class BLEClient
           return;
         }
         this.devices.add(peripheral.address.toLocaleLowerCase());
-        this.log.info('BLEClient', 'Creating Connection', peripheral.address);
-        const peripheralConnection = new BLEPeripheralConnection(
-          this.emitter,
+
+        await noble.stopScanningAsync();
+        this.log.info(
+          'BLEClient',
+          'peripheralAdvertisement',
+          peripheral.advertisement,
+        );
+        await this.explorePeripheral(
           this.subscriptions[peripheral.address.toLowerCase()],
           peripheral,
-          this.log,
         );
-        this.log.info('BLEClient', 'Stop Scanning', peripheral.address);
-        await noble.stopScanningAsync();
-        await peripheralConnection.connect();
-        await peripheralConnection.onDisconnect();
       },
     );
   }
@@ -95,6 +95,72 @@ export class BLEClient
   onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
     this.subscriptions.set(bleDeviceId.bleAddress.toLocaleLowerCase(), bleDeviceId);
+  }
+
+  async explorePeripheral(
+    deviceIdentification: BLEDeviceIdentification,
+    peripheral: Peripheral,
+  ) {
+    peripheral.on(
+      'disconnect',
+      async (error?: string) => {
+        if (error) {
+          this.log.error(error);
+          return;
+        }
+
+        await noble.startScanningAsync();
+      },
+    );
+
+    const services = await peripheral.discoverServicesAsync([]);
+
+    for (const service of services) {
+      let serviceInfo = service.uuid;
+
+      if (service.name) {
+        serviceInfo += ` (${service.name})`;
+      }
+
+      this.log.info('BLEClient', 'peripheralService', serviceInfo);
+
+      const characteristics = await service.discoverCharacteristicsAsync([]);
+
+      for (const characteristic of characteristics) {
+        let characteristicInfo = `  ${characteristic.uuid}`;
+
+        if (characteristic.name) {
+          characteristicInfo += ` (${characteristic.name})`;
+        }
+
+        const descriptors = await characteristic.discoverDescriptorsAsync();
+
+        const userDescriptionDescriptor = descriptors.find((descriptor) => descriptor.uuid === '2901');
+
+        if (userDescriptionDescriptor) {
+          const data = await userDescriptionDescriptor.readValueAsync();
+          if (data) {
+            characteristicInfo += ` (${data.toString()})`;
+          }
+        }
+
+        characteristicInfo += `\n    properties  ${characteristic.properties.join(', ')}`;
+
+        if (characteristic.properties.includes('read')) {
+          const data = await characteristic.readAsync();
+
+          if (data) {
+            const string = data.toString('ascii');
+
+            characteristicInfo += `\n    value       ${data.toString('hex')} | '${string}'`;
+          }
+        }
+
+        this.log.info('BLEClient', 'peripheralService', characteristicInfo);
+      }
+    }
+
+    await peripheral.disconnectAsync();
   }
 
   @OnEvent(
