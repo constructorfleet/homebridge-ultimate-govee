@@ -78,60 +78,12 @@ export class BLEClient
         const peripheralAddress = peripheral.address.toLowerCase();
         this.peripherals.set(peripheralAddress, peripheral);
         this.log.info('BLEClient', 'OnDiscover', peripheralAddress);
-        const peripheralConnection = this.createPeripheralConnection(
+        await this.createPeripheralConnection(
           peripheralAddress,
           peripheral,
         );
-        if (peripheralConnection && !peripheralConnection.discovered) {
-          await this.stopScanning();
-          this.log.info('BLEClient', 'onDiscover', 'Connecting');
-          await this.peripheralConnectionLock.acquire();
-          try {
-            await peripheralConnection.connect();
-            await peripheralConnection.discoverCharacteristics();
-          } finally {
-            this.peripheralConnectionLock.release();
-          }
-        }
-        await this.startScanning();
       },
     );
-  }
-
-  createPeripheralConnection(
-    address: string,
-    peripheral: Peripheral,
-  ): BLEPeripheralConnection | undefined {
-    this.log.info('BLEClient', 'createPeripheralConnection', address, this.subscriptions);
-    const deviceIdentification = this.subscriptions.get(address);
-    if (!deviceIdentification) {
-      return undefined;
-    }
-    let peripheralConnection = this.peripheralConnections.get(deviceIdentification.deviceId);
-    if (peripheralConnection) {
-      this.log.info('BLEClient', 'createPeripheralConnection', 'Using existing');
-      return peripheralConnection;
-    }
-
-    this.log.info('BLEClient', 'createPeripheralConnection', 'Creating');
-    peripheralConnection =
-      new BLEPeripheralConnection(
-        this.emitter,
-        this.peripheralConnectionLock,
-        BLEClient.SERVICE_CONTROL_UUID,
-        BLEClient.CHARACTERISTIC_CONTROL_UUID,
-        BLEClient.CHARACTERISTIC_REPORT_UUID,
-        deviceIdentification,
-        peripheral,
-        this.log,
-      );
-
-    this.peripheralConnections.set(
-      deviceIdentification.deviceId,
-      peripheralConnection,
-    );
-
-    return peripheralConnection;
   }
 
   @OnEvent(
@@ -143,26 +95,12 @@ export class BLEClient
   async onBLEDeviceSubscribe(bleDeviceIdentification: BLEDeviceIdentification) {
     const address = bleDeviceIdentification.bleAddress.toLowerCase();
     this.subscriptions.set(address, bleDeviceIdentification);
-    this.log.info('BLEClient', 'onSubscribe', address);
     const peripheral = this.peripherals.get(address);
     if (peripheral) {
-      this.log.info('BLEClient', 'onSubscribe', 'Getting Connection');
-      const peripheralConnection = this.createPeripheralConnection(
+      await this.createPeripheralConnection(
         address,
         peripheral,
       );
-
-      if (peripheralConnection && !peripheralConnection.discovered) {
-        await this.stopScanning();
-        this.log.info('BLEClient', 'onSubscribe', 'Connecting');
-        await this.peripheralConnectionLock.acquire();
-        try {
-          await peripheralConnection.connect();
-          await peripheralConnection.discoverCharacteristics();
-        } finally {
-          this.peripheralConnectionLock.release();
-        }
-      }
     }
     await this.startScanning();
   }
@@ -186,11 +124,51 @@ export class BLEClient
       for (let i = 0; i < command.state.length; i++) {
         this.log.info('BLEClient', 'OnSendCommand', 'Writing', command.state[i]);
         await peripheralConnection.writeCommand(command.state[i]);
-        // await sleep(1000);
       }
     } finally {
       this.peripheralConnectionLock.release();
     }
+  }
+
+  private async createPeripheralConnection(
+    address: string,
+    peripheral: Peripheral,
+  ) {
+    const deviceIdentification = this.subscriptions.get(address);
+    if (!deviceIdentification) {
+      return;
+    }
+    let peripheralConnection = this.peripheralConnections.get(deviceIdentification.deviceId);
+    if (!peripheralConnection) {
+      peripheralConnection =
+        new BLEPeripheralConnection(
+          this.emitter,
+          this.peripheralConnectionLock,
+          BLEClient.SERVICE_CONTROL_UUID,
+          BLEClient.CHARACTERISTIC_CONTROL_UUID,
+          BLEClient.CHARACTERISTIC_REPORT_UUID,
+          deviceIdentification,
+          peripheral,
+          this.log,
+        );
+
+      this.peripheralConnections.set(
+        deviceIdentification.deviceId,
+        peripheralConnection,
+      );
+    }
+
+    if (!peripheralConnection.discovered) {
+      await this.stopScanning();
+      await this.peripheralConnectionLock.acquire();
+      try {
+        await peripheralConnection.connect();
+        await peripheralConnection.discoverCharacteristics();
+      } finally {
+        this.peripheralConnectionLock.release();
+      }
+    }
+    await this.startScanning();
   }
 
   private async stopScanning() {
