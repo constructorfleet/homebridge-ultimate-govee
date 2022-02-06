@@ -116,6 +116,7 @@ export class BLEClient
     this.log.info('BLEClient', 'OnSendCommand', command);
     const peripheralConnection = this.peripheralConnections.get(command.deviceId);
     if (!peripheralConnection) {
+      this.log.info('BLEClient', 'OnSendCommand', 'No PeripheralConnection');
       return;
     }
 
@@ -168,6 +169,11 @@ export class BLEClient
       } finally {
         this.peripheralConnectionLock.release();
       }
+      this.emit(
+        new BLEPeripheralDiscoveredEvent(
+          peripheralConnection.deviceIdentification,
+        ),
+      );
     }
     await this.startScanning();
   }
@@ -224,21 +230,26 @@ export class BLEPeripheralConnection
   }
 
   async connect() {
-    if (!this.isConnected) {
-      await this.peripheral.connectAsync();
-    }
+    await this.peripheral.connectAsync();
   }
 
   async writeCommand(command: number[]) {
-    // await this.writeLock.acquire();
-    await this.controlCharacteristic!.writeAsync(
-      Buffer.of(...command),
-      true,
-    );
+    await this.writeLock.acquire();
+    try {
+      await this.controlCharacteristic!.writeAsync(
+        Buffer.of(...command),
+        true,
+      );
+      const buffer = await this.reportCharacteristic!.readAsync();
+      this.onDataCallback(buffer);
+    } finally {
+      this.writeLock.release();
+    }
   }
 
   async discoverCharacteristics() {
     if (this.discovered) {
+      await this.peripheral.disconnectAsync();
       return;
     }
     this.discovered = true;
@@ -248,11 +259,6 @@ export class BLEPeripheralConnection
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
     }
-    this.emit(
-      new BLEPeripheralDiscoveredEvent(
-        this.deviceIdentification,
-      ),
-    );
   }
 
   private async discoverServiceCharacteristics(service: Service) {
@@ -266,11 +272,6 @@ export class BLEPeripheralConnection
       const characteristic = characteristics[i];
       if (characteristic.uuid === this.reportCharacteristicUUID) {
         this.reportCharacteristic = characteristic;
-        this.reportCharacteristic.on(
-          'data',
-          this.onDataCallback,
-        );
-        await this.reportCharacteristic.subscribeAsync();
       } else if (characteristic.uuid === this.controlCharacteristicUUID) {
         this.controlCharacteristic = characteristic;
       }
@@ -364,9 +365,6 @@ export class BLEPeripheralConnection
           ),
         ),
       );
-    }
-    if (this.writeLock.isAcquired()) {
-      this.writeLock.release();
     }
   };
 
