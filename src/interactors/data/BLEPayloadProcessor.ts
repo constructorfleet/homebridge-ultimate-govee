@@ -19,6 +19,7 @@ import {REPORT_IDENTIFIER} from '../../util/const';
 export class BLEPayloadProcessor extends Emitter {
   private bleConnected = false;
   private peripheralConnected: Map<string, boolean> = new Map<string, boolean>();
+  private readonly stateRequests: Map<string, GoveeDevice> = new Map<string, GoveeDevice>();
 
   constructor(
     private readonly log: LoggingService,
@@ -48,6 +49,13 @@ export class BLEPayloadProcessor extends Emitter {
       connection.bleAddress.toLowerCase(),
       connection.connectionState === ConnectionState.Connected,
     );
+    if (connection.connectionState === ConnectionState.Connected) {
+      const device = this.stateRequests.get(connection.deviceId);
+      if (device) {
+        this.stateRequests.delete(connection.deviceId);
+        this.onRequestDeviceState(device);
+      }
+    }
   }
 
   @OnEvent(
@@ -88,6 +96,7 @@ export class BLEPayloadProcessor extends Emitter {
     }
     if (!this.peripheralConnected.get(device.bleAddress.toLowerCase())) {
       this.log.info('RequestDeviceState', `BLE Peripheral ${device.deviceId} is not connected`);
+      this.stateRequests.set(device.deviceId, device);
       return;
     }
     device.deviceStatusCodes.forEach(
