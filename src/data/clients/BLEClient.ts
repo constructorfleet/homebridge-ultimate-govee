@@ -77,6 +77,7 @@ export class BLEClient
       async (peripheral: Peripheral) => {
         const peripheralAddress = peripheral.address.toLowerCase();
         this.peripherals.set(peripheralAddress, peripheral);
+        this.log.info('BLEClient', 'OnDiscover', peripheralAddress);
         const peripheralConnection = this.createPeripheralConnection(
           peripheralAddress,
           peripheral,
@@ -101,6 +102,7 @@ export class BLEClient
     address: string,
     peripheral: Peripheral,
   ): BLEPeripheralConnection | undefined {
+    this.log.info('BLEClient', 'createPeripheralConnection', address, this.subscriptions);
     const deviceIdentification = this.subscriptions.get(address);
     if (!deviceIdentification) {
       return undefined;
@@ -141,6 +143,7 @@ export class BLEClient
   async onBLEDeviceSubscribe(bleDeviceIdentification: BLEDeviceIdentification) {
     const address = bleDeviceIdentification.bleAddress.toLowerCase();
     this.subscriptions.set(address, bleDeviceIdentification);
+    this.log.info('BLEClient', 'onSubscribe', address);
     const peripheral = this.peripherals.get(address);
     if (peripheral) {
       this.log.info('BLEClient', 'onSubscribe', 'Getting Connection');

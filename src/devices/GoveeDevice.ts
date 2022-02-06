@@ -24,7 +24,6 @@ export class GoveeDevice extends State {
     this.bleAddress = supportsBLE(deviceConfig)?.bleAddress ?? undefined;
     this.hardwareVersion = deviceConfig.hardwareVersion;
     this.softwareVersion = deviceConfig.softwareVersion;
-    console.log(this.name, this.bleAddress);
   }
 
   public deviceId: string;
