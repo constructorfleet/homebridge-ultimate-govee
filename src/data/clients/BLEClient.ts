@@ -207,19 +207,21 @@ export class BLEClient
   private async tryGetCharacteristics(
     peripheral: Peripheral,
   ): Promise<ControlReportCharacteristics | undefined> {
-    const serviceCharacteristics = await peripheral.discoverSomeServicesAndCharacteristicsAsync(
-      [BLEClient.SERVICE_CONTROL_UUID],
-      [
-        BLEClient.CHARACTERISTIC_REPORT_UUID,
-        BLEClient.CHARACTERISTIC_CONTROL_UUID,
-      ],
-    );
+    const services = await peripheral.discoverServicesAsync();
+    const controlService =
+      services.find(
+        (service) => service.uuid == BLEClient.SERVICE_CONTROL_UUID,
+      );
+    if (!controlService) {
+      return undefined;
+    }
+    const characteristics = await controlService.discoverCharacteristicsAsync();
     const reportCharacteristic =
-      serviceCharacteristics.characteristics.find(
+      characteristics.find(
         (characteristic) => characteristic.uuid === BLEClient.CHARACTERISTIC_REPORT_UUID,
       );
     const controlCharacteristic =
-      serviceCharacteristics.characteristics.find(
+      characteristics.find(
         (characteristic) => characteristic.uuid === BLEClient.CHARACTERISTIC_CONTROL_UUID,
       );
     if (!reportCharacteristic || !controlCharacteristic) {
