@@ -4,7 +4,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEConnectionStateEvent, BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
-import {Emitter} from '../../util/types';
+import {Emitter, sleep} from '../../util/types';
 import {Lock} from 'async-await-mutex-lock';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {
@@ -118,6 +118,14 @@ export class BLEClient
     if (!peripheralConnection) {
       this.log.info('BLEClient', 'OnSendCommand', 'No PeripheralConnection');
       return;
+    }
+
+    if (!peripheralConnection.discovered) {
+      let i = 0;
+      do {
+        await sleep(200);
+        i++;
+      } while (!peripheralConnection.discovered || i > 10);
     }
 
     await this.lock('OnSendCommand - Writing State');
@@ -244,18 +252,30 @@ export class BLEPeripheralConnection
   }
 
   async writeCommand(command: number[]) {
+    if (!this.controlCharacteristic) {
+      this.log.info('Peripheral', 'writeCommand', 'Missing Control Char', this.deviceIdentification);
+      return;
+    }
+    if (!this.reportCharacteristic) {
+      this.log.info('Peripheral', 'writeCommand', 'Missing Report Char', this.deviceIdentification);
+      return;
+    }
     await this.writeLock.acquire();
-    let buffer: Buffer;
     try {
-      await this.controlCharacteristic!.writeAsync(
+      this.reportCharacteristic.removeAllListeners();
+      await this.reportCharacteristic.subscribeAsync();
+      this.reportCharacteristic.on(
+        'data',
+        this.onDataCallback,
+      );
+      await this.controlCharacteristic.writeAsync(
         Buffer.of(...command),
         true,
       );
-      buffer = await this.reportCharacteristic!.readAsync();
+      await sleep(200);
     } finally {
       this.writeLock.release();
     }
-    this.onDataCallback(buffer);
   }
 
   async discoverCharacteristics() {
