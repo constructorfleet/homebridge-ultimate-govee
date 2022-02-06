@@ -164,6 +164,32 @@ export class BLEClient
     await this.startScanning();
   }
 
+  @OnEvent(
+    'BLE.PERIPHERAL.send',
+    {
+      async: true,
+    },
+  )
+  async onSendCommand(command: BLEPeripheralCommandSend) {
+    this.log.info('BLEClient', 'OnSendCommand', command);
+    const peripheralConnection = this.peripheralConnections.get(command.deviceId);
+    if (!peripheralConnection) {
+      return;
+    }
+
+    this.log.info('BLEClient', 'OnSendCommand', 'WritingTo');
+    await this.peripheralConnectionLock.acquire();
+    try {
+      await peripheralConnection.connect();
+      for (let i = 0; i < command.state.length; i++) {
+        await peripheralConnection.writeCommand(command.state[i]);
+        await sleep(1000);
+      }
+    } finally {
+      this.peripheralConnectionLock.release();
+    }
+  }
+
   private async stopScanning() {
     if (this.scanning) {
       this.scanning = false;
@@ -217,6 +243,13 @@ export class BLEPeripheralConnection
     if (!this.isConnected) {
       await this.peripheral.connectAsync();
     }
+  }
+
+  async writeCommand(command: number[]) {
+    await this.controlCharacteristic!.writeAsync(
+      Buffer.of(...command),
+      true,
+    );
   }
 
   async discoverCharacteristics() {
@@ -336,35 +369,6 @@ export class BLEPeripheralConnection
       ),
     );
   };
-
-  @OnEvent(
-    'BLE.PERIPHERAL.send',
-    {
-      async: true,
-    },
-  )
-  async onSendCommand(command: BLEPeripheralCommandSend) {
-    this.log.info('BLEPeripheralChar', 'Send', command);
-    if (command.deviceId !== this.deviceId || command.bleAddress.toLowerCase() !== this.bleAddress) {
-      return;
-    }
-    this.log.info('BlEPeripheral', 'Writing to', command.deviceId);
-    await this.peripheralConnectionLock.acquire();
-    try {
-      if (!this.isConnected) {
-        await this.connect();
-      }
-      for (let i = 0; i < command.state.length; i++) {
-        await this.controlCharacteristic!.writeAsync(
-          Buffer.of(...command.state[i]),
-          true,
-        );
-        await sleep(1000);
-      }
-    } finally {
-      this.peripheralConnectionLock.release();
-    }
-  }
 
   private get deviceId(): string {
     return this.deviceIdentification.deviceId;
