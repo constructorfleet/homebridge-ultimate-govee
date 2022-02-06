@@ -120,7 +120,7 @@ export class BLEClient
       return;
     }
 
-    await this.peripheralConnectionLock.acquire();
+    await this.lock('OnSendCommand - Writing State');
     try {
       await peripheralConnection.connect();
       for (let i = 0; i < command.state.length; i++) {
@@ -128,7 +128,7 @@ export class BLEClient
         await peripheralConnection.writeCommand(command.state[i]);
       }
     } finally {
-      this.peripheralConnectionLock.release();
+      await this.release('OnSendCommand - Writing State');
     }
   }
 
@@ -145,7 +145,6 @@ export class BLEClient
       peripheralConnection =
         new BLEPeripheralConnection(
           this.emitter,
-          this.peripheralConnectionLock,
           BLEClient.SERVICE_CONTROL_UUID,
           BLEClient.CHARACTERISTIC_CONTROL_UUID,
           BLEClient.CHARACTERISTIC_REPORT_UUID,
@@ -162,12 +161,12 @@ export class BLEClient
 
     if (!peripheralConnection.discovered) {
       await this.stopScanning();
-      await this.peripheralConnectionLock.acquire();
+      await this.lock('CreatePeripheralConnection - Discovering Characteristics');
       try {
         await peripheralConnection.connect();
         await peripheralConnection.discoverCharacteristics();
       } finally {
-        this.peripheralConnectionLock.release();
+        await this.release('CreatePeripheralConnection - Discovering Characteristics');
       }
       this.emit(
         new BLEPeripheralDiscoveredEvent(
@@ -194,6 +193,16 @@ export class BLEClient
       );
     }
   }
+
+  private async lock(log: string) {
+    this.log.info('BLEClient', 'AcquireLock', log);
+    await this.peripheralConnectionLock.acquire();
+  }
+
+  private async release(log: string) {
+    this.log.info('BLEClient', 'ReleaseLock', log);
+    this.peripheralConnectionLock.release();
+  }
 }
 
 export class BLEPeripheralConnection
@@ -207,7 +216,6 @@ export class BLEPeripheralConnection
 
   constructor(
     eventEmitter: EventEmitter2,
-    private readonly peripheralConnectionLock: Lock<void>,
     private readonly controlServiceUUID: string,
     private readonly controlCharacteristicUUID: string,
     private readonly reportCharacteristicUUID: string,
@@ -235,16 +243,17 @@ export class BLEPeripheralConnection
 
   async writeCommand(command: number[]) {
     await this.writeLock.acquire();
+    let buffer: Buffer;
     try {
       await this.controlCharacteristic!.writeAsync(
         Buffer.of(...command),
         true,
       );
-      const buffer = await this.reportCharacteristic!.readAsync();
-      this.onDataCallback(buffer);
+      buffer = await this.reportCharacteristic!.readAsync();
     } finally {
       this.writeLock.release();
     }
+    this.onDataCallback(buffer);
   }
 
   async discoverCharacteristics() {
