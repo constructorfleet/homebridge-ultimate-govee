@@ -120,14 +120,14 @@ export class DeviceManager extends Emitter {
           this.emit(
             new DeviceStateRequest(device),
           );
-          if (!device) {
-            this.log.debug('Setting timeout');
-            setTimeout(
-              () => this.pollDeviceStates,
-              10 * 1000,
-            );
-          }
         },
       );
+    if (!device) {
+      this.log.debug('Setting timeout');
+      setTimeout(
+        () => this.pollDeviceStates,
+        10 * 1000,
+      );
+    }
   };
 }
