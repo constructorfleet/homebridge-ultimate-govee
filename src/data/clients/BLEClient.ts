@@ -230,7 +230,7 @@ export class BLEPeripheralConnection
   }
 
   async writeCommand(command: number[]) {
-    await this.writeLock.acquire();
+    // await this.writeLock.acquire();
     await this.controlCharacteristic!.writeAsync(
       Buffer.of(...command),
       true,
@@ -354,16 +354,20 @@ export class BLEPeripheralConnection
         data: data,
       },
     );
-    this.emit(
-      new BLEPeripheralReceiveEvent(
-        new BLEPeripheralStateReceive(
-          this.bleAddress,
-          this.deviceId,
-          bufferToHex(data),
+    if (data.length > 0) {
+      this.emit(
+        new BLEPeripheralReceiveEvent(
+          new BLEPeripheralStateReceive(
+            this.bleAddress,
+            this.deviceId,
+            bufferToHex(data),
+          ),
         ),
-      ),
-    );
-    this.writeLock.release();
+      );
+    }
+    if (this.writeLock.isAcquired()) {
+      this.writeLock.release();
+    }
   };
 
   private get deviceId(): string {

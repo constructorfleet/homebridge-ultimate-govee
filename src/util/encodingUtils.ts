@@ -2,7 +2,7 @@ import {decode, encode} from 'base64-arraybuffer';
 
 export const hexStringToArray =
   (hexString: string): number[] =>
-    hexString.split(' ')
+    hexString.trim().split(' ')
       .map((x) => parseInt(`0x${x}`));
 
 export const uint8ToHex =
