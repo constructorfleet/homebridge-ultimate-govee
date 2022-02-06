@@ -210,7 +210,7 @@ export class BLEClient
     const services = await peripheral.discoverServicesAsync();
     const controlService =
       services.find(
-        (service) => service.uuid == BLEClient.SERVICE_CONTROL_UUID,
+        (service) => service.uuid === BLEClient.SERVICE_CONTROL_UUID,
       );
     if (!controlService) {
       return undefined;
