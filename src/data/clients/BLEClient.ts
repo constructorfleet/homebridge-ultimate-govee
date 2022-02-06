@@ -25,9 +25,6 @@ interface ControlReportCharacteristics {
   reportCharacteristic: Characteristic;
 }
 
-interface IdentifiedPeripheralCharacteristics extends IdentifiedPeripheral, ControlReportCharacteristics {
-}
-
 type BLEAddress = string;
 
 type LockKey = 'PeripheralConnect' | 'PeripheralWrite';
@@ -95,7 +92,37 @@ export class BLEClient
           return;
         }
 
-        await this.tryDiscoverPeripheral(peripheral);
+        let identifiedPeripheral: IdentifiedPeripheral | undefined = undefined;
+        await this.acquireLock(
+          'PeripheralConnect',
+          'BLEClient',
+          'discover',
+          peripheral.address.toLowerCase(),
+        );
+        await this.stopScanning();
+        try {
+          identifiedPeripheral = await this.tryGetIdentifiedPeripheral(peripheral);
+        } finally {
+          await this.releaseLock(
+            'PeripheralConnect',
+            'BLEClient',
+            'discover',
+            peripheral.address.toLowerCase(),
+          );
+          await this.startScanning();
+        }
+
+        if (!identifiedPeripheral) {
+          return;
+        }
+        this.emit(
+          new BLEPeripheralDiscoveredEvent(
+            new BLEDeviceIdentification(
+              identifiedPeripheral.deviceIdentification.bleAddress,
+              identifiedPeripheral.deviceIdentification.deviceId,
+            ),
+          ),
+        );
       },
     );
   }
@@ -114,95 +141,25 @@ export class BLEClient
     if (!peripheral) {
       return;
     }
-    await this.tryDiscoverPeripheral(peripheral);
-  }
 
-  @OnEvent(
-    'BLE.PERIPHERAL.Send',
-    {
-      async: true,
-    },
-  )
-  async onSendCommand(command: BLEPeripheralCommandSend) {
-    this.log.info('BLEClient', 'OnSendCommand', command);
-    const peripheralAddress = command.bleAddress.toLowerCase();
-
-    await this.acquireLock(
-      'PeripheralConnect',
-      'BLEClient',
-      'OnSendCommand',
-      command.bleAddress,
-    );
-    await this.stopScanning();
-    try {
-      const identifiedPeripheralCharacteristics =
-        await this.tryGetIdentifiedPeripheralCharacteristics(peripheralAddress);
-
-      if (!identifiedPeripheralCharacteristics) {
-        this.log.info(
-          'BLEClient',
-          'OnSendCommand',
-          'No Identified Peripheral');
-      } else {
-        const {
-          reportCharacteristic,
-          controlCharacteristic,
-        } = identifiedPeripheralCharacteristics;
-
-        for (let i = 0; i < command.state.length; i++) {
-          const state = command.state[i];
-          await this.acquireLock(
-            'PeripheralWrite',
-            'BLEClient',
-            'Sending',
-            peripheralAddress,
-            state,
-          );
-          reportCharacteristic.removeAllListeners();
-          await reportCharacteristic.subscribeAsync();
-          reportCharacteristic.on(
-            'data',
-            this.onDataCallback,
-          );
-          await controlCharacteristic.writeAsync(
-            Buffer.of(...state),
-            true,
-          );
-          await sleep(200);
-        }
-      }
-    } finally {
-      await this.startScanning();
-      await this.releaseLock(
-        'PeripheralConnect',
-        'BLEClient',
-        'OnSendCommand',
-        command.bleAddress,
-      );
-    }
-  }
-
-  private async tryDiscoverPeripheral(
-    peripheral: Peripheral,
-  ): Promise<IdentifiedPeripheral | undefined> {
     let identifiedPeripheral: IdentifiedPeripheral | undefined = undefined;
     await this.acquireLock(
       'PeripheralConnect',
       'BLEClient',
-      'tryDiscoverPeripheral',
+      'onSubscribe',
       peripheral.address.toLowerCase(),
     );
     await this.stopScanning();
     try {
       identifiedPeripheral = await this.tryGetIdentifiedPeripheral(peripheral);
     } finally {
-      await this.startScanning();
       await this.releaseLock(
         'PeripheralConnect',
         'BLEClient',
-        'tryDiscoverPeripheral',
+        'onSubscribe',
         peripheral.address.toLowerCase(),
       );
+      await this.startScanning();
     }
 
     if (!identifiedPeripheral) {
@@ -216,6 +173,78 @@ export class BLEClient
         ),
       ),
     );
+  }
+
+  @OnEvent(
+    'BLE.PERIPHERAL.Send',
+    {
+      async: true,
+    },
+  )
+  async onSendCommand(command: BLEPeripheralCommandSend) {
+    this.log.info('BLEClient', 'OnSendCommand', command);
+    const peripheralAddress = command.bleAddress.toLowerCase();
+    const identifiedPeripheral = this.identifiedPeripherals.get(peripheralAddress);
+    if (!identifiedPeripheral) {
+      return;
+    }
+
+    const peripheral = identifiedPeripheral.peripheral;
+    const deviceIdentification = identifiedPeripheral.deviceIdentification;
+
+    await this.acquireLock(
+      'PeripheralConnect',
+      'BLEClient',
+      'OnSendCommand',
+      command.bleAddress,
+    );
+    await this.stopScanning();
+    try {
+      if (peripheral.state !== 'connected') {
+        await peripheral.connectAsync();
+      }
+
+      const controlReportCharacteristics = await this.tryGetCharacteristics(peripheral);
+
+      if (!controlReportCharacteristics) {
+        return;
+      }
+
+      const {
+        reportCharacteristic,
+        controlCharacteristic,
+      } = controlReportCharacteristics;
+
+      for (let i = 0; i < command.state.length; i++) {
+        const state = command.state[i];
+        await this.acquireLock(
+          'PeripheralWrite',
+          'BLEClient',
+          'Sending',
+          peripheralAddress,
+          state,
+        );
+        reportCharacteristic.removeAllListeners();
+        await reportCharacteristic.subscribeAsync();
+        reportCharacteristic.on(
+          'data',
+          this.onDataCallback(deviceIdentification),
+        );
+        await controlCharacteristic.writeAsync(
+          Buffer.of(...state),
+          true,
+        );
+        await sleep(200);
+      }
+    } finally {
+      await this.releaseLock(
+        'PeripheralConnect',
+        'BLEClient',
+        'OnSendCommand',
+        command.bleAddress,
+      );
+      await this.startScanning();
+    }
   }
 
   private async tryGetCharacteristics(
@@ -248,42 +277,7 @@ export class BLEClient
     };
   }
 
-  private async tryGetIdentifiedPeripheralCharacteristics(
-    bleAddress: string,
-  ): Promise<IdentifiedPeripheralCharacteristics | undefined> {
-    if (!this.lock.isAcquired('PeripheralConnect')) {
-      this.log.info(
-        'BLEClient',
-        'tryGetIdentifiedPeripheralCharacteristics',
-        'Lock is not acquired',
-      );
-    }
-    const peripheralAddress = bleAddress.toLowerCase();
-    const identifiedPeripheral = this.identifiedPeripherals.get(peripheralAddress);
-    if (!identifiedPeripheral) {
-      return undefined;
-    }
-
-    const peripheral = identifiedPeripheral.peripheral;
-    const deviceIdentification = identifiedPeripheral.deviceIdentification;
-
-    await peripheral.connectAsync();
-
-    const controlReportCharacteristics = await this.tryGetCharacteristics(peripheral);
-
-    if (!controlReportCharacteristics) {
-      return undefined;
-    }
-
-    return {
-      peripheral: peripheral,
-      deviceIdentification: deviceIdentification,
-      controlCharacteristic: controlReportCharacteristics.controlCharacteristic,
-      reportCharacteristic: controlReportCharacteristics.reportCharacteristic,
-    };
-  }
-
-  private async tryGetIdentifiedPeripheral(
+  async tryGetIdentifiedPeripheral(
     peripheral: Peripheral,
   ): Promise<IdentifiedPeripheral | undefined> {
     const peripheralAddress = peripheral.address.toLowerCase();
@@ -308,14 +302,14 @@ export class BLEClient
     }
   }
 
-  private async stopScanning() {
+  async stopScanning() {
     if (this.scanning) {
       this.scanning = false;
       await noble.stopScanningAsync();
     }
   }
 
-  private async startScanning() {
+  async startScanning() {
     if (!this.scanning) {
       this.scanning = true;
       await noble.startScanningAsync(
@@ -325,7 +319,7 @@ export class BLEClient
     }
   }
 
-  private async acquireLock(
+  async acquireLock(
     key: LockKey,
     ...log: unknown[]
   ) {
@@ -338,7 +332,7 @@ export class BLEClient
     );
   }
 
-  private async releaseLock(
+  async releaseLock(
     key: LockKey,
     ...log: string[]
   ) {
@@ -351,7 +345,7 @@ export class BLEClient
     this.lock.release(key);
   }
 
-  private onDataCallback = (deviceIdentification: BLEDeviceIdentification) => async (data: Buffer) => {
+  onDataCallback = (deviceIdentification: BLEDeviceIdentification) => async (data: Buffer) => {
     await this.releaseLock(
       'PeripheralWrite',
       'BLEClient',
