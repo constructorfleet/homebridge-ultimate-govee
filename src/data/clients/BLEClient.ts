@@ -160,27 +160,26 @@ export class BLEClient
           'BLEClient',
           'OnSendCommand',
           'No Identified Peripheral');
-        return;
-      }
+      } else {
+        const {
+          reportCharacteristic,
+          controlCharacteristic,
+        } = identifiedPeripheralCharacteristics;
 
-      const {
-        reportCharacteristic,
-        controlCharacteristic,
-      } = identifiedPeripheralCharacteristics;
-
-      for (let i = 0; i < command.state.length; i++) {
-        const state = command.state[i];
-        reportCharacteristic.removeAllListeners();
-        await reportCharacteristic.subscribeAsync();
-        reportCharacteristic.on(
-          'data',
-          this.onDataCallback,
-        );
-        await controlCharacteristic.writeAsync(
-          Buffer.of(...state),
-          true,
-        );
-        await sleep(200);
+        for (let i = 0; i < command.state.length; i++) {
+          const state = command.state[i];
+          reportCharacteristic.removeAllListeners();
+          await reportCharacteristic.subscribeAsync();
+          reportCharacteristic.on(
+            'data',
+            this.onDataCallback,
+          );
+          await controlCharacteristic.writeAsync(
+            Buffer.of(...state),
+            true,
+          );
+          await sleep(200);
+        }
       }
     } finally {
       await this.startScanning();
@@ -273,23 +272,20 @@ export class BLEClient
 
       const controlReportCharacteristics = await this.tryGetCharacteristics(peripheral);
 
-      if (!controlReportCharacteristics) {
-        return undefined;
+      if (controlReportCharacteristics) {
+        this.peripherals.set(peripheralAddress, peripheral);
+
+        const deviceIdentification = this.subscriptions.get(peripheralAddress);
+        if (deviceIdentification) {
+          const identifiedPeripheral = {
+            deviceIdentification: deviceIdentification,
+            peripheral: peripheral,
+          };
+          this.identifiedPeripherals.set(peripheralAddress, identifiedPeripheral);
+
+          return identifiedPeripheral;
+        }
       }
-
-      this.peripherals.set(peripheralAddress, peripheral);
-      const deviceIdentification = this.subscriptions.get(peripheralAddress);
-      if (!deviceIdentification) {
-        return undefined;
-      }
-
-      const identifiedPeripheral = {
-        deviceIdentification: deviceIdentification,
-        peripheral: peripheral,
-      };
-      this.identifiedPeripherals.set(peripheralAddress, identifiedPeripheral);
-
-      return identifiedPeripheral;
     } finally {
       await this.startScanning();
       await this.release(
