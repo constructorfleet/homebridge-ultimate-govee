@@ -168,7 +168,7 @@ export class BLEClient
   }
 
   @OnEvent(
-    'BLE.PERIPHERAL.send',
+    'BLE.PERIPHERAL.Send',
     {
       async: true,
     },
@@ -217,6 +217,7 @@ export class BLEPeripheralConnection
   private controlCharacteristic?: Characteristic;
   private reportCharacteristic?: Characteristic;
   public isConnected = false;
+  public discovered = false;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -256,6 +257,10 @@ export class BLEPeripheralConnection
   }
 
   async discoverCharacteristics() {
+    if (this.discovered) {
+      return;
+    }
+    this.discovered = true;
     const services = await this.peripheral.discoverServicesAsync(
       [this.controlServiceUUID],
     );
@@ -355,8 +360,8 @@ export class BLEPeripheralConnection
       'Characteristic',
       'OnData',
       {
-        charName: this.controlCharacteristic?.name,
-        charUUID: this.controlCharacteristic?.uuid,
+        charName: this.reportCharacteristic?.name,
+        charUUID: this.reportCharacteristic?.uuid,
         deviceId: this.deviceId,
         bleAddress: this.bleAddress,
         data: data,
