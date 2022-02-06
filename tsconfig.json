@@ -23,6 +23,8 @@
     "src/",
   ],
   "exclude": [
+    ".vscode/",
+    ".idea/",
     "**/*.spec.ts"
   ]
 }
