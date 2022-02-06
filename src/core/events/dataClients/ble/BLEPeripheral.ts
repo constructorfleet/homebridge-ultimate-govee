@@ -39,7 +39,7 @@ export abstract class BLEPeripheralEvent<EventDataType>
     eventData?: EventDataType,
   ) {
     super(
-      `BLE.PERIPHERAL.${eventName}`,
+      `PERIPHERAL.${eventName}`,
       eventData,
     );
   }

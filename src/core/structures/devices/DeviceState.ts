@@ -9,7 +9,7 @@ export interface DeviceStateColor {
 export interface DeviceState {
   deviceId: string;
 
-  model: string;
+  model?: string;
 
   on?: boolean;
 

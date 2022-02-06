@@ -10,14 +10,27 @@ import {base64ToHex} from '../../util/encodingUtils';
 import {IoTPublishTo} from '../../core/events/dataClients/iot/IoTPublish';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {LoggingService} from '../../logging/LoggingService';
+import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 
 @Injectable()
 export class IoTPayloadProcessor extends Emitter {
+  private iotConnected = false;
+
   constructor(
     private readonly log: LoggingService,
     eventEmitter: EventEmitter2,
   ) {
     super(eventEmitter);
+  }
+
+  @OnEvent(
+    'IOT.CONNECTION',
+    {
+      async: true,
+    },
+  )
+  onIoTConnection(connection: ConnectionState) {
+    this.iotConnected = connection === ConnectionState.Connected;
   }
 
   @OnEvent(
@@ -50,6 +63,10 @@ export class IoTPayloadProcessor extends Emitter {
   onRequestDeviceState(
     device: GoveeDevice,
   ) {
+    if (!this.iotConnected) {
+      this.log.info('RequestDeviceState', 'IOT is not connected');
+      return;
+    }
     if (!device.iotTopic) {
       return;
     }
