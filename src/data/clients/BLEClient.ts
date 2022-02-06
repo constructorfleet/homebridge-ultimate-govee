@@ -30,6 +30,8 @@ interface IdentifiedPeripheralCharacteristics extends IdentifiedPeripheral, Cont
 
 type BLEAddress = string;
 
+type LockKey = 'PeripheralConnect' | 'PeripheralWrite';
+
 @Injectable()
 export class BLEClient
   extends GoveeClient {
@@ -43,7 +45,7 @@ export class BLEClient
   private identifiedPeripherals: Map<BLEAddress, IdentifiedPeripheral> = new Map<BLEAddress, IdentifiedPeripheral>();
   private scanning = false;
   private online = false;
-  private peripheralConnectionLock = new Lock<void>();
+  private lock = new Lock<LockKey>();
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -124,7 +126,8 @@ export class BLEClient
     this.log.info('BLEClient', 'OnSendCommand', command);
     const peripheralAddress = command.bleAddress.toLowerCase();
 
-    await this.lock(
+    await this.acquireLock(
+      'PeripheralConnect',
       'BLEClient',
       'OnSendCommand',
       command.bleAddress,
@@ -147,6 +150,13 @@ export class BLEClient
 
         for (let i = 0; i < command.state.length; i++) {
           const state = command.state[i];
+          await this.acquireLock(
+            'PeripheralWrite',
+            'BLEClient',
+            'Sending',
+            peripheralAddress,
+            state,
+          );
           reportCharacteristic.removeAllListeners();
           await reportCharacteristic.subscribeAsync();
           reportCharacteristic.on(
@@ -162,7 +172,8 @@ export class BLEClient
       }
     } finally {
       await this.startScanning();
-      await this.release(
+      await this.releaseLock(
+        'PeripheralConnect',
         'BLEClient',
         'OnSendCommand',
         command.bleAddress,
@@ -174,7 +185,8 @@ export class BLEClient
     peripheral: Peripheral,
   ): Promise<IdentifiedPeripheral | undefined> {
     let identifiedPeripheral: IdentifiedPeripheral | undefined = undefined;
-    await this.lock(
+    await this.acquireLock(
+      'PeripheralConnect',
       'BLEClient',
       'tryDiscoverPeripheral',
       peripheral.address.toLowerCase(),
@@ -184,7 +196,8 @@ export class BLEClient
       identifiedPeripheral = await this.tryGetIdentifiedPeripheral(peripheral);
     } finally {
       await this.startScanning();
-      await this.release(
+      await this.releaseLock(
+        'PeripheralConnect',
         'BLEClient',
         'tryDiscoverPeripheral',
         peripheral.address.toLowerCase(),
@@ -237,7 +250,7 @@ export class BLEClient
   private async tryGetIdentifiedPeripheralCharacteristics(
     bleAddress: string,
   ): Promise<IdentifiedPeripheralCharacteristics | undefined> {
-    if (!this.peripheralConnectionLock.isAcquired()) {
+    if (!this.lock.isAcquired('PeripheralConnect')) {
       this.log.info(
         'BLEClient',
         'tryGetIdentifiedPeripheralCharacteristics',
@@ -305,23 +318,46 @@ export class BLEClient
     if (!this.scanning) {
       this.scanning = true;
       await noble.startScanningAsync(
-        [],
-        false,
+        [BLEClient.SERVICE_CONTROL_UUID],
+        true,
       );
     }
   }
 
-  private async lock(...log: string[]) {
-    await this.peripheralConnectionLock.acquire();
-    this.log.info('BLEClient', 'AcquireLock', ...log);
+  private async acquireLock(
+    key: LockKey,
+    ...log: unknown[]
+  ) {
+    await this.lock.acquire(key);
+    this.log.info(
+      'BLEClient',
+      'AcquireLock',
+      key,
+      ...log,
+    );
   }
 
-  private async release(...log: string[]) {
-    this.log.info('BLEClient', 'ReleaseLock', ...log);
-    this.peripheralConnectionLock.release();
+  private async releaseLock(
+    key: LockKey,
+    ...log: string[]
+  ) {
+    this.log.info(
+      'BLEClient',
+      'ReleaseLock',
+      key,
+      ...log,
+    );
+    this.lock.release(key);
   }
 
-  private onDataCallback = (deviceIdentification: BLEDeviceIdentification) => (data: Buffer) => {
+  private onDataCallback = (deviceIdentification: BLEDeviceIdentification) => async (data: Buffer) => {
+    await this.releaseLock(
+      'PeripheralWrite',
+      'BLEClient',
+      'onDataCallback',
+      deviceIdentification.deviceId,
+      data.toString(),
+    );
     this.log.info(
       'BLEClient',
       'OnDataCallback',
