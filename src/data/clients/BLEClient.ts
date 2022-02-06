@@ -195,9 +195,12 @@ export class BLEPeripheralConnection
     );
   }
 
-  async connect() {
+  async connect(discoverCharacteristics?: boolean) {
     if (!this.isConnected) {
       await this.peripheral.connectAsync();
+    }
+    if (!discoverCharacteristics) {
+      return;
     }
     const services = await this.peripheral.discoverServicesAsync(
       [this.controlServiceUUID],
@@ -220,6 +223,7 @@ export class BLEPeripheralConnection
         this.reportCharacteristic =
           new BLEPeripheralReportingCharacteristic(
             this.emitter,
+            this,
             characteristic,
             this.deviceIdentification.deviceId,
             this.deviceIdentification.bleAddress,
@@ -230,6 +234,7 @@ export class BLEPeripheralConnection
         this.controlCharacteristic =
           new BLEPeripheralControlCharacteristic(
             this.emitter,
+            this,
             characteristic,
             this.deviceIdentification.deviceId,
             this.deviceIdentification.bleAddress,
@@ -307,6 +312,7 @@ export class BLEPeripheralConnection
 export abstract class BLEPeripheralCharacteristic extends Emitter {
   protected constructor(
     emitter: EventEmitter2,
+    readonly peripheralConnection: BLEPeripheralConnection,
     readonly characteristic: Characteristic,
     readonly deviceId: string,
     readonly bleAddress: string,
@@ -319,6 +325,7 @@ export abstract class BLEPeripheralCharacteristic extends Emitter {
 export class BLEPeripheralReportingCharacteristic extends BLEPeripheralCharacteristic {
   constructor(
     emitter: EventEmitter2,
+    peripheralConnection: BLEPeripheralConnection,
     characteristic: Characteristic,
     deviceId: string,
     bleAddress: string,
@@ -326,6 +333,7 @@ export class BLEPeripheralReportingCharacteristic extends BLEPeripheralCharacter
   ) {
     super(
       emitter,
+      peripheralConnection,
       characteristic,
       deviceId,
       bleAddress,
@@ -365,6 +373,7 @@ export class BLEPeripheralReportingCharacteristic extends BLEPeripheralCharacter
 export class BLEPeripheralControlCharacteristic extends BLEPeripheralCharacteristic {
   constructor(
     emitter: EventEmitter2,
+    peripheralConnection: BLEPeripheralConnection,
     characteristic: Characteristic,
     deviceId: string,
     bleAddress: string,
@@ -372,6 +381,7 @@ export class BLEPeripheralControlCharacteristic extends BLEPeripheralCharacteris
   ) {
     super(
       emitter,
+      peripheralConnection,
       characteristic,
       deviceId,
       bleAddress,
@@ -391,6 +401,9 @@ export class BLEPeripheralControlCharacteristic extends BLEPeripheralCharacteris
       return;
     }
     this.log.info('BlEPeripheral', 'Writing to', command.deviceId);
+    if (!this.peripheralConnection.isConnected) {
+      await this.peripheralConnection.connect(false);
+    }
     await this.characteristic.writeAsync(
       Buffer.of(...command.state),
       true,

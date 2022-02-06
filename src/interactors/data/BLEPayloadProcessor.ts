@@ -18,7 +18,7 @@ import {REPORT_IDENTIFIER} from '../../util/const';
 @Injectable()
 export class BLEPayloadProcessor extends Emitter {
   private bleConnected = false;
-  private peripheralConnected: Map<string, boolean> = new Map<string, boolean>();
+  private readonly discoveredPeripherals: string[] = [];
   private readonly stateRequests: Map<string, GoveeDevice> = new Map<string, GoveeDevice>();
 
   constructor(
@@ -46,10 +46,7 @@ export class BLEPayloadProcessor extends Emitter {
   )
   onBLEPeripheralConnection(connection: BLEPeripheralConnectionState) {
     this.log.info('BLE Peripheral Connection', connection.deviceId, connection.connectionState === ConnectionState.Connected);
-    this.peripheralConnected.set(
-      connection.bleAddress.toLowerCase(),
-      connection.connectionState === ConnectionState.Connected,
-    );
+    this.discoveredPeripherals.push(connection.bleAddress.toLowerCase());
     this.log.info('BLE Peripheral Connections', this.stateRequests);
     if (connection.connectionState === ConnectionState.Connected) {
       const device = this.stateRequests.get(connection.deviceId);
@@ -98,7 +95,7 @@ export class BLEPayloadProcessor extends Emitter {
       this.log.info('RequestDeviceState', 'BLE is not connected');
       return;
     }
-    if (!this.peripheralConnected.get(device.bleAddress.toLowerCase())) {
+    if (!this.discoveredPeripherals.has(device.bleAddress.toLowerCase())) {
       this.log.info('RequestDeviceState', `BLE Peripheral ${device.deviceId} is not connected`);
       this.stateRequests.set(device.deviceId, device);
       return;
