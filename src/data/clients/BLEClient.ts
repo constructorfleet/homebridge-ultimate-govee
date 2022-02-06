@@ -4,7 +4,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEConnectionStateEvent, BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
-import {Emitter, sleep} from '../../util/types';
+import {Emitter} from '../../util/types';
 import {Lock} from 'async-await-mutex-lock';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {
@@ -180,13 +180,13 @@ export class BLEClient
       return;
     }
 
-    this.log.info('BLEClient', 'OnSendCommand', 'WritingTo');
     await this.peripheralConnectionLock.acquire();
     try {
       await peripheralConnection.connect();
       for (let i = 0; i < command.state.length; i++) {
+        this.log.info('BLEClient', 'OnSendCommand', 'Writing', command.state[i]);
         await peripheralConnection.writeCommand(command.state[i]);
-        await sleep(1000);
+        // await sleep(1000);
       }
     } finally {
       this.peripheralConnectionLock.release();
@@ -216,6 +216,7 @@ export class BLEPeripheralConnection
 
   private controlCharacteristic?: Characteristic;
   private reportCharacteristic?: Characteristic;
+  private writeLock = new Lock();
   public isConnected = false;
   public discovered = false;
 
@@ -250,6 +251,12 @@ export class BLEPeripheralConnection
   }
 
   async writeCommand(command: number[]) {
+    await this.writeLock.acquire();
+    this.reportCharacteristic!.removeAllListeners();
+    this.reportCharacteristic!.once(
+      'data',
+      this.onDataCallback,
+    );
     await this.controlCharacteristic!.writeAsync(
       Buffer.of(...command),
       true,
@@ -280,10 +287,6 @@ export class BLEPeripheralConnection
       const characteristic = characteristics[i];
       if (characteristic.uuid === this.reportCharacteristicUUID) {
         this.reportCharacteristic = characteristic;
-        this.reportCharacteristic.on(
-          'data',
-          this.onDataCallback,
-        );
       } else if (characteristic.uuid === this.controlCharacteristicUUID) {
         this.controlCharacteristic = characteristic;
       }
@@ -376,6 +379,7 @@ export class BLEPeripheralConnection
         ),
       ),
     );
+    this.writeLock.release();
   };
 
   private get deviceId(): string {
