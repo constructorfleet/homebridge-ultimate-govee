@@ -95,7 +95,7 @@ export class BLEPayloadProcessor extends Emitter {
       this.log.info('RequestDeviceState', 'BLE is not connected');
       return;
     }
-    if (!this.discoveredPeripherals.has(device.bleAddress.toLowerCase())) {
+    if (!this.discoveredPeripherals.includes(device.bleAddress.toLowerCase())) {
       this.log.info('RequestDeviceState', `BLE Peripheral ${device.deviceId} is not connected`);
       this.stateRequests.set(device.deviceId, device);
       return;
