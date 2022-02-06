@@ -7,7 +7,7 @@ export class BLEPeripheralConnectionState extends BLEDeviceIdentification {
     deviceId: string,
     public connectionState: ConnectionState,
   ) {
-    super(bleAddress, deviceId);
+    super(bleAddress.toLowerCase(), deviceId);
   }
 }
 
@@ -17,7 +17,7 @@ export class BLEPeripheralStateReceive extends BLEDeviceIdentification {
     deviceId: string,
     public state: number[],
   ) {
-    super(bleAddress, deviceId);
+    super(bleAddress.toLowerCase(), deviceId);
   }
 }
 
@@ -27,7 +27,7 @@ export class BLEPeripheralCommandSend extends BLEDeviceIdentification {
     deviceId: string,
     public state: number[],
   ) {
-    super(bleAddress, deviceId);
+    super(bleAddress.toLowerCase(), deviceId);
   }
 }
 
@@ -61,7 +61,7 @@ export class BLEPeripheralReceiveEvent
 
   constructor(eventData: BLEPeripheralStateReceive) {
     super(
-      'State',
+      'Receive',
       eventData,
     );
   }
@@ -72,7 +72,7 @@ export class BLEPeripheralSendEvent
 
   constructor(eventData: BLEPeripheralCommandSend) {
     super(
-      'State',
+      'Send',
       eventData,
     );
   }
