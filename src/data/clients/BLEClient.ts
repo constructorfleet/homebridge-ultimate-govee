@@ -238,7 +238,9 @@ export class BLEPeripheralConnection
   }
 
   async connect() {
-    await this.peripheral.connectAsync();
+    if (this.peripheral.state !== 'connected') {
+      await this.peripheral.connectAsync();
+    }
   }
 
   async writeCommand(command: number[]) {
