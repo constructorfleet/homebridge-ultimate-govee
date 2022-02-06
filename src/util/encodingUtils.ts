@@ -25,10 +25,18 @@ export const base64ToHex =
       ),
     );
 
+export const bufferToHex =
+  (buffer: Buffer): number[] =>
+    hexStringToArray(
+      uint8ToHex(
+        toUint8Array(
+          buffer,
+        ),
+      ),
+    );
+
 export const hexToBase64 =
   (codes: number[]): string =>
     encode(
       Uint8Array.of(...codes),
     );
-
-
