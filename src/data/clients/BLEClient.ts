@@ -404,9 +404,11 @@ export class BLEPeripheralControlCharacteristic extends BLEPeripheralCharacteris
     if (!this.peripheralConnection.isConnected) {
       await this.peripheralConnection.connect(false);
     }
-    await this.characteristic.writeAsync(
-      Buffer.of(...command.state),
-      true,
-    );
+    for (let i = 0; i < command.state.length; i++) {
+      await this.characteristic.writeAsync(
+        Buffer.of(...command.state[i]),
+        true,
+      );
+    }
   }
 }

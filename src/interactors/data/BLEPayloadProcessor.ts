@@ -101,20 +101,20 @@ export class BLEPayloadProcessor extends Emitter {
       return;
     }
     this.log.info('RequestDeviceState', 'codes', device.deviceStatusCodes);
-    device.deviceStatusCodes.forEach(
-      (statusCodes) =>
-        this.emit(
-          new BLEPeripheralSendEvent(
-            new BLEPeripheralCommandSend(
-              device.bleAddress!.toLowerCase(),
-              device.deviceId,
+    this.emit(
+      new BLEPeripheralSendEvent(
+        new BLEPeripheralCommandSend(
+          device.bleAddress!.toLowerCase(),
+          device.deviceId,
+          device.deviceStatusCodes.map(
+            (statusCodes) =>
               getCommandCodes(
                 REPORT_IDENTIFIER,
                 statusCodes,
               ),
-            ),
           ),
         ),
+      ),
     );
   }
 }

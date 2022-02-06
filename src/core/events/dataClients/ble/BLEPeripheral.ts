@@ -25,7 +25,7 @@ export class BLEPeripheralCommandSend extends BLEDeviceIdentification {
   constructor(
     bleAddress: string,
     deviceId: string,
-    public state: number[],
+    public state: number[][],
   ) {
     super(bleAddress.toLowerCase(), deviceId);
   }
