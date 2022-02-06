@@ -345,30 +345,31 @@ export class BLEClient
     this.lock.release(key);
   }
 
-  onDataCallback = (deviceIdentification: BLEDeviceIdentification) => async (data: Buffer) => {
-    await this.releaseLock(
+  onDataCallback = (deviceIdentification: BLEDeviceIdentification) => (data: Buffer) => {
+    this.releaseLock(
       'PeripheralWrite',
       'BLEClient',
       'onDataCallback',
       deviceIdentification.deviceId,
       data.toString(),
-    );
-    this.log.info(
-      'BLEClient',
-      'OnDataCallback',
-      data,
-    );
-    if (data.length > 0) {
-      this.emit(
-        new BLEPeripheralReceiveEvent(
-          new BLEPeripheralStateReceive(
-            deviceIdentification.bleAddress,
-            deviceIdentification.deviceId,
-            bufferToHex(data),
-          ),
-        ),
+    ).then(() => {
+      this.log.info(
+        'BLEClient',
+        'OnDataCallback',
+        data,
       );
-    }
+      if (data.length > 0) {
+        this.emit(
+          new BLEPeripheralReceiveEvent(
+            new BLEPeripheralStateReceive(
+              deviceIdentification.bleAddress,
+              deviceIdentification.deviceId,
+              bufferToHex(data),
+            ),
+          ),
+        );
+      }
+    });
   };
 }
 
