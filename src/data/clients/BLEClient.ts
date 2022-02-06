@@ -149,40 +149,38 @@ export class BLEClient
       return;
     }
     let peripheralConnection = this.peripheralConnections.get(deviceIdentification.deviceId);
-    if (!peripheralConnection) {
-      peripheralConnection =
-        new BLEPeripheralConnection(
-          this.emitter,
-          BLEClient.SERVICE_CONTROL_UUID,
-          BLEClient.CHARACTERISTIC_CONTROL_UUID,
-          BLEClient.CHARACTERISTIC_REPORT_UUID,
-          deviceIdentification,
-          peripheral,
-          this.log,
-        );
-
-      this.peripheralConnections.set(
-        deviceIdentification.deviceId,
-        peripheralConnection,
-      );
+    if (peripheralConnection) {
+      return;
     }
 
-    if (!peripheralConnection.discovered) {
-      await this.stopScanning();
-      await this.lock('CreatePeripheralConnection - Discovering Characteristics');
-      try {
-        await peripheralConnection.connect();
-        await peripheralConnection.discoverCharacteristics();
-      } finally {
-        await this.release('CreatePeripheralConnection - Discovering Characteristics');
-      }
-      this.emit(
-        new BLEPeripheralDiscoveredEvent(
-          peripheralConnection.deviceIdentification,
-        ),
+    peripheralConnection =
+      new BLEPeripheralConnection(
+        this.emitter,
+        BLEClient.SERVICE_CONTROL_UUID,
+        BLEClient.CHARACTERISTIC_CONTROL_UUID,
+        BLEClient.CHARACTERISTIC_REPORT_UUID,
+        deviceIdentification,
+        peripheral,
+        this.log,
       );
+    await this.stopScanning();
+    await this.lock('CreatePeripheralConnection - Discovering Characteristics');
+    try {
+      await peripheralConnection.connect();
+      await peripheralConnection.discoverCharacteristics();
+    } finally {
+      await this.release('CreatePeripheralConnection - Discovering Characteristics');
     }
+    this.peripheralConnections.set(
+      deviceIdentification.deviceId,
+      peripheralConnection,
+    );
     await this.startScanning();
+    this.emit(
+      new BLEPeripheralDiscoveredEvent(
+        peripheralConnection.deviceIdentification,
+      ),
+    );
   }
 
   private async stopScanning() {
