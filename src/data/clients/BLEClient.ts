@@ -39,11 +39,13 @@ export class BLEClient
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
           this.online = true;
-          this.scanning = true;
-          await noble.startScanningAsync([], true);
           this.emit(
             new BLEConnectionStateEvent(ConnectionState.Connected),
           );
+          if (!this.scanning && this.subscriptions.size > 0) {
+            this.scanning = true;
+            await noble.startScanningAsync([], true);
+          }
         } else {
           this.emit(
             new BLEConnectionStateEvent(ConnectionState.Offline),
@@ -109,7 +111,7 @@ export class BLEClient
   onBLEDeviceSubscribe(bleDeviceIdentification: BLEDeviceIdentification) {
     if (!this.subscriptions.has(bleDeviceIdentification.bleAddress)) {
       this.subscriptions.set(bleDeviceIdentification.bleAddress, bleDeviceIdentification);
-      if (!this.scanning) {
+      if (!this.scanning && this.online) {
         this.scanning = true;
         noble.startScanning(
           [],

@@ -1,7 +1,6 @@
 import {DynamicModule, Module} from '@nestjs/common';
 import {EventEmitterModule} from '@nestjs/event-emitter';
 import {DeviceManager} from '../devices/DeviceManager';
-import {IoTClient} from '../data/clients/IoTClient';
 import {RestClient} from '../data/clients/RestClient';
 import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../util/const';
 import path from 'path';
@@ -63,11 +62,11 @@ export class GoveePluginModule {
         },
         {
           provide: IOT_CERTIFICATE,
-          useValue:  path.resolve(path.join(rootPath, 'assets', 'testiot.cert.pem')),
+          useValue: path.resolve(path.join(rootPath, 'assets', 'testiot.cert.pem')),
         },
         {
           provide: IOT_CA_CERTIFICATE,
-          useValue:  path.resolve(path.join(rootPath, 'assets', 'AmazonRootCA1.pem')),
+          useValue: path.resolve(path.join(rootPath, 'assets', 'AmazonRootCA1.pem')),
         },
         {
           provide: GOVEE_CLIENT_ID,
@@ -76,7 +75,7 @@ export class GoveePluginModule {
         ...purifierProviders,
         ...humidifierProviders,
         IoTPayloadProcessor,
-        IoTClient,
+        // IoTClient,
         RestPayloadProcessor,
         RestClient,
         BLEPayloadProcessor,
@@ -93,7 +92,7 @@ export class GoveePluginModule {
         GOVEE_CLIENT_ID,
         LoggingModule,
         IoTPayloadProcessor,
-        IoTClient,
+        // IoTClient,
         RestPayloadProcessor,
         RestClient,
         BLEPayloadProcessor,
