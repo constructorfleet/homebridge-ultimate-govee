@@ -343,10 +343,10 @@ export class BLEPeripheralControlCharacteristic extends BLEPeripheralCharacteris
     },
   )
   async onSendCommand(command: BLEPeripheralCommandSend) {
-    if (command.deviceId !== this.deviceId || command.bleAddress != this.bleAddress) {
+    if (command.deviceId !== this.deviceId || command.bleAddress !== this.bleAddress) {
       return;
     }
-
+    this.log.info('BlEPeripheral', 'Writing to', command.deviceId);
     await this.characteristic.writeAsync(
       Buffer.of(...command.state),
       true,
