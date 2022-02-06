@@ -82,7 +82,7 @@ export class BLEClient
           peripheralAddress,
           peripheral,
         );
-        if (peripheralConnection) {
+        if (peripheralConnection && !peripheralConnection.discovered) {
           await this.stopScanning();
           this.log.info('BLEClient', 'onDiscover', 'Connecting');
           await this.peripheralConnectionLock.acquire();
@@ -152,7 +152,7 @@ export class BLEClient
         peripheral,
       );
 
-      if (peripheralConnection) {
+      if (peripheralConnection && !peripheralConnection.discovered) {
         await this.stopScanning();
         this.log.info('BLEClient', 'onSubscribe', 'Connecting');
         await this.peripheralConnectionLock.acquire();
