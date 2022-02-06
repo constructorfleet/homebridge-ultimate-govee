@@ -124,12 +124,12 @@ export class BLEClient
     this.log.info('BLEClient', 'OnSendCommand', command);
     const peripheralAddress = command.bleAddress.toLowerCase();
 
-    await this.stopScanning();
     await this.lock(
       'BLEClient',
       'OnSendCommand',
       command.bleAddress,
     );
+    await this.stopScanning();
     try {
       const identifiedPeripheralCharacteristics =
         await this.tryGetIdentifiedPeripheralCharacteristics(peripheralAddress);
@@ -174,12 +174,12 @@ export class BLEClient
     peripheral: Peripheral,
   ): Promise<IdentifiedPeripheral | undefined> {
     let identifiedPeripheral: IdentifiedPeripheral | undefined = undefined;
-    await this.stopScanning();
     await this.lock(
       'BLEClient',
       'tryDiscoverPeripheral',
       peripheral.address.toLowerCase(),
     );
+    await this.stopScanning();
     try {
       identifiedPeripheral = await this.tryGetIdentifiedPeripheral(peripheral);
     } finally {
