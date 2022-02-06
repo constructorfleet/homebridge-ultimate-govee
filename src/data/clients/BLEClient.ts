@@ -183,6 +183,7 @@ export class BLEClient
         await sleep(200);
       }
     } finally {
+      await this.startScanning();
       await this.release(
         'BLEClient',
         'OnSendCommand',
