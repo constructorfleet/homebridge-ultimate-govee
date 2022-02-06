@@ -8,12 +8,12 @@ import {LoggingService} from '../../logging/LoggingService';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {
   BLEPeripheralCommandSend,
-  BLEPeripheralConnectionState,
   BLEPeripheralSendEvent,
   BLEPeripheralStateReceive,
 } from '../../core/events/dataClients/ble/BLEPeripheral';
 import {getCommandCodes} from '../../util/opCodeUtils';
 import {REPORT_IDENTIFIER} from '../../util/const';
+import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 
 @Injectable()
 export class BLEPayloadProcessor extends Emitter {
@@ -39,20 +39,18 @@ export class BLEPayloadProcessor extends Emitter {
   }
 
   @OnEvent(
-    'BLE.PERIPHERAL.Connection',
+    'BLE.PERIPHERAL.Discovered',
     {
       async: true,
     },
   )
-  onBLEPeripheralConnection(connection: BLEPeripheralConnectionState) {
-    this.discoveredPeripherals.push(connection.bleAddress.toLowerCase());
-    if (connection.connectionState === ConnectionState.Connected) {
-      const device = this.stateRequests.get(connection.deviceId);
-      if (device) {
-        this.log.info('BLE Peripheral Connections', 'Requesting State', device);
-        this.stateRequests.delete(connection.deviceId);
-        this.onRequestDeviceState(device);
-      }
+  onBLEPeripheralConnection(deviceIdentification: BLEDeviceIdentification) {
+    this.discoveredPeripherals.push(deviceIdentification.bleAddress.toLowerCase());
+    const device = this.stateRequests.get(deviceIdentification.deviceId);
+    if (device) {
+      this.log.info('BLE Peripheral Discovered', 'Requesting State', device);
+      this.stateRequests.delete(deviceIdentification.deviceId);
+      this.onRequestDeviceState(device);
     }
   }
 

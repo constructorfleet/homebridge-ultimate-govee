@@ -45,6 +45,17 @@ export abstract class BLEPeripheralEvent<EventDataType>
   }
 }
 
+export class BLEPeripheralDiscoveredEvent
+  extends BLEPeripheralEvent<BLEDeviceIdentification> {
+
+  constructor(eventData: BLEDeviceIdentification) {
+    super(
+      'Discovered',
+      eventData,
+    );
+  }
+}
+
 export class BLEPeripheralConnectionEvent
   extends BLEPeripheralEvent<BLEPeripheralConnectionState> {
 

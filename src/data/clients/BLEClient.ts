@@ -11,6 +11,7 @@ import {
   BLEPeripheralCommandSend,
   BLEPeripheralConnectionEvent,
   BLEPeripheralConnectionState,
+  BLEPeripheralDiscoveredEvent,
   BLEPeripheralReceiveEvent,
   BLEPeripheralStateReceive,
 } from '../../core/events/dataClients/ble/BLEPeripheral';
@@ -247,6 +248,11 @@ export class BLEPeripheralConnection
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
     }
+    this.emit(
+      new BLEPeripheralDiscoveredEvent(
+        this.deviceIdentification,
+      ),
+    );
   }
 
   private async discoverServiceCharacteristics(service: Service) {
