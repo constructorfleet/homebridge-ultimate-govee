@@ -70,12 +70,12 @@ export class BLEClient
           return;
         }
 
-        this.log.info('BLEClient', 'Creating Connection', peripheral.address);
+        this.log.info('BLEClient', 'Creating Connection', peripheralAddress);
         const peripheralConnection = new BLEPeripheralConnection(
           this.emitter,
           BLEClient.SERVICE_CONTROL_UUID,
           BLEClient.CHARACTERISTIC_CONTROL_UUID,
-          this.subscriptions[peripheralAddress],
+          this.subscriptions.get(peripheralAddress)!,
           peripheral,
           this.log,
         );
@@ -112,17 +112,19 @@ export class BLEClient
   )
   onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
-    this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
-    if (!this.scanning) {
-      this.scanning = true;
-      noble.startScanning(
-        [],
-        true,
-        (error?: Error) => {
-          if (error) {
-            this.log.error(error);
-          }
-        });
+    if (!this.subscriptions.has(bleDeviceId.bleAddress)) {
+      this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
+      if (!this.scanning) {
+        this.scanning = true;
+        noble.startScanning(
+          [],
+          true,
+          (error?: Error) => {
+            if (error) {
+              this.log.error(error);
+            }
+          });
+      }
     }
   }
 }
