@@ -92,18 +92,8 @@ export class BLEClient
         if (this.identifiedPeripherals.has(peripheral.address.toLowerCase())) {
           return;
         }
-        const identifiedPeripheral = await this.tryGetIdentifiedPeripheral(peripheral);
-        if (!identifiedPeripheral) {
-          return;
-        }
-        this.emit(
-          new BLEPeripheralDiscoveredEvent(
-            new BLEDeviceIdentification(
-              identifiedPeripheral.deviceIdentification.bleAddress,
-              identifiedPeripheral.deviceIdentification.deviceId,
-            ),
-          ),
-        );
+
+        await this.tryDiscoverPeripheral(peripheral);
       },
     );
   }
@@ -121,18 +111,7 @@ export class BLEClient
     if (!peripheral) {
       return;
     }
-    const identifiedPeripheral = await this.tryGetIdentifiedPeripheral(peripheral);
-    if (!identifiedPeripheral) {
-      return;
-    }
-    this.emit(
-      new BLEPeripheralDiscoveredEvent(
-        new BLEDeviceIdentification(
-          identifiedPeripheral.deviceIdentification.bleAddress,
-          identifiedPeripheral.deviceIdentification.deviceId,
-        ),
-      ),
-    );
+    await this.tryDiscoverPeripheral(peripheral);
   }
 
   @OnEvent(
@@ -191,12 +170,43 @@ export class BLEClient
     }
   }
 
+  private async tryDiscoverPeripheral(
+    peripheral: Peripheral,
+  ): Promise<IdentifiedPeripheral | undefined> {
+    let identifiedPeripheral: IdentifiedPeripheral | undefined = undefined;
+    await this.stopScanning();
+    await this.lock(
+      'BLEClient',
+      'tryDiscoverPeripheral',
+      peripheral.address.toLowerCase(),
+    );
+    try {
+      identifiedPeripheral = await this.tryGetIdentifiedPeripheral(peripheral);
+    } finally {
+      await this.startScanning();
+      await this.release(
+        'BLEClient',
+        'tryDiscoverPeripheral',
+        peripheral.address.toLowerCase(),
+      );
+    }
+
+    if (!identifiedPeripheral) {
+      return;
+    }
+    this.emit(
+      new BLEPeripheralDiscoveredEvent(
+        new BLEDeviceIdentification(
+          identifiedPeripheral.deviceIdentification.bleAddress,
+          identifiedPeripheral.deviceIdentification.deviceId,
+        ),
+      ),
+    );
+  }
+
   private async tryGetCharacteristics(
     peripheral: Peripheral,
   ): Promise<ControlReportCharacteristics | undefined> {
-    if (!this.peripheralConnectionLock.isAcquired()) {
-      return undefined;
-    }
     const serviceCharacteristics = await peripheral.discoverSomeServicesAndCharacteristicsAsync(
       [BLEClient.SERVICE_CONTROL_UUID],
       [
@@ -261,38 +271,24 @@ export class BLEClient
     peripheral: Peripheral,
   ): Promise<IdentifiedPeripheral | undefined> {
     const peripheralAddress = peripheral.address.toLowerCase();
-    await this.stopScanning();
-    await this.lock(
-      'BLEClient',
-      'tryGetControllablePeripheral',
-      peripheralAddress,
-    );
-    try {
-      await peripheral.connectAsync();
 
-      const controlReportCharacteristics = await this.tryGetCharacteristics(peripheral);
+    await peripheral.connectAsync();
 
-      if (controlReportCharacteristics) {
-        this.peripherals.set(peripheralAddress, peripheral);
+    const controlReportCharacteristics = await this.tryGetCharacteristics(peripheral);
 
-        const deviceIdentification = this.subscriptions.get(peripheralAddress);
-        if (deviceIdentification) {
-          const identifiedPeripheral = {
-            deviceIdentification: deviceIdentification,
-            peripheral: peripheral,
-          };
-          this.identifiedPeripherals.set(peripheralAddress, identifiedPeripheral);
+    if (controlReportCharacteristics) {
+      this.peripherals.set(peripheralAddress, peripheral);
 
-          return identifiedPeripheral;
-        }
+      const deviceIdentification = this.subscriptions.get(peripheralAddress);
+      if (deviceIdentification) {
+        const identifiedPeripheral = {
+          deviceIdentification: deviceIdentification,
+          peripheral: peripheral,
+        };
+        this.identifiedPeripherals.set(peripheralAddress, identifiedPeripheral);
+
+        return identifiedPeripheral;
       }
-    } finally {
-      await this.startScanning();
-      await this.release(
-        'BLEClient',
-        'OnDiscover',
-        'Discover Characteristics',
-      );
     }
   }
 
