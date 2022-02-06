@@ -89,7 +89,7 @@ export class BLEClient
     noble.on(
       'discover',
       async (peripheral: Peripheral) => {
-        if (this.identifiedPeripherals.has(peripheral.address.toLowerCase())) {
+        if (this.peripherals.has(peripheral.address.toLowerCase())) {
           return;
         }
 
