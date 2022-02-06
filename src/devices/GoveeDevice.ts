@@ -85,7 +85,7 @@ export class GoveeDevice extends State {
       new BLEPeripheralCommandSend(
         this.bleAddress.toLowerCase(),
         this.deviceId,
-        base64ToHex(command),
+        [base64ToHex(command)],
       ),
     );
   }

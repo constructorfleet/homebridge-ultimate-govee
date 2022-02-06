@@ -6,7 +6,7 @@ export type Constructor<TypeClass> = new (...args) => TypeClass;
 export type StandardEnum<T> = {
   [id: string]: T | string;
   [nu: number]: string;
-}
+};
 
 export abstract class Emitter {
   protected constructor(
@@ -26,4 +26,8 @@ export abstract class Emitter {
       event.eventData,
     );
   }
+}
+
+export async function delay(ms: number) {
+  await new Promise(resolve => setTimeout(resolve, ms));
 }
