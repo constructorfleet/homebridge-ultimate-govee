@@ -15,11 +15,6 @@ import {BLESubscribeToDevice} from '../core/events/dataClients/ble/BLESubscripti
 
 @Injectable()
 export class DeviceManager extends Emitter {
-  // private static readonly DEVICE_CLASSES = [
-  //   GoveeHumidifier,
-  //   GoveeAirPurifier,
-  // ];
-
   private readonly devices = new Map<string, GoveeDevice>();
 
   constructor(

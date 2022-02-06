@@ -10,7 +10,7 @@ export class BLESubscribeToDevice
     super(
       'Subscribe',
       new BLEDeviceIdentification(
-        bleAddress,
+        bleAddress.toLowerCase(),
         deviceId,
       ),
     );
