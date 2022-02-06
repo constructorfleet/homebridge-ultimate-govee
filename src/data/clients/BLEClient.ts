@@ -88,11 +88,13 @@ export class BLEClient
           this.log.info('BLEClient', 'onDiscover', 'Connecting');
           await peripheralConnection.connect();
         }
-        this.scanning = true;
-        await noble.startScanningAsync(
-          [],
-          true,
-        );
+        if (!this.scanning) {
+          this.scanning = true;
+          await noble.startScanningAsync(
+            [],
+            true,
+          );
+        }
       },
     );
   }
@@ -153,7 +155,7 @@ export class BLEClient
         await peripheralConnection.connect();
       }
     }
-    if (!this.scanning && this.online) {
+    if (!this.scanning) {
       this.scanning = true;
       await noble.startScanningAsync(
         [],
@@ -194,8 +196,9 @@ export class BLEPeripheralConnection
   }
 
   async connect() {
-    await this.peripheral.connectAsync();
-    this.onConnect();
+    if (!this.isConnected) {
+      await this.peripheral.connectAsync();
+    }
     const services = await this.peripheral.discoverServicesAsync(
       [this.controlServiceUUID],
     );
