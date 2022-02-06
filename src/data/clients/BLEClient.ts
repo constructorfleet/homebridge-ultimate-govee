@@ -4,7 +4,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEConnectionStateEvent, BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
-import {Emitter} from '../../util/types';
+import {Emitter, sleep} from '../../util/types';
 import {Lock} from 'async-await-mutex-lock';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {
@@ -15,7 +15,6 @@ import {
   BLEPeripheralStateReceive,
 } from '../../core/events/dataClients/ble/BLEPeripheral';
 import {bufferToHex} from '../../util/encodingUtils';
-import {delay} from 'rxjs';
 
 @Injectable()
 export class BLEClient
@@ -43,10 +42,7 @@ export class BLEClient
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
           this.online = true;
-          if (!this.scanning) {
-            this.scanning = true;
-            await noble.startScanningAsync([], true);
-          }
+          await this.startScanning();
           this.emit(
             new BLEConnectionStateEvent(ConnectionState.Connected),
           );
@@ -55,9 +51,7 @@ export class BLEClient
           this.emit(
             new BLEConnectionStateEvent(ConnectionState.Offline),
           );
-          if (this.scanning) {
-            await noble.stopScanningAsync();
-          }
+          await this.stopScanning();
         }
       },
     );
@@ -88,6 +82,7 @@ export class BLEClient
           peripheral,
         );
         if (peripheralConnection) {
+          await this.stopScanning();
           this.log.info('BLEClient', 'onDiscover', 'Connecting');
           await this.peripheralConnectionLock.acquire();
           try {
@@ -97,13 +92,7 @@ export class BLEClient
             this.peripheralConnectionLock.release();
           }
         }
-        if (!this.scanning) {
-          this.scanning = true;
-          await noble.startScanningAsync(
-            [],
-            true,
-          );
-        }
+        await this.startScanning();
       },
     );
   }
@@ -161,6 +150,7 @@ export class BLEClient
       );
 
       if (peripheralConnection) {
+        await this.stopScanning();
         this.log.info('BLEClient', 'onSubscribe', 'Connecting');
         await this.peripheralConnectionLock.acquire();
         try {
@@ -171,11 +161,22 @@ export class BLEClient
         }
       }
     }
+    await this.startScanning();
+  }
+
+  private async stopScanning() {
+    if (this.scanning) {
+      this.scanning = false;
+      await noble.stopScanningAsync();
+    }
+  }
+
+  private async startScanning() {
     if (!this.scanning) {
       this.scanning = true;
       await noble.startScanningAsync(
-        [],
-        true,
+        [BLEClient.SERVICE_CONTROL_UUID],
+        false,
       );
     }
   }
@@ -358,7 +359,7 @@ export class BLEPeripheralConnection
           Buffer.of(...command.state[i]),
           true,
         );
-        await delay(500);
+        await sleep(1000);
       }
     } finally {
       this.peripheralConnectionLock.release();

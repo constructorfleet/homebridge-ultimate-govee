@@ -28,6 +28,6 @@ export abstract class Emitter {
   }
 }
 
-export async function delay(ms: number) {
+export async function sleep(ms: number) {
   await new Promise(resolve => setTimeout(resolve, ms));
 }
