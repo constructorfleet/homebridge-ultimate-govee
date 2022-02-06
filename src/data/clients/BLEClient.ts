@@ -129,6 +129,8 @@ export class BLEClient
 export class BLEPeripheralConnection
   extends Emitter {
 
+  private readonly bleCharacteristics: BLEPeripheralCharacteristic[] = [];
+
   constructor(
     eventEmitter: EventEmitter2,
     private readonly controlServiceUUID: string,
@@ -173,9 +175,13 @@ export class BLEPeripheralConnection
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
     }
-    characteristic.on(
-      'data',
-      this.onDataCallback(characteristic),
+    this.bleCharacteristics.push(
+      new BLEPeripheralCharacteristic(
+        characteristic,
+        this.deviceIdentification.deviceId,
+        this.deviceIdentification.bleAddress,
+        this.log,
+      ),
     );
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
@@ -202,17 +208,31 @@ export class BLEPeripheralConnection
         },
       });
   }
+}
 
-  onDataCallback = (characteristic: Characteristic) => (data: Buffer) => {
+export class BLEPeripheralCharacteristic {
+  constructor(
+    readonly characteristic: Characteristic,
+    readonly deviceId: string,
+    readonly bleAddress: string,
+    readonly log: LoggingService,
+  ) {
+    this.onDataCallback.bind(this);
+    characteristic.on(
+      'data',
+      this.onDataCallback,
+    );
+  }
+
+  public onDataCallback(data: Buffer) {
     this.log.info(
-      'OnData',
       {
-        deviceId: this.deviceIdentification.deviceId,
-        bleAddress: this.deviceIdentification.bleAddress,
-        charUUID: characteristic.uuid,
-        charName: characteristic.name,
+        charName: this.characteristic.name,
+        charUUID: this.characteristic.uuid,
+        deviceId: this.deviceId,
+        bleAddress: this.bleAddress,
         data: data,
       },
     );
-  };
+  }
 }
