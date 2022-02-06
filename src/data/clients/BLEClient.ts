@@ -5,7 +5,6 @@ import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
 import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 import {Emitter} from '../../util/types';
-import {curry} from 'rambda';
 
 @Injectable()
 export class BLEClient
@@ -174,21 +173,9 @@ export class BLEPeripheralConnection
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
     }
-    const dataCallback = ((data) => {
-      this.log.info(
-        'OnData',
-        {
-          deviceId: this.deviceIdentification.deviceId,
-          bleAddress: this.deviceIdentification.bleAddress,
-          charUUID: characteristic.uuid,
-          charName: characteristic.name,
-          data: data,
-        },
-      );
-    }).bind(this);
     characteristic.on(
       'data',
-      dataCallback,
+      this.onDataCallback(characteristic),
     );
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
@@ -215,4 +202,17 @@ export class BLEPeripheralConnection
         },
       });
   }
+
+  onDataCallback = (characteristic: Characteristic) => (data: Buffer) => {
+    this.log.info(
+      'OnData',
+      {
+        deviceId: this.deviceIdentification.deviceId,
+        bleAddress: this.deviceIdentification.bleAddress,
+        charUUID: characteristic.uuid,
+        charName: characteristic.name,
+        data: data,
+      },
+    );
+  };
 }
