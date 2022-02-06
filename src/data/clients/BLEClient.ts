@@ -109,6 +109,7 @@ export class BLEClient
   async onBLEDeviceSubscribe(bleDeviceIdentification: BLEDeviceIdentification) {
     const address = bleDeviceIdentification.bleAddress.toLowerCase();
     this.subscriptions.set(address, bleDeviceIdentification);
+    await this.startScanning();
     const peripheral = this.peripherals.get(address);
     if (!peripheral) {
       return;
@@ -318,7 +319,7 @@ export class BLEClient
     if (!this.scanning) {
       this.scanning = true;
       await noble.startScanningAsync(
-        [BLEClient.SERVICE_CONTROL_UUID],
+        [],
         true,
       );
     }
