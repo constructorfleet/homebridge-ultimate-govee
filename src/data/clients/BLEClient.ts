@@ -195,8 +195,8 @@ export class BLEClient
   }
 
   private async lock(log: string) {
-    this.log.info('BLEClient', 'AcquireLock', log);
     await this.peripheralConnectionLock.acquire();
+    this.log.info('BLEClient', 'AcquireLock', log);
   }
 
   private async release(log: string) {
