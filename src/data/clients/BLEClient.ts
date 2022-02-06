@@ -249,7 +249,6 @@ export class BLEPeripheralConnection
 
   async discoverCharacteristics() {
     if (this.discovered) {
-      await this.peripheral.disconnectAsync();
       return;
     }
     this.discovered = true;
