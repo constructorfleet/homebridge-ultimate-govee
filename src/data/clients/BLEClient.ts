@@ -204,7 +204,7 @@ export class BLEClient
     if (!this.scanning) {
       this.scanning = true;
       await noble.startScanningAsync(
-        [BLEClient.SERVICE_CONTROL_UUID],
+        [],
         false,
       );
     }
