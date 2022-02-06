@@ -148,12 +148,11 @@ export class BLEClient
     if (!deviceIdentification) {
       return;
     }
-    let peripheralConnection = this.peripheralConnections.get(deviceIdentification.deviceId);
-    if (peripheralConnection) {
+    if (this.peripheralConnections.has(deviceIdentification.deviceId)) {
       return;
     }
 
-    peripheralConnection =
+    const peripheralConnection =
       new BLEPeripheralConnection(
         this.emitter,
         BLEClient.SERVICE_CONTROL_UUID,
@@ -164,17 +163,19 @@ export class BLEClient
         this.log,
       );
     await this.stopScanning();
-    await this.lock('CreatePeripheralConnection - Discovering Characteristics');
+    await this.lock(`CreatePeripheralConnection - Discovering Characteristics ${deviceIdentification.deviceId}`);
     try {
       await peripheralConnection.connect();
       await peripheralConnection.discoverCharacteristics();
+      this.peripheralConnections.set(
+        deviceIdentification.deviceId,
+        peripheralConnection,
+      );
+    } catch (e) {
+      this.log.error(`CreatePeripheralConnection - Discovering Characteristics ${deviceIdentification.deviceId} ${e}`);
     } finally {
-      await this.release('CreatePeripheralConnection - Discovering Characteristics');
+      await this.release(`CreatePeripheralConnection - Discovering Characteristics ${deviceIdentification.deviceId}`);
     }
-    this.peripheralConnections.set(
-      deviceIdentification.deviceId,
-      peripheralConnection,
-    );
     await this.startScanning();
     this.emit(
       new BLEPeripheralDiscoveredEvent(
@@ -280,13 +281,13 @@ export class BLEPeripheralConnection
     if (this.discovered) {
       return;
     }
-    this.discovered = true;
     const services = await this.peripheral.discoverServicesAsync(
       [this.controlServiceUUID],
     );
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
     }
+    this.discovered = true;
   }
 
   private async discoverServiceCharacteristics(service: Service) {
