@@ -88,13 +88,11 @@ export class BLEClient
           this.log.info('BLEClient', 'onDiscover', 'Connecting');
           await peripheralConnection.connect();
         }
-        if (!this.scanning && this.online) {
-          this.scanning = true;
-          await noble.startScanningAsync(
-            [],
-            true,
-          );
-        }
+        this.scanning = true;
+        await noble.startScanningAsync(
+          [],
+          true,
+        );
       },
     );
   }
@@ -197,6 +195,7 @@ export class BLEPeripheralConnection
 
   async connect() {
     await this.peripheral.connectAsync();
+    this.onConnect();
     const services = await this.peripheral.discoverServicesAsync(
       [this.controlServiceUUID],
     );
@@ -384,7 +383,8 @@ export class BLEPeripheralControlCharacteristic extends BLEPeripheralCharacteris
     },
   )
   async onSendCommand(command: BLEPeripheralCommandSend) {
-    if (command.deviceId !== this.deviceId || command.bleAddress !== this.bleAddress) {
+    this.log.info('BLEPeripheralChar', 'Send', command);
+    if (command.deviceId !== this.deviceId || command.bleAddress.toLowerCase() !== this.bleAddress.toLowerCase()) {
       return;
     }
     this.log.info('BlEPeripheral', 'Writing to', command.deviceId);

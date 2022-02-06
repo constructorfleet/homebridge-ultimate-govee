@@ -50,8 +50,10 @@ export class BLEPayloadProcessor extends Emitter {
       connection.bleAddress.toLowerCase(),
       connection.connectionState === ConnectionState.Connected,
     );
+    this.log.info('BLE Peripheral Connections', this.stateRequests);
     if (connection.connectionState === ConnectionState.Connected) {
       const device = this.stateRequests.get(connection.deviceId);
+      this.log.info('BLE Peripheral Connections', 'Requesting State', device);
       if (device) {
         this.stateRequests.delete(connection.deviceId);
         this.onRequestDeviceState(device);
@@ -66,6 +68,7 @@ export class BLEPayloadProcessor extends Emitter {
     },
   )
   onPeripheralReceive(state: BLEPeripheralStateReceive) {
+    this.log.info('BLE Peripheral Receive', state);
     try {
       const devState = toDeviceState(
         state.deviceId,
@@ -100,6 +103,7 @@ export class BLEPayloadProcessor extends Emitter {
       this.stateRequests.set(device.deviceId, device);
       return;
     }
+    this.log.info('RequestDeviceState', 'codes', device.deviceStatusCodes);
     device.deviceStatusCodes.forEach(
       (statusCodes) =>
         this.emit(
