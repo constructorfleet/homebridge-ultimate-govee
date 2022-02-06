@@ -56,7 +56,7 @@ export class DeviceManager extends Emitter {
         if (device.bleAddress) {
           this.emit(
             new BLESubscribeToDevice(
-              device.bleAddress,
+              device.bleAddress.toLowerCase(),
               device.deviceId,
             ),
           );

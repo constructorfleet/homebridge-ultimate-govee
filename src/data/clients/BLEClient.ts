@@ -31,6 +31,7 @@ export class BLEClient
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
           this.online = true;
+          this.scanning = true;
           await noble.startScanningAsync([], true);
         } else {
           this.online = false;
@@ -64,11 +65,11 @@ export class BLEClient
           this.log.info('BLEClient', 'Unknown Address', peripheral.address);
           return;
         }
-        if (this.peripherals.has(peripheral.address.toLocaleLowerCase())) {
+        if (this.peripherals.has(peripheral.address.toLowerCase())) {
           this.log.info('BLEClient', 'Already Known', peripheral.address);
           return;
         }
-        this.devices.add(peripheral.address.toLocaleLowerCase());
+        this.devices.add(peripheral.address.toLowerCase());
 
         this.log.info('BLEClient', 'Creating Connection', peripheral.address);
         const peripheralConnection = new BLEPeripheralConnection(
@@ -94,9 +95,9 @@ export class BLEClient
     const connectPromises = Array.from(
       this.peripherals.values(),
     ).filter(
-      (peripheral) => !this.connections.has(peripheral.peripheral.address.toLowerCase()),
+      (peripheral: BLEPeripheralConnection) => !this.connections.has(peripheral.peripheral.address.toLowerCase()),
     ).map(
-      (peripheral) => {
+      (peripheral: BLEPeripheralConnection) => {
         this.connections.add(peripheral.peripheral.address.toLowerCase());
         return peripheral.connect();
       },
@@ -114,6 +115,7 @@ export class BLEClient
     this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
     this.subscriptions.set(bleDeviceId.bleAddress.toLocaleLowerCase(), bleDeviceId);
     if (!this.scanning) {
+      this.scanning = true;
       noble.startScanning(
         [],
         true,
