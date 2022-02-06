@@ -33,7 +33,6 @@ export class GoveeHumidifier
     super(deviceConfig);
   }
 
-
   receive(state: DeviceState): void {
     super.updateState(state);
   }
