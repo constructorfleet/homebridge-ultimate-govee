@@ -132,7 +132,7 @@ export class BLEClient
 export class BLEPeripheralConnection
   extends Emitter {
 
-  private readonly bleCharacteristics: BLEPeripheralCharacteristic[] = [];
+  private readonly bleCharacteristics: Map<string, BLEPeripheralCharacteristic> = new Map<string, BLEPeripheralCharacteristic>();
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -156,7 +156,6 @@ export class BLEPeripheralConnection
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
     }
-    this.log.info(this.peripheral.advertisement);
   }
 
   async discoverServiceCharacteristics(service: Service) {
@@ -164,7 +163,9 @@ export class BLEPeripheralConnection
       [],
     );
     for (let i = 0; i < characteristics.length; i++) {
-      await this.readCharacteristicValue(service, characteristics[i]);
+      if (!this.bleCharacteristics.has(characteristics[i].uuid)) {
+        await this.readCharacteristicValue(service, characteristics[i]);
+      }
     }
   }
 
@@ -180,7 +181,8 @@ export class BLEPeripheralConnection
       }));
     }
     this.log.info('Creating Characteristic', this.deviceIdentification);
-    this.bleCharacteristics.push(
+    this.bleCharacteristics.set(
+      characteristic.uuid,
       new BLEPeripheralCharacteristic(
         characteristic,
         this.deviceIdentification.deviceId,
@@ -222,14 +224,13 @@ export class BLEPeripheralCharacteristic {
     readonly bleAddress: string,
     readonly log: LoggingService,
   ) {
-    this.onDataCallback.bind(this);
     characteristic.on(
       'data',
       this.onDataCallback,
     );
   }
 
-  public onDataCallback(data: Buffer) {
+  public onDataCallback = (data: Buffer) => {
     this.log.info(
       {
         charName: this.characteristic.name,
