@@ -1,20 +1,35 @@
 import {BLEDeviceIdentification, BLEEvent} from './BLEEvent';
-import {Peripheral} from '@abandonware/noble';
 import {ConnectionState} from '../DataClientEvent';
-import {BLEPeripheralConnection} from '../../../../data/clients/BLEClient';
 
-export class PeripheralConnectionState extends BLEDeviceIdentification {
-
+export class BLEPeripheralConnectionState extends BLEDeviceIdentification {
   constructor(
     bleAddress: string,
     deviceId: string,
     public connectionState: ConnectionState,
-    public connection: BLEPeripheralConnection,
   ) {
     super(bleAddress, deviceId);
   }
 }
 
+export class BLEPeripheralStateReceive extends BLEDeviceIdentification {
+  constructor(
+    bleAddress: string,
+    deviceId: string,
+    public state: number[],
+  ) {
+    super(bleAddress, deviceId);
+  }
+}
+
+export class BLEPeripheralCommandSend extends BLEDeviceIdentification {
+  constructor(
+    bleAddress: string,
+    deviceId: string,
+    public state: number[],
+  ) {
+    super(bleAddress, deviceId);
+  }
+}
 
 export abstract class BLEPeripheralEvent<EventDataType>
   extends BLEEvent<EventDataType> {
@@ -30,13 +45,34 @@ export abstract class BLEPeripheralEvent<EventDataType>
   }
 }
 
-export class BLEPeripheralDiscoveredEvent
-  extends BLEPeripheralEvent<Peripheral> {
+export class BLEPeripheralConnectionEvent
+  extends BLEPeripheralEvent<BLEPeripheralConnectionState> {
 
-
-  constructor(eventData: Peripheral) {
+  constructor(eventData: BLEPeripheralConnectionState) {
     super(
-      'Discovered',
+      'Connection',
+      eventData,
+    );
+  }
+}
+
+export class BLEPeripheralReceiveEvent
+  extends BLEPeripheralEvent<BLEPeripheralStateReceive> {
+
+  constructor(eventData: BLEPeripheralStateReceive) {
+    super(
+      'State',
+      eventData,
+    );
+  }
+}
+
+export class BLEPeripheralSendEvent
+  extends BLEPeripheralEvent<BLEPeripheralCommandSend> {
+
+  constructor(eventData: BLEPeripheralCommandSend) {
+    super(
+      'State',
       eventData,
     );
   }
