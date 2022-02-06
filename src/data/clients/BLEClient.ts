@@ -24,7 +24,8 @@ export class BLEClient
   private static readonly CHARACTERISTIC_REPORT_UUID = '000102030405060708090a0b0c0d2b10';
 
   private subscriptions: Map<string, BLEDeviceIdentification> = new Map<string, BLEDeviceIdentification>();
-  private peripherals: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
+  private peripheralConnections: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
+  private peripherals: Map<string, Peripheral> = new Map<string, Peripheral>();
   private scanning = false;
   private online = false;
 
@@ -39,13 +40,13 @@ export class BLEClient
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
           this.online = true;
-          this.emit(
-            new BLEConnectionStateEvent(ConnectionState.Connected),
-          );
-          if (!this.scanning && this.subscriptions.size > 0) {
+          if (!this.scanning) {
             this.scanning = true;
             await noble.startScanningAsync([], true);
           }
+          this.emit(
+            new BLEConnectionStateEvent(ConnectionState.Connected),
+          );
         } else {
           this.emit(
             new BLEConnectionStateEvent(ConnectionState.Offline),
@@ -78,28 +79,49 @@ export class BLEClient
       'discover',
       async (peripheral: Peripheral) => {
         const peripheralAddress = peripheral.address.toLowerCase();
-        const deviceIdentification = this.subscriptions.get(peripheralAddress);
-        if (!deviceIdentification) {
-          this.log.debug('BLEClient', 'Unknown Address', peripheralAddress);
-          return;
-        }
-        if (this.peripherals.has(deviceIdentification.deviceId)) {
-          this.log.debug('BLEClient', 'Known Peripheral', deviceIdentification.deviceId);
-          return;
-        }
-        const peripheralConnection = new BLEPeripheralConnection(
-          this.emitter,
-          BLEClient.SERVICE_CONTROL_UUID,
-          BLEClient.CHARACTERISTIC_CONTROL_UUID,
-          BLEClient.CHARACTERISTIC_REPORT_UUID,
-          deviceIdentification,
+        this.peripherals.set(peripheralAddress, peripheral);
+        const peripheralConnection = this.createPeripheralConnection(
+          peripheralAddress,
           peripheral,
-          this.log,
         );
-        this.peripherals.set(deviceIdentification.deviceId, peripheralConnection);
-        await peripheralConnection.connect();
+        if (peripheralConnection && !peripheralConnection.isConnected) {
+          await peripheralConnection.connect();
+        }
       },
     );
+  }
+
+  createPeripheralConnection(
+    address: string,
+    peripheral: Peripheral,
+  ): BLEPeripheralConnection | undefined {
+    const deviceIdentification = this.subscriptions.get(address);
+    if (!deviceIdentification) {
+      this.log.debug('BLEClient', 'Unknown Address', address);
+      return;
+    }
+    let peripheralConnection = this.peripheralConnections.get(deviceIdentification.deviceId);
+    if (peripheralConnection) {
+      return peripheralConnection;
+    }
+
+    peripheralConnection =
+      new BLEPeripheralConnection(
+        this.emitter,
+        BLEClient.SERVICE_CONTROL_UUID,
+        BLEClient.CHARACTERISTIC_CONTROL_UUID,
+        BLEClient.CHARACTERISTIC_REPORT_UUID,
+        deviceIdentification,
+        peripheral,
+        this.log,
+      );
+
+    this.peripheralConnections.set(
+      deviceIdentification.deviceId,
+      peripheralConnection,
+    );
+
+    return peripheralConnection;
   }
 
   @OnEvent(
@@ -108,20 +130,33 @@ export class BLEClient
       async: true,
     },
   )
-  onBLEDeviceSubscribe(bleDeviceIdentification: BLEDeviceIdentification) {
-    if (!this.subscriptions.has(bleDeviceIdentification.bleAddress)) {
-      this.subscriptions.set(bleDeviceIdentification.bleAddress, bleDeviceIdentification);
-      if (!this.scanning && this.online) {
-        this.scanning = true;
-        noble.startScanning(
-          [],
-          true,
-          (error?: Error) => {
-            if (error) {
-              this.log.error(error);
-            }
-          });
+  async onBLEDeviceSubscribe(bleDeviceIdentification: BLEDeviceIdentification) {
+    const address = bleDeviceIdentification.bleAddress.toLowerCase();
+    if (!this.subscriptions.has(address)) {
+      this.subscriptions.set(address, bleDeviceIdentification);
+    }
+    const peripheral = this.peripherals.get(address);
+    if (peripheral) {
+      const peripheralConnection = this.createPeripheralConnection(
+        address,
+        peripheral,
+      );
+
+      if (peripheralConnection && !peripheralConnection.isConnected) {
+        await peripheralConnection.connect();
       }
+    }
+
+    if (!this.scanning && this.online) {
+      this.scanning = true;
+      noble.startScanning(
+        [],
+        true,
+        (error?: Error) => {
+          if (error) {
+            this.log.error(error);
+          }
+        });
     }
   }
 }
@@ -131,6 +166,7 @@ export class BLEPeripheralConnection
 
   private controlCharacteristic?: BLEPeripheralControlCharacteristic;
   private reportCharacteristic?: BLEPeripheralReportingCharacteristic;
+  public isConnected = false;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -233,6 +269,7 @@ export class BLEPeripheralConnection
       this.log.error(this.deviceIdentification.deviceId, error);
       return;
     }
+    this.isConnected = true;
     this.emit(
       new BLEPeripheralConnectionEvent(
         new BLEPeripheralConnectionState(
@@ -249,6 +286,7 @@ export class BLEPeripheralConnection
       this.log.error(this.deviceIdentification.deviceId, error);
       return;
     }
+    this.isConnected = false;
     this.emit(
       new BLEPeripheralConnectionEvent(
         new BLEPeripheralConnectionState(
