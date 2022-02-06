@@ -45,13 +45,11 @@ export class BLEPayloadProcessor extends Emitter {
     },
   )
   onBLEPeripheralConnection(connection: BLEPeripheralConnectionState) {
-    this.log.info('BLE Peripheral Connection', connection.deviceId, connection.connectionState === ConnectionState.Connected);
     this.discoveredPeripherals.push(connection.bleAddress.toLowerCase());
-    this.log.info('BLE Peripheral Connections', this.stateRequests);
     if (connection.connectionState === ConnectionState.Connected) {
       const device = this.stateRequests.get(connection.deviceId);
-      this.log.info('BLE Peripheral Connections', 'Requesting State', device);
       if (device) {
+        this.log.info('BLE Peripheral Connections', 'Requesting State', device);
         this.stateRequests.delete(connection.deviceId);
         this.onRequestDeviceState(device);
       }

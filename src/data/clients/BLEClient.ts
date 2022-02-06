@@ -230,11 +230,6 @@ export class BLEPeripheralConnection
 
   async writeCommand(command: number[]) {
     await this.writeLock.acquire();
-    this.reportCharacteristic!.removeAllListeners();
-    this.reportCharacteristic!.once(
-      'data',
-      this.onDataCallback,
-    );
     await this.controlCharacteristic!.writeAsync(
       Buffer.of(...command),
       true,
@@ -265,6 +260,11 @@ export class BLEPeripheralConnection
       const characteristic = characteristics[i];
       if (characteristic.uuid === this.reportCharacteristicUUID) {
         this.reportCharacteristic = characteristic;
+        this.reportCharacteristic.on(
+          'data',
+          this.onDataCallback,
+        );
+        await this.reportCharacteristic.subscribeAsync();
       } else if (characteristic.uuid === this.controlCharacteristicUUID) {
         this.controlCharacteristic = characteristic;
       }
