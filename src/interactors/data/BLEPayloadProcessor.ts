@@ -45,6 +45,7 @@ export class BLEPayloadProcessor extends Emitter {
     },
   )
   onBLEPeripheralConnection(connection: BLEPeripheralConnectionState) {
+    this.log.info('BLE Peripheral Connection', connection.deviceId, connection.connectionState === ConnectionState.Connected);
     this.peripheralConnected.set(
       connection.bleAddress.toLowerCase(),
       connection.connectionState === ConnectionState.Connected,

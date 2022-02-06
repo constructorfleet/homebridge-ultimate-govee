@@ -48,10 +48,10 @@ export class BLEClient
             new BLEConnectionStateEvent(ConnectionState.Connected),
           );
         } else {
+          this.online = false;
           this.emit(
             new BLEConnectionStateEvent(ConnectionState.Offline),
           );
-          this.online = false;
           if (this.scanning) {
             await noble.stopScanningAsync();
           }
@@ -84,8 +84,16 @@ export class BLEClient
           peripheralAddress,
           peripheral,
         );
-        if (peripheralConnection && !peripheralConnection.isConnected) {
+        if (peripheralConnection) {
+          this.log.info('BLEClient', 'onDiscover', 'Connecting');
           await peripheralConnection.connect();
+        }
+        if (!this.scanning && this.online) {
+          this.scanning = true;
+          await noble.startScanningAsync(
+            [],
+            true,
+          );
         }
       },
     );
@@ -97,14 +105,15 @@ export class BLEClient
   ): BLEPeripheralConnection | undefined {
     const deviceIdentification = this.subscriptions.get(address);
     if (!deviceIdentification) {
-      this.log.debug('BLEClient', 'Unknown Address', address);
-      return;
+      return undefined;
     }
     let peripheralConnection = this.peripheralConnections.get(deviceIdentification.deviceId);
     if (peripheralConnection) {
+      this.log.info('BLEClient', 'createPeripheralConnection', 'Using existing');
       return peripheralConnection;
     }
 
+    this.log.info('BLEClient', 'createPeripheralConnection', 'Creating');
     peripheralConnection =
       new BLEPeripheralConnection(
         this.emitter,
@@ -132,31 +141,26 @@ export class BLEClient
   )
   async onBLEDeviceSubscribe(bleDeviceIdentification: BLEDeviceIdentification) {
     const address = bleDeviceIdentification.bleAddress.toLowerCase();
-    if (!this.subscriptions.has(address)) {
-      this.subscriptions.set(address, bleDeviceIdentification);
-    }
+    this.subscriptions.set(address, bleDeviceIdentification);
     const peripheral = this.peripherals.get(address);
     if (peripheral) {
+      this.log.info('BLEClient', 'onSubscribe', 'Getting Connection');
       const peripheralConnection = this.createPeripheralConnection(
         address,
         peripheral,
       );
 
-      if (peripheralConnection && !peripheralConnection.isConnected) {
+      if (peripheralConnection) {
+        this.log.info('BLEClient', 'onSubscribe', 'Connecting');
         await peripheralConnection.connect();
       }
     }
-
     if (!this.scanning && this.online) {
       this.scanning = true;
-      noble.startScanning(
+      await noble.startScanningAsync(
         [],
         true,
-        (error?: Error) => {
-          if (error) {
-            this.log.error(error);
-          }
-        });
+      );
     }
   }
 }
@@ -193,7 +197,6 @@ export class BLEPeripheralConnection
 
   async connect() {
     await this.peripheral.connectAsync();
-    this.log.info(this.peripheral.advertisement);
     const services = await this.peripheral.discoverServicesAsync(
       [this.controlServiceUUID],
     );
