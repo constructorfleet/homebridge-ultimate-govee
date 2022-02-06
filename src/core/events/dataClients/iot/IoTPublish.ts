@@ -1,6 +1,6 @@
 import {IoTEvent, IoTEventData} from './IoTEvent';
 
-export class IoTPublishTo
+export class IoTPublishToEvent
   extends IoTEvent<IoTEventData> {
 
   constructor(

@@ -18,3 +18,6 @@ export const PLATFORM_CONFIG_FILE = 'Platform_Config_File';
 
 export const LOGGER = 'Logger';
 export const HOMEBRIDGE_API = 'Homebridge_Api';
+
+export const COMMAND_IDENTIFIER = 0x33;
+export const REPORT_IDENTIFIER = 0xaa;

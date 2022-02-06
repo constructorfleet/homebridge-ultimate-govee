@@ -7,7 +7,7 @@ import {IoTEventData} from '../../core/events/dataClients/iot/IoTEvent';
 import {plainToInstance} from 'class-transformer';
 import {DeviceStateReceived} from '../../core/events/devices/DeviceReceived';
 import {base64ToHex} from '../../util/encodingUtils';
-import {IoTPublishTo} from '../../core/events/dataClients/iot/IoTPublish';
+import {IoTPublishToEvent} from '../../core/events/dataClients/iot/IoTPublish';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {LoggingService} from '../../logging/LoggingService';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
@@ -71,7 +71,7 @@ export class IoTPayloadProcessor extends Emitter {
       return;
     }
     this.emit(
-      new IoTPublishTo(
+      new IoTPublishToEvent(
         device.iotTopic,
         JSON.stringify({
           topic: device.iotTopic,

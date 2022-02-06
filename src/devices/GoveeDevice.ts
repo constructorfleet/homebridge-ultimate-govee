@@ -4,7 +4,9 @@ import {supportsIoT} from '../core/structures/devices/configs/IoTConfig';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {supportsBLE} from '../core/structures/devices/configs/BLEConfig';
 import {Emitter} from '../util/types';
-import {IoTPublishTo} from '../core/events/dataClients/iot/IoTPublish';
+import {IoTPublishToEvent} from '../core/events/dataClients/iot/IoTPublish';
+import {BLEPeripheralCommandSend, BLEPeripheralSendEvent} from '../core/events/dataClients/ble/BLEPeripheral';
+import {base64ToHex} from '../util/encodingUtils';
 
 export class GoveeDevice extends State {
   static MODELS: string[] = [];
@@ -50,11 +52,11 @@ export class GoveeDevice extends State {
     this.parse(state);
   }
 
-  getIoTEvent(command: string): IoTPublishTo | undefined {
+  getIoTEvent(command: string): IoTPublishToEvent | undefined {
     if (!this.iotTopic) {
       return undefined;
     }
-    return new IoTPublishTo(
+    return new IoTPublishToEvent(
       this.iotTopic,
       JSON.stringify({
         topic: this.iotTopic,
@@ -74,7 +76,17 @@ export class GoveeDevice extends State {
     );
   }
 
-  getBleEvent(command: string): undefined {
-    return undefined;
+  getBleEvent(command: string): BLEPeripheralSendEvent | undefined {
+    if (!this.bleAddress) {
+      return undefined;
+    }
+
+    return new BLEPeripheralSendEvent(
+      new BLEPeripheralCommandSend(
+        this.bleAddress.toLowerCase(),
+        this.deviceId,
+        base64ToHex(command),
+      ),
+    );
   }
 }
