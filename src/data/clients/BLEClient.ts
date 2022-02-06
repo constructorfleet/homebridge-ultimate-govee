@@ -70,7 +70,6 @@ export class BLEClient
           return;
         }
 
-        this.log.info('BLEClient', 'Creating Connection', peripheralAddress);
         const peripheralConnection = new BLEPeripheralConnection(
           this.emitter,
           BLEClient.SERVICE_CONTROL_UUID,
@@ -111,7 +110,6 @@ export class BLEClient
     },
   )
   onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
-    this.log.info('BLEClient', 'Subscribing', bleDeviceId.deviceId, bleDeviceId.bleAddress);
     if (!this.subscriptions.has(bleDeviceId.bleAddress)) {
       this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
       if (!this.scanning) {
@@ -144,7 +142,6 @@ export class BLEPeripheralConnection
   ) {
     super(eventEmitter);
     peripheral.removeAllListeners();
-    log.info('DeviceIdentifier', deviceIdentification);
   }
 
   async connect() {
@@ -180,16 +177,17 @@ export class BLEPeripheralConnection
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
     }
-    this.log.info('Creating Characteristic', this.deviceIdentification);
-    this.bleCharacteristics.set(
-      characteristic.uuid,
-      new BLEPeripheralCharacteristic(
-        characteristic,
-        this.deviceIdentification.deviceId,
-        this.deviceIdentification.bleAddress,
-        this.log,
-      ),
-    );
+    if (characteristic.properties.includes('notify') || characteristic.properties.includes('indicate')) {
+      this.bleCharacteristics.set(
+        characteristic.uuid,
+        new BLEPeripheralCharacteristic(
+          characteristic,
+          this.deviceIdentification.deviceId,
+          this.deviceIdentification.bleAddress,
+          this.log,
+        ),
+      );
+    }
     if (characteristic.uuid === this.controlCharacteristicUUID) {
       await characteristic.writeAsync(
         Buffer.from(
@@ -232,6 +230,8 @@ export class BLEPeripheralCharacteristic {
 
   public onDataCallback = (data: Buffer) => {
     this.log.info(
+      'Characteristic',
+      'OnData',
       {
         charName: this.characteristic.name,
         charUUID: this.characteristic.uuid,
