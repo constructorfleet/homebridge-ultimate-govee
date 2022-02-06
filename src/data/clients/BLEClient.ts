@@ -3,8 +3,17 @@ import {Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {LoggingService} from '../../logging/LoggingService';
 import noble, {Characteristic, Peripheral, Service} from '@abandonware/noble';
-import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
+import {BLEConnectionStateEvent, BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 import {Emitter} from '../../util/types';
+import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
+import {
+  BLEPeripheralCommandSend,
+  BLEPeripheralConnectionEvent,
+  BLEPeripheralConnectionState,
+  BLEPeripheralReceiveEvent,
+  BLEPeripheralStateReceive,
+} from '../../core/events/dataClients/ble/BLEPeripheral';
+import {bufferToHex} from '../../util/encodingUtils';
 
 @Injectable()
 export class BLEClient
@@ -12,10 +21,10 @@ export class BLEClient
   private static readonly STATE_POWERED_ON = 'poweredOn';
   private static readonly SERVICE_CONTROL_UUID = '000102030405060708090a0b0c0d1910';
   private static readonly CHARACTERISTIC_CONTROL_UUID = '000102030405060708090a0b0c0d2b11';
+  private static readonly CHARACTERISTIC_REPORT_UUID = '000102030405060708090a0b0c0d2b10';
 
   private subscriptions: Map<string, BLEDeviceIdentification> = new Map<string, BLEDeviceIdentification>();
   private peripherals: Map<string, BLEPeripheralConnection> = new Map<string, BLEPeripheralConnection>();
-  private connections: Set<string> = new Set<string>();
   private scanning = false;
   private online = false;
 
@@ -32,7 +41,13 @@ export class BLEClient
           this.online = true;
           this.scanning = true;
           await noble.startScanningAsync([], true);
+          this.emit(
+            new BLEConnectionStateEvent(ConnectionState.Connected),
+          );
         } else {
+          this.emit(
+            new BLEConnectionStateEvent(ConnectionState.Offline),
+          );
           this.online = false;
           if (this.scanning) {
             await noble.stopScanningAsync();
@@ -61,46 +76,28 @@ export class BLEClient
       'discover',
       async (peripheral: Peripheral) => {
         const peripheralAddress = peripheral.address.toLowerCase();
-        if (!this.subscriptions.has(peripheralAddress)) {
-          this.log.info('BLEClient', 'Unknown Address', peripheralAddress);
+        const deviceIdentification = this.subscriptions.get(peripheralAddress);
+        if (!deviceIdentification) {
+          this.log.debug('BLEClient', 'Unknown Address', peripheralAddress);
           return;
         }
-        if (this.peripherals.has(peripheralAddress)) {
-          this.log.info('BLEClient', 'Already Known', peripheralAddress);
+        if (this.peripherals.has(deviceIdentification.deviceId)) {
+          this.log.debug('BLEClient', 'Known Peripheral', deviceIdentification.deviceId);
           return;
         }
-
         const peripheralConnection = new BLEPeripheralConnection(
           this.emitter,
           BLEClient.SERVICE_CONTROL_UUID,
           BLEClient.CHARACTERISTIC_CONTROL_UUID,
-          this.subscriptions.get(peripheralAddress)!,
+          BLEClient.CHARACTERISTIC_REPORT_UUID,
+          deviceIdentification,
           peripheral,
           this.log,
         );
-        this.peripherals.set(peripheralAddress, peripheralConnection);
-        if (this.peripherals.size === this.subscriptions.size) {
-          await this.connectToPeripherals();
-        }
+        this.peripherals.set(deviceIdentification.deviceId, peripheralConnection);
+        await peripheralConnection.connect();
       },
     );
-  }
-
-  async connectToPeripherals() {
-    if (this.scanning) {
-      await noble.stopScanningAsync();
-    }
-    const connectPromises = Array.from(
-      this.peripherals.values(),
-    ).filter(
-      (peripheral: BLEPeripheralConnection) => !this.connections.has(peripheral.deviceIdentification.bleAddress),
-    ).map(
-      (peripheral: BLEPeripheralConnection) => {
-        this.connections.add(peripheral.deviceIdentification.bleAddress);
-        return peripheral.connect();
-      },
-    );
-    await Promise.all(connectPromises);
   }
 
   @OnEvent(
@@ -109,9 +106,9 @@ export class BLEClient
       async: true,
     },
   )
-  onBLEDeviceSubscribe(bleDeviceId: BLEDeviceIdentification) {
-    if (!this.subscriptions.has(bleDeviceId.bleAddress)) {
-      this.subscriptions.set(bleDeviceId.bleAddress, bleDeviceId);
+  onBLEDeviceSubscribe(bleDeviceIdentification: BLEDeviceIdentification) {
+    if (!this.subscriptions.has(bleDeviceIdentification.bleAddress)) {
+      this.subscriptions.set(bleDeviceIdentification.bleAddress, bleDeviceIdentification);
       if (!this.scanning) {
         this.scanning = true;
         noble.startScanning(
@@ -130,25 +127,37 @@ export class BLEClient
 export class BLEPeripheralConnection
   extends Emitter {
 
-  private readonly bleCharacteristics: Map<string, BLEPeripheralCharacteristic> = new Map<string, BLEPeripheralCharacteristic>();
+  private controlCharacteristic?: BLEPeripheralControlCharacteristic;
+  private reportCharacteristic?: BLEPeripheralReportingCharacteristic;
 
   constructor(
     eventEmitter: EventEmitter2,
     private readonly controlServiceUUID: string,
     private readonly controlCharacteristicUUID: string,
+    private readonly reportCharacteristicUUID: string,
     public readonly deviceIdentification: BLEDeviceIdentification,
     private readonly peripheral: Peripheral,
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
     peripheral.removeAllListeners();
+
+    peripheral.on(
+      'connect',
+      this.onConnect,
+    );
+
+    peripheral.on(
+      'disconnect',
+      this.onDisconnect,
+    );
   }
 
   async connect() {
     await this.peripheral.connectAsync();
     this.log.info(this.peripheral.advertisement);
     const services = await this.peripheral.discoverServicesAsync(
-      [],
+      [this.controlServiceUUID],
     );
     for (let i = 0; i < services.length; i++) {
       await this.discoverServiceCharacteristics(services[i]);
@@ -157,16 +166,38 @@ export class BLEPeripheralConnection
 
   async discoverServiceCharacteristics(service: Service) {
     const characteristics = await service.discoverCharacteristicsAsync(
-      [],
+      [
+        this.reportCharacteristicUUID,
+        this.controlCharacteristicUUID,
+      ],
     );
     for (let i = 0; i < characteristics.length; i++) {
-      if (!this.bleCharacteristics.has(characteristics[i].uuid)) {
-        await this.readCharacteristicValue(service, characteristics[i]);
+      const characteristic = characteristics[i];
+      if (characteristic.uuid === this.reportCharacteristicUUID) {
+        this.reportCharacteristic =
+          new BLEPeripheralReportingCharacteristic(
+            this.emitter,
+            characteristic,
+            this.deviceIdentification.deviceId,
+            this.deviceIdentification.bleAddress,
+            this.log,
+          );
       }
+      if (characteristic.uuid === this.controlCharacteristicUUID) {
+        this.controlCharacteristic =
+          new BLEPeripheralControlCharacteristic(
+            this.emitter,
+            characteristic,
+            this.deviceIdentification.deviceId,
+            this.deviceIdentification.bleAddress,
+            this.log,
+          );
+      }
+      await this.logCharacteristic(service, characteristic);
     }
   }
 
-  async readCharacteristicValue(service: Service, characteristic: Characteristic) {
+  async logCharacteristic(service: Service, characteristic: Characteristic) {
     const descriptors = await characteristic.discoverDescriptorsAsync();
     const descriptorLogs: string[] = [];
     for (let i = 0; i < descriptors.length; i++) {
@@ -176,25 +207,6 @@ export class BLEPeripheralConnection
         type: descriptors[i].type,
         value: (await descriptors[i].readValueAsync()).toString('hex'),
       }));
-    }
-    if (characteristic.properties.includes('notify') || characteristic.properties.includes('indicate')) {
-      this.bleCharacteristics.set(
-        characteristic.uuid,
-        new BLEPeripheralCharacteristic(
-          characteristic,
-          this.deviceIdentification.deviceId,
-          this.deviceIdentification.bleAddress,
-          this.log,
-        ),
-      );
-    }
-    if (characteristic.uuid === this.controlCharacteristicUUID) {
-      await characteristic.writeAsync(
-        Buffer.from(
-          [0xaa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab],
-        ),
-        true,
-      );
     }
     const characteristicValue = await characteristic.readAsync();
     this.log.info(
@@ -213,15 +225,68 @@ export class BLEPeripheralConnection
         },
       });
   }
+
+  public onConnect = (error?: Error) => {
+    if (error) {
+      this.log.error(this.deviceIdentification.deviceId, error);
+      return;
+    }
+    this.emit(
+      new BLEPeripheralConnectionEvent(
+        new BLEPeripheralConnectionState(
+          this.deviceIdentification.bleAddress,
+          this.deviceIdentification.deviceId,
+          ConnectionState.Connected,
+        ),
+      ),
+    );
+  };
+
+  public onDisconnect = (error?: Error) => {
+    if (error) {
+      this.log.error(this.deviceIdentification.deviceId, error);
+      return;
+    }
+    this.emit(
+      new BLEPeripheralConnectionEvent(
+        new BLEPeripheralConnectionState(
+          this.deviceIdentification.bleAddress,
+          this.deviceIdentification.deviceId,
+          ConnectionState.Offline,
+        ),
+      ),
+    );
+  };
 }
 
-export class BLEPeripheralCharacteristic {
-  constructor(
+export abstract class BLEPeripheralCharacteristic extends Emitter {
+  protected constructor(
+    emitter: EventEmitter2,
     readonly characteristic: Characteristic,
     readonly deviceId: string,
     readonly bleAddress: string,
     readonly log: LoggingService,
   ) {
+    super(emitter);
+  }
+}
+
+export class BLEPeripheralReportingCharacteristic extends BLEPeripheralCharacteristic {
+  constructor(
+    emitter: EventEmitter2,
+    characteristic: Characteristic,
+    deviceId: string,
+    bleAddress: string,
+    log: LoggingService,
+  ) {
+    super(
+      emitter,
+      characteristic,
+      deviceId,
+      bleAddress,
+      log,
+    );
+
     characteristic.on(
       'data',
       this.onDataCallback,
@@ -239,6 +304,50 @@ export class BLEPeripheralCharacteristic {
         bleAddress: this.bleAddress,
         data: data,
       },
+    );
+    this.emit(
+      new BLEPeripheralReceiveEvent(
+        new BLEPeripheralStateReceive(
+          this.bleAddress,
+          this.deviceId,
+          bufferToHex(data),
+        ),
+      ),
+    );
+  };
+}
+
+export class BLEPeripheralControlCharacteristic extends BLEPeripheralCharacteristic {
+  constructor(
+    emitter: EventEmitter2,
+    characteristic: Characteristic,
+    deviceId: string,
+    bleAddress: string,
+    log: LoggingService,
+  ) {
+    super(
+      emitter,
+      characteristic,
+      deviceId,
+      bleAddress,
+      log,
+    );
+  }
+
+  @OnEvent(
+    'BLE.PERIPHERAL.send',
+    {
+      async: true,
+    },
+  )
+  async onSendCommand(command: BLEPeripheralCommandSend) {
+    if (command.deviceId !== this.deviceId || command.bleAddress != this.bleAddress) {
+      return;
+    }
+
+    await this.characteristic.writeAsync(
+      Buffer.of(...command.state),
+      true,
     );
   }
 }
