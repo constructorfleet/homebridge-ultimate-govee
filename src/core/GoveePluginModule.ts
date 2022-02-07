@@ -8,7 +8,7 @@ import {machineIdSync} from 'node-machine-id';
 import {humidifierProviders} from '../devices/GoveeHumidifier';
 import {purifierProviders} from '../devices/GoveeAirPurifier';
 import {IoTPayloadProcessor} from '../interactors/data/IoTPayloadProcessor';
-import {RestPayloadProcessor} from '../interactors/data/RestPayloadProcessor';
+import {RestEventProcessor} from '../interactors/data/RestPayloadProcessor';
 import {ConfigurationModule} from '../config/ConfigurationModule';
 import {GoveeConfiguration} from '../config/GoveeConfiguration';
 import {PersistConfiguration} from '../persist/PersistConfiguration';
@@ -86,7 +86,7 @@ export class GoveePluginModule {
         ...purifierProviders,
         ...humidifierProviders,
         ...connectionProviders,
-        RestPayloadProcessor,
+        RestEventProcessor,
         RestClient,
         DeviceManager,
       ],
@@ -100,7 +100,7 @@ export class GoveePluginModule {
         GOVEE_CLIENT_ID,
         LoggingModule,
         ...connectionProviders,
-        RestPayloadProcessor,
+        RestEventProcessor,
         RestClient,
         DeviceManager,
         ConfigurationModule,
