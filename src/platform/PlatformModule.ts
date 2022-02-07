@@ -21,14 +21,12 @@ import {PlatformConfigService} from './config/PlatformConfigService';
 export interface GoveeCredentials {
   username: string;
   password: string;
-  apiKey?: string;
 }
 
 export interface GoveeConnections {
   enableIoT: boolean;
   enableBLE: boolean;
 }
-
 
 export interface PlatformModuleConfig {
   rootPath: string;

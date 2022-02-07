@@ -11,7 +11,6 @@ interface UltimateGoveePlatformConfig {
   name?: string;
   username: string;
   password: string;
-  apiKey: string;
 }
 
 /**
@@ -20,7 +19,7 @@ interface UltimateGoveePlatformConfig {
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class UltimateGoveePlatform
-  implements DynamicPlatformPlugin {
+implements DynamicPlatformPlugin {
   private appContext!: INestApplicationContext;
   private service!: PlatformService;
   private loaded = false;
@@ -48,7 +47,10 @@ export class UltimateGoveePlatform
         credentials: {
           username: goveeConfig.username,
           password: goveeConfig.password,
-          apiKey: goveeConfig.apiKey,
+        },
+        connections: {
+          enableIoT: false,
+          enableBLE: true,
         },
       }),
       {
