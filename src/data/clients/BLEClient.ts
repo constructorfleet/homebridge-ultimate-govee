@@ -112,6 +112,12 @@ export class BLEClient
         await this.lock.acquire('PeripheralConnect');
         try {
           await peripheral.connectAsync();
+          try {
+            const handleBuf = await peripheral.readHandleAsync(Buffer.of(0xd9, 0x20));
+            this.log.info(bufferToHex(handleBuf));
+          } catch (e) {
+            this.log.info('No handle');
+          }
           this.log.info(
             peripheralAddress,
             peripheral.advertisement,
