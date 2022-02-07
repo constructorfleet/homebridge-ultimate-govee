@@ -76,6 +76,7 @@ export class RestClient
         },
       )
       .catch((error: ApiError) => {
+        this.log.error('RestClient', 'Authenticate', error);
         this.emit(
           new RestAuthenticationFailureEvent(
             error.status,
