@@ -113,6 +113,8 @@ export class BLEClient
         this.log.info(
           peripheralAddress,
           peripheral.advertisement,
+          peripheral.uuid,
+          peripheral.id,
           model,
         );
         try {
@@ -134,6 +136,9 @@ export class BLEClient
               let charValue: Buffer | undefined = undefined;
               if (characteristic.properties.includes('read')) {
                 charValue = await characteristic.readAsync();
+              }
+              if (characteristic.properties.includes('notify') || characteristic.properties.includes('indicate')) {
+                characteristic.on('data', (data) => this.log.info('OnData', characteristic.uuid, data));
               }
               this.log.info(
                 'CHAR',
