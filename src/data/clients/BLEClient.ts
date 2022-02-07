@@ -110,15 +110,16 @@ export class BLEClient
         }
 
         await this.lock.acquire('PeripheralConnect');
-        this.log.info(
-          peripheralAddress,
-          peripheral.advertisement,
-          peripheral.uuid,
-          peripheral.id,
-          model,
-        );
         try {
           await peripheral.connectAsync();
+          this.log.info(
+            peripheralAddress,
+            peripheral.advertisement,
+            peripheral.uuid,
+            peripheral.id,
+            model,
+            await peripheral.updateRssiAsync(),
+          );
           const services = await peripheral.discoverServicesAsync();
           for (let i = 0; i < services.length; i++) {
             const service = services[i];
@@ -147,6 +148,7 @@ export class BLEClient
                 peripheralName,
                 characteristic.name,
                 characteristic.uuid,
+                characteristic.properties,
                 charValue,
               );
 
