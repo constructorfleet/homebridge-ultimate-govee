@@ -148,6 +148,18 @@ export class BLEClient
                 characteristic.on('data', (data) => this.log.info('OnData', characteristic.uuid, data));
                 await characteristic.subscribeAsync();
               }
+              if (characteristic.properties.includes('write')) {
+                await characteristic.writeAsync(
+                  Buffer.of(0xaa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00ab),
+                  false,
+                );
+              }
+              if (characteristic.properties.includes('writeWithoutResponse')) {
+                await characteristic.writeAsync(
+                  Buffer.of(0xaa, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00ab),
+                  false,
+                );
+              }
               this.log.info(
                 'CHAR',
                 peripheralAddress,
