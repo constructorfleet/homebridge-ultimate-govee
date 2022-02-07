@@ -27,7 +27,7 @@ interface ControlReportCharacteristics {
 
 type BLEAddress = string;
 
-type LockKey = 'PeripheralConnect' | 'PeripheralWrite';
+type LockKey = 'PeripheralConnect' | 'PeripheralWrite' | 'Discover';
 
 @Injectable()
 export class BLEClient
@@ -80,27 +80,26 @@ export class BLEClient
     noble.on(
       'scanStop',
       async () => {
-        await noble.startScanningAsync(
-          [],
-          true,
-        );
-        // this.scanning = false;
-        // this.log.info('BLEClient', 'ScanStop');
+        this.scanning = false;
+        this.log.info('BLEClient', 'ScanStop');
       },
     );
 
     noble.on(
       'discover',
       async (peripheral: Peripheral) => {
+        await this.lock.acquire('Discover');
         const peripheralAddress = peripheral.address.toLowerCase();
-        if (this.peripherals.has(peripheralAddress)) {
+        if (!this.peripherals.has(peripheral.uuid)) {
+          this.lock.release('Discover');
           return;
         }
 
         this.peripherals.set(
-          peripheralAddress,
+          peripheral.uuid,
           peripheral,
         );
+        this.lock.release('Discover');
 
         const peripheralName = peripheral.advertisement.localName;
         const regexResult = BLEClient.BLE_NAME_REGEX.exec(peripheralName);
@@ -109,6 +108,7 @@ export class BLEClient
           return;
         }
 
+        await this.stopScanning();
         await this.lock.acquire('PeripheralConnect');
         try {
           await peripheral.connectAsync();
@@ -190,6 +190,7 @@ export class BLEClient
           await peripheral.disconnectAsync();
         } finally {
           await this.lock.release('PeripheralConnect');
+          await this.startScanning();
         }
       },
     );
