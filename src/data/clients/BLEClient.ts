@@ -88,40 +88,19 @@ export class BLEClient
     noble.on(
       'discover',
       async (peripheral: Peripheral) => {
-        if (this.peripherals.has(peripheral.address.toLowerCase())) {
+        const peripheralAddress = peripheral.address.toLowerCase();
+        if (this.peripherals.has(peripheralAddress)) {
           return;
         }
 
-        let identifiedPeripheral: IdentifiedPeripheral | undefined = undefined;
-        await this.acquireLock(
-          'PeripheralConnect',
-          'BLEClient',
-          'discover',
-          peripheral.address.toLowerCase(),
+        this.peripherals.set(
+          peripheralAddress,
+          peripheral,
         );
-        await this.stopScanning();
-        try {
-          identifiedPeripheral = await this.tryGetIdentifiedPeripheral(peripheral);
-        } finally {
-          await this.releaseLock(
-            'PeripheralConnect',
-            'BLEClient',
-            'discover',
-            peripheral.address.toLowerCase(),
-          );
-          await this.startScanning();
-        }
 
-        if (!identifiedPeripheral) {
-          return;
-        }
-        this.emit(
-          new BLEPeripheralDiscoveredEvent(
-            new BLEDeviceIdentification(
-              identifiedPeripheral.deviceIdentification.bleAddress,
-              identifiedPeripheral.deviceIdentification.deviceId,
-            ),
-          ),
+        this.log.info(
+          peripheralAddress,
+          peripheral.advertisement,
         );
       },
     );
