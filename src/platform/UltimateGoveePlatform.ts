@@ -1,17 +1,11 @@
-import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, PlatformIdentifier, PlatformName} from 'homebridge';
+import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig} from 'homebridge';
 import {INestApplicationContext} from '@nestjs/common';
 import {NestFactory} from '@nestjs/core';
 import {PlatformModule} from './PlatformModule';
 import {PlatformService} from './PlatformService';
 import path from 'path';
-
-interface UltimateGoveePlatformConfig {
-  rootPath: string;
-  platform: PlatformName | PlatformIdentifier;
-  name?: string;
-  username: string;
-  password: string;
-}
+import {plainToInstance} from 'class-transformer';
+import {GoveePluginConfig} from './config/GoveePluginConfig';
 
 /**
  * HomebridgePlatform
@@ -30,7 +24,11 @@ implements DynamicPlatformPlugin {
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
-    const goveeConfig = config as UltimateGoveePlatformConfig;
+    const goveeConfig = plainToInstance(GoveePluginConfig, config);
+    if (!goveeConfig.isValid()) {
+      log.error('Configuration is missing required properties');
+      return;
+    }
     NestFactory.createApplicationContext(
       PlatformModule.register({
         rootPath: path.resolve(path.join(__dirname, '..')),
@@ -45,12 +43,13 @@ implements DynamicPlatformPlugin {
         registerAccessory: this.api.registerPlatformAccessories,
         updateAccessory: this.api.updatePlatformAccessories,
         credentials: {
-          username: goveeConfig.username,
-          password: goveeConfig.password,
+          username: goveeConfig.username!,
+          password: goveeConfig.password!,
         },
         connections: {
-          enableIoT: false,
-          enableBLE: true,
+          enableIoT: goveeConfig.connections?.iot ?? true,
+          enableBLE: goveeConfig.connections?.ble ?? true,
+          enableAPI: goveeConfig.connections?.api ?? true,
         },
       }),
       {

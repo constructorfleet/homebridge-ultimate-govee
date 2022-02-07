@@ -28,6 +28,11 @@
             "title": "Enable Bluetooth LE",
             "type": "boolean",
             "default": true
+          },
+          "api": {
+            "title": "Enable API",
+            "type": "boolean",
+            "default": true
           }
         }
       },

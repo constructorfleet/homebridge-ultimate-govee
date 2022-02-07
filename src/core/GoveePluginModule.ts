@@ -39,6 +39,10 @@ export class GoveePluginModule {
       connectionProviders.push(IoTClient);
       connectionProviders.push(IoTEventProcessor);
     }
+    if (config.enableAPI) {
+      connectionProviders.push(RestClient);
+      connectionProviders.push(RestEventProcessor);
+    }
     return {
       module: GoveePluginModule,
       imports: [
@@ -86,8 +90,6 @@ export class GoveePluginModule {
         ...purifierProviders,
         ...humidifierProviders,
         ...connectionProviders,
-        RestEventProcessor,
-        RestClient,
         DeviceManager,
       ],
       exports: [
@@ -100,8 +102,6 @@ export class GoveePluginModule {
         GOVEE_CLIENT_ID,
         LoggingModule,
         ...connectionProviders,
-        RestEventProcessor,
-        RestClient,
         DeviceManager,
         ConfigurationModule,
         PersistModule,

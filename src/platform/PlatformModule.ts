@@ -26,6 +26,7 @@ export interface GoveeCredentials {
 export interface GoveeConnections {
   enableIoT: boolean;
   enableBLE: boolean;
+  enableAPI: boolean;
 }
 
 export interface PlatformModuleConfig {
@@ -55,6 +56,7 @@ export class PlatformModule {
           password: config.credentials.password,
           enableBLE: config.connections.enableBLE,
           enableIoT: config.connections.enableIoT,
+          enableAPI: config.connections.enableAPI,
         },
         {
           storagePath: config.storagePath,

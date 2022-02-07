@@ -3,4 +3,5 @@ export interface GoveeConfiguration {
   password: string;
   enableIoT: boolean;
   enableBLE: boolean;
+  enableAPI: boolean;
 }

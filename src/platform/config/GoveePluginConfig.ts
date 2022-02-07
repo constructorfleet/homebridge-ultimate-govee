@@ -1,4 +1,4 @@
-import {Expose, Type} from 'class-transformer';
+import {Exclude, Expose, Type} from 'class-transformer';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 
@@ -47,6 +47,9 @@ export class GoveeConnections {
 
   @Expose({name: 'ble'})
   ble = true;
+
+  @Expose({name: 'api'})
+  api = true;
 }
 
 export class GoveePluginConfig {
@@ -69,5 +72,10 @@ export class GoveePluginConfig {
   @Expose({name: 'devices'})
   @Type(() => GoveeDeviceOverrides)
   devices?: GoveeDeviceOverrides;
+
+  @Exclude()
+  isValid(): boolean {
+    return this.username !== undefined || this.password !== undefined;
+  }
 }
 
