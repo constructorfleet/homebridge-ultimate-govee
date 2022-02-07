@@ -12,7 +12,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {ExtendedDate} from '../../util/extendedDate';
-import {RestAuthenticatedEvent} from '../../core/events/dataClients/rest/RestAuthentication';
+import {RestAuthenticatedEvent, RestAuthenticationFailureEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
 import {RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
@@ -21,6 +21,7 @@ import {TokenRefreshRequest, tokenRefreshRequest} from '../../core/structures/ap
 import {TokenRefreshResponse} from '../../core/structures/api/responses/payloads/TokenRefreshResponse';
 import {PersistService} from '../../persist/PersistService';
 import {LoggingService} from '../../logging/LoggingService';
+import {ApiError, ApiResponseStatus} from '../../core/structures/api/ApiResponseStatus';
 
 const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
@@ -63,12 +64,12 @@ export class RestClient
   }
 
   @OnEvent(
-    'REST.Authenticate',
+    'REST.AUTHENTICATION.Authenticate',
     {
       async: true,
     },
   )
-  login(requestDevices = false): Promise<OAuthData> {
+  login(requestDevices = false): Promise<OAuthData | ApiResponseStatus> {
     if (this.isValidToken) {
       const oauthData = this.persist.oauthData!;
       this.emit(
@@ -95,7 +96,15 @@ export class RestClient
           }
           return authData;
         },
-      );
+      )
+      .catch((error: ApiError) => {
+        this.emit(
+          new RestAuthenticationFailureEvent(
+            error.status,
+          ),
+        );
+        return error.status;
+      });
   }
 
   private async authenticate(): Promise<OAuthData> {
@@ -111,7 +120,15 @@ export class RestClient
     )
       .post()
       .then((res) => {
-        this.log.debug(res);
+        if (res.status !== 200) {
+          throw new ApiError(
+            'Error encountered during authentication',
+            {
+              statusCode: res.status,
+              message: res.statusText,
+            },
+          );
+        }
         return res.data.client;
       })
       .then((client): OAuthData => {
@@ -143,6 +160,15 @@ export class RestClient
     )
       .post()
       .then((res) => {
+        if (res.status !== 200) {
+          throw new ApiError(
+            'Error encountered during authentication',
+            {
+              statusCode: res.status,
+              message: res.statusText,
+            },
+          );
+        }
         return {
           token: res.data.token,
           accountIoTTopic: this.persist.oauthData?.accountIoTTopic,
@@ -171,6 +197,16 @@ export class RestClient
   )
   getDevices(): Promise<void> {
     return this.login(false)
+      .then((res) => {
+        const authData = res as OAuthData;
+        if (!authData) {
+          throw new ApiError(
+            'Encountered an error retrieving devices',
+            res as ApiResponseStatus,
+          );
+        }
+        return authData;
+      })
       .then((authData) =>
         request<BaseRequest, AppDeviceListResponse>(
           `${BASE_GOVEE_APP_DEVICE_URL}/list`,
@@ -183,6 +219,7 @@ export class RestClient
           this.emit(
             new RestResponseDeviceList(resp.data),
           ),
-      );
+      )
+      .catch((error) => this.log.error(error));
   }
 }
