@@ -10,7 +10,6 @@ import {GOVEE_CLIENT_ID} from '../../util/const';
 import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
-import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {ExtendedDate} from '../../util/extendedDate';
 import {RestAuthenticatedEvent, RestAuthenticationFailureEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
@@ -44,23 +43,6 @@ export class RestClient
     @Inject(GOVEE_CLIENT_ID) private clientId: string,
   ) {
     super(eventEmitter);
-  }
-
-  @OnEvent(
-    'IOT.Connection',
-    {
-      async: true,
-    },
-  )
-  onIoTConnected(connection: ConnectionState) {
-    const accountTopic = this.persist.oauthData?.accountIoTTopic;
-    if (connection !== ConnectionState.Connected ||
-      !accountTopic) {
-      return;
-    }
-    this.emit(
-      new IoTSubscribeToEvent(accountTopic),
-    );
   }
 
   @OnEvent(

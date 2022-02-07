@@ -11,13 +11,16 @@ import {IoTPublishToEvent} from '../../core/events/dataClients/iot/IoTPublish';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {LoggingService} from '../../logging/LoggingService';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
+import {PersistService} from '../../persist/PersistService';
+import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 
 @Injectable()
-export class IoTPayloadProcessor extends Emitter {
+export class IoTEventProcessor extends Emitter {
   private iotConnected = false;
 
   constructor(
     private readonly log: LoggingService,
+    private persist: PersistService,
     eventEmitter: EventEmitter2,
   ) {
     super(eventEmitter);
@@ -31,6 +34,13 @@ export class IoTPayloadProcessor extends Emitter {
   )
   onIoTConnection(connection: ConnectionState) {
     this.iotConnected = connection === ConnectionState.Connected;
+    const accountTopic = this.persist.oauthData?.accountIoTTopic;
+    if (connection !== ConnectionState.Connected || !accountTopic) {
+      return;
+    }
+    this.emit(
+      new IoTSubscribeToEvent(accountTopic),
+    );
   }
 
   @OnEvent(

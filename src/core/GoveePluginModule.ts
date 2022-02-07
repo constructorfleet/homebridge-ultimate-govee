@@ -7,7 +7,7 @@ import path from 'path';
 import {machineIdSync} from 'node-machine-id';
 import {humidifierProviders} from '../devices/GoveeHumidifier';
 import {purifierProviders} from '../devices/GoveeAirPurifier';
-import {IoTPayloadProcessor} from '../interactors/data/IoTPayloadProcessor';
+import {IoTEventProcessor} from '../interactors/data/IoTPayloadProcessor';
 import {RestEventProcessor} from '../interactors/data/RestPayloadProcessor';
 import {ConfigurationModule} from '../config/ConfigurationModule';
 import {GoveeConfiguration} from '../config/GoveeConfiguration';
@@ -37,7 +37,7 @@ export class GoveePluginModule {
     }
     if (config.enableIoT) {
       connectionProviders.push(IoTClient);
-      connectionProviders.push(IoTPayloadProcessor);
+      connectionProviders.push(IoTEventProcessor);
     }
     return {
       module: GoveePluginModule,
