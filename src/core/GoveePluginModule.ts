@@ -16,7 +16,7 @@ import {PersistModule} from '../persist/PersistModule';
 import {LoggingModule} from '../logging/LoggingModule';
 import {Logger} from '../logging/Logger';
 import {BLEClient} from '../data/clients/BLEClient';
-import {BLEPayloadProcessor} from '../interactors/data/BLEPayloadProcessor';
+import {BLEEventProcessor} from '../interactors/data/BLEPayloadProcessor';
 import {IoTClient} from '../data/clients/IoTClient';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 
@@ -33,7 +33,7 @@ export class GoveePluginModule {
     const connectionProviders: Provider[] = [];
     if (config.enableBLE) {
       connectionProviders.push(BLEClient);
-      connectionProviders.push(BLEPayloadProcessor);
+      connectionProviders.push(BLEEventProcessor);
     }
     if (config.enableIoT) {
       connectionProviders.push(IoTClient);

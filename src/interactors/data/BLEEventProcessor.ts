@@ -16,7 +16,7 @@ import {REPORT_IDENTIFIER} from '../../util/const';
 import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 
 @Injectable()
-export class BLEPayloadProcessor extends Emitter {
+export class BLEEventProcessor extends Emitter {
   private bleConnected = false;
   private readonly discoveredPeripherals: string[] = [];
   private readonly stateRequests: Map<string, GoveeDevice> = new Map<string, GoveeDevice>();
