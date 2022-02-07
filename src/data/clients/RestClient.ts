@@ -22,7 +22,7 @@ import {PersistService} from '../../persist/PersistService';
 import {LoggingService} from '../../logging/LoggingService';
 import {ApiError, ApiResponseStatus} from '../../core/structures/api/ApiResponseStatus';
 
-const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app.govee.com/account/rest/account/v1';
+const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app2.govee.com/account/rest/account/v1';
 const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
 
 // const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
