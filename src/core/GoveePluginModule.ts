@@ -7,8 +7,6 @@ import path from 'path';
 import {machineIdSync} from 'node-machine-id';
 import {humidifierProviders} from '../devices/GoveeHumidifier';
 import {purifierProviders} from '../devices/GoveeAirPurifier';
-import {IoTEventProcessor} from '../interactors/data/IoTPayloadProcessor';
-import {RestEventProcessor} from '../interactors/data/RestPayloadProcessor';
 import {ConfigurationModule} from '../config/ConfigurationModule';
 import {GoveeConfiguration} from '../config/GoveeConfiguration';
 import {PersistConfiguration} from '../persist/PersistConfiguration';
@@ -16,9 +14,11 @@ import {PersistModule} from '../persist/PersistModule';
 import {LoggingModule} from '../logging/LoggingModule';
 import {Logger} from '../logging/Logger';
 import {BLEClient} from '../data/clients/BLEClient';
-import {BLEEventProcessor} from '../interactors/data/BLEPayloadProcessor';
 import {IoTClient} from '../data/clients/IoTClient';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
+import {BLEEventProcessor} from '../interactors/data/BLEEventProcessor';
+import {IoTEventProcessor} from '../interactors/data/IoTEventProcessor';
+import {RestEventProcessor} from '../interactors/data/RestEventProcessor';
 
 
 @Module({})
