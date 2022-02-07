@@ -124,11 +124,15 @@
           "items": [
             {
               "key": "connections.iot",
-              "flex": "1 1 50%"
+              "flex": "1 1 33%"
             },
             {
               "key": "connections.ble",
-              "flex": "1 1 50%"
+              "flex": "1 1 33%"
+            },
+            {
+              "key": "connections.api",
+              "flex": "1 1 33%"
             }
           ]
         }
