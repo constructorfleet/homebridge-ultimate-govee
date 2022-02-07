@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "Govee Ultimate",
   "name": "homebridge-ultimate-govee",
   "author": {
@@ -7,7 +6,7 @@
     "email": "that@teagantotally.rocks"
   },
   "version": "1.0.0",
-  "type": "commonjs",
+  "type": "module",
   "description": "The ultimate Govee HomeBridge plugin.",
   "license": "MIT",
   "repository": {
