@@ -15,6 +15,22 @@
         "title": "Govee Account Password",
         "required": true
       },
+      "connections": {
+        "title": "Connection Settings",
+        "type": "object",
+        "properties": {
+          "iot": {
+            "title": "Enable AWS IoT",
+            "type": "boolean",
+            "default": true
+          },
+          "ble": {
+            "title": "Enable Bluetooth LE",
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
       "devices": {
         "title": "Device Overrides",
         "description": "Optional settings for your Govee devices.",
@@ -90,6 +106,27 @@
       "items": [
         "username",
         "password"
+      ]
+    },
+    {
+      "type": "section",
+      "key": "connections",
+      "items": [
+        {
+          "type": "div",
+          "displayFlex": true,
+          "flex-direction": "row",
+          "items": [
+            {
+              "key": "connections.iot",
+              "flex": "1 1 50%"
+            },
+            {
+              "key": "connections.ble",
+              "flex": "1 1 50%"
+            }
+          ]
+        }
       ]
     },
     {

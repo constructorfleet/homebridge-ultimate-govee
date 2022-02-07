@@ -11,16 +11,16 @@ export class GoveeDeviceOverride {
   }
 
   @Expose({name: 'deviceId'})
-    deviceId?: string;
+  deviceId?: string;
 
   @Expose({name: 'model'})
-    model?: string;
+  model?: string;
 
   @Expose({name: 'ignore'})
-    ignore?: boolean;
+  ignore?: boolean;
 
   @Expose({name: 'displayName'})
-    displayName?: string;
+  displayName?: string;
 }
 
 export class GoveeDeviceOverrides {
@@ -34,28 +34,40 @@ export class GoveeDeviceOverrides {
 
   @Expose({name: 'airPurifiers'})
   @Type(() => GoveeDeviceOverrides)
-    airPurifiers?: GoveeDeviceOverride[];
+  airPurifiers?: GoveeDeviceOverride[];
 
   @Expose({name: 'humidifiers'})
   @Type(() => GoveeDeviceOverrides)
-    humidifiers?: GoveeDeviceOverride[];
+  humidifiers?: GoveeDeviceOverride[];
+}
+
+export class GoveeConnections {
+  @Expose({name: 'iot'})
+  iot = true;
+
+  @Expose({name: 'ble'})
+  ble = true;
 }
 
 export class GoveePluginConfig {
   @Expose({name: 'name'})
-    name: string = PLUGIN_NAME;
+  name: string = PLUGIN_NAME;
 
   @Expose({name: 'platform'})
-    platform: string = PLATFORM_NAME;
+  platform: string = PLATFORM_NAME;
 
   @Expose({name: 'username'})
-    username?: string;
+  username?: string;
 
   @Expose({name: 'password'})
-    password?: string;
+  password?: string;
+
+  @Expose({name: 'connections'})
+  @Type(() => GoveeConnections)
+  connections?: GoveeConnections;
 
   @Expose({name: 'devices'})
   @Type(() => GoveeDeviceOverrides)
-    devices?: GoveeDeviceOverrides;
+  devices?: GoveeDeviceOverrides;
 }
 
