@@ -103,6 +103,7 @@ export class RestClient
       .post()
       .then((res) => {
         if (res.status !== 200) {
+          this.log.error(res);
           throw new ApiError(
             'Error encountered during authentication',
             {
