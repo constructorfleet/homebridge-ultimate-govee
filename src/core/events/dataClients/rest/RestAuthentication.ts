@@ -25,7 +25,7 @@ export class RestAuthenticateEvent
 }
 
 export class RestAuthenticationFailureEvent
-  extends RestEvent<ApiResponseStatus> {
+  extends RestAuthenticationEvent<ApiResponseStatus> {
 
   constructor(
     eventData: ApiResponseStatus,
