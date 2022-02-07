@@ -24,6 +24,11 @@ export interface GoveeCredentials {
   apiKey?: string;
 }
 
+export interface GoveeConnections {
+  enableIoT: boolean;
+  enableBLE: boolean;
+}
+
 
 export interface PlatformModuleConfig {
   rootPath: string;
@@ -38,6 +43,7 @@ export interface PlatformModuleConfig {
   registerAccessory: (pluginIdentifier: PluginIdentifier, platformName: PlatformName, accessories: PlatformAccessory[]) => void;
   updateAccessory: (accessories: PlatformAccessory[]) => void;
   credentials: GoveeCredentials;
+  connections: GoveeConnections;
 }
 
 @Module({})
@@ -49,6 +55,8 @@ export class PlatformModule {
         GoveePluginModule.register({
           username: config.credentials.username,
           password: config.credentials.password,
+          enableBLE: config.connections.enableBLE,
+          enableIoT: config.connections.enableIoT,
         },
         {
           storagePath: config.storagePath,

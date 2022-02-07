@@ -17,6 +17,8 @@ import {LoggingModule} from '../logging/LoggingModule';
 import {Logger} from '../logging/Logger';
 import {BLEClient} from '../data/clients/BLEClient';
 import {BLEPayloadProcessor} from '../interactors/data/BLEPayloadProcessor';
+import {IoTClient} from '../data/clients/IoTClient';
+import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 
 
 @Module({})
@@ -28,6 +30,15 @@ export class GoveePluginModule {
     logger: Logger,
   ): DynamicModule {
     logger.error(path.join('assets', 'testiot.cert.pkey'));
+    const connectionProviders: Provider[] = [];
+    if (config.enableBLE) {
+      connectionProviders.push(BLEClient);
+      connectionProviders.push(BLEPayloadProcessor);
+    }
+    if (config.enableIoT) {
+      connectionProviders.push(IoTClient);
+      connectionProviders.push(IoTPayloadProcessor);
+    }
     return {
       module: GoveePluginModule,
       imports: [
@@ -74,12 +85,9 @@ export class GoveePluginModule {
         },
         ...purifierProviders,
         ...humidifierProviders,
-        IoTPayloadProcessor,
-        // IoTClient,
+        ...connectionProviders,
         RestPayloadProcessor,
         RestClient,
-        BLEPayloadProcessor,
-        BLEClient,
         DeviceManager,
       ],
       exports: [
@@ -91,12 +99,9 @@ export class GoveePluginModule {
         IOT_HOST,
         GOVEE_CLIENT_ID,
         LoggingModule,
-        IoTPayloadProcessor,
-        // IoTClient,
+        ...connectionProviders,
         RestPayloadProcessor,
         RestClient,
-        BLEPayloadProcessor,
-        BLEClient,
         DeviceManager,
         ConfigurationModule,
         PersistModule,
