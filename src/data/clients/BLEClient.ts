@@ -82,7 +82,7 @@ export class BLEClient
       async () => {
         await noble.startScanningAsync(
           [],
-          false,
+          true,
         );
         // this.scanning = false;
         // this.log.info('BLEClient', 'ScanStop');
@@ -355,7 +355,7 @@ export class BLEClient
       this.scanning = true;
       await noble.startScanningAsync(
         [],
-        false,
+        true,
       );
     }
   }
