@@ -36,7 +36,7 @@ export class BLEClient
   private static readonly SERVICE_CONTROL_UUID = '000102030405060708090a0b0c0d1910';
   private static readonly CHARACTERISTIC_CONTROL_UUID = '000102030405060708090a0b0c0d2b11';
   private static readonly CHARACTERISTIC_REPORT_UUID = '000102030405060708090a0b0c0d2b10';
-
+  private static readonly BLE_NAME_REGEX = new RegExp(/ihoment_(?<model>[^_]+)_.*/);
   private subscriptions: Map<BLEAddress, BLEDeviceIdentification> = new Map<BLEAddress, BLEDeviceIdentification>();
   private peripherals: Map<BLEAddress, Peripheral> = new Map<BLEAddress, Peripheral>();
   private identifiedPeripherals: Map<BLEAddress, IdentifiedPeripheral> = new Map<BLEAddress, IdentifiedPeripheral>();
@@ -97,6 +97,13 @@ export class BLEClient
           peripheralAddress,
           peripheral,
         );
+
+        const peripheralName = peripheral.advertisement.localName;
+        const regexResult = BLEClient.BLE_NAME_REGEX.exec(peripheralName);
+        const model = regexResult?.groups?.model;
+        if (!model) {
+          return;
+        }
 
         this.log.info(
           peripheralAddress,
