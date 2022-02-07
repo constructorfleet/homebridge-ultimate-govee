@@ -37,11 +37,12 @@ export class BLEClient
   private static readonly CHARACTERISTIC_CONTROL_UUID = '000102030405060708090a0b0c0d2b11';
   private static readonly CHARACTERISTIC_REPORT_UUID = '000102030405060708090a0b0c0d2b10';
   private static readonly BLE_NAME_REGEX = new RegExp(/ihoment_(?<model>[^_]+)_.*/);
+
   private subscriptions: Map<BLEAddress, BLEDeviceIdentification> = new Map<BLEAddress, BLEDeviceIdentification>();
   private peripherals: Map<BLEAddress, Peripheral> = new Map<BLEAddress, Peripheral>();
   private identifiedPeripherals: Map<BLEAddress, IdentifiedPeripheral> = new Map<BLEAddress, IdentifiedPeripheral>();
   private scanning = false;
-  private online = false;
+  private isOnline = false;
   private lock = new Lock<LockKey>();
 
   constructor(
@@ -54,13 +55,13 @@ export class BLEClient
       async (state) => {
         this.log.info('BLEClient', 'StateChange', state);
         if (state === BLEClient.STATE_POWERED_ON) {
-          this.online = true;
-          await this.startScanning();
+          this.isOnline = true;
           this.emit(
             new BLEConnectionStateEvent(ConnectionState.Connected),
           );
+          await this.startScanning();
         } else {
-          this.online = false;
+          this.isOnline = false;
           this.emit(
             new BLEConnectionStateEvent(ConnectionState.Offline),
           );
@@ -351,7 +352,7 @@ export class BLEClient
   }
 
   async startScanning() {
-    if (!this.scanning) {
+    if (!this.scanning && this.isOnline) {
       this.scanning = true;
       await noble.startScanningAsync(
         [],

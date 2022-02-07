@@ -1,6 +1,11 @@
-export function BaseHeaders(): Record<string, string> {
+export function BaseHeaders(
+  clientId: string,
+  appVersion: string,
+): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'clientType': '0',
+    'appVersion': appVersion,
   };
 }

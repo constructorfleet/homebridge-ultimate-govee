@@ -21,19 +21,17 @@ import {TokenRefreshResponse} from '../../core/structures/api/responses/payloads
 import {PersistService} from '../../persist/PersistService';
 import {LoggingService} from '../../logging/LoggingService';
 import {ApiError, ApiResponseStatus} from '../../core/structures/api/ApiResponseStatus';
+import jwtDecode from 'jwt-decode';
+import {JWTPayload} from '../../core/structures/api/JsonWebToken';
 
-const BASE_GOVEE_APP_ACCOUNT_URL = 'https://app2.govee.com/account/rest/account/v1';
-const BASE_GOVEE_APP_DEVICE_URL = 'https://app2.govee.com/device/rest/devices/v1';
-
-// const GOVEE_API_BASE_URL = 'https://developer-api.govee.com/v1/devices';
+const GOVEE_APP_VERSION = '3.7.0';
+const BASE_GOVEE_APP_URL = 'https://app2.govee.com';
+const BASE_GOVEE_APP_ACCOUNT_URL = `${BASE_GOVEE_APP_URL}/account/rest/account/v1`;
+const BASE_GOVEE_APP_DEVICE_URL = `${BASE_GOVEE_APP_URL}/device/rest/devices/v1`;
 
 @Injectable()
 export class RestClient
   extends GoveeClient {
-
-  private get isValidToken(): boolean {
-    return (this.persist.oauthData?.tokenExpiration || 0) > Date.now();
-  }
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -52,7 +50,7 @@ export class RestClient
     },
   )
   login(requestDevices = false): Promise<OAuthData | ApiResponseStatus> {
-    if (this.isValidToken) {
+    if (this.isTokenValid(this.persist.oauthData?.token)) {
       const oauthData = this.persist.oauthData!;
       this.emit(
         new IoTSubscribeToEvent(oauthData.accountIoTTopic || ''),
@@ -64,9 +62,7 @@ export class RestClient
       return Promise.resolve(oauthData);
     }
 
-    return (this.persist.oauthData?.refreshToken
-      ? this.refreshToken()
-      : this.authenticate())
+    return this.authenticate()
       .then(
         (authData) => {
           this.emit(
@@ -93,7 +89,10 @@ export class RestClient
     this.log.info('Authenticating');
     return request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
-      BaseHeaders(),
+      BaseHeaders(
+        this.clientId,
+        BASE_GOVEE_APP_URL,
+      ),
       loginRequest(
         this.config.username,
         this.config.password,
@@ -135,9 +134,13 @@ export class RestClient
     this.log.debug('REFRESH TOKEN');
     return request<TokenRefreshRequest, TokenRefreshResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/refresh-tokens`,
-      AuthenticatedHeader(this.persist.oauthData?.token || ''),
-      tokenRefreshRequest(
+      AuthenticatedHeader(
+        this.clientId,
+        GOVEE_APP_VERSION,
         this.persist.oauthData?.token || '',
+      ),
+      tokenRefreshRequest(
+        this.persist.oauthData?.refreshToken || '',
       ),
     )
       .post()
@@ -192,7 +195,11 @@ export class RestClient
       .then((authData) =>
         request<BaseRequest, AppDeviceListResponse>(
           `${BASE_GOVEE_APP_DEVICE_URL}/list`,
-          AuthenticatedHeader(authData.token || ''),
+          AuthenticatedHeader(
+            this.clientId,
+            GOVEE_APP_VERSION,
+            authData.token || '',
+          ),
         ),
       )
       .then((req) => req.post())
@@ -203,5 +210,28 @@ export class RestClient
           ),
       )
       .catch((error) => this.log.error(error));
+  }
+
+  private isTokenValid(token?: string): boolean {
+    if (!token) {
+      return false;
+    }
+    try {
+      const jwt = jwtDecode<JWTPayload>(token, {});
+      if (!jwt.exp || !jwt.iat) {
+        return false;
+      }
+      const expirationDateUTC = new Date(1970, 1, 1).setSeconds(jwt.exp);
+      const nowUTC = new Date().getUTCSeconds();
+      return nowUTC < expirationDateUTC;
+    } catch (error) {
+      this.log.error(
+        'RestClient',
+        'isTokenValid',
+        error,
+      );
+    }
+
+    return false;
   }
 }
