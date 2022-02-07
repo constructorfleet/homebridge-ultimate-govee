@@ -139,6 +139,7 @@ export class BLEClient
               }
               if (characteristic.properties.includes('notify') || characteristic.properties.includes('indicate')) {
                 characteristic.on('data', (data) => this.log.info('OnData', characteristic.uuid, data));
+                await characteristic.subscribeAsync();
               }
               this.log.info(
                 'CHAR',
@@ -165,6 +166,7 @@ export class BLEClient
             }
 
           }
+          await sleep(2000);
           await peripheral.disconnectAsync();
         } finally {
           await this.lock.release('PeripheralConnect');
