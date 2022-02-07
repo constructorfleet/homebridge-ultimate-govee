@@ -80,8 +80,12 @@ export class BLEClient
     noble.on(
       'scanStop',
       async () => {
-        this.scanning = false;
-        this.log.info('BLEClient', 'ScanStop');
+        await noble.startScanningAsync(
+          [],
+          false,
+        );
+        // this.scanning = false;
+        // this.log.info('BLEClient', 'ScanStop');
       },
     );
 
@@ -105,10 +109,45 @@ export class BLEClient
           return;
         }
 
+        await this.lock.acquire('PeripheralConnect');
         this.log.info(
           peripheralAddress,
           peripheral.advertisement,
+          model,
         );
+        try {
+          await peripheral.connectAsync();
+          const services = await peripheral.discoverServicesAsync();
+          for (let i = 0; i < services.length; i++) {
+            const service = services[i];
+            this.log.info(
+              peripheralAddress,
+              peripheralName,
+              service.name,
+              service.uuid,
+            );
+
+            const characteristics = await service.discoverCharacteristicsAsync();
+            for (let j = 0; j < characteristics.length; j++) {
+              const characteristic = characteristics[j];
+              let value: Buffer | undefined = undefined;
+              if (characteristic.properties.includes('read')) {
+                value = await characteristic.readAsync();
+              }
+              this.log.info(
+                peripheralAddress,
+                peripheralName,
+                characteristic.name,
+                characteristic.uuid,
+                value,
+              );
+            }
+
+          }
+          await peripheral.disconnectAsync();
+        } finally {
+          await this.lock.release('PeripheralConnect');
+        }
       },
     );
   }
@@ -300,7 +339,7 @@ export class BLEClient
       this.scanning = true;
       await noble.startScanningAsync(
         [],
-        true,
+        false,
       );
     }
   }
