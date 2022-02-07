@@ -121,6 +121,7 @@ export class BLEClient
           for (let i = 0; i < services.length; i++) {
             const service = services[i];
             this.log.info(
+              'SERVICE',
               peripheralAddress,
               peripheralName,
               service.name,
@@ -130,17 +131,32 @@ export class BLEClient
             const characteristics = await service.discoverCharacteristicsAsync();
             for (let j = 0; j < characteristics.length; j++) {
               const characteristic = characteristics[j];
-              let value: Buffer | undefined = undefined;
+              let charValue: Buffer | undefined = undefined;
               if (characteristic.properties.includes('read')) {
-                value = await characteristic.readAsync();
+                charValue = await characteristic.readAsync();
               }
               this.log.info(
+                'CHAR',
                 peripheralAddress,
                 peripheralName,
                 characteristic.name,
                 characteristic.uuid,
-                value,
+                charValue,
               );
+
+              const descriptors = await characteristic.discoverDescriptorsAsync();
+              for (let k = 0; k < descriptors.length; k++) {
+                const descriptor = descriptors[k];
+                const descriptorValue = await descriptor.readValueAsync();
+                this.log.info(
+                  'DESC',
+                  peripheralAddress,
+                  peripheralName,
+                  descriptor.name,
+                  descriptor.uuid,
+                  descriptorValue,
+                );
+              }
             }
 
           }
