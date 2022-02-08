@@ -4,7 +4,8 @@ import {GoveePluginModule} from '../core/GoveePluginModule';
 import {
   HOMEBRIDGE_API,
   PLATFORM_CHARACTERISTICS,
-  PLATFORM_CONFIG, PLATFORM_CONFIG_FILE,
+  PLATFORM_CONFIG,
+  PLATFORM_CONFIG_FILE,
   PLATFORM_SERVICES,
   PLATFORM_UUID_GENERATOR,
 } from '../util/const';
@@ -20,11 +21,16 @@ import {PlatformConfigService} from './config/PlatformConfigService';
 export interface GoveeCredentials {
   username: string;
   password: string;
-  apiKey?: string;
 }
 
+export interface GoveeConnections {
+  enableIoT: boolean;
+  enableBLE: boolean;
+  enableAPI: boolean;
+}
 
 export interface PlatformModuleConfig {
+  rootPath: string;
   api: API;
   Service: typeof Service;
   Characteristic: typeof Characteristic;
@@ -36,6 +42,7 @@ export interface PlatformModuleConfig {
   registerAccessory: (pluginIdentifier: PluginIdentifier, platformName: PlatformName, accessories: PlatformAccessory[]) => void;
   updateAccessory: (accessories: PlatformAccessory[]) => void;
   credentials: GoveeCredentials;
+  connections: GoveeConnections;
 }
 
 @Module({})
@@ -47,10 +54,14 @@ export class PlatformModule {
         GoveePluginModule.register({
           username: config.credentials.username,
           password: config.credentials.password,
+          enableBLE: config.connections.enableBLE,
+          enableIoT: config.connections.enableIoT,
+          enableAPI: config.connections.enableAPI,
         },
         {
           storagePath: config.storagePath,
         },
+        config.rootPath,
         config.logger,
         ),
       ],

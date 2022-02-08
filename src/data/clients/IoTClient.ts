@@ -1,5 +1,4 @@
 import {device} from 'aws-iot-device-sdk';
-import path from 'path';
 import {GoveeClient} from './GoveeClient';
 import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../../util/const';
 import {Inject, Injectable} from '@nestjs/common';
@@ -10,12 +9,15 @@ import {IotReceive} from '../../core/events/dataClients/iot/IotReceive';
 import {IoTSubscribedToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 import {IoTUnsubscribedFromEvent} from '../../core/events/dataClients/iot/IotRemoveSubscription';
 import {LoggingService} from '../../logging/LoggingService';
+import {Lock} from 'async-await-mutex-lock';
+import {promisify} from 'util';
 
 @Injectable()
 export class IoTClient
   extends GoveeClient {
   private readonly awsIOTDevice: device;
   private connected = false;
+  private lock = new Lock<void>();
   private readonly subscriptions: Set<string> = new Set<string>();
 
   constructor(
@@ -30,9 +32,9 @@ export class IoTClient
     super(eventEmitter);
     this.awsIOTDevice = new device({
       clientId: clientId,
-      certPath: path.resolve(certificatePath),
-      keyPath: path.resolve(keyPath),
-      caPath: path.resolve(caPath),
+      certPath: certificatePath,
+      keyPath: keyPath,
+      caPath: caPath,
       host: host,
     });
 
@@ -81,65 +83,56 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Unsubscribe',
-    {
-      async: true,
-    },
   )
-  unsubscribe(message: IoTEventData) {
+  async unsubscribe(message: IoTEventData) {
     if (!message.topic) {
       this.log.info('No topic to unsubscribe from');
       return;
     }
-    this.awsIOTDevice.unsubscribe(
-      message.topic,
-      (err) => {
-        if (err) {
-          this.emit(new IoTErrorEvent(err));
-        } else {
-          this.subscriptions.delete(message.topic);
-          this.emit(new IoTUnsubscribedFromEvent(message.topic));
-        }
-      },
-    );
+    await this.lock.acquire();
+    try {
+      await promisify(this.awsIOTDevice.unsubscribe)(message.topic);
+      this.subscriptions.delete(message.topic);
+      this.emit(
+        new IoTUnsubscribedFromEvent(message.topic),
+      );
+    } catch (error) {
+      this.emit(new IoTErrorEvent(error as Error));
+    } finally {
+      this.lock.release();
+    }
   }
 
   @OnEvent(
     'IOT.Subscribe',
-    {
-      async: true,
-    },
   )
-  subscribe(message: IoTEventData) {
+  async subscribe(message: IoTEventData) {
     if (!message.topic) {
       this.log.info('No topic to subscribe to');
       return;
     }
-    if (this.subscriptions.has(message.topic)) {
-      this.log.info('Topic Subscribed', message.topic);
-      return;
+    await this.lock.acquire();
+    try {
+      if (!this.subscriptions.has(message.topic)) {
+        this.log.info('Subscribing', message.topic);
+        await promisify(this.awsIOTDevice.subscribe)(
+          message.topic,
+          undefined,
+        );
+        this.subscriptions.add(message.topic);
+        this.emit(new IoTSubscribedToEvent(message.topic));
+      }
+    } catch (error) {
+      this.emit(new IoTErrorEvent(error as Error));
+    } finally {
+      this.lock.release();
     }
-    this.log.info('Subscribing', message.topic);
-    this.awsIOTDevice.subscribe(
-      message.topic,
-      undefined,
-      (err) => {
-        if (err) {
-          this.emit(new IoTErrorEvent(err));
-        } else {
-          this.subscriptions.add(message.topic);
-          this.emit(new IoTSubscribedToEvent(message.topic));
-        }
-      },
-    );
   }
 
   @OnEvent(
     'IOT.Publish',
-    {
-      async: true,
-    },
   )
-  publishTo(message: IoTEventData) {
+  async publishTo(message: IoTEventData) {
     if (!message.topic) {
       this.log.info('No topic to publish to');
       return;

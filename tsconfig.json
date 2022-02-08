@@ -21,9 +21,10 @@
   },
   "include": [
     "src/",
-    "assets/"
   ],
   "exclude": [
+    ".vscode/",
+    ".idea/",
     "**/*.spec.ts"
   ]
 }

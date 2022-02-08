@@ -1,5 +1,7 @@
 import {State} from './State';
 import {DeviceState} from '../../core/structures/devices/DeviceState';
+import {getCommandCodes, getCommandValues} from '../../util/opCodeUtils';
+import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
 
 const commandIdentifiers = [
   5,
@@ -21,11 +23,12 @@ export function MistLevel<StateType extends State>(
 
     public constructor(...args) {
       super(...args);
+      this.addDeviceStatusCodes(commandIdentifiers);
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
-      const commandValues = this.getCommandValues(
-        [170, ...commandIdentifiers],
+      const commandValues = getCommandValues(
+        [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
       if (commandValues) {
@@ -36,8 +39,8 @@ export function MistLevel<StateType extends State>(
     }
 
     public get mistLevelChange(): number[] {
-      return this.getCommandCodes(
-        0x33,
+      return getCommandCodes(
+        COMMAND_IDENTIFIER,
         commandIdentifiers,
         this.mistLevel || 0,
       );

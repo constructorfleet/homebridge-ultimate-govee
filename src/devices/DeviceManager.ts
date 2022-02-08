@@ -1,10 +1,10 @@
 import {Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {Emitter} from '../util/types';
+import {Emitter, sleep} from '../util/types';
 import {ModuleRef} from '@nestjs/core';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
-import {DeviceStateRequest} from '../core/events/devices/DeviceRequests';
+import {DevicePollRequest, DeviceStateRequest} from '../core/events/devices/DeviceRequests';
 import {GoveeDevice} from './GoveeDevice';
 import {DeviceDiscoveredEvent} from '../core/events/devices/DeviceDiscovered';
 import {DeviceUpdatedEvent} from '../core/events/devices/DeviceUpdated';
@@ -14,11 +14,6 @@ import {LoggingService} from '../logging/LoggingService';
 
 @Injectable()
 export class DeviceManager extends Emitter {
-  // private static readonly DEVICE_CLASSES = [
-  //   GoveeHumidifier,
-  //   GoveeAirPurifier,
-  // ];
-
   private readonly devices = new Map<string, GoveeDevice>();
 
   constructor(
@@ -27,15 +22,15 @@ export class DeviceManager extends Emitter {
     public moduleRef: ModuleRef,
   ) {
     super(eventEmitter);
+    this.emit(
+      new DevicePollRequest(),
+    );
   }
 
   @OnEvent(
     'DEVICE.RECEIVED.Settings',
-    {
-      async: true,
-    },
   )
-  onDeviceSetting(deviceSettings: DeviceConfig) {
+  async onDeviceSetting(deviceSettings: DeviceConfig) {
     if (!deviceSettings) {
       this.log.info('No device settings');
       return;
@@ -52,8 +47,8 @@ export class DeviceManager extends Emitter {
         this.emit(
           new DeviceDiscoveredEvent(device),
         );
-        this.pollDeviceStates(
-          device,
+        this.emit(
+          new DevicePollRequest(device),
         );
       } catch (err) {
         this.log.error(err);
@@ -63,11 +58,8 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.RECEIVED.State',
-    {
-      async: true,
-    },
   )
-  onDeviceState(deviceState: DeviceState) {
+  async onDeviceState(deviceState: DeviceState) {
     if (!this.devices.has(deviceState.deviceId)) {
       this.log.info('Unknown Device');
       return;
@@ -84,11 +76,8 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Command',
-    {
-      async: true,
-    },
   )
-  onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
+  async onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
     const device = this.devices.get(deviceTransition.deviceId);
     if (!device) {
       this.log.info('Unknown Device');
@@ -103,9 +92,15 @@ export class DeviceManager extends Emitter {
     );
   }
 
-  pollDeviceStates = (
+  @OnEvent(
+    'DEVICE.REQUEST.Poll',
+    {
+      nextTick: true,
+    },
+  )
+  async pollDeviceStates(
     device?: GoveeDevice,
-  ): void => {
+  ) {
     (
       device
         ? [device]
@@ -116,14 +111,14 @@ export class DeviceManager extends Emitter {
           this.emit(
             new DeviceStateRequest(device),
           );
-          if (!device) {
-            this.log.debug('Setting timeout');
-            setTimeout(
-              () => this.pollDeviceStates,
-              10 * 1000,
-            );
-          }
         },
       );
-  };
+    if (!device) {
+      this.log.debug('Setting timeout');
+      await sleep(1000);
+      await this.emitAsync(
+        new DevicePollRequest(),
+      );
+    }
+  }
 }

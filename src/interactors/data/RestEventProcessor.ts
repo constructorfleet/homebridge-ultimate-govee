@@ -5,22 +5,39 @@ import {Emitter} from '../../util/types';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {plainToInstance} from 'class-transformer';
 import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
+import {ApiResponseStatus} from '../../core/structures/api/ApiResponseStatus';
+import {LoggingService} from '../../logging/LoggingService';
+import {RestAuthenticateEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 
 @Injectable()
-export class RestPayloadProcessor extends Emitter {
+export class RestEventProcessor extends Emitter {
   constructor(
     eventEmitter: EventEmitter2,
+    private readonly log: LoggingService,
   ) {
     super(eventEmitter);
   }
 
   @OnEvent(
-    'REST.RESPONSE.DeviceList',
-    {
-      async: true,
-    },
+    'REST.AUTHENTICATION.Failure',
   )
-  onDeviceListReceived(payload: AppDeviceListResponse) {
+  async onAuthenticationFailure(response: ApiResponseStatus) {
+    this.log.error('Unexpected error authenticating with API', response.message);
+    if (response.statusCode >= 500) {
+      this.log.error('Retrying authentication in 1 minute due to server-side error.');
+      setTimeout(
+        () => this.emit(new RestAuthenticateEvent()),
+        60 * 1000,
+      );
+    } else if (response.statusCode >= 400) {
+      this.log.error('Please verify your API credentials and restart the plugin.');
+    }
+  }
+
+  @OnEvent(
+    'REST.RESPONSE.DeviceList',
+  )
+  async onDeviceListReceived(payload: AppDeviceListResponse) {
     payload.devices
       .map(
         (device) =>

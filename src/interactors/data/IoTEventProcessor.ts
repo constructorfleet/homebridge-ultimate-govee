@@ -7,26 +7,43 @@ import {IoTEventData} from '../../core/events/dataClients/iot/IoTEvent';
 import {plainToInstance} from 'class-transformer';
 import {DeviceStateReceived} from '../../core/events/devices/DeviceReceived';
 import {base64ToHex} from '../../util/encodingUtils';
-import {IoTPublishTo} from '../../core/events/dataClients/iot/IoTPublish';
+import {IoTPublishToEvent} from '../../core/events/dataClients/iot/IoTPublish';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {LoggingService} from '../../logging/LoggingService';
+import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
+import {PersistService} from '../../persist/PersistService';
+import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 
 @Injectable()
-export class IoTPayloadProcessor extends Emitter {
+export class IoTEventProcessor extends Emitter {
+  private iotConnected = false;
+
   constructor(
     private readonly log: LoggingService,
+    private persist: PersistService,
     eventEmitter: EventEmitter2,
   ) {
     super(eventEmitter);
   }
 
   @OnEvent(
-    'IOT.Received',
-    {
-      async: true,
-    },
+    'IOT.CONNECTION',
   )
-  onIoTMessage(message: IoTEventData) {
+  async onIoTConnection(connection: ConnectionState) {
+    this.iotConnected = connection === ConnectionState.Connected;
+    const accountTopic = this.persist.oauthData?.accountIoTTopic;
+    if (connection !== ConnectionState.Connected || !accountTopic) {
+      return;
+    }
+    this.emit(
+      new IoTSubscribeToEvent(accountTopic),
+    );
+  }
+
+  @OnEvent(
+    'IOT.Received',
+  )
+  async onIoTMessage(message: IoTEventData) {
     try {
       const acctMessage = plainToInstance(
         IoTAccountMessage,
@@ -43,18 +60,19 @@ export class IoTPayloadProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State',
-    {
-      async: true,
-    },
   )
-  onRequestDeviceState(
+  async onRequestDeviceState(
     device: GoveeDevice,
   ) {
+    if (!this.iotConnected) {
+      this.log.info('RequestDeviceState', 'IOT is not connected');
+      return;
+    }
     if (!device.iotTopic) {
       return;
     }
     this.emit(
-      new IoTPublishTo(
+      new IoTPublishToEvent(
         device.iotTopic,
         JSON.stringify({
           topic: device.iotTopic,
