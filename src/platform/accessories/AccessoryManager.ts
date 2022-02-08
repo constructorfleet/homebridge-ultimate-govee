@@ -43,9 +43,6 @@ export class AccessoryManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Discovered',
-    {
-      nextTick: true,
-    },
   )
   async onDeviceDiscovered(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
@@ -76,9 +73,6 @@ export class AccessoryManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Updated',
-    {
-      nextTick: true,
-    },
   )
   async onDeviceUpdated(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);

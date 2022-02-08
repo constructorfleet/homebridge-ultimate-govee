@@ -83,9 +83,6 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Unsubscribe',
-    {
-      nextTick: true,
-    },
   )
   async unsubscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -108,9 +105,6 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Subscribe',
-    {
-      nextTick: true,
-    },
   )
   async subscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -137,9 +131,6 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Publish',
-    {
-      nextTick: true,
-    },
   )
   async publishTo(message: IoTEventData) {
     if (!message.topic) {

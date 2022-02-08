@@ -28,9 +28,6 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'IOT.CONNECTION',
-    {
-      nextTick: true,
-    },
   )
   async onIoTConnection(connection: ConnectionState) {
     this.iotConnected = connection === ConnectionState.Connected;
@@ -45,9 +42,6 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'IOT.Received',
-    {
-      nextTick: true,
-    },
   )
   async onIoTMessage(message: IoTEventData) {
     try {
@@ -66,9 +60,6 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State',
-    {
-      nextTick: true,
-    },
   )
   async onRequestDeviceState(
     device: GoveeDevice,

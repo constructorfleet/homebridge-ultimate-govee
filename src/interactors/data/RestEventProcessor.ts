@@ -20,9 +20,6 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.AUTHENTICATION.Failure',
-    {
-      nextTick: true,
-    },
   )
   async onAuthenticationFailure(response: ApiResponseStatus) {
     this.log.error('Unexpected error authenticating with API', response.message);
@@ -39,9 +36,6 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.RESPONSE.DeviceList',
-    {
-      nextTick: true,
-    },
   )
   async onDeviceListReceived(payload: AppDeviceListResponse) {
     payload.devices

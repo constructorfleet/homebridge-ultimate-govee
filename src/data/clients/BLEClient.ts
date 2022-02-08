@@ -91,21 +91,12 @@ export class BLEClient
     noble.on(
       'discover',
       async (peripheral: Peripheral) => {
-        await this.acquireLock(
-          'OnDiscover',
-        );
-        try {
-          const bleAddress = peripheral.address.toLowerCase();
-          const model = BLEClient.parsePeripheralModel(peripheral);
-          if (model && !this.peripherals.has(bleAddress)) {
-            this.peripherals.set(
-              bleAddress,
-              peripheral,
-            );
-          }
-        } finally {
-          await this.releaseLock(
-            'OnDiscover',
+        const bleAddress = peripheral.address.toLowerCase();
+        const model = BLEClient.parsePeripheralModel(peripheral);
+        if (model && !this.peripherals.has(bleAddress)) {
+          this.peripherals.set(
+            bleAddress,
+            peripheral,
           );
         }
       },
@@ -114,9 +105,6 @@ export class BLEClient
 
   @OnEvent(
     'BLE.PERIPHERAL.Send',
-    {
-      nextTick: true,
-    },
   )
   async onSendCommand(peripheralCommand: BLEPeripheralCommandSend) {
     const peripheralAddress = peripheralCommand.bleAddress.toLowerCase();

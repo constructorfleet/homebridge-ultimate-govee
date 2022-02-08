@@ -45,9 +45,6 @@ export class RestClient
 
   @OnEvent(
     'REST.AUTHENTICATION.Authenticate',
-    {
-      nextTick: true,
-    },
   )
   async login(requestDevices = false): Promise<OAuthData | ApiResponseStatus> {
     if (this.isTokenValid(this.persist.oauthData?.token)) {
@@ -178,9 +175,6 @@ export class RestClient
 
   @OnEvent(
     'REST.REQUEST.Devices',
-    {
-      nextTick: true,
-    },
   )
   async getDevices(): Promise<void> {
     return this.login(false)

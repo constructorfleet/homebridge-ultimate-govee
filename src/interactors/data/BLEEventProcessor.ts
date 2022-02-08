@@ -34,9 +34,6 @@ export class BLEEventProcessor extends Emitter {
 
   @OnEvent(
     'BLE.PERIPHERAL.Receive',
-    {
-      nextTick: true,
-    },
   )
   async onPeripheralReceive(state: BLEPeripheralStateReceive) {
     this.log.info('BLE Peripheral Receive', state);
@@ -55,9 +52,6 @@ export class BLEEventProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State',
-    {
-      nextTick: true,
-    },
   )
   async onRequestDeviceState(
     device: GoveeDevice,

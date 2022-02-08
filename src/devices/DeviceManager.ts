@@ -29,9 +29,6 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.RECEIVED.Settings',
-    {
-      nextTick: true,
-    },
   )
   async onDeviceSetting(deviceSettings: DeviceConfig) {
     if (!deviceSettings) {
@@ -61,9 +58,6 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.RECEIVED.State',
-    {
-      nextTick: true,
-    },
   )
   async onDeviceState(deviceState: DeviceState) {
     if (!this.devices.has(deviceState.deviceId)) {
@@ -82,9 +76,6 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Command',
-    {
-      nextTick: true,
-    },
   )
   async onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
     const device = this.devices.get(deviceTransition.deviceId);
@@ -103,9 +94,6 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.Poll',
-    {
-      nextTick: true,
-    },
   )
   async pollDeviceStates(
     device?: GoveeDevice,
