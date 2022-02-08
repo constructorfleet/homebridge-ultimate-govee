@@ -152,10 +152,10 @@ export class BLEClient
       );
 
       if (controlCharacteristic && reportCharacteristic) {
-        await reportCharacteristic.subscribeAsync();
         for (let i = 0; i < peripheralCommand.commands.length; i++) {
           const command = peripheralCommand.commands[i];
           reportCharacteristic.removeAllListeners();
+          await reportCharacteristic.subscribeAsync();
           await controlCharacteristic.writeAsync(
             Buffer.of(...command),
             true,
