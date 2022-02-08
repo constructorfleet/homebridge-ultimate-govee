@@ -1,12 +1,14 @@
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {Event} from '../core/events/Event';
 
-export type Constructor<TypeClass> = new (...args) => TypeClass;
+type Callback<A> = (args: A) => void;
 
-export type StandardEnum<T> = {
-  [id: string]: T | string;
-  [nu: number]: string;
-};
+export const safePromisify = <T, A>(fn: (args: T, cb: Callback<A>) => void): ((args: T) => Promise<A>) =>
+  (args: T) => new Promise((resolve) => {
+    fn(args, (callbackArgs) => {
+      resolve(callbackArgs);
+    });
+  });
 
 export abstract class Emitter {
   protected constructor(
