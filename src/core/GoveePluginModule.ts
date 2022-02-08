@@ -4,7 +4,6 @@ import {DeviceManager} from '../devices/DeviceManager';
 import {RestClient} from '../data/clients/RestClient';
 import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../util/const';
 import path from 'path';
-import {machineIdSync} from 'node-machine-id';
 import {humidifierProviders} from '../devices/GoveeHumidifier';
 import {purifierProviders} from '../devices/GoveeAirPurifier';
 import {ConfigurationModule} from '../config/ConfigurationModule';
@@ -19,7 +18,8 @@ import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {BLEEventProcessor} from '../interactors/data/BLEEventProcessor';
 import {IoTEventProcessor} from '../interactors/data/IoTEventProcessor';
 import {RestEventProcessor} from '../interactors/data/RestEventProcessor';
-
+import {Md5} from 'ts-md5';
+import {v4 as uuidv4} from 'uuid';
 
 @Module({})
 export class GoveePluginModule {
@@ -85,7 +85,11 @@ export class GoveePluginModule {
         },
         {
           provide: GOVEE_CLIENT_ID,
-          useValue: machineIdSync().slice(0, 10),
+          useValue:
+            Md5.hashStr(
+              Buffer.from(uuidv4() + (new Date().getMilliseconds()).toString()).toString('utf8'),
+              false,
+            ),
         },
         ...purifierProviders,
         ...humidifierProviders,
