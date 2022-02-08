@@ -4,7 +4,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {LoggingService} from '../../logging/LoggingService';
 import noble, {Peripheral} from '@abandonware/noble';
 import {BLEConnectionStateEvent, BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
-import {sleep} from '../../util/types';
+import {safePromisify} from '../../util/types';
 import {Lock} from 'async-await-mutex-lock';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {
@@ -152,31 +152,41 @@ export class BLEClient
       );
 
       if (controlCharacteristic && reportCharacteristic) {
-        reportCharacteristic.removeAllListeners();
-        reportCharacteristic.on(
-          'data',
-          this.onDataCallback(
-            new BLEDeviceIdentification(
-              peripheralCommand.bleAddress,
-              peripheralCommand.deviceId,
-            ),
-          ),
-        );
         await reportCharacteristic.subscribeAsync();
-
         for (let i = 0; i < peripheralCommand.commands.length; i++) {
           const command = peripheralCommand.commands[i];
-          await this.acquireLock(
-            'BLEClient',
-            'Sending',
-            peripheralAddress,
-            command,
-          );
+          reportCharacteristic.removeAllListeners();
           await controlCharacteristic.writeAsync(
             Buffer.of(...command),
             true,
           );
-          await sleep(200);
+          const data = await safePromisify<string, Buffer>(reportCharacteristic.on)('data');
+          this.log.info(
+            'BLEClient',
+            'OnDataCallback',
+            data,
+          );
+          if (data.length > 0) {
+            this.emit(
+              new BLEPeripheralReceiveEvent(
+                new BLEPeripheralStateReceive(
+                  peripheralCommand.bleAddress,
+                  peripheralCommand.deviceId,
+                  bufferToHex(data),
+                ),
+              ),
+            );
+          }
+          // await reportCharacteristic.on(
+          //   'data',
+          //   this.onDataCallback(
+          //     new BLEDeviceIdentification(
+          //       peripheralCommand.bleAddress,
+          //       peripheralCommand.deviceId,
+          //     ),
+          //   ),
+          // );
+          // await sleep(200);
         }
       }
       await peripheral.disconnectAsync();
@@ -223,35 +233,27 @@ export class BLEClient
       'ReleaseLock',
       ...log,
     );
-    await this.startScanning();
     this.lock.release();
+    await this.startScanning();
   }
 
   onDataCallback = (deviceIdentification: BLEDeviceIdentification) => (data: Buffer) => {
-    this.releaseLock(
-      'PeripheralWrite',
+    this.log.info(
       'BLEClient',
-      'onDataCallback',
-      deviceIdentification.deviceId,
-      data.toString(),
-    ).then(() => {
-      this.log.info(
-        'BLEClient',
-        'OnDataCallback',
-        data,
-      );
-      if (data.length > 0) {
-        this.emit(
-          new BLEPeripheralReceiveEvent(
-            new BLEPeripheralStateReceive(
-              deviceIdentification.bleAddress,
-              deviceIdentification.deviceId,
-              bufferToHex(data),
-            ),
+      'OnDataCallback',
+      data,
+    );
+    if (data.length > 0) {
+      this.emit(
+        new BLEPeripheralReceiveEvent(
+          new BLEPeripheralStateReceive(
+            deviceIdentification.bleAddress,
+            deviceIdentification.deviceId,
+            bufferToHex(data),
           ),
-        );
-      }
-    });
+        ),
+      );
+    }
   };
 }
 
