@@ -1,10 +1,10 @@
 import {Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {Emitter} from '../util/types';
+import {Emitter, sleep} from '../util/types';
 import {ModuleRef} from '@nestjs/core';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
-import {DeviceStateRequest} from '../core/events/devices/DeviceRequests';
+import {DevicePollRequest, DeviceStateRequest} from '../core/events/devices/DeviceRequests';
 import {GoveeDevice} from './GoveeDevice';
 import {DeviceDiscoveredEvent} from '../core/events/devices/DeviceDiscovered';
 import {DeviceUpdatedEvent} from '../core/events/devices/DeviceUpdated';
@@ -22,7 +22,9 @@ export class DeviceManager extends Emitter {
     public moduleRef: ModuleRef,
   ) {
     super(eventEmitter);
-    this.pollDeviceStates();
+    this.emit(
+      new DevicePollRequest(),
+    );
   }
 
   @OnEvent(
@@ -90,9 +92,12 @@ export class DeviceManager extends Emitter {
     );
   }
 
-  pollDeviceStates = (
+  @OnEvent(
+    'DEVICE.REQUEST.Poll',
+  )
+  async pollDeviceStates(
     device?: GoveeDevice,
-  ): void => {
+  ) {
     (
       device
         ? [device]
@@ -107,10 +112,10 @@ export class DeviceManager extends Emitter {
       );
     if (!device) {
       this.log.debug('Setting timeout');
-      setTimeout(
-        () => this.pollDeviceStates,
-        10 * 1000,
+      await sleep(10000);
+      this.emit(
+        new DevicePollRequest(),
       );
     }
-  };
+  }
 }

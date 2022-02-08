@@ -17,6 +17,19 @@ export class DeviceSettingRequest
   }
 }
 
+export class DevicePollRequest
+  extends DeviceRequestEvent<GoveeDevice | undefined> {
+
+  constructor(
+    eventData?: GoveeDevice,
+  ) {
+    super(
+      'Poll',
+      eventData,
+    );
+  }
+}
+
 export class DeviceStateRequest
   extends DeviceRequestEvent<GoveeDevice> {
 
