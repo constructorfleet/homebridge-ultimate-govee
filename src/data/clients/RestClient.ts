@@ -92,7 +92,7 @@ export class RestClient
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
       BaseHeaders(
         this.clientId,
-        BASE_GOVEE_APP_URL,
+        GOVEE_APP_VERSION,
       ),
       loginRequest(
         this.config.username,
