@@ -180,7 +180,10 @@ export class BLEClient
   async startScanning() {
     if (!this.isScanning && this.isOnline) {
       this.isScanning = true;
-      await noble.startScanningAsync();
+      await noble.startScanningAsync(
+        [],
+        false,
+      );
     }
   }
 
