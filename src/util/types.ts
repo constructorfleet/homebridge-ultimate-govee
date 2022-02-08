@@ -1,15 +1,6 @@
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {Event} from '../core/events/Event';
 
-type Callback<A> = (args: A) => void;
-
-export const safePromisify = <T, A>(fn: (args: T, cb: Callback<A>) => void): ((args: T) => Promise<A>) =>
-  (args: T) => new Promise((resolve) => {
-    fn(args, (callbackArgs) => {
-      resolve(callbackArgs);
-    });
-  });
-
 export abstract class Emitter {
   protected constructor(
     private eventEmitter: EventEmitter2,
