@@ -38,9 +38,6 @@ class Request<PayloadType extends BaseRequest,
   }
 
   post(): Promise<AxiosResponse<ResponseType>> {
-    console.log(this.payload);
-    console.log(this.headers);
-    console.log(this.url);
     return axios.post(
       this.url,
       this.payload,
