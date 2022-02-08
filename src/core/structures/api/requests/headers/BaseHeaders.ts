@@ -6,6 +6,7 @@ export function BaseHeaders(
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'clientType': '0',
+    'clientId': clientId,
     'appVersion': appVersion,
   };
 }
