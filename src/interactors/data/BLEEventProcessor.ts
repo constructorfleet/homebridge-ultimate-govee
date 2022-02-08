@@ -13,13 +13,10 @@ import {
 } from '../../core/events/dataClients/ble/BLEPeripheral';
 import {getCommandCodes} from '../../util/opCodeUtils';
 import {REPORT_IDENTIFIER} from '../../util/const';
-import {BLEDeviceIdentification} from '../../core/events/dataClients/ble/BLEEvent';
 
 @Injectable()
 export class BLEEventProcessor extends Emitter {
   private bleConnected = false;
-  private readonly discoveredPeripherals: string[] = [];
-  private readonly stateRequests: Map<string, GoveeDevice> = new Map<string, GoveeDevice>();
 
   constructor(
     private readonly log: LoggingService,
@@ -36,22 +33,6 @@ export class BLEEventProcessor extends Emitter {
   )
   onBLEConnection(connection: ConnectionState) {
     this.bleConnected = connection === ConnectionState.Connected;
-  }
-
-  @OnEvent(
-    'BLE.PERIPHERAL.Discovered',
-    {
-      async: true,
-    },
-  )
-  onBLEPeripheralConnection(deviceIdentification: BLEDeviceIdentification) {
-    this.discoveredPeripherals.push(deviceIdentification.bleAddress.toLowerCase());
-    const device = this.stateRequests.get(deviceIdentification.deviceId);
-    if (device) {
-      this.log.info('BLE Peripheral Discovered', 'Requesting State', device);
-      this.stateRequests.delete(deviceIdentification.deviceId);
-      this.onRequestDeviceState(device);
-    }
   }
 
   @OnEvent(
@@ -79,28 +60,25 @@ export class BLEEventProcessor extends Emitter {
     'DEVICE.REQUEST.State',
     {
       async: true,
+      nextTick: true,
     },
   )
   onRequestDeviceState(
     device: GoveeDevice,
   ) {
-    if (!device.bleAddress) {
+    const bleAddress = device.bleAddress?.toLowerCase();
+    if (!bleAddress) {
       return;
     }
-    if (!this.bleConnected) {
-      this.log.info('RequestDeviceState', 'BLE is not connected');
-      return;
-    }
-    if (!this.discoveredPeripherals.includes(device.bleAddress.toLowerCase())) {
-      this.log.info('RequestDeviceState', `BLE Peripheral ${device.deviceId} is not connected`);
-      this.stateRequests.set(device.deviceId, device);
-      return;
-    }
-    this.log.info('RequestDeviceState', 'codes', device.deviceStatusCodes);
+    this.log.info(
+      'RequestDeviceState',
+      'codes',
+      device.deviceStatusCodes,
+    );
     this.emit(
       new BLEPeripheralSendEvent(
         new BLEPeripheralCommandSend(
-          device.bleAddress!.toLowerCase(),
+          bleAddress,
           device.deviceId,
           device.deviceStatusCodes.map(
             (statusCodes) =>

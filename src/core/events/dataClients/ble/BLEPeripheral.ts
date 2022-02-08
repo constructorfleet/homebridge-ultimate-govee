@@ -1,15 +1,4 @@
 import {BLEDeviceIdentification, BLEEvent} from './BLEEvent';
-import {ConnectionState} from '../DataClientEvent';
-
-export class BLEPeripheralConnectionState extends BLEDeviceIdentification {
-  constructor(
-    bleAddress: string,
-    deviceId: string,
-    public connectionState: ConnectionState,
-  ) {
-    super(bleAddress.toLowerCase(), deviceId);
-  }
-}
 
 export class BLEPeripheralStateReceive extends BLEDeviceIdentification {
   constructor(
@@ -25,9 +14,12 @@ export class BLEPeripheralCommandSend extends BLEDeviceIdentification {
   constructor(
     bleAddress: string,
     deviceId: string,
-    public state: number[][],
+    public commands: number[][],
   ) {
-    super(bleAddress.toLowerCase(), deviceId);
+    super(
+      bleAddress.toLowerCase(),
+      deviceId,
+    );
   }
 }
 
@@ -40,28 +32,6 @@ export abstract class BLEPeripheralEvent<EventDataType>
   ) {
     super(
       `PERIPHERAL.${eventName}`,
-      eventData,
-    );
-  }
-}
-
-export class BLEPeripheralDiscoveredEvent
-  extends BLEPeripheralEvent<BLEDeviceIdentification> {
-
-  constructor(eventData: BLEDeviceIdentification) {
-    super(
-      'Discovered',
-      eventData,
-    );
-  }
-}
-
-export class BLEPeripheralConnectionEvent
-  extends BLEPeripheralEvent<BLEPeripheralConnectionState> {
-
-  constructor(eventData: BLEPeripheralConnectionState) {
-    super(
-      'Connection',
       eventData,
     );
   }
