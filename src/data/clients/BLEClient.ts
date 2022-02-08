@@ -36,6 +36,7 @@ export class BLEClient
   private isOnline = false;
   private lock = new Lock<void>();
   connectedDevice?: BLEDeviceIdentification = undefined;
+  remainingCommands = 0;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -143,7 +144,7 @@ export class BLEClient
           peripheralCommand.bleAddress,
           peripheralCommand.deviceId,
         );
-
+        this.remainingCommands = peripheralCommand.commands.length;
         for (let i = 0; i < peripheralCommand.commands.length; i++) {
           const command = peripheralCommand.commands[i];
           reportCharacteristic.removeAllListeners();
@@ -159,6 +160,10 @@ export class BLEClient
           );
           await sleep(200);
         }
+        for (let i = 0; i < 10 && this.remainingCommands > 0; i++) {
+          await sleep(200);
+        }
+        this.remainingCommands = 0;
       }
       await peripheral.disconnectAsync();
     } finally {
@@ -212,6 +217,7 @@ export class BLEClient
   }
 
   onDataCallback = (data: Buffer) => {
+    this.remainingCommands--;
     this.log.info(
       'BLEClient',
       'OnDataCallback',
