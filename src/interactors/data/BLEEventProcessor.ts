@@ -27,21 +27,15 @@ export class BLEEventProcessor extends Emitter {
 
   @OnEvent(
     'BLE.CONNECTION',
-    {
-      async: true,
-    },
   )
-  onBLEConnection(connection: ConnectionState) {
+  async onBLEConnection(connection: ConnectionState) {
     this.bleConnected = connection === ConnectionState.Connected;
   }
 
   @OnEvent(
     'BLE.PERIPHERAL.Receive',
-    {
-      async: true,
-    },
   )
-  onPeripheralReceive(state: BLEPeripheralStateReceive) {
+  async onPeripheralReceive(state: BLEPeripheralStateReceive) {
     this.log.info('BLE Peripheral Receive', state);
     try {
       const devState = toDeviceState(
@@ -58,12 +52,8 @@ export class BLEEventProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State',
-    {
-      async: true,
-      nextTick: true,
-    },
   )
-  onRequestDeviceState(
+  async onRequestDeviceState(
     device: GoveeDevice,
   ) {
     const bleAddress = device.bleAddress?.toLowerCase();

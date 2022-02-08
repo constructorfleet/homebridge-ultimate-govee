@@ -83,10 +83,6 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Unsubscribe',
-    {
-      async: true,
-      nextTick: true,
-    },
   )
   async unsubscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -109,10 +105,6 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Subscribe',
-    {
-      async: true,
-      nextTick: true,
-    },
   )
   async subscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -139,12 +131,8 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Publish',
-    {
-      async: true,
-      nextTick: true,
-    },
   )
-  publishTo(message: IoTEventData) {
+  async publishTo(message: IoTEventData) {
     if (!message.topic) {
       this.log.info('No topic to publish to');
       return;

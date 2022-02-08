@@ -27,11 +27,8 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.RECEIVED.Settings',
-    {
-      async: true,
-    },
   )
-  onDeviceSetting(deviceSettings: DeviceConfig) {
+  async onDeviceSetting(deviceSettings: DeviceConfig) {
     if (!deviceSettings) {
       this.log.info('No device settings');
       return;
@@ -59,11 +56,8 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.RECEIVED.State',
-    {
-      async: true,
-    },
   )
-  onDeviceState(deviceState: DeviceState) {
+  async onDeviceState(deviceState: DeviceState) {
     if (!this.devices.has(deviceState.deviceId)) {
       this.log.info('Unknown Device');
       return;
@@ -80,11 +74,8 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Command',
-    {
-      async: true,
-    },
   )
-  onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
+  async onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
     const device = this.devices.get(deviceTransition.deviceId);
     if (!device) {
       this.log.info('Unknown Device');

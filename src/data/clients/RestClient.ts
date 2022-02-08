@@ -45,11 +45,8 @@ export class RestClient
 
   @OnEvent(
     'REST.AUTHENTICATION.Authenticate',
-    {
-      async: true,
-    },
   )
-  login(requestDevices = false): Promise<OAuthData | ApiResponseStatus> {
+  async login(requestDevices = false): Promise<OAuthData | ApiResponseStatus> {
     if (this.isTokenValid(this.persist.oauthData?.token)) {
       const oauthData = this.persist.oauthData!;
       this.emit(
@@ -178,11 +175,8 @@ export class RestClient
 
   @OnEvent(
     'REST.REQUEST.Devices',
-    {
-      async: true,
-    },
   )
-  getDevices(): Promise<void> {
+  async getDevices(): Promise<void> {
     return this.login(false)
       .then((res) => {
         const authData = res as OAuthData;

@@ -28,11 +28,8 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'IOT.CONNECTION',
-    {
-      async: true,
-    },
   )
-  onIoTConnection(connection: ConnectionState) {
+  async onIoTConnection(connection: ConnectionState) {
     this.iotConnected = connection === ConnectionState.Connected;
     const accountTopic = this.persist.oauthData?.accountIoTTopic;
     if (connection !== ConnectionState.Connected || !accountTopic) {
@@ -45,11 +42,8 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'IOT.Received',
-    {
-      async: true,
-    },
   )
-  onIoTMessage(message: IoTEventData) {
+  async onIoTMessage(message: IoTEventData) {
     try {
       const acctMessage = plainToInstance(
         IoTAccountMessage,
@@ -66,11 +60,8 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State',
-    {
-      async: true,
-    },
   )
-  onRequestDeviceState(
+  async onRequestDeviceState(
     device: GoveeDevice,
   ) {
     if (!this.iotConnected) {

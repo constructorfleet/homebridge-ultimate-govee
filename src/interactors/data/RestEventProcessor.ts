@@ -20,11 +20,8 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.AUTHENTICATION.Failure',
-    {
-      async: true,
-    },
   )
-  onAuthenticationFailure(response: ApiResponseStatus) {
+  async onAuthenticationFailure(response: ApiResponseStatus) {
     this.log.error('Unexpected error authenticating with API', response.message);
     if (response.statusCode >= 500) {
       this.log.error('Retrying authentication in 1 minute due to server-side error.');
@@ -39,11 +36,8 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.RESPONSE.DeviceList',
-    {
-      async: true,
-    },
   )
-  onDeviceListReceived(payload: AppDeviceListResponse) {
+  async onDeviceListReceived(payload: AppDeviceListResponse) {
     payload.devices
       .map(
         (device) =>

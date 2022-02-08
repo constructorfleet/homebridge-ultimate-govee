@@ -80,7 +80,7 @@ export class BLEClient
     noble.on(
       'scanStop',
       async () => {
-        await this.startScanning();
+        this.isScanning = false;
         this.log.debug(
           'BLEClient',
           'ScanStop',
@@ -114,27 +114,17 @@ export class BLEClient
 
   @OnEvent(
     'BLE.PERIPHERAL.Send',
-    {
-      async: true,
-      nextTick: true,
-    },
   )
   async onSendCommand(peripheralCommand: BLEPeripheralCommandSend) {
-    this.log.info(
-      'BLEClient',
-      'OnSendCommand',
-      peripheralCommand,
-    );
     const peripheralAddress = peripheralCommand.bleAddress.toLowerCase();
     const peripheral = this.peripherals.get(peripheralAddress);
     if (!peripheral) {
       return;
     }
 
-
     await this.acquireLock(
       'OnSendCommand',
-      peripheralCommand.bleAddress,
+      peripheralCommand,
     );
 
     if (peripheral.state !== 'connected') {
@@ -218,6 +208,7 @@ export class BLEClient
   async releaseLock(
     ...log: string[]
   ) {
+    await this.startScanning();
     this.log.info(
       'BLEClient',
       'ReleaseLock',

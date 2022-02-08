@@ -43,11 +43,8 @@ export class AccessoryManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Discovered',
-    {
-      async: true,
-    },
   )
-  onDeviceDiscovered(device: GoveeDevice) {
+  async onDeviceDiscovered(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
     const accessory =
       this.accessories.get(deviceUUID)
@@ -76,11 +73,8 @@ export class AccessoryManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Updated',
-    {
-      async: true,
-    },
   )
-  onDeviceUpdated(device: GoveeDevice) {
+  async onDeviceUpdated(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
     if (!this.accessories.has(deviceUUID)) {
       return;
