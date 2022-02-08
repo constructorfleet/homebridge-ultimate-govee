@@ -19,6 +19,15 @@ export abstract class Emitter {
       event.eventData,
     );
   }
+
+  public async emitAsync<EventData, EventType extends Event<EventData>>(
+    event: EventType,
+  ) {
+    await this.eventEmitter.emitAsync(
+      event.eventName,
+      event.eventData,
+    );
+  }
 }
 
 export async function sleep(ms: number) {

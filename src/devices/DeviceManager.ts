@@ -94,6 +94,9 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.Poll',
+    {
+      nextTick: true,
+    },
   )
   async pollDeviceStates(
     device?: GoveeDevice,
@@ -112,8 +115,8 @@ export class DeviceManager extends Emitter {
       );
     if (!device) {
       this.log.debug('Setting timeout');
-      await sleep(10000);
-      this.emit(
+      await sleep(1000);
+      await this.emitAsync(
         new DevicePollRequest(),
       );
     }
