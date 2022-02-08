@@ -114,6 +114,9 @@ export class BLEClient
 
   @OnEvent(
     'BLE.PERIPHERAL.Send',
+    {
+      nextTick: true,
+    },
   )
   async onSendCommand(peripheralCommand: BLEPeripheralCommandSend) {
     const peripheralAddress = peripheralCommand.bleAddress.toLowerCase();
