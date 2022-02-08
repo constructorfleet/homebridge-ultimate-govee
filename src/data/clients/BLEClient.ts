@@ -80,7 +80,7 @@ export class BLEClient
     noble.on(
       'scanStop',
       async () => {
-        this.isScanning = false;
+        await this.startScanning();
         this.log.debug(
           'BLEClient',
           'ScanStop',
@@ -91,16 +91,23 @@ export class BLEClient
     noble.on(
       'discover',
       async (peripheral: Peripheral) => {
-        const bleAddress = peripheral.address.toLowerCase();
-        const model = BLEClient.parsePeripheralModel(peripheral);
-        if (!model || this.peripherals.has(bleAddress)) {
-          return;
-        }
-
-        this.peripherals.set(
-          bleAddress,
-          peripheral,
+        await this.acquireLock(
+          'OnDiscover',
         );
+        try {
+          const bleAddress = peripheral.address.toLowerCase();
+          const model = BLEClient.parsePeripheralModel(peripheral);
+          if (model && !this.peripherals.has(bleAddress)) {
+            this.peripherals.set(
+              bleAddress,
+              peripheral,
+            );
+          }
+        } finally {
+          await this.releaseLock(
+            'OnDiscover',
+          );
+        }
       },
     );
   }
@@ -126,7 +133,6 @@ export class BLEClient
 
 
     await this.acquireLock(
-      'BLEClient',
       'OnSendCommand',
       peripheralCommand.bleAddress,
     );
@@ -177,7 +183,6 @@ export class BLEClient
     } finally {
       this.connectedDevice = undefined;
       await this.releaseLock(
-        'BLEClient',
         'OnSendCommand',
         peripheralCommand.bleAddress,
       );
@@ -219,7 +224,6 @@ export class BLEClient
       ...log,
     );
     this.lock.release();
-    await this.startScanning();
   }
 
   onDataCallback = (data: Buffer) => {
