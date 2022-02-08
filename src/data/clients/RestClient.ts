@@ -55,8 +55,8 @@ export class RestClient
       this.emit(
         new IoTSubscribeToEvent(oauthData.accountIoTTopic || ''),
       );
+      this.emit(new RestAuthenticatedEvent(oauthData));
       if (requestDevices) {
-        this.emit(new RestAuthenticatedEvent(oauthData));
         this.emit(new RestRequestDevices());
       }
       return Promise.resolve(oauthData);
@@ -220,6 +220,12 @@ export class RestClient
     }
     try {
       const jwt = jwtDecode<JWTPayload>(token, {});
+      this.log.debug(
+        'RestClient',
+        'isTokenValid',
+        token,
+        jwt,
+      );
       if (!jwt.exp || !jwt.iat) {
         return false;
       }
