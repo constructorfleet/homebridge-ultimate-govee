@@ -11,15 +11,11 @@ export const uint8ToHex =
       .toString('hex')
       .replace(/(.{2})/g, '$1 ');
 
-export const toUint8Array =
-  (buffer: ArrayBuffer): Uint8Array =>
-    new Uint8Array(buffer);
-
 export const base64ToHex =
   (b64String: string): number[] =>
     hexStringToArray(
       uint8ToHex(
-        toUint8Array(
+        new Uint8Array(
           decode(b64String),
         ),
       ),
@@ -29,7 +25,7 @@ export const bufferToHex =
   (buffer: Buffer): number[] =>
     hexStringToArray(
       uint8ToHex(
-        toUint8Array(
+        new Uint8Array(
           buffer,
         ),
       ),
