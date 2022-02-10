@@ -3,7 +3,6 @@ import {BaseHeaders} from '../../core/structures/api/requests/headers/BaseHeader
 import {loginRequest, LoginRequest} from '../../core/structures/api/requests/payloads/LoginRequest';
 import {LoginResponse} from '../../core/structures/api/responses/payloads/LoginResponse';
 import {GoveeClient} from './GoveeClient';
-import {GOVEE_CLIENT_ID} from '../../util/const';
 import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
@@ -20,6 +19,7 @@ import {BaseRequest} from '../../core/structures/api/requests/payloads/BaseReque
 import {AppDeviceListResponse} from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
 import {AuthenticatedHeader} from '../../core/structures/api/requests/headers/AuthenticatedHeader';
 import {RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
+import {GOVEE_CLIENT_ID} from '../../util/const';
 
 const GOVEE_APP_VERSION = '3.7.0';
 const BASE_GOVEE_APP_URL = 'https://app2.govee.com';
@@ -30,14 +30,18 @@ const BASE_GOVEE_APP_DEVICE_URL = `${BASE_GOVEE_APP_URL}/device/rest/devices/v1`
 export class RestClient
   extends GoveeClient {
 
+  private readonly clientId: string;
+
   constructor(
     eventEmitter: EventEmitter2,
     private config: ConfigurationService,
     private persist: PersistService,
     private readonly log: LoggingService,
-    @Inject(GOVEE_CLIENT_ID) private clientId: string,
+    @Inject(GOVEE_CLIENT_ID) clientId: string,
   ) {
     super(eventEmitter);
+    this.clientId =
+      this.persist.oauthData?.clientId || clientId;
   }
 
   @OnEvent(
@@ -46,6 +50,8 @@ export class RestClient
   async login(requestDevices = false): Promise<OAuthData | undefined> {
     if (this.isTokenValid(this.persist.oauthData?.token)) {
       const oauthData = this.persist.oauthData!;
+      this.persist.oauthData = oauthData;
+
       await this.emitAsync(
         new IoTSubscribeToEvent(oauthData.accountIoTTopic || ''),
       );
@@ -53,14 +59,17 @@ export class RestClient
       if (requestDevices) {
         this.emit(new RestRequestDevices());
       }
-      return Promise.resolve(oauthData);
+      return oauthData;
     }
 
     try {
       const authData = await this.authenticate();
-      await this.emitAsync(
-        new IoTSubscribeToEvent(authData?.accountIoTTopic || ''),
-      );
+
+      if (authData?.accountIoTTopic) {
+        await this.emitAsync(
+          new IoTSubscribeToEvent(authData.accountIoTTopic),
+        );
+      }
       if (requestDevices) {
         await this.emitAsync(new RestAuthenticatedEvent(authData));
         await this.emit(new RestRequestDevices());
@@ -108,10 +117,11 @@ export class RestClient
       token: client.token,
       accountIoTTopic: client.topic,
       refreshToken: client.refreshToken,
+      clientId: this.clientId,
     };
 
     this.persist.oauthData = oauthData;
-    this.log.info('RestClient', 'authenticate', oauthData);
+    this.log.debug('RestClient', 'authenticate', oauthData);
     return oauthData;
   }
 
@@ -162,7 +172,6 @@ export class RestClient
   async getDevices(): Promise<void> {
     try {
       const authData = await this.login(false);
-      this.log.info('RestClient', 'getDevices', authData);
       if (!authData) {
         return;
       }
@@ -175,7 +184,6 @@ export class RestClient
           authData.token || '',
         ),
       ).post();
-      this.log.info('RestClient', 'getDevices', res);
       await this.emitAsync(
         new RestResponseDeviceList(res.data),
       );
@@ -184,19 +192,21 @@ export class RestClient
     }
   }
 
-  private isTokenValid(token?: string): boolean {
+  private decodeJWT(token?: string): JWTPayload | undefined {
     if (!token) {
-      return false;
+      return undefined;
     }
     try {
-      const jwt = jwtDecode<JWTPayload>(token, {});
-      this.log.debug(
-        'RestClient',
-        'isTokenValid',
-        token,
-        jwt,
-      );
-      if (!jwt.exp || !jwt.iat) {
+      return jwtDecode<JWTPayload>(token, {});
+    } catch (error) {
+      this.log.error('RestClient', 'decodeJWT', error);
+    }
+  }
+
+  private isTokenValid(token?: string): boolean {
+    const jwt = this.decodeJWT(token);
+    try {
+      if (!jwt?.exp || !jwt?.iat) {
         return false;
       }
       const expirationDateUTC = new Date(1970, 1, 1).setSeconds(jwt.exp);

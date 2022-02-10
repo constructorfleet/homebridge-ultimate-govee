@@ -1,5 +1,6 @@
 export interface AuthenticationData {
   readonly accountIoTTopic?: string;
+  readonly clientId: string;
 }
 
 export interface TokenAuthData extends AuthenticationData {
