@@ -42,6 +42,11 @@ export class IoTClient
       'connect',
       async () => {
         if (!this.connected) {
+          this.log.info(
+            'IoTClient',
+            'onConnect',
+            'Connection Connected',
+          );
           this.connected = true;
           await this.emitAsync(
             new IoTConnectionStateEvent(ConnectionState.Connected),
@@ -53,6 +58,11 @@ export class IoTClient
     this.awsIOTDevice.on(
       'reconnect',
       async () => {
+        this.log.info(
+          'IoTClient',
+          'onReconnect',
+          'Connection Reconnected',
+        );
         if (!this.connected) {
           this.connected = true;
           await this.emitAsync(
@@ -65,14 +75,36 @@ export class IoTClient
     this.awsIOTDevice.on(
       'error',
       (error: Error | string) => {
-        this.log.error('ERROR', error);
+        this.log.error(
+          'IoTClient',
+          'onError',
+          error,
+        );
+      },
+    );
+    this.awsIOTDevice.on(
+      'offline',
+      async () => {
+        this.log.info(
+          'IoTClient',
+          'onOffline',
+          'Connection Offline',
+        );
+        if (this.connected) {
+          this.connected = false;
+          await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
+        }
       },
     );
 
     this.awsIOTDevice.on(
       'close',
       async () => {
-        this.log.info('CLOSED');
+        this.log.info(
+          'IoTClient',
+          'onClose',
+          'Connection Closed',
+        );
         if (this.connected) {
           this.connected = false;
           await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
@@ -146,10 +178,19 @@ export class IoTClient
   )
   async publishTo(message: IoTEventData) {
     if (!message.topic) {
-      this.log.info('No topic to publish to');
+      this.log.info(
+        'IoTClient',
+        'publishTo',
+        'No topic to publish to',
+      );
       return;
     }
-    this.log.info('Publishing', message.topic, message.payload);
+    this.log.debug(
+      'IoTClient',
+      'publishTo',
+      message.topic,
+      message.payload,
+    );
     await promisify(this.awsIOTDevice.publish)(
       message.topic,
       message.payload,
