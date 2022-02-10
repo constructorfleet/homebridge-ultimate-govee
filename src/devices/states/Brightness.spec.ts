@@ -35,7 +35,7 @@ describe('BrightnessState', () => {
       testState.parse({
         deviceId: 'device',
         commands: [
-          [REPORT_IDENTIFIER, 5, 4, 100],
+          [REPORT_IDENTIFIER, 4, 100],
         ],
       });
       expect(testState.brightness).toBe(100);
@@ -57,9 +57,9 @@ describe('BrightnessState', () => {
   describe('brightnessChange', () => {
     it('returns opcode array', () => {
       testState.brightness = 22;
-      expect(testState.brightness).toStrictEqual(
+      expect(testState.brightnessChange).toStrictEqual(
         [
-          COMMAND_IDENTIFIER, 4, 25, 0, 0,
+          COMMAND_IDENTIFIER, 4, 22, 0, 0,
           0, 0, 0, 0, 0,
           0, 0, 0, 0, 0,
           0, 0, 0, 0, 33,
