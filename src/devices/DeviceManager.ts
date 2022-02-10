@@ -22,9 +22,6 @@ export class DeviceManager extends Emitter {
     public moduleRef: ModuleRef,
   ) {
     super(eventEmitter);
-    this.emit(
-      new DevicePollRequest(),
-    );
   }
 
   @OnEvent(
@@ -114,30 +111,28 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.Poll',
-    {
-      nextTick: true,
-    },
   )
   async pollDeviceStates(
-    device?: GoveeDevice,
+    device: GoveeDevice,
   ) {
-    const devices = device ? [device] : Array.from(this.devices.values());
-    for (let i = 0; i < devices.length; i++) {
-      await this.emitAsync(
-        new DeviceStateRequest(devices[i]),
-      );
-    }
+    this.log.debug(
+      'DeviceManager',
+      'pollDeviceStates',
+      device.deviceId,
+    );
+    await this.emitAsync(
+      new DeviceStateRequest(device),
+    );
 
-    if (!device) {
-      this.log.debug(
-        'DeviceManager',
-        'pollDeviceStates',
-        'Setting Poll Timeout',
-      );
-      await sleep(1000);
-      await this.emitAsync(
-        new DevicePollRequest(),
-      );
-    }
+    this.log.debug(
+      'DeviceManager',
+      'pollDeviceStates',
+      'Setting Poll Timeout',
+      device.deviceId,
+    );
+    await sleep(30000);
+    await this.emitAsync(
+      new DevicePollRequest(device),
+    );
   }
 }
