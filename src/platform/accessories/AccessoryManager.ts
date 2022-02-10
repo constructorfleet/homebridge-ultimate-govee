@@ -10,6 +10,7 @@ import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
+import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -27,18 +28,31 @@ export class AccessoryManager extends Emitter {
     super(eventEmitter);
   }
 
-  onAccessoryLoaded(
+  async onAccessoryLoaded(
     accessory: PlatformAccessory,
   ) {
     this.accessories.set(
       accessory.UUID,
       accessory,
     );
-    const device = accessory.context.device;
+    const device: GoveeDevice = accessory.context.device;
     this.informationService.initializeAccessory(accessory, device);
     this.humidifierService.initializeAccessory(accessory, device);
     this.purifierService.initializeAccessory(accessory, device);
     this.api.updatePlatformAccessories([accessory]);
+    await this.emitAsync(
+      new DeviceSettingsReceived({
+        deviceId: device.deviceId,
+        model: device.model,
+        pactCode: device.pactCode,
+        pactType: device.pactType,
+        hardwareVersion: device.hardwareVersion,
+        softwareVersion: device.softwareVersion,
+        bleAddress: device.bleAddress,
+        macAddress: device.macAddress,
+        name: accessory.displayName,
+      }),
+    );
   }
 
   @OnEvent(
