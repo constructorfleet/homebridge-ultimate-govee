@@ -56,7 +56,7 @@ implements DynamicPlatformPlugin {
         logger: console,
         abortOnError: false,
       },
-    ).then((context) => {
+    ).then(async (context) => {
       this.appContext = context;
       this.service = context.get(PlatformService);
       while (this.cachedAccessories.length) {
@@ -66,7 +66,7 @@ implements DynamicPlatformPlugin {
         }
       }
       if (this.loaded) {
-        this.service.discoverDevices();
+        await this.service.discoverDevices();
       }
     });
 
