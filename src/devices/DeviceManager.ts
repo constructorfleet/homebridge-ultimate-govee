@@ -36,9 +36,20 @@ export class DeviceManager extends Emitter {
       return;
     }
     if (!this.devices.has(deviceSettings.deviceId)) {
+      let deviceCtor;
       try {
         // @ts-ignore
-        const deviceCtor = this.moduleRef.get(deviceSettings.model)();
+        deviceCtor = this.moduleRef.get(deviceSettings.model)();
+      } catch (error) {
+        this.log.info(
+          'DeviceManager',
+          'onDeviceSettings',
+          'Unknown model',
+          deviceSettings.model,
+        );
+        return;
+      }
+      try {
         const device = deviceCtor(deviceSettings);
         this.devices.set(
           deviceSettings.deviceId,
@@ -61,7 +72,12 @@ export class DeviceManager extends Emitter {
   )
   async onDeviceState(deviceState: DeviceState) {
     if (!this.devices.has(deviceState.deviceId)) {
-      this.log.info('Unknown Device');
+      this.log.info(
+        'DeviceManager',
+        'onDeviceState',
+        'Unknown Device',
+        deviceState.deviceId,
+      );
       return;
     }
     const device = this.devices.get(deviceState.deviceId);
@@ -79,7 +95,12 @@ export class DeviceManager extends Emitter {
   async onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
     const device = this.devices.get(deviceTransition.deviceId);
     if (!device) {
-      this.log.info('Unknown Device');
+      this.log.info(
+        'DeviceManager',
+        'onDeviceCommand',
+        'Unknown Device',
+        deviceTransition.deviceId,
+      );
       return;
     }
     if (!device.iotTopic) {
@@ -108,7 +129,11 @@ export class DeviceManager extends Emitter {
     }
 
     if (!device) {
-      this.log.debug('Setting timeout');
+      this.log.debug(
+        'DeviceManager',
+        'pollDeviceStates',
+        'Setting Poll Timeout',
+      );
       await sleep(1000);
       await this.emitAsync(
         new DevicePollRequest(),
