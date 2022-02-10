@@ -105,6 +105,9 @@ export class BLEClient
 
   @OnEvent(
     'BLE.PERIPHERAL.Send',
+    {
+      nextTick: true,
+    },
   )
   async onSendCommand(peripheralCommand: BLEPeripheralCommandSend) {
     const peripheralAddress = peripheralCommand.bleAddress.toLowerCase();
@@ -119,6 +122,7 @@ export class BLEClient
     );
 
     if (peripheral.state !== 'connected') {
+      await this.stopScanning();
       await peripheral.connectAsync();
     }
 
@@ -192,7 +196,7 @@ export class BLEClient
   ) {
     await this.lock.acquire();
     await this.stopScanning();
-    this.log.info(
+    this.log.debug(
       'BLEClient',
       'AcquireLock',
       ...log,
@@ -203,7 +207,7 @@ export class BLEClient
     ...log: string[]
   ) {
     await this.startScanning();
-    this.log.info(
+    this.log.debug(
       'BLEClient',
       'ReleaseLock',
       ...log,
@@ -211,14 +215,14 @@ export class BLEClient
     this.lock.release();
   }
 
-  onDataCallback = (data: Buffer) => {
-    this.log.info(
+  onDataCallback = async (data: Buffer) => {
+    this.log.debug(
       'BLEClient',
       'OnDataCallback',
       data,
     );
     if (data.length > 0 && this.connectedDevice) {
-      this.emit(
+      await this.emitAsync(
         new BLEPeripheralReceiveEvent(
           new BLEPeripheralStateReceive(
             this.connectedDevice.bleAddress,

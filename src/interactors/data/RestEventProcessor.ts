@@ -38,7 +38,7 @@ export class RestEventProcessor extends Emitter {
     'REST.RESPONSE.DeviceList',
   )
   async onDeviceListReceived(payload: AppDeviceListResponse) {
-    payload.devices
+    const deviceConfigs = payload.devices
       .map(
         (device) =>
           plainToInstance(
@@ -46,12 +46,13 @@ export class RestEventProcessor extends Emitter {
             JSON.parse(device.deviceExt.deviceSettings),
           ) as AppDeviceSettingsResponse,
       )
-      .map(toDeviceConfig)
-      .forEach((device) =>
-        this.emit(
-          new DeviceSettingsReceived(device),
-        ),
+      .map(toDeviceConfig);
+
+    for (let i = 0; i < deviceConfigs.length; i++) {
+      await this.emitAsync(
+        new DeviceSettingsReceived(deviceConfigs[i]),
       );
+    }
   }
 }
 
