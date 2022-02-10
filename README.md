@@ -12,23 +12,26 @@ A Homebridge plugin to provide comprehensive and intuitive control of Govee devi
 ## Plugin Information
 
 - Supported Devices:
-  - Air Purifiers (H7121, H7122)
-    - Control Device Power
-    - Control Device Fan Speed (Low, Medium, High, Night-mode)
-    - Lock/Unlock the Physical Controls on the Device
-  - Humidifiers (H7141, H7142)
-    - Control Device Power
-    - Control Device Mist Output Level
-    - Reports Device Water Level
-    - Lock/Unlock the Physical Controls on the Device
+    - Air Purifiers (H7121, H7122)
+        - Control Device Power
+        - Control Device Fan Speed (Low, Medium, High, Night-mode)
+        - Lock/Unlock the Physical Controls on the Device
+    - Humidifiers (H7141, H7142)
+        - Control Device Power
+        - Control Device Mist Output Level
+        - Reports Device Water Level
+        - Lock/Unlock the Physical Controls on the Device
 - Required Information
-  - Govee Account Credentials (Username, Password)
+    - Govee Account Credentials (Username, Password)
 
 ## Setup
 
 ### Development Environment
 
-To develop Homebridge plugins you must have Node.js 14 or later installed, and a modern code editor such as [VS Code](https://code.visualstudio.com/). This plugin template uses [TypeScript](https://www.typescriptlang.org/) to make development easier and comes with pre-configured settings for [VS Code](https://code.visualstudio.com/) and ESLint. If you are using VS Code install these extensions:
+To develop Homebridge plugins you must have Node.js 14 or later installed, and a modern code editor such
+as [VS Code](https://code.visualstudio.com/). This plugin template uses [TypeScript](https://www.typescriptlang.org/) to
+make development easier and comes with pre-configured settings for [VS Code](https://code.visualstudio.com/) and ESLint.
+If you are using VS Code install these extensions:
 
 * [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 
@@ -42,7 +45,8 @@ npm install
 
 #### Build Plugin
 
-TypeScript needs to be compiled into JavaScript before it can run. The following command will compile the contents of your [`src`](./src) directory and put the resulting code into the `dist` folder.
+TypeScript needs to be compiled into JavaScript before it can run. The following command will compile the contents of
+your [`src`](./src) directory and put the resulting code into the `dist` folder.
 
 ```
 npm run build
@@ -64,13 +68,17 @@ homebridge -D
 
 #### Watch For Changes and Build Automatically
 
-If you want to have your code compile automatically as you make changes, and restart Homebridge automatically between changes you can run:
+If you want to have your code compile automatically as you make changes, and restart Homebridge automatically between
+changes you can run:
 
 ```
 npm run watch
 ```
 
-This will launch an instance of Homebridge in debug mode which will restart every time you make a change to the source code. It will load the config stored in the default location under `~/.homebridge`. You may need to stop other running instances of Homebridge while using this command to prevent conflicts. You can adjust the Homebridge startup command in the [`nodemon.json`](./nodemon.json) file.
+This will launch an instance of Homebridge in debug mode which will restart every time you make a change to the source
+code. It will load the config stored in the default location under `~/.homebridge`. You may need to stop other running
+instances of Homebridge while using this command to prevent conflicts. You can adjust the Homebridge startup command in
+the [`nodemon.json`](./nodemon.json) file.
 
 #### Versioning Your Plugin
 
@@ -95,13 +103,15 @@ npm version patch
 
 #### Publish Package
 
-When you are ready to publish your plugin to [npm](https://www.npmjs.com/), make sure you have removed the `private` attribute from the [`package.json`](./package.json) file then run:
+When you are ready to publish your plugin to [npm](https://www.npmjs.com/), make sure you have removed the `private`
+attribute from the [`package.json`](./package.json) file then run:
 
 ```
 npm publish
 ```
 
-If you are publishing a scoped plugin, i.e. `@username/homebridge-xxx` you will need to add `--access=public` to command the first time you publish.
+If you are publishing a scoped plugin, i.e. `@username/homebridge-xxx` you will need to add `--access=public` to command
+the first time you publish.
 
 #### Publishing Beta Versions
 
@@ -126,7 +136,13 @@ sudo npm install -g homebridge-example-plugin@beta
 #### Configuration Fields
 
 `username` - Your Govee Home username  
-`password` - Your Govee Home password  
+`password` - Your Govee Home password
+
+##### Connections
+
+`ble` - Enable Bluetooth LE connections  
+`iot` - Enable AWS IoT connections  
+`rest` - Enable REST API connection
 
 ##### Device Overrides
 
