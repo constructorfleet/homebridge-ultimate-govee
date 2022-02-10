@@ -187,6 +187,12 @@ export class RestClient
       await this.emitAsync(
         new RestResponseDeviceList(res.data),
       );
+      setTimeout(
+        () => this.emit(
+          new RestRequestDevices(),
+        ),
+        60 * 60 * 1000,
+      );
     } catch (error) {
       this.log.error('RestClient', 'getDevices', error);
     }

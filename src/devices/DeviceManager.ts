@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {Emitter, sleep} from '../util/types';
+import {Emitter} from '../util/types';
 import {ModuleRef} from '@nestjs/core';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
@@ -130,9 +130,11 @@ export class DeviceManager extends Emitter {
       'Setting Poll Timeout',
       device.deviceId,
     );
-    await sleep(30000);
-    await this.emitAsync(
-      new DevicePollRequest(device),
+    setTimeout(
+      () => this.emit(
+        new DevicePollRequest(device),
+      ),
+      30 * 1000,
     );
   }
 }

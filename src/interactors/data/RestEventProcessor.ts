@@ -1,7 +1,7 @@
 import {AppDeviceListResponse, AppDeviceSettingsResponse} from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
 import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
 import {Injectable} from '@nestjs/common';
-import {Emitter, sleep} from '../../util/types';
+import {Emitter} from '../../util/types';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {plainToInstance} from 'class-transformer';
 import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
@@ -25,8 +25,10 @@ export class RestEventProcessor extends Emitter {
     this.log.error('Unexpected error authenticating with API', response.message);
     if (response.statusCode >= 500) {
       this.log.error('Retrying authentication in 1 minute due to server-side error.');
-      await sleep(60000);
-      await this.emitAsync(new RestAuthenticateEvent());
+      setTimeout(
+        () => this.emit(new RestAuthenticateEvent()),
+        60 * 1000,
+      );
     } else if (response.statusCode >= 400) {
       this.log.error('Please verify your API credentials and restart the plugin.');
     }
@@ -36,7 +38,7 @@ export class RestEventProcessor extends Emitter {
     'REST.RESPONSE.DeviceList',
   )
   async onDeviceListReceived(payload: AppDeviceListResponse) {
-    payload.devices
+    const deviceConfigs = payload.devices
       .map(
         (device) =>
           plainToInstance(
@@ -44,12 +46,13 @@ export class RestEventProcessor extends Emitter {
             JSON.parse(device.deviceExt.deviceSettings),
           ) as AppDeviceSettingsResponse,
       )
-      .map(toDeviceConfig)
-      .forEach((device) =>
-        this.emit(
-          new DeviceSettingsReceived(device),
-        ),
+      .map(toDeviceConfig);
+
+    for (let i = 0; i < deviceConfigs.length; i++) {
+      await this.emitAsync(
+        new DeviceSettingsReceived(deviceConfigs[i]),
       );
+    }
   }
 }
 
