@@ -42,7 +42,7 @@ export class BLEEventProcessor extends Emitter {
         state.deviceId,
         state.state,
       );
-      this.emit(
+      await this.emitAsync(
         new DeviceStateReceived(devState),
       );
     } catch (err) {
@@ -65,7 +65,7 @@ export class BLEEventProcessor extends Emitter {
       'codes',
       device.deviceStatusCodes,
     );
-    this.emit(
+    await this.emitAsync(
       new BLEPeripheralSendEvent(
         new BLEPeripheralCommandSend(
           bleAddress,

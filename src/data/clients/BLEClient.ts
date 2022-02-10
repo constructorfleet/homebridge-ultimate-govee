@@ -119,6 +119,7 @@ export class BLEClient
     );
 
     if (peripheral.state !== 'connected') {
+      await this.stopScanning();
       await peripheral.connectAsync();
     }
 
@@ -211,14 +212,14 @@ export class BLEClient
     this.lock.release();
   }
 
-  onDataCallback = (data: Buffer) => {
+  onDataCallback = async (data: Buffer) => {
     this.log.info(
       'BLEClient',
       'OnDataCallback',
       data,
     );
     if (data.length > 0 && this.connectedDevice) {
-      this.emit(
+      await this.emitAsync(
         new BLEPeripheralReceiveEvent(
           new BLEPeripheralStateReceive(
             this.connectedDevice.bleAddress,

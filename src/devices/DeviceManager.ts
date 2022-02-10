@@ -44,10 +44,10 @@ export class DeviceManager extends Emitter {
           deviceSettings.deviceId,
           device,
         );
-        this.emit(
+        await this.emitAsync(
           new DeviceDiscoveredEvent(device),
         );
-        this.emit(
+        await this.emitAsync(
           new DevicePollRequest(device),
         );
       } catch (err) {
@@ -67,11 +67,10 @@ export class DeviceManager extends Emitter {
     const device = this.devices.get(deviceState.deviceId);
     if (device) {
       device.updateState(deviceState);
-      this.emit(
+      await this.emitAsync(
         new DeviceUpdatedEvent(device),
       );
     }
-    return;
   }
 
   @OnEvent(
@@ -101,18 +100,13 @@ export class DeviceManager extends Emitter {
   async pollDeviceStates(
     device?: GoveeDevice,
   ) {
-    (
-      device
-        ? [device]
-        : Array.from(this.devices.values())
-    )
-      ?.forEach(
-        (device) => {
-          this.emit(
-            new DeviceStateRequest(device),
-          );
-        },
+    const devices = device ? [device] : Array.from(this.devices.values());
+    for (let i = 0; i < devices.length; i++) {
+      await this.emitAsync(
+        new DeviceStateRequest(devices[i]),
       );
+    }
+
     if (!device) {
       this.log.debug('Setting timeout');
       await sleep(1000);

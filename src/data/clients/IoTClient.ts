@@ -40,10 +40,22 @@ export class IoTClient
 
     this.awsIOTDevice.on(
       'connect',
-      () => {
+      async () => {
         if (!this.connected) {
           this.connected = true;
-          this.emit(
+          await this.emitAsync(
+            new IoTConnectionStateEvent(ConnectionState.Connected),
+          );
+        }
+      },
+    );
+
+    this.awsIOTDevice.on(
+      'reconnect',
+      async () => {
+        if (!this.connected) {
+          this.connected = true;
+          await this.emitAsync(
             new IoTConnectionStateEvent(ConnectionState.Connected),
           );
         }
@@ -59,19 +71,19 @@ export class IoTClient
 
     this.awsIOTDevice.on(
       'close',
-      () => {
+      async () => {
         this.log.info('CLOSED');
         if (this.connected) {
           this.connected = false;
-          this.emit(new IoTConnectionStateEvent(ConnectionState.Closed));
+          await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
         }
       },
     );
 
     this.awsIOTDevice.on(
       'message',
-      (topic: string, payload: string) => {
-        this.emit(
+      async (topic: string, payload: string) => {
+        await this.emitAsync(
           new IotReceive(
             topic,
             JSON.parse(payload.toString()),
@@ -93,11 +105,11 @@ export class IoTClient
     try {
       await promisify(this.awsIOTDevice.unsubscribe)(message.topic);
       this.subscriptions.delete(message.topic);
-      this.emit(
+      await this.emitAsync(
         new IoTUnsubscribedFromEvent(message.topic),
       );
     } catch (error) {
-      this.emit(new IoTErrorEvent(error as Error));
+      await this.emitAsync(new IoTErrorEvent(error as Error));
     } finally {
       this.lock.release();
     }
@@ -120,10 +132,10 @@ export class IoTClient
           undefined,
         );
         this.subscriptions.add(message.topic);
-        this.emit(new IoTSubscribedToEvent(message.topic));
+        await this.emitAsync(new IoTSubscribedToEvent(message.topic));
       }
     } catch (error) {
-      this.emit(new IoTErrorEvent(error as Error));
+      await this.emitAsync(new IoTErrorEvent(error as Error));
     } finally {
       this.lock.release();
     }
@@ -138,9 +150,10 @@ export class IoTClient
       return;
     }
     this.log.info('Publishing', message.topic, message.payload);
-    this.awsIOTDevice.publish(
+    await promisify(this.awsIOTDevice.publish)(
       message.topic,
       message.payload,
+      undefined,
     );
   }
 }

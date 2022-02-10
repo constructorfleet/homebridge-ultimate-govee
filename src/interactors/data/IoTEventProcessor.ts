@@ -35,7 +35,7 @@ export class IoTEventProcessor extends Emitter {
     if (connection !== ConnectionState.Connected || !accountTopic) {
       return;
     }
-    this.emit(
+    await this.emitAsync(
       new IoTSubscribeToEvent(accountTopic),
     );
   }
@@ -50,7 +50,7 @@ export class IoTEventProcessor extends Emitter {
         message.payload,
       );
       const devState = toDeviceState(acctMessage);
-      this.emit(
+      await this.emitAsync(
         new DeviceStateReceived(devState),
       );
     } catch (err) {
@@ -71,7 +71,7 @@ export class IoTEventProcessor extends Emitter {
     if (!device.iotTopic) {
       return;
     }
-    this.emit(
+    await this.emitAsync(
       new IoTPublishToEvent(
         device.iotTopic,
         JSON.stringify({

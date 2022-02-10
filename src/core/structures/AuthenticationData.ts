@@ -1,5 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AuthenticationData {
+  readonly accountIoTTopic?: string;
 }
 
 export interface TokenAuthData extends AuthenticationData {
@@ -8,6 +8,4 @@ export interface TokenAuthData extends AuthenticationData {
 
 export interface OAuthData extends TokenAuthData {
   readonly refreshToken: string;
-  readonly tokenExpiration: number;
-  readonly accountIoTTopic?: string;
 }
