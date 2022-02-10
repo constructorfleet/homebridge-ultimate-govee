@@ -4,7 +4,6 @@ import {Active} from './states/Active';
 import {StatusMode} from './states/StatusMode';
 import {MistLevel} from './states/MistLevel';
 import {ProgrammableMistLevel} from './states/ProgrammableMistLevel';
-import {DeviceState} from '../core/structures/devices/DeviceState';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {GoveeDevice} from './GoveeDevice';
 import {ControlLock} from './states/ControlLock';
@@ -31,9 +30,5 @@ export class GoveeHumidifier
     deviceConfig: DeviceConfig,
   ) {
     super(deviceConfig);
-  }
-
-  receive(state: DeviceState): void {
-    super.updateState(state);
   }
 }
