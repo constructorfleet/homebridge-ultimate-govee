@@ -193,7 +193,7 @@ export class BLEClient
   ) {
     await this.lock.acquire();
     await this.stopScanning();
-    this.log.info(
+    this.log.debug(
       'BLEClient',
       'AcquireLock',
       ...log,
@@ -204,7 +204,7 @@ export class BLEClient
     ...log: string[]
   ) {
     await this.startScanning();
-    this.log.info(
+    this.log.debug(
       'BLEClient',
       'ReleaseLock',
       ...log,
@@ -213,7 +213,7 @@ export class BLEClient
   }
 
   onDataCallback = async (data: Buffer) => {
-    this.log.info(
+    this.log.debug(
       'BLEClient',
       'OnDataCallback',
       data,
