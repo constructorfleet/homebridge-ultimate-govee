@@ -60,6 +60,9 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State',
+    {
+      nextTick: true,
+    },
   )
   async onRequestDeviceState(
     device: GoveeDevice,

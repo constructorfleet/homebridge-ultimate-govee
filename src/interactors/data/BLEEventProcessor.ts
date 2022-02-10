@@ -60,6 +60,9 @@ export class BLEEventProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State',
+    {
+      nextTick: true,
+    },
   )
   async onRequestDeviceState(
     device: GoveeDevice,

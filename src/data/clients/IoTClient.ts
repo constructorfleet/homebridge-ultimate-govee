@@ -181,6 +181,9 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Publish',
+    {
+      nextTick: true,
+    },
   )
   async publishTo(message: IoTEventData) {
     if (!message.topic) {
