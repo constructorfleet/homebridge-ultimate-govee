@@ -37,8 +37,8 @@ export class PlatformService extends Emitter {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices() {
-    this.emit(
+  async discoverDevices() {
+    await this.emitAsync(
       new RestRequestDevices(),
     );
   }
