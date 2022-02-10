@@ -36,7 +36,11 @@ export class BLEEventProcessor extends Emitter {
     'BLE.PERIPHERAL.Receive',
   )
   async onPeripheralReceive(state: BLEPeripheralStateReceive) {
-    this.log.info('BLE Peripheral Receive', state);
+    this.log.debug(
+      'BLEEventProcessor',
+      'onPeripheralReceive',
+      state,
+    );
     try {
       const devState = toDeviceState(
         state.deviceId,
@@ -46,7 +50,11 @@ export class BLEEventProcessor extends Emitter {
         new DeviceStateReceived(devState),
       );
     } catch (err) {
-      this.log.error(err);
+      this.log.error(
+        'BLEEventProcessory',
+        'onPeripheralReceive',
+        err,
+      );
     }
   }
 
@@ -60,9 +68,10 @@ export class BLEEventProcessor extends Emitter {
     if (!bleAddress) {
       return;
     }
-    this.log.info(
+    this.log.debug(
+      'BLEEventProcessor',
       'RequestDeviceState',
-      'codes',
+      device.deviceId,
       device.deviceStatusCodes,
     );
     await this.emitAsync(
