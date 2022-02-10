@@ -18,10 +18,10 @@ export class DeviceSettingRequest
 }
 
 export class DevicePollRequest
-  extends DeviceRequestEvent<GoveeDevice> {
+  extends DeviceRequestEvent<string> {
 
   constructor(
-    eventData: GoveeDevice,
+    eventData: string,
   ) {
     super(
       'Poll',

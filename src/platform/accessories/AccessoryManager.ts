@@ -43,14 +43,15 @@ export class AccessoryManager extends Emitter {
     await this.emitAsync(
       new DeviceSettingsReceived({
         deviceId: device.deviceId,
+        name: accessory.displayName,
         model: device.model,
         pactCode: device.pactCode,
         pactType: device.pactType,
         hardwareVersion: device.hardwareVersion,
         softwareVersion: device.softwareVersion,
         bleAddress: device.bleAddress,
+        deviceTopic: device.iotTopic,
         macAddress: device.macAddress,
-        name: accessory.displayName,
       }),
     );
   }

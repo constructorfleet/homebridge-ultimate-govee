@@ -32,35 +32,36 @@ export class DeviceManager extends Emitter {
       this.log.info('No device settings');
       return;
     }
-    if (!this.devices.has(deviceSettings.deviceId)) {
-      let deviceCtor;
-      try {
-        // @ts-ignore
-        deviceCtor = this.moduleRef.get(deviceSettings.model)();
-      } catch (error) {
-        this.log.info(
-          'DeviceManager',
-          'onDeviceSettings',
-          'Unknown model',
-          deviceSettings.model,
-        );
-        return;
-      }
-      try {
-        const device = deviceCtor(deviceSettings);
-        this.devices.set(
-          deviceSettings.deviceId,
-          device,
-        );
+    const newDevice = !this.devices.has(deviceSettings.deviceId);
+    let deviceCtor;
+    try {
+      // @ts-ignore
+      deviceCtor = this.moduleRef.get(deviceSettings.model)();
+    } catch (error) {
+      this.log.info(
+        'DeviceManager',
+        'onDeviceSettings',
+        'Unknown model',
+        deviceSettings.model,
+      );
+      return;
+    }
+    try {
+      const device = deviceCtor(deviceSettings);
+      this.devices.set(
+        deviceSettings.deviceId,
+        device,
+      );
+      await this.emitAsync(
+        new DeviceDiscoveredEvent(device),
+      );
+      if (newDevice) {
         await this.emitAsync(
-          new DeviceDiscoveredEvent(device),
+          new DevicePollRequest(device.deviceId),
         );
-        await this.emitAsync(
-          new DevicePollRequest(device),
-        );
-      } catch (err) {
-        this.log.error(err);
       }
+    } catch (err) {
+      this.log.error(err);
     }
   }
 
@@ -113,26 +114,29 @@ export class DeviceManager extends Emitter {
     'DEVICE.REQUEST.Poll',
   )
   async pollDeviceStates(
-    device: GoveeDevice,
+    deviceId: string,
   ) {
     this.log.debug(
       'DeviceManager',
       'pollDeviceStates',
-      device.deviceId,
+      deviceId,
     );
-    await this.emitAsync(
-      new DeviceStateRequest(device),
-    );
+    const device = this.devices.get(deviceId);
+    if (device) {
+      await this.emitAsync(
+        new DeviceStateRequest(device),
+      );
+    }
 
     this.log.debug(
       'DeviceManager',
       'pollDeviceStates',
       'Setting Poll Timeout',
-      device.deviceId,
+      deviceId,
     );
     setTimeout(
       () => this.emit(
-        new DevicePollRequest(device),
+        new DevicePollRequest(deviceId),
       ),
       30 * 1000,
     );

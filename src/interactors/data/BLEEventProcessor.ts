@@ -68,7 +68,7 @@ export class BLEEventProcessor extends Emitter {
     device: GoveeDevice,
   ) {
     const bleAddress = device.bleAddress?.toLowerCase();
-    if (!bleAddress) {
+    if (!bleAddress || !device.deviceStatusCodes) {
       return;
     }
     this.log.debug(

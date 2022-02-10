@@ -6,7 +6,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {IoTConnectionStateEvent, IoTErrorEvent, IoTEventData} from '../../core/events/dataClients/iot/IoTEvent';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {IotReceive} from '../../core/events/dataClients/iot/IotReceive';
-import {IoTSubscribedToEvent} from '../../core/events/dataClients/iot/IotSubscription';
+import {IoTSubscribedToEvent, IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 import {IoTUnsubscribedFromEvent} from '../../core/events/dataClients/iot/IotRemoveSubscription';
 import {LoggingService} from '../../logging/LoggingService';
 import {Lock} from 'async-await-mutex-lock';
@@ -51,6 +51,7 @@ export class IoTClient
           await this.emitAsync(
             new IoTConnectionStateEvent(ConnectionState.Connected),
           );
+          await this.resubscribe();
         }
       },
     );
@@ -68,6 +69,7 @@ export class IoTClient
           await this.emitAsync(
             new IoTConnectionStateEvent(ConnectionState.Connected),
           );
+          await this.resubscribe();
         }
       },
     );
@@ -205,5 +207,15 @@ export class IoTClient
       message.payload,
       undefined,
     );
+  }
+
+  private async resubscribe() {
+    for (let i = 0; i < this.subscriptions.size; i++) {
+      await this.emitAsync(
+        new IoTSubscribeToEvent(
+          this.subscriptions[i],
+        ),
+      );
+    }
   }
 }
