@@ -16,26 +16,6 @@ export abstract class AccessoryService extends Emitter {
     super(eventEmitter);
   }
 
-  public initializeAccessory(
-    accessory: PlatformAccessory,
-    device: GoveeDevice,
-  ): PlatformAccessory {
-    if (!this.supports(device)) {
-      return accessory;
-    }
-
-    if (!accessory.context.device) {
-      accessory.context.device = device;
-    }
-
-    const service = this.get(accessory);
-    this.updateServiceCharacteristics(
-      service,
-      device,
-    );
-    return accessory;
-  }
-
   public updateAccessory(
     accessory: PlatformAccessory,
     device: GoveeDevice,
@@ -47,6 +27,7 @@ export abstract class AccessoryService extends Emitter {
       this.get(accessory),
       device,
     );
+    accessory.context.device = device;
     return accessory;
   }
 
