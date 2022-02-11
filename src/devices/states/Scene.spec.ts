@@ -1,6 +1,6 @@
 import {State} from './State';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
-import {Scene, SceneState} from './Scenes';
+import {Scene, SceneState} from './Scene';
 
 class TestState extends Scene(State) {
   constructor(...args) {
