@@ -42,7 +42,8 @@ export function ColorTemperature<StateType extends State>(
           commandValues[1],
           commandValues[2],
         );
-
+      } else {
+        this.colorTemperature = undefined;
       }
 
       return super.parse(deviceState);
