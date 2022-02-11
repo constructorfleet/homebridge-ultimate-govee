@@ -14,7 +14,7 @@ const commandIdentifiers = [
 ];
 
 export interface ColorTemperatureState {
-  colorTemperature?: ColorRGB;
+  solidColor?: ColorRGB;
 
   get colorTemperatureChange(): number[];
 }
@@ -24,7 +24,7 @@ export function ColorTemperature<StateType extends State>(
 ) {
   // @ts-ignore
   return class extends stateType implements ColorTemperatureState {
-    public colorTemperature?: ColorRGB;
+    public solidColor?: ColorRGB;
 
     public constructor(...args) {
       super(...args);
@@ -37,13 +37,11 @@ export function ColorTemperature<StateType extends State>(
         deviceState.commands,
       );
       if (commandValues) {
-        this.colorTemperature = new ColorRGB(
+        this.solidColor = new ColorRGB(
           commandValues[0],
           commandValues[1],
           commandValues[2],
         );
-      } else {
-        this.colorTemperature = undefined;
       }
 
       return super.parse(deviceState);
@@ -53,9 +51,9 @@ export function ColorTemperature<StateType extends State>(
       return getCommandCodes(
         COMMAND_IDENTIFIER,
         commandIdentifiers,
-        this.colorTemperature?.red || 0,
-        this.colorTemperature?.green || 0,
-        this.colorTemperature?.blue || 0,
+        this.solidColor?.red || 0,
+        this.solidColor?.green || 0,
+        this.solidColor?.blue || 0,
       );
     }
   };
