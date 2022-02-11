@@ -1,5 +1,5 @@
-import * as rgb2hsv from 'pure-color/convert/rgb2hsv';
-import * as hsv2rgb from 'pure-color/convert/hsv2rgb';
+import rgb2hsv from 'pure-color/convert/rgb2hsv';
+import hsv2rgb from 'pure-color/convert/hsv2rgb';
 
 export class ColorRGB {
   constructor(
