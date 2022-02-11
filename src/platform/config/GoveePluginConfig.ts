@@ -45,20 +45,6 @@ export class GoveeDeviceOverrides {
   @Expose({name: 'lights'})
   @Type(() => GoveeDeviceOverrides)
   lights?: GoveeDeviceOverride[];
-
-  getDeviceConfiguration(
-    deviceId: string,
-  ): GoveeDeviceOverride | undefined {
-    const deviceConfigurations: GoveeDeviceOverride[] =
-      new Array<GoveeDeviceOverride>(
-        ...(this.humidifiers || []),
-        ...(this.airPurifiers || []),
-        ...(this.lights || []),
-      );
-    return deviceConfigurations.find(
-      (deviceConfig) => deviceConfig.deviceId == deviceId,
-    );
-  }
 }
 
 export class GoveeConnections {

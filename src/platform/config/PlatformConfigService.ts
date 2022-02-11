@@ -6,6 +6,7 @@ import {GoveeDeviceOverride, GoveeDeviceOverrides, GoveePluginConfig} from './Go
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {GoveeHumidifier} from '../../devices/GoveeHumidifier';
 import {GoveeAirPurifier} from '../../devices/GoveeAirPurifier';
+import {GoveeLight} from '../../devices/GoveeLight';
 
 @Injectable()
 export class PlatformConfigService {
@@ -50,6 +51,20 @@ export class PlatformConfigService {
       return new GoveePluginConfig();
     }
     return platformConfig;
+  }
+
+  getDeviceConfiguration(
+    deviceId: string,
+  ): GoveeDeviceOverride | undefined {
+    const deviceConfigurations: GoveeDeviceOverride[] =
+      new Array<GoveeDeviceOverride>(
+        ...(this.pluginConfiguration.devices?.humidifiers || []),
+        ...(this.pluginConfiguration.devices?.airPurifiers || []),
+        ...(this.pluginConfiguration.devices?.lights || []),
+      );
+    return deviceConfigurations.find(
+      (deviceConfig) => deviceConfig.deviceId === deviceId,
+    );
   }
 
   updateConfigurationWithDevices(
@@ -124,10 +139,18 @@ export class PlatformConfigService {
             !deviceMap.has(device.deviceId) && device instanceof GoveeAirPurifier,
         )
         .map((device) => new GoveeDeviceOverride(device));
+    const newLights: GoveeDeviceOverride[] =
+      devices
+        .filter(
+          (device) =>
+            !deviceMap.has(device.deviceId) && device instanceof GoveeLight,
+        )
+        .map((device) => new GoveeDeviceOverride(device));
 
     return new GoveeDeviceOverrides(
       (config.devices?.humidifiers || []).concat(...newHumidifiers),
       (config?.devices?.airPurifiers || []).concat(...newPurifiers),
+      (config?.devices?.lights || []).concat(...newLights),
     );
   }
 }

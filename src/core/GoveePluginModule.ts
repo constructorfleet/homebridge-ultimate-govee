@@ -20,6 +20,7 @@ import {IoTEventProcessor} from '../interactors/data/IoTEventProcessor';
 import {RestEventProcessor} from '../interactors/data/RestEventProcessor';
 import {Md5} from 'ts-md5';
 import {v4 as uuidv4} from 'uuid';
+import {rgbLightProviders} from '../devices/GoveeRGBLight';
 
 @Module({})
 export class GoveePluginModule {
@@ -29,7 +30,6 @@ export class GoveePluginModule {
     rootPath: string,
     logger: Logger,
   ): DynamicModule {
-    logger.error(path.join('assets', 'testiot.cert.pkey'));
     const connectionProviders: Provider[] = [];
     if (config.enableBLE) {
       connectionProviders.push(BLEClient);
@@ -93,12 +93,14 @@ export class GoveePluginModule {
         },
         ...purifierProviders,
         ...humidifierProviders,
+        ...rgbLightProviders,
         ...connectionProviders,
         DeviceManager,
       ],
       exports: [
         ...purifierProviders,
         ...humidifierProviders,
+        ...rgbLightProviders,
         IOT_CA_CERTIFICATE,
         IOT_CERTIFICATE,
         IOT_KEY,

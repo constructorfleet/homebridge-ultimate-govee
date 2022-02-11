@@ -32,9 +32,7 @@ export class AccessoryManager extends Emitter {
   ) {
     const device = accessory.context.device;
     const deviceConfig =
-      this.platformConfigService
-        .pluginConfiguration
-        .devices?.getDeviceConfiguration(device.context.deviceId);
+      this.platformConfigService.getDeviceConfiguration(device.deviceId);
 
     if (deviceConfig?.ignore) {
       this.api.unregisterPlatformAccessories(
@@ -59,9 +57,7 @@ export class AccessoryManager extends Emitter {
   )
   async onDeviceDiscovered(device: GoveeDevice) {
     const deviceConfig =
-      this.platformConfigService
-        .pluginConfiguration
-        .devices?.getDeviceConfiguration(device.deviceId);
+      this.platformConfigService.getDeviceConfiguration(device.deviceId);
     if (deviceConfig?.ignore) {
       return;
     }
