@@ -58,10 +58,13 @@ export abstract class AccessoryService extends Emitter {
     return true;
   }
 
-  protected abstract updateServiceCharacteristics(
+  protected updateServiceCharacteristics(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     service: Service,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     device: GoveeDevice,
-  );
+  ) {
+  }
 
   protected abstract initializeServiceCharacteristics(
     service: Service,
