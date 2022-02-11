@@ -214,12 +214,6 @@ export class RestClient
     }
     try {
       const jwt = jwtDecode<JWTPayload>(token, {});
-      this.log.debug(
-        'RestClient',
-        'isTokenValid',
-        token,
-        jwt,
-      );
       if (!jwt.exp || !jwt.iat) {
         return false;
       }
