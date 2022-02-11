@@ -28,6 +28,14 @@ export function SolidColor<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
+      if (deviceState.color !== undefined) {
+        this.solidColor = new ColorRGB(
+          deviceState.color.red,
+          deviceState.color.green,
+          deviceState.color.blue,
+        );
+        return super.parse(deviceState);
+      }
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
