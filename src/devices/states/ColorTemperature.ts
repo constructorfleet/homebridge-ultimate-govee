@@ -2,7 +2,7 @@ import {State} from './State';
 import {DeviceState} from '../../core/structures/devices/DeviceState';
 import {getCommandCodes, getCommandValues} from '../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
-import {ColorRGB} from '../../util/colorUtils';
+import {ColorRGB, kelvinToRGB} from '../../util/colorUtils';
 
 const commandIdentifiers = [
   5,
@@ -32,6 +32,11 @@ export function ColorTemperature<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
+      if (deviceState.colorTemperature !== undefined && deviceState.colorTemperature !== 0) {
+        this.solidColor = kelvinToRGB(deviceState.colorTemperature);
+        return super.parse(deviceState);
+      }
+
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
