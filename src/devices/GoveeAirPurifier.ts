@@ -5,7 +5,6 @@ import {Active} from './states/Active';
 import {Timer} from './states/Timer';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {GoveeDevice} from './GoveeDevice';
-import {StatusMode} from './states/StatusMode';
 import {ControlLock} from './states/ControlLock';
 
 export const purifierProviders: Provider[] = [
@@ -24,7 +23,7 @@ export const purifierProviders: Provider[] = [
 ];
 
 export class GoveeAirPurifier
-  extends ControlLock(StatusMode(FanSpeed(Timer(Active(OnOff(GoveeDevice)))))) {
+  extends ControlLock(FanSpeed(Timer(Active(OnOff(GoveeDevice))))) {
 
   constructor(
     deviceConfig: DeviceConfig,
