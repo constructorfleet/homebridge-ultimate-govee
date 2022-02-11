@@ -1,7 +1,7 @@
 import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
 import {SolidColor} from './states/SolidColor';
 import {MusicMode} from './states/MusicMode';
-import {GoveeWWLight} from './GoveeWWLight';
+import {GoveeLight} from './GoveeLight';
 import {DeviceFactory} from './DeviceFactory';
 
 
@@ -11,7 +11,7 @@ import {DeviceFactory} from './DeviceFactory';
 export class GoveeRGBICLight
   extends MusicMode(
     SolidColor(
-      GoveeWWLight,
+      GoveeLight,
     ),
   ) {
 

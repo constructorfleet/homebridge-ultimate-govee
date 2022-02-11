@@ -1,12 +1,13 @@
 import {AccessoryService} from './AccessoryService';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {LoggingService} from '../../../logging/LoggingService';
+import {ServiceRegistry} from '../ServiceRegistry';
 
-@Injectable()
+@ServiceRegistry.register
 export class InformationService extends AccessoryService {
   protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.AccessoryInformation;
 

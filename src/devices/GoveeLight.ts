@@ -10,7 +10,7 @@ import {Scene} from './states/Scene';
 import {DeviceFactory} from './DeviceFactory';
 
 @DeviceFactory.register()
-export class GoveeWWLight
+export class GoveeLight
   extends Scene(
     ColorTemperature(
       Brightness(

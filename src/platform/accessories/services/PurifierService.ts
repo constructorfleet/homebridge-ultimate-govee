@@ -1,5 +1,5 @@
 import {AccessoryService} from './AccessoryService';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
@@ -12,8 +12,10 @@ import {DeviceFanSpeedTransition} from '../../../core/structures/devices/transit
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
+import {ServiceRegistry} from '../ServiceRegistry';
+import {GoveeAirPurifier} from '../../../devices/GoveeAirPurifier';
 
-@Injectable()
+@ServiceRegistry.register
 export class PurifierService extends AccessoryService {
   protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
 
@@ -32,7 +34,7 @@ export class PurifierService extends AccessoryService {
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return Reflect.has(device, 'fanSpeed');
+    return device instanceof GoveeAirPurifier;
   }
 
   protected updateServiceCharacteristics(

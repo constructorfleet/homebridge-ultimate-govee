@@ -4,16 +4,10 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {API, PlatformAccessory} from 'homebridge';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {HOMEBRIDGE_API} from '../../util/const';
-import {InformationService} from './services/InformationService';
-import {HumidifierService} from './services/HumidifierService';
-import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
-import {ColorTemperature} from './services/lightCharacteristics/ColorTemperature';
-import {Hue} from './services/lightCharacteristics/Hue';
-import {Saturation} from './services/lightCharacteristics/Saturation';
-import {LightService} from './services/LightService';
+import {AccessoryService} from './services/AccessoryService';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -21,13 +15,7 @@ export class AccessoryManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
-    private readonly informationService: InformationService,
-    private readonly humidifierService: HumidifierService,
-    private readonly purifierService: PurifierService,
-    private readonly lightService: LightService,
-    private readonly colorTemperature: ColorTemperature,
-    private readonly hue: Hue,
-    private readonly saturation: Saturation,
+    @Inject(AccessoryService) private readonly services: AccessoryService[],
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
@@ -54,13 +42,7 @@ export class AccessoryManager extends Emitter {
       accessory.UUID,
       accessory,
     );
-    this.informationService.updateAccessory(accessory, device);
-    this.humidifierService.updateAccessory(accessory, device);
-    this.purifierService.updateAccessory(accessory, device);
-    this.lightService.updateAccessory(accessory, device);
-    this.hue.updateAccessory(accessory, device);
-    this.saturation.updateAccessory(accessory, device);
-    this.colorTemperature.updateAccessory(accessory, device);
+    this.services.forEach((service) => service.updateAccessory(accessory, device));
     this.api.updatePlatformAccessories([accessory]);
   }
 
@@ -81,13 +63,7 @@ export class AccessoryManager extends Emitter {
         deviceUUID,
       );
 
-    this.informationService.updateAccessory(accessory, device);
-    this.humidifierService.updateAccessory(accessory, device);
-    this.purifierService.updateAccessory(accessory, device);
-    this.lightService.updateAccessory(accessory, device);
-    this.hue.updateAccessory(accessory, device);
-    this.saturation.updateAccessory(accessory, device);
-    this.colorTemperature.updateAccessory(accessory, device);
+    this.services.forEach((service) => service.updateAccessory(accessory, device));
     this.api.updatePlatformAccessories([accessory]);
 
     if (!this.accessories.has(deviceUUID)) {
@@ -113,13 +89,7 @@ export class AccessoryManager extends Emitter {
       return;
     }
 
-    this.informationService.updateAccessory(accessory, device);
-    this.humidifierService.updateAccessory(accessory, device);
-    this.purifierService.updateAccessory(accessory, device);
-    this.lightService.updateAccessory(accessory, device);
-    this.hue.updateAccessory(accessory, device);
-    this.saturation.updateAccessory(accessory, device);
-    this.colorTemperature.updateAccessory(accessory, device);
+    this.services.forEach((service) => service.updateAccessory(accessory, device));
 
     this.api.updatePlatformAccessories([accessory]);
   }

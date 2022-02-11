@@ -1,5 +1,5 @@
 import {AccessoryService} from './AccessoryService';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
@@ -10,8 +10,12 @@ import {DeviceActiveTransition} from '../../../core/structures/devices/transitio
 import {LoggingService} from '../../../logging/LoggingService';
 import {BrightnessState} from '../../../devices/states/Brightness';
 import {DeviceBrightnessTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
+import {ServiceRegistry} from '../ServiceRegistry';
+import {GoveeLight} from '../../../devices/GoveeLight';
+import {GoveeRGBLight} from '../../../devices/GoveeRGBLight';
+import {GoveeRGBICLight} from '../../../devices/GoveeRGBICLight';
 
-@Injectable()
+@ServiceRegistry.register
 export class LightService extends AccessoryService {
   protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
 
@@ -30,7 +34,7 @@ export class LightService extends AccessoryService {
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return Reflect.has(device, 'brightness');
+    return device instanceof GoveeLight || device instanceof GoveeRGBLight || device instanceof GoveeRGBICLight;
   }
 
   protected updateServiceCharacteristics(

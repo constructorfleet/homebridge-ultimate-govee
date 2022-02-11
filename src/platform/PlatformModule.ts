@@ -11,16 +11,10 @@ import {
 } from '../util/const';
 import {AccessoryManager} from './accessories/AccessoryManager';
 import {BinaryLike} from 'hap-nodejs/dist/lib/util/uuid';
-import {InformationService} from './accessories/services/InformationService';
-import {HumidifierService} from './accessories/services/HumidifierService';
-import {PurifierService} from './accessories/services/PurifierService';
 import {PlatformName, PluginIdentifier} from 'homebridge/lib/api';
 import {PlatformService} from './PlatformService';
 import {PlatformConfigService} from './config/PlatformConfigService';
-import {LightService} from './accessories/services/LightService';
-import {ColorTemperature} from './accessories/services/lightCharacteristics/ColorTemperature';
-import {Hue} from './accessories/services/lightCharacteristics/Hue';
-import {Saturation} from './accessories/services/lightCharacteristics/Saturation';
+import {ServiceRegistry} from './accessories/ServiceRegistry';
 
 export interface GoveeCredentials {
   username: string;
@@ -103,13 +97,7 @@ export class PlatformModule {
           provide: PLATFORM_CONFIG_FILE,
           useValue: config.configPath,
         },
-        InformationService,
-        LightService,
-        ColorTemperature,
-        Hue,
-        Saturation,
-        HumidifierService,
-        PurifierService,
+        ServiceRegistry.getServices(),
         AccessoryManager,
         PlatformService,
         PlatformConfigService,

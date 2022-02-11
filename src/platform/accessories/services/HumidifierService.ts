@@ -1,5 +1,5 @@
 import {AccessoryService} from './AccessoryService';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
@@ -13,8 +13,10 @@ import {StatusModeState} from '../../../devices/states/StatusMode';
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
+import {ServiceRegistry} from '../ServiceRegistry';
+import {GoveeHumidifier} from '../../../devices/GoveeHumidifier';
 
-@Injectable()
+@ServiceRegistry.register
 export class HumidifierService extends AccessoryService {
   protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
 
@@ -33,7 +35,7 @@ export class HumidifierService extends AccessoryService {
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return Reflect.has(device, 'mistLevel');
+    return device instanceof GoveeHumidifier;
   }
 
   protected updateServiceCharacteristics(

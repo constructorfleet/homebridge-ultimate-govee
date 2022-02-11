@@ -6,7 +6,8 @@ export class DeviceFactory {
   private static readonly providers: Provider[] = [];
 
   static getProviders(): Provider[] {
-    return this.providers;
+    console.log(DeviceFactory.providers);
+    return DeviceFactory.providers;
   }
 
   static register<T extends Constructor<GoveeDevice>>(

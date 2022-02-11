@@ -1,5 +1,5 @@
 import {AccessoryService} from '../AccessoryService';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
@@ -8,8 +8,9 @@ import {DeviceCommandEvent} from '../../../../core/events/devices/DeviceCommand'
 import {LoggingService} from '../../../../logging/LoggingService';
 import {DeviceColorTransition} from '../../../../core/structures/devices/transitions/DeviceColorTransition';
 import {hsvToRGB} from '../../../../util/colorUtils';
+import {ServiceRegistry} from '../../ServiceRegistry';
 
-@Injectable()
+@ServiceRegistry.register
 export class Saturation extends AccessoryService {
   protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
 
