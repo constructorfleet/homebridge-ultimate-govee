@@ -1,6 +1,15 @@
 import * as rgb2hsv from 'pure-color/convert/rgb2hsv';
 import * as hsv2rgb from 'pure-color/convert/hsv2rgb';
 
+export class ColorRGB {
+  constructor(
+    public red: number,
+    public green: number,
+    public blue: number,
+  ) {
+  }
+}
+
 export const KELVIN_MINIMUM = 2000;
 export const KELVIN_MAXIMUM = 7100;
 export const HUE_MINIMUM = 0;
