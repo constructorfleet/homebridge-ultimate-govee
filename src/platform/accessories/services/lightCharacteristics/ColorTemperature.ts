@@ -7,7 +7,7 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../../core/events/devices/DeviceCommand';
 import {LoggingService} from '../../../../logging/LoggingService';
 import {DeviceColorTransition} from '../../../../core/structures/devices/transitions/DeviceColorTransition';
-import {kelvinToRGB} from '../../../../util/colorUtils';
+import {kelvinToRGB, rgbToHSV} from '../../../../util/colorUtils';
 
 @Injectable()
 export class ColorTemperature extends AccessoryService {
@@ -38,15 +38,22 @@ export class ColorTemperature extends AccessoryService {
     service
       .getCharacteristic(this.CHARACTERISTICS.ColorTemperature)
       .onSet(
-        async (value: CharacteristicValue) =>
+        async (value: CharacteristicValue) => {
+          const color = kelvinToRGB(value as number || 0);
+          const hueSaturation = rgbToHSV(color);
+          service.getCharacteristic(this.CHARACTERISTICS.Hue)
+            .updateValue(hueSaturation.hue);
+          service.getCharacteristic(this.CHARACTERISTICS.Saturation)
+            .updateValue(hueSaturation.saturation);
           await this.emitAsync(
             new DeviceCommandEvent(
               new DeviceColorTransition(
                 device.deviceId,
-                kelvinToRGB(value as number || 0),
+                color,
               ),
             ),
-          ),
+          );
+        },
       );
   }
 }
