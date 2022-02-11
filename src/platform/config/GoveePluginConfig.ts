@@ -27,9 +27,11 @@ export class GoveeDeviceOverrides {
   constructor(
     humidifiers: GoveeDeviceOverride[],
     purifiers: GoveeDeviceOverride[],
+    lights: GoveeDeviceOverride[],
   ) {
     this.humidifiers = humidifiers;
     this.airPurifiers = purifiers;
+    this.lights = lights;
   }
 
   @Expose({name: 'airPurifiers'})
@@ -39,6 +41,24 @@ export class GoveeDeviceOverrides {
   @Expose({name: 'humidifiers'})
   @Type(() => GoveeDeviceOverrides)
   humidifiers?: GoveeDeviceOverride[];
+
+  @Expose({name: 'lights'})
+  @Type(() => GoveeDeviceOverrides)
+  lights?: GoveeDeviceOverride[];
+
+  getDeviceConfiguration(
+    deviceId: string,
+  ): GoveeDeviceOverride | undefined {
+    const deviceConfigurations: GoveeDeviceOverride[] =
+      new Array<GoveeDeviceOverride>(
+        ...(this.humidifiers || []),
+        ...(this.airPurifiers || []),
+        ...(this.lights || []),
+      );
+    return deviceConfigurations.find(
+      (deviceConfig) => deviceConfig.deviceId == deviceId,
+    );
+  }
 }
 
 export class GoveeConnections {

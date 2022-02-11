@@ -30,11 +30,24 @@ export class AccessoryManager extends Emitter {
   onAccessoryLoaded(
     accessory: PlatformAccessory,
   ) {
+    const device = accessory.context.device;
+    const deviceConfig =
+      this.platformConfigService
+        .pluginConfiguration
+        .devices?.getDeviceConfiguration(device.context.deviceId);
+
+    if (deviceConfig?.ignore) {
+      this.api.unregisterPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
+      return;
+    }
     this.accessories.set(
       accessory.UUID,
       accessory,
     );
-    const device = accessory.context.device;
     this.informationService.initializeAccessory(accessory, device);
     this.humidifierService.initializeAccessory(accessory, device);
     this.purifierService.initializeAccessory(accessory, device);
@@ -45,6 +58,13 @@ export class AccessoryManager extends Emitter {
     'DEVICE.Discovered',
   )
   async onDeviceDiscovered(device: GoveeDevice) {
+    const deviceConfig =
+      this.platformConfigService
+        .pluginConfiguration
+        .devices?.getDeviceConfiguration(device.deviceId);
+    if (deviceConfig?.ignore) {
+      return;
+    }
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
     const accessory =
       this.accessories.get(deviceUUID)
