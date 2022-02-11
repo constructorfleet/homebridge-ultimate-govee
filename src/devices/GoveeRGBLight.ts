@@ -6,6 +6,7 @@ import {DeviceFactory} from './DeviceFactory';
 
 @DeviceFactory.register(
   'H6141',
+  'H6170',
 )
 export class GoveeRGBLight
   extends MusicMode(
