@@ -46,6 +46,7 @@ export class DeviceManager extends Emitter {
       );
       return;
     }
+
     try {
       const device = deviceCtor(deviceSettings);
       this.devices.set(

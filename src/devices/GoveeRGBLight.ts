@@ -4,7 +4,9 @@ import {MusicMode} from './states/MusicMode';
 import {GoveeLight} from './GoveeLight';
 import {DeviceFactory} from './DeviceFactory';
 
-@DeviceFactory.register()
+@DeviceFactory.register(
+  'H6141',
+)
 export class GoveeRGBLight
   extends MusicMode(
     SolidColor(
