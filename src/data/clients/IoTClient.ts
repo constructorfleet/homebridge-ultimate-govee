@@ -6,7 +6,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {IoTConnectionStateEvent, IoTErrorEvent, IoTEventData} from '../../core/events/dataClients/iot/IoTEvent';
 import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
 import {IotReceive} from '../../core/events/dataClients/iot/IotReceive';
-import {IoTSubscribedToEvent} from '../../core/events/dataClients/iot/IotSubscription';
+import {IoTSubscribedToEvent, IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 import {IoTUnsubscribedFromEvent} from '../../core/events/dataClients/iot/IotRemoveSubscription';
 import {LoggingService} from '../../logging/LoggingService';
 import {Lock} from 'async-await-mutex-lock';
@@ -40,12 +40,36 @@ export class IoTClient
 
     this.awsIOTDevice.on(
       'connect',
-      () => {
+      async () => {
         if (!this.connected) {
+          this.log.info(
+            'IoTClient',
+            'onConnect',
+            'Connection Connected',
+          );
           this.connected = true;
-          this.emit(
+          await this.emitAsync(
             new IoTConnectionStateEvent(ConnectionState.Connected),
           );
+          await this.resubscribe();
+        }
+      },
+    );
+
+    this.awsIOTDevice.on(
+      'reconnect',
+      async () => {
+        this.log.info(
+          'IoTClient',
+          'onReconnect',
+          'Connection Reconnected',
+        );
+        if (!this.connected) {
+          this.connected = true;
+          await this.emitAsync(
+            new IoTConnectionStateEvent(ConnectionState.Connected),
+          );
+          await this.resubscribe();
         }
       },
     );
@@ -53,25 +77,53 @@ export class IoTClient
     this.awsIOTDevice.on(
       'error',
       (error: Error | string) => {
-        this.log.error('ERROR', error);
+        this.log.error(
+          'IoTClient',
+          'onError',
+          error,
+        );
+      },
+    );
+    this.awsIOTDevice.on(
+      'offline',
+      async () => {
+        this.log.info(
+          'IoTClient',
+          'onOffline',
+          'Connection Offline',
+        );
+        if (this.connected) {
+          this.connected = false;
+          await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
+        }
       },
     );
 
     this.awsIOTDevice.on(
       'close',
-      () => {
-        this.log.info('CLOSED');
+      async () => {
+        this.log.info(
+          'IoTClient',
+          'onClose',
+          'Connection Closed',
+        );
         if (this.connected) {
           this.connected = false;
-          this.emit(new IoTConnectionStateEvent(ConnectionState.Closed));
+          await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
         }
       },
     );
 
     this.awsIOTDevice.on(
       'message',
-      (topic: string, payload: string) => {
-        this.emit(
+      async (topic: string, payload: string) => {
+        this.log.debug(
+          'IoTClient',
+          'onMessage',
+          topic,
+          payload,
+        );
+        await this.emitAsync(
           new IotReceive(
             topic,
             JSON.parse(payload.toString()),
@@ -93,11 +145,11 @@ export class IoTClient
     try {
       await promisify(this.awsIOTDevice.unsubscribe)(message.topic);
       this.subscriptions.delete(message.topic);
-      this.emit(
+      await this.emitAsync(
         new IoTUnsubscribedFromEvent(message.topic),
       );
     } catch (error) {
-      this.emit(new IoTErrorEvent(error as Error));
+      await this.emitAsync(new IoTErrorEvent(error as Error));
     } finally {
       this.lock.release();
     }
@@ -120,10 +172,10 @@ export class IoTClient
           undefined,
         );
         this.subscriptions.add(message.topic);
-        this.emit(new IoTSubscribedToEvent(message.topic));
+        await this.emitAsync(new IoTSubscribedToEvent(message.topic));
       }
     } catch (error) {
-      this.emit(new IoTErrorEvent(error as Error));
+      await this.emitAsync(new IoTErrorEvent(error as Error));
     } finally {
       this.lock.release();
     }
@@ -131,16 +183,39 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Publish',
+    {
+      nextTick: true,
+    },
   )
   async publishTo(message: IoTEventData) {
     if (!message.topic) {
-      this.log.info('No topic to publish to');
+      this.log.info(
+        'IoTClient',
+        'publishTo',
+        'No topic to publish to',
+      );
       return;
     }
-    this.log.info('Publishing', message.topic, message.payload);
-    this.awsIOTDevice.publish(
+    this.log.debug(
+      'IoTClient',
+      'publishTo',
       message.topic,
       message.payload,
     );
+    await promisify(this.awsIOTDevice.publish)(
+      message.topic,
+      message.payload,
+      undefined,
+    );
+  }
+
+  private async resubscribe() {
+    for (let i = 0; i < this.subscriptions.size; i++) {
+      await this.emitAsync(
+        new IoTSubscribeToEvent(
+          this.subscriptions[i],
+        ),
+      );
+    }
   }
 }

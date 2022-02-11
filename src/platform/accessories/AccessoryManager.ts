@@ -4,10 +4,14 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {API, PlatformAccessory} from 'homebridge';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {HOMEBRIDGE_API} from '../../util/const';
+import {InformationService} from './services/InformationService';
+import {HumidifierService} from './services/HumidifierService';
+import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
 import {AccessoryService} from './services/AccessoryService';
+import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -23,7 +27,7 @@ export class AccessoryManager extends Emitter {
     super(eventEmitter);
   }
 
-  onAccessoryLoaded(
+  async onAccessoryLoaded(
     accessory: PlatformAccessory,
   ) {
     const device = accessory.context.device;
@@ -44,6 +48,20 @@ export class AccessoryManager extends Emitter {
     );
     this.services.forEach((service) => service.updateAccessory(accessory, device));
     this.api.updatePlatformAccessories([accessory]);
+    await this.emitAsync(
+      new DeviceSettingsReceived({
+        deviceId: device.deviceId,
+        name: accessory.displayName,
+        model: device.model,
+        pactCode: device.pactCode,
+        pactType: device.pactType,
+        hardwareVersion: device.hardwareVersion,
+        softwareVersion: device.softwareVersion,
+        bleAddress: device.bleAddress,
+        deviceTopic: device.iotTopic,
+        macAddress: device.macAddress,
+      }),
+    );
   }
 
   @OnEvent(

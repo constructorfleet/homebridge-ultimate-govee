@@ -98,11 +98,10 @@ export class GoveePluginModule {
         },
         {
           provide: GOVEE_CLIENT_ID,
-          useValue:
-            Md5.hashStr(
-              Buffer.from(uuidv4() + (new Date().getMilliseconds()).toString()).toString('utf8'),
-              false,
-            ),
+          useValue: Md5.hashStr(
+            Buffer.from(uuidv4() + (new Date().getMilliseconds()).toString()).toString('utf8'),
+            false,
+          ),
         },
         ...DeviceFactory.getProviders(),
         ...connectionProviders,

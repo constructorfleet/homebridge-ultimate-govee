@@ -56,7 +56,7 @@ implements DynamicPlatformPlugin {
         logger: console,
         abortOnError: false,
       },
-    ).then((context) => {
+    ).then(async (context) => {
       this.appContext = context;
       this.service = context.get(PlatformService);
       while (this.cachedAccessories.length) {
@@ -66,7 +66,7 @@ implements DynamicPlatformPlugin {
         }
       }
       if (this.loaded) {
-        this.service.discoverDevices();
+        await this.service.discoverDevices();
       }
     });
 
@@ -76,9 +76,9 @@ implements DynamicPlatformPlugin {
     // Dynamic Platform plugins should only register new accessories after this event was fired,
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
-    this.api.on('didFinishLaunching', () => {
+    this.api.on('didFinishLaunching', async () => {
       if (this.service) {
-        this.service.discoverDevices();
+        await this.service.discoverDevices();
       }
       log.debug('Executed didFinishLaunching callback');
       this.loaded = true;
