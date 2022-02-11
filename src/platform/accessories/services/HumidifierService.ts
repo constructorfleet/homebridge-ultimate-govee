@@ -36,7 +36,7 @@ export class HumidifierService extends AccessoryService {
     return Reflect.has(device, 'mistLevel');
   }
 
-  protected initializeServiceCharacteristics(
+  protected updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
   ) {
@@ -139,38 +139,5 @@ export class HumidifierService extends AccessoryService {
             ),
           ),
       );
-  }
-
-  protected updateServiceCharacteristics(
-    service: Service,
-    device: GoveeDevice,
-  ) {
-    service.getCharacteristic(this.CHARACTERISTICS.WaterLevel)
-      .updateValue(
-        ((device as unknown as StatusModeState).statusMode === 4)
-          ? 0
-          : 100);
-    service
-      .getCharacteristic(this.CHARACTERISTICS.Active)
-      .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive ?? false)
-          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
-          ? this.CHARACTERISTICS.Active.ACTIVE
-          : this.CHARACTERISTICS.Active.INACTIVE,
-      );
-    service
-      .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
-      .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive
-            && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
-            && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
-          ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
-          : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
-      );
-    service
-      .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityHumidifierThreshold)
-      .updateValue(((device as unknown as MistLevelState).mistLevel ?? 0) / 8 * 100);
   }
 }

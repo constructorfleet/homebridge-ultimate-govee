@@ -33,7 +33,7 @@ export class LightService extends AccessoryService {
     return Reflect.has(device, 'brightness');
   }
 
-  protected initializeServiceCharacteristics(
+  protected updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
   ) {
@@ -65,16 +65,5 @@ export class LightService extends AccessoryService {
             ),
           ),
       );
-  }
-
-  protected updateServiceCharacteristics(
-    service: Service,
-    device: GoveeDevice,
-  ) {
-    service
-      .getCharacteristic(this.CHARACTERISTICS.On)
-      .updateValue((device as unknown as ActiveState).isActive ?? false);
-    service.getCharacteristic(this.CHARACTERISTICS.Brightness)
-      .updateValue((device as unknown as BrightnessState).brightness ?? 0);
   }
 }

@@ -29,10 +29,6 @@ export abstract class AccessoryService extends Emitter {
     }
 
     const service = this.get(accessory);
-    this.initializeServiceCharacteristics(
-      service,
-      device,
-    );
     this.updateServiceCharacteristics(
       service,
       device,
@@ -58,15 +54,7 @@ export abstract class AccessoryService extends Emitter {
     return true;
   }
 
-  protected updateServiceCharacteristics(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    service: Service,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    device: GoveeDevice,
-  ) {
-  }
-
-  protected abstract initializeServiceCharacteristics(
+  protected abstract updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
   );

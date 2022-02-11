@@ -35,7 +35,7 @@ export class PurifierService extends AccessoryService {
     return Reflect.has(device, 'fanSpeed');
   }
 
-  protected initializeServiceCharacteristics(
+  protected updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
   ) {
@@ -118,40 +118,6 @@ export class PurifierService extends AccessoryService {
             ),
           ),
         ),
-      );
-  }
-
-  protected updateServiceCharacteristics(
-    service: Service,
-    device: GoveeDevice,
-  ) {
-    const fanSpeed = (device as unknown as FanSpeedState).fanSpeed ?? 0;
-    service
-      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
-      .updateValue(
-        (device as unknown as ControlLockState).areControlsLocked
-          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
-          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED);
-    service
-      .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
-      .updateValue(
-        fanSpeed === 16
-          ? 25
-          : ((fanSpeed + 1) * 25),
-      );
-    service
-      .getCharacteristic(this.CHARACTERISTICS.CurrentAirPurifierState)
-      .updateValue(
-        ((device as unknown as ActiveState)?.isActive ?? false)
-          ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
-          : this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE,
-      );
-    service
-      .getCharacteristic(this.CHARACTERISTICS.Active)
-      .updateValue(
-        ((device as unknown as ActiveState)?.isActive ?? false)
-          ? this.CHARACTERISTICS.Active.ACTIVE
-          : this.CHARACTERISTICS.Active.INACTIVE,
       );
   }
 }

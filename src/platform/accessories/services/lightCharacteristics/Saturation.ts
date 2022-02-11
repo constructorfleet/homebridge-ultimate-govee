@@ -31,7 +31,7 @@ export class Saturation extends AccessoryService {
     return Reflect.has(device, 'colorTemperatureChange');
   }
 
-  protected initializeServiceCharacteristics(
+  protected updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
   ) {

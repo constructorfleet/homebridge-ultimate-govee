@@ -24,13 +24,6 @@ export class InformationService extends AccessoryService {
     );
   }
 
-  protected initializeServiceCharacteristics(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    service: Service,
-  ) {
-    return;
-  }
-
   protected updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
