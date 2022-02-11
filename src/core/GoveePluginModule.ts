@@ -22,6 +22,7 @@ import {Md5} from 'ts-md5';
 import {v4 as uuidv4} from 'uuid';
 import {rgbLightProviders} from '../devices/GoveeRGBLight';
 import {rgbicLightProviders} from '../devices/GoveeRGBICLight';
+import {wwLightProviders} from '../devices/GoveeWWLight';
 
 @Module({})
 export class GoveePluginModule {
@@ -94,6 +95,7 @@ export class GoveePluginModule {
         },
         ...purifierProviders,
         ...humidifierProviders,
+        ...wwLightProviders,
         ...rgbLightProviders,
         ...rgbicLightProviders,
         ...connectionProviders,
@@ -102,6 +104,7 @@ export class GoveePluginModule {
       exports: [
         ...purifierProviders,
         ...humidifierProviders,
+        ...wwLightProviders,
         ...rgbLightProviders,
         ...rgbicLightProviders,
         IOT_CA_CERTIFICATE,
