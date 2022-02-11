@@ -6,7 +6,7 @@ import {GoveeDeviceOverride, GoveeDeviceOverrides, GoveePluginConfig} from './Go
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {GoveeHumidifier} from '../../devices/GoveeHumidifier';
 import {GoveeAirPurifier} from '../../devices/GoveeAirPurifier';
-import {GoveeLight} from '../../devices/GoveeLight';
+import {GoveeWWLight} from '../../devices/GoveeWWLight';
 
 @Injectable()
 export class PlatformConfigService {
@@ -143,7 +143,7 @@ export class PlatformConfigService {
       devices
         .filter(
           (device) =>
-            !deviceMap.has(device.deviceId) && device instanceof GoveeLight,
+            !deviceMap.has(device.deviceId) && device instanceof GoveeWWLight,
         )
         .map((device) => new GoveeDeviceOverride(device));
 

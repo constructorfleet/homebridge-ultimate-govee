@@ -5,25 +5,30 @@ import {Timer} from './states/Timer';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {GoveeDevice} from './GoveeDevice';
 import {StatusMode} from './states/StatusMode';
-import {ControlLock} from './states/ControlLock';
 import {ColorTemperature} from './states/ColorTemperature';
 import {Brightness} from './states/Brightness';
 import {Scene} from './states/Scene';
 
-const lightModels = [];
+const wwLightModels = [];
 
-export const lightProviders: Provider[] = [];
+export const wwLightProviders: Provider[] = [];
 
-export class GoveeLight
+export class GoveeWWLight
   extends Scene(
     ColorTemperature(
       Brightness(
-        ControlLock(
-          StatusMode(
-            Timer(
-              Active(
-                OnOff(
-                  GoveeDevice)))))))) {
+        StatusMode(
+          Timer(
+            Active(
+              OnOff(
+                GoveeDevice,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ) {
 
   constructor(
     deviceConfig: DeviceConfig,

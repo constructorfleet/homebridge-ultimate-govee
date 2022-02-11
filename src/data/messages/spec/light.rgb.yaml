@@ -11,14 +11,9 @@
   05: Color
     02:
       rr: Red
-      gg: Green
-      bb: Blue
-  05: Color Temp (RGB From Kelvin)
-    02:
-      ff:
-        ff:
-          ff:
-            01:
+        gg: Green
+          bb: Blue
+            01: COLOR TEMP
               rr:
               gg:
               bb:

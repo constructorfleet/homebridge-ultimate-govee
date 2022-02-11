@@ -21,6 +21,7 @@ import {RestEventProcessor} from '../interactors/data/RestEventProcessor';
 import {Md5} from 'ts-md5';
 import {v4 as uuidv4} from 'uuid';
 import {rgbLightProviders} from '../devices/GoveeRGBLight';
+import {rgbicLightProviders} from '../devices/GoveeRGBICLight';
 
 @Module({})
 export class GoveePluginModule {
@@ -94,6 +95,7 @@ export class GoveePluginModule {
         ...purifierProviders,
         ...humidifierProviders,
         ...rgbLightProviders,
+        ...rgbicLightProviders,
         ...connectionProviders,
         DeviceManager,
       ],
@@ -101,6 +103,7 @@ export class GoveePluginModule {
         ...purifierProviders,
         ...humidifierProviders,
         ...rgbLightProviders,
+        ...rgbicLightProviders,
         IOT_CA_CERTIFICATE,
         IOT_CERTIFICATE,
         IOT_KEY,
