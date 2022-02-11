@@ -102,9 +102,6 @@ export class DeviceManager extends Emitter {
       );
       return;
     }
-    if (!device.iotTopic) {
-      return;
-    }
     deviceTransition.apply(
       device,
       this,
