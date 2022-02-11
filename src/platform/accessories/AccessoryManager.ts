@@ -10,6 +10,10 @@ import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
+import {ColorTemperature} from './services/lightCharacteristics/ColorTemperature';
+import {Hue} from './services/lightCharacteristics/Hue';
+import {Saturation} from './services/lightCharacteristics/Saturation';
+import {LightService} from './services/LightService';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -20,6 +24,10 @@ export class AccessoryManager extends Emitter {
     private readonly informationService: InformationService,
     private readonly humidifierService: HumidifierService,
     private readonly purifierService: PurifierService,
+    private readonly lightService: LightService,
+    private readonly colorTemperature: ColorTemperature,
+    private readonly hue: Hue,
+    private readonly saturation: Saturation,
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
@@ -49,6 +57,10 @@ export class AccessoryManager extends Emitter {
     this.informationService.initializeAccessory(accessory, device);
     this.humidifierService.initializeAccessory(accessory, device);
     this.purifierService.initializeAccessory(accessory, device);
+    this.lightService.initializeAccessory(accessory, device);
+    this.hue.initializeAccessory(accessory, device);
+    this.saturation.initializeAccessory(accessory, device);
+    this.colorTemperature.initializeAccessory(accessory, device);
     this.api.updatePlatformAccessories([accessory]);
   }
 
@@ -73,6 +85,10 @@ export class AccessoryManager extends Emitter {
       this.informationService.initializeAccessory(accessory, device);
       this.humidifierService.initializeAccessory(accessory, device);
       this.purifierService.initializeAccessory(accessory, device);
+      this.lightService.initializeAccessory(accessory, device);
+      this.hue.initializeAccessory(accessory, device);
+      this.saturation.initializeAccessory(accessory, device);
+      this.colorTemperature.initializeAccessory(accessory, device);
       this.accessories.set(
         deviceUUID,
         accessory,
@@ -82,6 +98,10 @@ export class AccessoryManager extends Emitter {
       this.informationService.updateAccessory(accessory, device);
       this.humidifierService.updateAccessory(accessory, device);
       this.purifierService.updateAccessory(accessory, device);
+      this.lightService.updateAccessory(accessory, device);
+      this.hue.updateAccessory(accessory, device);
+      this.saturation.updateAccessory(accessory, device);
+      this.colorTemperature.updateAccessory(accessory, device);
       this.api.updatePlatformAccessories([accessory]);
     }
     this.platformConfigService.updateConfigurationWithDevices(device);
