@@ -72,14 +72,14 @@ export class IoTEventProcessor extends Emitter {
         'IoTEventProcessor',
         'RequestDeviceState',
         'No topic',
-        device,
+        device.deviceId,
       );
       return;
     }
     this.log.debug(
       'IoTEventProcessor',
       'RequestDeviceState',
-      device,
+      device.deviceId,
     );
     await this.emitAsync(
       new IoTPublishToEvent(
