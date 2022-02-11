@@ -76,7 +76,7 @@ export class IoTEventProcessor extends Emitter {
       );
       return;
     }
-    this.log.info(
+    this.log.debug(
       'IoTEventProcessor',
       'RequestDeviceState',
       device,
