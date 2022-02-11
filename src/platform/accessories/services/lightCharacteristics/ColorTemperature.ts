@@ -28,7 +28,7 @@ export class ColorTemperature extends AccessoryService {
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return Reflect.has(device, 'colorTemperature');
+    return Reflect.has(device, 'colorTemperatureChange');
   }
 
   protected initializeServiceCharacteristics(
