@@ -25,6 +25,10 @@ export function StatusMode<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
+      if (deviceState.mode !== undefined) {
+        this.statusMode = deviceState.mode;
+        return super.parse(deviceState);
+      }
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
