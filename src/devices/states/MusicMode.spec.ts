@@ -1,6 +1,7 @@
 import {State} from './State';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
 import {MusicMode, MusicModeState, MusicModeType} from './MusicMode';
+import {ColorRGB} from '../../util/colorUtils';
 
 class TestState extends MusicMode(State) {
   constructor(...args) {
@@ -25,9 +26,7 @@ describe('MusicModeState', () => {
   describe('parse', () => {
     it('processes DeviceState.commands', () => {
       expect(testState.musicMode).toBeUndefined();
-      expect(testState.musicModeRed).toBeUndefined();
-      expect(testState.musicModeGreen).toBeUndefined();
-      expect(testState.musicModeBlue).toBeUndefined();
+      expect(testState.musicColor).toBeUndefined();
       testState.parse({
         deviceId: 'device',
         commands: [
@@ -35,9 +34,9 @@ describe('MusicModeState', () => {
         ],
       });
       expect(testState.musicMode).toBe(MusicModeType.SPECTRUM);
-      expect(testState.musicModeRed).toBe(255);
-      expect(testState.musicModeGreen).toBe(0);
-      expect(testState.musicModeBlue).toBe(0);
+      expect(testState.musicColor?.red).toBe(255);
+      expect(testState.musicColor?.green).toBe(0);
+      expect(testState.musicColor?.blue).toBe(0);
       testState.parse({
         deviceId: 'device',
         commands: [
@@ -45,16 +44,14 @@ describe('MusicModeState', () => {
         ],
       });
       expect(testState.musicMode).toBe(MusicModeType.ENERGETIC);
-      expect(testState.musicModeRed).toBe(0);
-      expect(testState.musicModeGreen).toBe(255);
-      expect(testState.musicModeBlue).toBe(0);
+      expect(testState.musicColor?.red).toBe(0);
+      expect(testState.musicColor?.green).toBe(255);
+      expect(testState.musicColor?.blue).toBe(0);
     });
 
     it('ignores non-applicable DeviceState', () => {
       expect(testState.musicMode).toBeUndefined();
-      expect(testState.musicModeRed).toBeUndefined();
-      expect(testState.musicModeGreen).toBeUndefined();
-      expect(testState.musicModeBlue).toBeUndefined();
+      expect(testState.musicColor).toBeUndefined();
       testState.parse({
         deviceId: 'device',
         brightness: 100,
@@ -63,18 +60,18 @@ describe('MusicModeState', () => {
         ],
       });
       expect(testState.musicMode).toBeUndefined();
-      expect(testState.musicModeRed).toBeUndefined();
-      expect(testState.musicModeGreen).toBeUndefined();
-      expect(testState.musicModeBlue).toBeUndefined();
+      expect(testState.musicColor).toBeUndefined();
     });
   });
 
   describe('musicModeChange', () => {
     it('returns opcode array', () => {
       testState.musicMode = MusicModeType.RHYTHM;
-      testState.musicModeRed = 20;
-      testState.musicModeGreen = 80;
-      testState.musicModeBlue = 40;
+      testState.musicColor = new ColorRGB(
+        20,
+        80,
+        40,
+      );
       expect(testState.musicModeChange).toStrictEqual(
         [
           COMMAND_IDENTIFIER, 5, 1, 3, 0,

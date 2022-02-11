@@ -2,6 +2,7 @@ import {State} from './State';
 import {DeviceState} from '../../core/structures/devices/DeviceState';
 import {getCommandCodes, getCommandValues} from '../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
+import {ColorRGB} from '../../util/colorUtils';
 
 const commandIdentifiers = [
   5,
@@ -17,9 +18,7 @@ export enum MusicModeType {
 
 export interface MusicModeState {
   musicMode?: MusicModeType;
-  musicModeRed?: number;
-  musicModeBlue?: number;
-  musicModeGreen?: number;
+  musicColor?: ColorRGB;
 
   get musicModeChange(): number[];
 }
@@ -30,9 +29,7 @@ export function MusicMode<StateType extends State>(
   // @ts-ignore
   return class extends stateType implements MusicModeState {
     public musicMode?: MusicModeType;
-    public musicModeRed?: number;
-    public musicModeBlue?: number;
-    public musicModeGreen?: number;
+    public musicColor?: ColorRGB;
 
     public constructor(...args) {
       super(...args);
@@ -46,9 +43,11 @@ export function MusicMode<StateType extends State>(
       );
       if (commandValues) {
         this.musicMode = commandValues[0];
-        this.musicModeRed = commandValues[2];
-        this.musicModeGreen = commandValues[3];
-        this.musicModeBlue = commandValues[4];
+        this.musicColor = new ColorRGB(
+          commandValues[2],
+          commandValues[3],
+          commandValues[4],
+        );
       }
 
       return super.parse(deviceState);
@@ -60,9 +59,9 @@ export function MusicMode<StateType extends State>(
         commandIdentifiers,
         this.musicMode || 0,
         0x00,
-        this.musicModeRed || 0,
-        this.musicModeGreen || 0,
-        this.musicModeBlue || 0,
+        this.musicColor?.red || 0,
+        this.musicColor?.green || 0,
+        this.musicColor?.blue || 0,
       );
     }
   };
