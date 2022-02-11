@@ -17,6 +17,10 @@ import {PurifierService} from './accessories/services/PurifierService';
 import {PlatformName, PluginIdentifier} from 'homebridge/lib/api';
 import {PlatformService} from './PlatformService';
 import {PlatformConfigService} from './config/PlatformConfigService';
+import {LightService} from './accessories/services/LightService';
+import {ColorTemperature} from './accessories/services/lightCharacteristics/ColorTemperature';
+import {Hue} from './accessories/services/lightCharacteristics/Hue';
+import {Saturation} from './accessories/services/lightCharacteristics/Saturation';
 
 export interface GoveeCredentials {
   username: string;
@@ -100,6 +104,10 @@ export class PlatformModule {
           useValue: config.configPath,
         },
         InformationService,
+        LightService,
+        ColorTemperature,
+        Hue,
+        Saturation,
         HumidifierService,
         PurifierService,
         AccessoryManager,
