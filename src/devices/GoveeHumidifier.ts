@@ -4,25 +4,14 @@ import {Active} from './states/Active';
 import {StatusMode} from './states/StatusMode';
 import {MistLevel} from './states/MistLevel';
 import {ProgrammableMistLevel} from './states/ProgrammableMistLevel';
-import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {GoveeDevice} from './GoveeDevice';
 import {ControlLock} from './states/ControlLock';
+import {DeviceFactory} from './DeviceFactory';
 
-export const humidifierProviders: Provider[] = [
-  {
-    provide: 'H7141',
-    useValue: function() {
-      return (config) => new GoveeHumidifier(config);
-    },
-  },
-  {
-    provide: 'H7142',
-    useValue: function() {
-      return (config) => new GoveeHumidifier(config);
-    },
-  },
-];
-
+@DeviceFactory.register(
+  'H7141',
+  'H7141',
+)
 export class GoveeHumidifier
   extends ControlLock(ProgrammableMistLevel(MistLevel(StatusMode(Active(OnOff(GoveeDevice)))))) {
 

@@ -9,8 +9,6 @@ import {BLEPeripheralCommandSend, BLEPeripheralSendEvent} from '../core/events/d
 import {base64ToHex} from '../util/encodingUtils';
 
 export class GoveeDevice extends State {
-  static MODELS: string[] = [];
-
   constructor(
     deviceConfig: DeviceConfig,
   ) {

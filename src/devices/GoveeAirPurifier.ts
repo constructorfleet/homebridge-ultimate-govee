@@ -3,25 +3,14 @@ import {OnOff} from './states/OnOff';
 import {FanSpeed} from './states/FanSpeed';
 import {Active} from './states/Active';
 import {Timer} from './states/Timer';
-import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {GoveeDevice} from './GoveeDevice';
 import {ControlLock} from './states/ControlLock';
+import {DeviceFactory} from './DeviceFactory';
 
-export const purifierProviders: Provider[] = [
-  {
-    provide: 'H7121',
-    useValue: function() {
-      return (config) => new GoveeAirPurifier(config);
-    },
-  },
-  {
-    provide: 'H7122',
-    useValue: function() {
-      return (config) => new GoveeAirPurifier(config);
-    },
-  },
-];
-
+@DeviceFactory.register(
+  'H7121',
+  'H7122',
+)
 export class GoveeAirPurifier
   extends ControlLock(FanSpeed(Timer(Active(OnOff(GoveeDevice))))) {
 
