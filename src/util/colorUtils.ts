@@ -10,6 +10,14 @@ export class ColorRGB {
   }
 }
 
+export class HueSaturation {
+  constructor(
+    public hue: number,
+    public saturation: number,
+  ) {
+  }
+}
+
 export const KELVIN_MINIMUM = 2000;
 export const KELVIN_MAXIMUM = 7100;
 export const HUE_MINIMUM = 0;
@@ -83,9 +91,20 @@ export const kelvinToRGB =
       )];
 
 export const rgbToHSV =
-  (red: number, green: number, blue: number): [number, number] =>
-    rgb2hsv([red, green, blue]);
+  (rgb: ColorRGB): HueSaturation => {
+    const hsv = rgb2hsv([rgb.red, rgb.green, rgb.blue]);
+    return new HueSaturation(
+      hsv[0],
+      hsv[1],
+    );
+  };
 
 export const hsvToRGB =
-  (hue: number, saturation: number): [number, number, number] =>
-    hsv2rgb([hue, saturation, 100]);
+  (hue: number, saturation: number): ColorRGB => {
+    const rgb = hsv2rgb([hue, saturation, 100]);
+    return new ColorRGB(
+      rgb[0],
+      rgb[1],
+      rgb[2],
+    );
+  };
