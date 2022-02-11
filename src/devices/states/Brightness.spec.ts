@@ -45,7 +45,6 @@ describe('BrightnessState', () => {
       expect(testState.brightness).toBeUndefined();
       testState.parse({
         deviceId: 'device',
-        brightness: 100,
         commands: [
           [REPORT_IDENTIFIER, 1, 2],
         ],
