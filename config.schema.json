@@ -99,6 +99,36 @@
                 }
               }
             }
+          },
+          "lights": {
+            "title": "Light Overrides",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "condition": {
+                "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && model.devices.lights[arrayIndices].deviceId && model.devices.lights[arrayIndices].model);"
+              },
+              "properties": {
+                "deviceId": {
+                  "title": "Govee Device ID",
+                  "type": "string",
+                  "readonly": true
+                },
+                "model": {
+                  "title": "Govee Device Model",
+                  "type": "string",
+                  "readonly": true
+                },
+                "ignore": {
+                  "title": "Ignore Device",
+                  "type": "boolean"
+                },
+                "displayName": {
+                  "title": "Display Name",
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -236,6 +266,58 @@
                         },
                         {
                           "key": "devices.humidifiers[].displayName",
+                          "flex": "4 4 80%"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Lights",
+          "expandable": true,
+          "expanded": true,
+          "items": [
+            {
+              "type": "array",
+              "key": "devices.lights",
+              "notitle": true,
+              "items": [
+                {
+                  "type": "div",
+                  "displayFlex": true,
+                  "flex-direction": "column",
+                  "items": [
+                    {
+                      "type": "div",
+                      "displayFlex": true,
+                      "flex-direction": "row",
+                      "items": [
+                        {
+                          "key": "devices.lights[].deviceId",
+                          "flex": "4 4 80%"
+                        },
+                        {
+                          "key": "devices.lights[].model",
+                          "flex": "1 1 20%"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "div",
+                      "displayFlex": "true",
+                      "flex-direction": "row",
+                      "items": [
+                        {
+                          "key": "devices.lights[].ignore",
+                          "flex": "1 1 20%"
+                        },
+                        {
+                          "key": "devices.lights[].displayName",
                           "flex": "4 4 80%"
                         }
                       ]

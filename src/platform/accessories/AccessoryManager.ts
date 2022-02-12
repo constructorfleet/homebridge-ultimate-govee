@@ -4,12 +4,10 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {API, PlatformAccessory} from 'homebridge';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {HOMEBRIDGE_API} from '../../util/const';
-import {InformationService} from './services/InformationService';
-import {HumidifierService} from './services/HumidifierService';
-import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
+import {AccessoryService} from './services/AccessoryService';
 import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
 
 @Injectable()
@@ -18,9 +16,7 @@ export class AccessoryManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
-    private readonly informationService: InformationService,
-    private readonly humidifierService: HumidifierService,
-    private readonly purifierService: PurifierService,
+    @Inject(AccessoryService) private readonly services: AccessoryService[],
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
@@ -31,14 +27,23 @@ export class AccessoryManager extends Emitter {
   async onAccessoryLoaded(
     accessory: PlatformAccessory,
   ) {
+    const device = accessory.context.device;
+    const deviceConfig =
+      this.platformConfigService.getDeviceConfiguration(device.deviceId);
+
+    if (deviceConfig?.ignore) {
+      this.api.unregisterPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
+      return;
+    }
     this.accessories.set(
       accessory.UUID,
       accessory,
     );
-    const device: GoveeDevice = accessory.context.device;
-    this.informationService.initializeAccessory(accessory, device);
-    this.humidifierService.initializeAccessory(accessory, device);
-    this.purifierService.initializeAccessory(accessory, device);
+    this.services.forEach((service) => service.updateAccessory(accessory, device));
     this.api.updatePlatformAccessories([accessory]);
     await this.emitAsync(
       new DeviceSettingsReceived({
@@ -60,6 +65,11 @@ export class AccessoryManager extends Emitter {
     'DEVICE.Discovered',
   )
   async onDeviceDiscovered(device: GoveeDevice) {
+    const deviceConfig =
+      this.platformConfigService.getDeviceConfiguration(device.deviceId);
+    if (deviceConfig?.ignore) {
+      return;
+    }
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
     const accessory =
       this.accessories.get(deviceUUID)
@@ -68,20 +78,15 @@ export class AccessoryManager extends Emitter {
         deviceUUID,
       );
 
+    this.services.forEach((service) => service.updateAccessory(accessory, device));
+    this.api.updatePlatformAccessories([accessory]);
+
     if (!this.accessories.has(deviceUUID)) {
-      this.informationService.initializeAccessory(accessory, device);
-      this.humidifierService.initializeAccessory(accessory, device);
-      this.purifierService.initializeAccessory(accessory, device);
       this.accessories.set(
         deviceUUID,
         accessory,
       );
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-    } else {
-      this.informationService.updateAccessory(accessory, device);
-      this.humidifierService.updateAccessory(accessory, device);
-      this.purifierService.updateAccessory(accessory, device);
-      this.api.updatePlatformAccessories([accessory]);
     }
     this.platformConfigService.updateConfigurationWithDevices(device);
   }
@@ -99,9 +104,7 @@ export class AccessoryManager extends Emitter {
       return;
     }
 
-    this.informationService.updateAccessory(accessory, device);
-    this.humidifierService.updateAccessory(accessory, device);
-    this.purifierService.updateAccessory(accessory, device);
+    this.services.forEach((service) => service.updateAccessory(accessory, device));
 
     this.api.updatePlatformAccessories([accessory]);
   }

@@ -67,27 +67,19 @@ export class IoTEventProcessor extends Emitter {
   async onRequestDeviceState(
     device: GoveeDevice,
   ) {
-    if (!this.iotConnected) {
-      this.log.info(
-        'IoTEventProcessor',
-        'RequestDeviceState',
-        'IOT is not connected',
-      );
-      return;
-    }
     if (!device.iotTopic) {
       this.log.info(
         'IoTEventProcessor',
         'RequestDeviceState',
         'No topic',
-        device,
+        device.deviceId,
       );
       return;
     }
-    this.log.info(
+    this.log.debug(
       'IoTEventProcessor',
       'RequestDeviceState',
-      device,
+      device.deviceId,
     );
     await this.emitAsync(
       new IoTPublishToEvent(

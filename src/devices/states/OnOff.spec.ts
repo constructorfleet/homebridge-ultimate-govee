@@ -8,45 +8,45 @@ class TestState extends OnOff(State) {
   }
 }
 
-let activeState: OnOffState & State;
+let testState: OnOffState & State;
 
 describe('OnOffState', () => {
   beforeEach(() => {
-    activeState = new TestState();
+    testState = new TestState();
   });
 
   describe('constructor', () => {
     it('adds command identifier', () => {
-      expect(activeState.deviceStatusCodes).toHaveLength(0);
-      expect(activeState.deviceStatusCodes).toStrictEqual([]);
+      expect(testState.deviceStatusCodes).toHaveLength(0);
+      expect(testState.deviceStatusCodes).toStrictEqual([]);
     });
   });
 
   describe('parse', () => {
     it('processes DeviceState.on', () => {
-      expect(activeState.isOn).toBeUndefined();
-      activeState.parse({
+      expect(testState.isOn).toBeUndefined();
+      testState.parse({
         deviceId: 'device',
         on: true,
       });
-      expect(activeState.isOn).toBeTruthy();
-      activeState.parse({
+      expect(testState.isOn).toBeTruthy();
+      testState.parse({
         deviceId: 'device',
         on: false,
       });
-      expect(activeState.isOn).toBeFalsy();
+      expect(testState.isOn).toBeFalsy();
     });
 
     it('ignores non-applicable DeviceState', () => {
-      expect(activeState.isOn).toBeUndefined();
-      activeState.parse({
+      expect(testState.isOn).toBeUndefined();
+      testState.parse({
         deviceId: 'device',
         brightness: 100,
         commands: [
           [REPORT_IDENTIFIER, 5, 2],
         ],
       });
-      expect(activeState.isOn).toBeUndefined();
+      expect(testState.isOn).toBeUndefined();
     });
   });
 });

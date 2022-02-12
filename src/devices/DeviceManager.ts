@@ -46,6 +46,7 @@ export class DeviceManager extends Emitter {
       );
       return;
     }
+
     try {
       const device = deviceCtor(deviceSettings);
       this.devices.set(
@@ -99,9 +100,6 @@ export class DeviceManager extends Emitter {
         'Unknown Device',
         deviceTransition.deviceId,
       );
-      return;
-    }
-    if (!device.iotTopic) {
       return;
     }
     deviceTransition.apply(

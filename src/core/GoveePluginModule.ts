@@ -4,8 +4,7 @@ import {DeviceManager} from '../devices/DeviceManager';
 import {RestClient} from '../data/clients/RestClient';
 import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../util/const';
 import path from 'path';
-import {humidifierProviders} from '../devices/GoveeHumidifier';
-import {purifierProviders} from '../devices/GoveeAirPurifier';
+
 import {ConfigurationModule} from '../config/ConfigurationModule';
 import {GoveeConfiguration} from '../config/GoveeConfiguration';
 import {PersistConfiguration} from '../persist/PersistConfiguration';
@@ -20,6 +19,21 @@ import {IoTEventProcessor} from '../interactors/data/IoTEventProcessor';
 import {RestEventProcessor} from '../interactors/data/RestEventProcessor';
 import {Md5} from 'ts-md5';
 import {v4 as uuidv4} from 'uuid';
+import {DeviceFactory} from '../devices/DeviceFactory';
+import {GoveeRGBICLight} from '../devices/GoveeRGBICLight';
+import {GoveeRGBLight} from '../devices/GoveeRGBLight';
+import {GoveeLight} from '../devices/GoveeLight';
+import {GoveeAirPurifier} from '../devices/GoveeAirPurifier';
+import {GoveeHumidifier} from '../devices/GoveeHumidifier';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const GOVEE_DEVICE_TYPES = [
+  GoveeHumidifier,
+  GoveeAirPurifier,
+  GoveeLight,
+  GoveeRGBLight,
+  GoveeRGBICLight,
+];
 
 @Module({})
 export class GoveePluginModule {
@@ -29,7 +43,6 @@ export class GoveePluginModule {
     rootPath: string,
     logger: Logger,
   ): DynamicModule {
-    logger.error(path.join('assets', 'testiot.cert.pkey'));
     const connectionProviders: Provider[] = [];
     if (config.enableBLE) {
       connectionProviders.push(BLEClient);
@@ -90,14 +103,12 @@ export class GoveePluginModule {
             false,
           ),
         },
-        ...purifierProviders,
-        ...humidifierProviders,
+        ...DeviceFactory.getProviders(),
         ...connectionProviders,
         DeviceManager,
       ],
       exports: [
-        ...purifierProviders,
-        ...humidifierProviders,
+        ...DeviceFactory.getProviders(),
         IOT_CA_CERTIFICATE,
         IOT_CERTIFICATE,
         IOT_KEY,
