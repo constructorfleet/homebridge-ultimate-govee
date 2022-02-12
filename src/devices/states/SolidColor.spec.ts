@@ -61,9 +61,9 @@ describe('SolidColorState', () => {
       expect(testState.solidColorChange).toStrictEqual(
         [
           COMMAND_IDENTIFIER, 5, 2, 20, 80,
-          40, 0, 0, 0, 0,
+          40, 0, 255, 174, 84,
           0, 0, 0, 0, 0,
-          0, 0, 0, 0, 88,
+          0, 0, 0, 0, 93,
         ],
       );
     });

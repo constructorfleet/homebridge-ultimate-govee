@@ -46,7 +46,6 @@ export function SolidColor<StateType extends State>(
           commandValues[1],
           commandValues[2],
         );
-
       }
 
       return super.parse(deviceState);
@@ -59,6 +58,7 @@ export function SolidColor<StateType extends State>(
         this.solidColor?.red || 0,
         this.solidColor?.green || 0,
         this.solidColor?.blue || 0,
+        0x00, 0xff, 0xae, 0x54,
       );
     }
   };
