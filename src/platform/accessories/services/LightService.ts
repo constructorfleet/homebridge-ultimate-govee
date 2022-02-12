@@ -3,10 +3,8 @@ import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {ActiveState} from '../../../devices/states/Active';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
-import {DeviceActiveTransition} from '../../../core/structures/devices/transitions/DeviceActiveTransition';
 import {LoggingService} from '../../../logging/LoggingService';
 import {BrightnessState} from '../../../devices/states/Brightness';
 import {DeviceBrightnessTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
@@ -14,6 +12,8 @@ import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeLight} from '../../../devices/GoveeLight';
 import {GoveeRGBLight} from '../../../devices/GoveeRGBLight';
 import {GoveeRGBICLight} from '../../../devices/GoveeRGBICLight';
+import {DeviceOnOffTransition} from '../../../core/structures/devices/transitions/DeviceOnOffTransition';
+import {OnOffState} from '../../../devices/states/OnOff';
 
 @ServiceRegistry.register
 export class LightService extends AccessoryService {
@@ -43,12 +43,12 @@ export class LightService extends AccessoryService {
   ) {
     service
       .getCharacteristic(this.CHARACTERISTICS.On)
-      .updateValue((device as unknown as ActiveState).isActive ?? false)
+      .updateValue((device as unknown as OnOffState).isOn ?? false)
       .onSet(
         async (value: CharacteristicValue) =>
           this.emit(
             new DeviceCommandEvent(
-              new DeviceActiveTransition(
+              new DeviceOnOffTransition(
                 device.deviceId,
                 value as boolean,
               ),
