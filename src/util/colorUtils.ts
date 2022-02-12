@@ -8,6 +8,10 @@ export class ColorRGB {
     public blue: number,
   ) {
   }
+
+  difference(color: ColorRGB): number {
+    return Math.abs(this.red - color.red) + Math.abs(this.green - color.green) - Math.abs(this.blue - color.blue);
+  }
 }
 
 export class HueSaturation {
@@ -78,6 +82,20 @@ export const KELVIN_MAP = {
   7000: new ColorRGB(245, 243, 255),
   7100: new ColorRGB(243, 242, 255),
 };
+
+export const rgbToKelvin =
+  (rgbColor: ColorRGB): number =>
+    parseInt(Object.entries(KELVIN_MAP)
+      .map(
+        (entry) => {
+          return {
+            temperature: entry[0],
+            color: entry[1],
+            difference: rgbColor.difference(entry[1]),
+          };
+        },
+      )
+      .sort((d1, d2) => Math.abs(d1.difference - d2.difference))[0].temperature);
 
 export const kelvinToRGB =
   (kelvin: number): ColorRGB =>

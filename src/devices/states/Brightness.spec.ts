@@ -23,6 +23,20 @@ describe('BrightnessState', () => {
   });
 
   describe('parse', () => {
+    it('processes DeviceState.brightness', () => {
+      expect(testState.brightness).toBeUndefined();
+      testState.parse({
+        deviceId: 'device',
+        brightness: 10,
+      });
+      expect(testState.brightness).toBe(10);
+      testState.parse({
+        deviceId: 'device',
+        brightness: 72,
+      });
+      expect(testState.brightness).toBe(72);
+    });
+
     it('processes DeviceState.commands', () => {
       expect(testState.brightness).toBeUndefined();
       testState.parse({

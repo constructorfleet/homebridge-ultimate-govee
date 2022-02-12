@@ -10,6 +10,7 @@ const commandIdentifiers = [
 
 export interface StatusModeState {
   statusMode?: number;
+  subStatusMode?: number;
 }
 
 export function StatusMode<StateType extends State>(
@@ -18,6 +19,7 @@ export function StatusMode<StateType extends State>(
   // @ts-ignore
   return class extends stateType implements StatusModeState {
     public statusMode?: number;
+    public subStatusMode?: number;
 
     public constructor(...args) {
       super(...args);
@@ -27,6 +29,7 @@ export function StatusMode<StateType extends State>(
     public override parse(deviceState: DeviceState): ThisType<this> {
       if (deviceState.mode !== undefined) {
         this.statusMode = deviceState.mode;
+        this.subStatusMode = 0;
         return super.parse(deviceState);
       }
       const commandValues = getCommandValues(
@@ -35,6 +38,7 @@ export function StatusMode<StateType extends State>(
       );
       if (commandValues) {
         this.statusMode = commandValues[0];
+        this.subStatusMode = commandValues[1];
       }
 
       return super.parse(deviceState);
