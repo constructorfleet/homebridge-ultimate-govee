@@ -1,6 +1,6 @@
 import {DeviceTransition} from '../DeviceTransition';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
-import {ColorRGB} from '../../../../util/colorUtils';
+import {ColorRGB, rgbToKelvin} from '../../../../util/colorUtils';
 import {ColorTemperatureState} from '../../../../devices/states/ColorTemperature';
 
 export class DeviceColorTemperatureTransition extends DeviceTransition<ColorTemperatureState & GoveeDevice> {
@@ -14,7 +14,8 @@ export class DeviceColorTemperatureTransition extends DeviceTransition<ColorTemp
   }
 
   protected updateState(device: ColorTemperatureState & GoveeDevice): DeviceColorTemperatureTransition {
-    device.solidColor = this.color;
+    device.colorTemperature = this.color;
+    device.temperatureKelvin = rgbToKelvin(this.color);
     this.commandCodes = device.colorTemperatureChange;
     return this;
   }
