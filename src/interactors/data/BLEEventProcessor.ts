@@ -36,36 +36,48 @@ export class BLEEventProcessor extends Emitter {
     'BLE.PERIPHERAL.Receive',
   )
   async onPeripheralReceive(state: BLEPeripheralStateReceive) {
-    this.log.info('BLE Peripheral Receive', state);
+    this.log.debug(
+      'BLEEventProcessor',
+      'onPeripheralReceive',
+      state,
+    );
     try {
       const devState = toDeviceState(
         state.deviceId,
         state.state,
       );
-      this.emit(
+      await this.emitAsync(
         new DeviceStateReceived(devState),
       );
     } catch (err) {
-      this.log.error(err);
+      this.log.error(
+        'BLEEventProcessory',
+        'onPeripheralReceive',
+        err,
+      );
     }
   }
 
   @OnEvent(
     'DEVICE.REQUEST.State',
+    {
+      nextTick: true,
+    },
   )
   async onRequestDeviceState(
     device: GoveeDevice,
   ) {
     const bleAddress = device.bleAddress?.toLowerCase();
-    if (!bleAddress) {
+    if (!bleAddress || !device.deviceStatusCodes) {
       return;
     }
-    this.log.info(
+    this.log.debug(
+      'BLEEventProcessor',
       'RequestDeviceState',
-      'codes',
+      device.deviceId,
       device.deviceStatusCodes,
     );
-    this.emit(
+    await this.emitAsync(
       new BLEPeripheralSendEvent(
         new BLEPeripheralCommandSend(
           bleAddress,

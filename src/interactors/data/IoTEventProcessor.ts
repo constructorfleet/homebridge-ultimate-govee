@@ -35,7 +35,7 @@ export class IoTEventProcessor extends Emitter {
     if (connection !== ConnectionState.Connected || !accountTopic) {
       return;
     }
-    this.emit(
+    await this.emitAsync(
       new IoTSubscribeToEvent(accountTopic),
     );
   }
@@ -50,7 +50,7 @@ export class IoTEventProcessor extends Emitter {
         message.payload,
       );
       const devState = toDeviceState(acctMessage);
-      this.emit(
+      await this.emitAsync(
         new DeviceStateReceived(devState),
       );
     } catch (err) {
@@ -60,18 +60,28 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State',
+    {
+      nextTick: true,
+    },
   )
   async onRequestDeviceState(
     device: GoveeDevice,
   ) {
-    if (!this.iotConnected) {
-      this.log.info('RequestDeviceState', 'IOT is not connected');
-      return;
-    }
     if (!device.iotTopic) {
+      this.log.info(
+        'IoTEventProcessor',
+        'RequestDeviceState',
+        'No topic',
+        device.deviceId,
+      );
       return;
     }
-    this.emit(
+    this.log.debug(
+      'IoTEventProcessor',
+      'RequestDeviceState',
+      device.deviceId,
+    );
+    await this.emitAsync(
       new IoTPublishToEvent(
         device.iotTopic,
         JSON.stringify({

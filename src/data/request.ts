@@ -1,6 +1,7 @@
 import {BaseRequest} from '../core/structures/api/requests/payloads/BaseRequest';
 import {BaseResponse} from '../core/structures/api/responses/payloads/BaseResponse';
 import axios, {AxiosResponse} from 'axios';
+import {ApiError} from '../core/structures/api/ApiResponseStatus';
 
 export function request<PayloadType extends BaseRequest,
   ResponseType extends BaseResponse>
@@ -26,8 +27,8 @@ class Request<PayloadType extends BaseRequest,
   ) {
   }
 
-  get(): Promise<AxiosResponse<ResponseType>> {
-    return axios.get(
+  async get(): Promise<AxiosResponse<ResponseType>> {
+    const res = await axios.get(
       this.url,
       {
         timeout: 10000,
@@ -35,10 +36,22 @@ class Request<PayloadType extends BaseRequest,
         params: this.payload,
       },
     );
+
+    if (res.status !== 200) {
+      throw new ApiError(
+        res.statusText,
+        {
+          message: res.statusText,
+          statusCode: res.status,
+        },
+      );
+    }
+
+    return res;
   }
 
-  post(): Promise<AxiosResponse<ResponseType>> {
-    return axios.post(
+  async post(): Promise<AxiosResponse<ResponseType>> {
+    const res = await axios.post(
       this.url,
       this.payload,
       {
@@ -46,5 +59,17 @@ class Request<PayloadType extends BaseRequest,
         headers: this.headers,
       },
     );
+
+    if (res.status !== 200 || res.data.status !== 200) {
+      throw new ApiError(
+        res.data.message,
+        {
+          message: res.data.message,
+          statusCode: res.data.status,
+        },
+      );
+    }
+
+    return res;
   }
 }

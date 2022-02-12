@@ -3,9 +3,9 @@ import {HOMEBRIDGE_API} from '../util/const';
 import {API, PlatformAccessory} from 'homebridge';
 import {Emitter} from '../util/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
-import {RestAuthenticateEvent} from '../core/events/dataClients/rest/RestAuthentication';
 import {AccessoryManager} from './accessories/AccessoryManager';
 import {LoggingService} from '../logging/LoggingService';
+import {RestRequestDevices} from '../core/events/dataClients/rest/RestRequest';
 
 @Injectable()
 export class PlatformService extends Emitter {
@@ -37,9 +37,9 @@ export class PlatformService extends Emitter {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices() {
-    this.emit(
-      new RestAuthenticateEvent(),
+  async discoverDevices() {
+    await this.emitAsync(
+      new RestRequestDevices(),
     );
   }
 }

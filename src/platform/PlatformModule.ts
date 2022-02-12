@@ -11,12 +11,28 @@ import {
 } from '../util/const';
 import {AccessoryManager} from './accessories/AccessoryManager';
 import {BinaryLike} from 'hap-nodejs/dist/lib/util/uuid';
-import {InformationService} from './accessories/services/InformationService';
-import {HumidifierService} from './accessories/services/HumidifierService';
-import {PurifierService} from './accessories/services/PurifierService';
 import {PlatformName, PluginIdentifier} from 'homebridge/lib/api';
 import {PlatformService} from './PlatformService';
 import {PlatformConfigService} from './config/PlatformConfigService';
+import {ServiceRegistry} from './accessories/ServiceRegistry';
+import {HumidifierService} from './accessories/services/HumidifierService';
+import {InformationService} from './accessories/services/InformationService';
+import {LightService} from './accessories/services/LightService';
+import {PurifierService} from './accessories/services/PurifierService';
+import {ColorTemperature} from './accessories/services/lightCharacteristics/ColorTemperature';
+import {Hue} from './accessories/services/lightCharacteristics/Hue';
+import {Saturation} from './accessories/services/lightCharacteristics/Saturation';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const ACCESSORY_SERVICES = [
+  HumidifierService,
+  InformationService,
+  LightService,
+  PurifierService,
+  ColorTemperature,
+  Hue,
+  Saturation,
+];
 
 export interface GoveeCredentials {
   username: string;
@@ -99,9 +115,7 @@ export class PlatformModule {
           provide: PLATFORM_CONFIG_FILE,
           useValue: config.configPath,
         },
-        InformationService,
-        HumidifierService,
-        PurifierService,
+        ServiceRegistry.getServices(),
         AccessoryManager,
         PlatformService,
         PlatformConfigService,

@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {Emitter, sleep} from '../util/types';
+import {Emitter} from '../util/types';
 import {ModuleRef} from '@nestjs/core';
 import {DeviceState} from '../core/structures/devices/DeviceState';
 import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
@@ -22,9 +22,6 @@ export class DeviceManager extends Emitter {
     public moduleRef: ModuleRef,
   ) {
     super(eventEmitter);
-    this.emit(
-      new DevicePollRequest(),
-    );
   }
 
   @OnEvent(
@@ -35,24 +32,37 @@ export class DeviceManager extends Emitter {
       this.log.info('No device settings');
       return;
     }
-    if (!this.devices.has(deviceSettings.deviceId)) {
-      try {
-        // @ts-ignore
-        const deviceCtor = this.moduleRef.get(deviceSettings.model)();
-        const device = deviceCtor(deviceSettings);
-        this.devices.set(
-          deviceSettings.deviceId,
-          device,
+    const newDevice = !this.devices.has(deviceSettings.deviceId);
+    let deviceCtor;
+    try {
+      // @ts-ignore
+      deviceCtor = this.moduleRef.get(deviceSettings.model)();
+    } catch (error) {
+      this.log.info(
+        'DeviceManager',
+        'onDeviceSettings',
+        'Unknown model',
+        deviceSettings.model,
+      );
+      return;
+    }
+
+    try {
+      const device = deviceCtor(deviceSettings);
+      this.devices.set(
+        deviceSettings.deviceId,
+        device,
+      );
+      await this.emitAsync(
+        new DeviceDiscoveredEvent(device),
+      );
+      if (newDevice) {
+        await this.emitAsync(
+          new DevicePollRequest(device.deviceId),
         );
-        this.emit(
-          new DeviceDiscoveredEvent(device),
-        );
-        this.emit(
-          new DevicePollRequest(device),
-        );
-      } catch (err) {
-        this.log.error(err);
       }
+    } catch (err) {
+      this.log.error(err);
     }
   }
 
@@ -61,17 +71,21 @@ export class DeviceManager extends Emitter {
   )
   async onDeviceState(deviceState: DeviceState) {
     if (!this.devices.has(deviceState.deviceId)) {
-      this.log.info('Unknown Device');
+      this.log.info(
+        'DeviceManager',
+        'onDeviceState',
+        'Unknown Device',
+        deviceState.deviceId,
+      );
       return;
     }
     const device = this.devices.get(deviceState.deviceId);
     if (device) {
       device.updateState(deviceState);
-      this.emit(
+      await this.emitAsync(
         new DeviceUpdatedEvent(device),
       );
     }
-    return;
   }
 
   @OnEvent(
@@ -80,10 +94,12 @@ export class DeviceManager extends Emitter {
   async onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
     const device = this.devices.get(deviceTransition.deviceId);
     if (!device) {
-      this.log.info('Unknown Device');
-      return;
-    }
-    if (!device.iotTopic) {
+      this.log.info(
+        'DeviceManager',
+        'onDeviceCommand',
+        'Unknown Device',
+        deviceTransition.deviceId,
+      );
       return;
     }
     deviceTransition.apply(
@@ -94,31 +110,33 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.Poll',
-    {
-      nextTick: true,
-    },
   )
   async pollDeviceStates(
-    device?: GoveeDevice,
+    deviceId: string,
   ) {
-    (
-      device
-        ? [device]
-        : Array.from(this.devices.values())
-    )
-      ?.forEach(
-        (device) => {
-          this.emit(
-            new DeviceStateRequest(device),
-          );
-        },
-      );
-    if (!device) {
-      this.log.debug('Setting timeout');
-      await sleep(1000);
+    this.log.debug(
+      'DeviceManager',
+      'pollDeviceStates',
+      deviceId,
+    );
+    const device = this.devices.get(deviceId);
+    if (device) {
       await this.emitAsync(
-        new DevicePollRequest(),
+        new DeviceStateRequest(device),
       );
     }
+
+    this.log.debug(
+      'DeviceManager',
+      'pollDeviceStates',
+      'Setting Poll Timeout',
+      deviceId,
+    );
+    setTimeout(
+      () => this.emit(
+        new DevicePollRequest(deviceId),
+      ),
+      30 * 1000,
+    );
   }
 }

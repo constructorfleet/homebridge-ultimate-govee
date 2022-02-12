@@ -23,6 +23,20 @@ describe('StatusModeState', () => {
   });
 
   describe('parse', () => {
+    it('processes DeviceState.mode', () => {
+      expect(testState.subStatusMode).toBeUndefined();
+      testState.parse({
+        deviceId: 'device',
+        mode: 10,
+      });
+      expect(testState.statusMode).toBe(10);
+      testState.parse({
+        deviceId: 'device',
+        mode: 23,
+      });
+      expect(testState.statusMode).toBe(23);
+    });
+
     it('processes DeviceState.commands', () => {
       expect(testState.statusMode).toBeUndefined();
       testState.parse({

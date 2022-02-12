@@ -1,19 +1,19 @@
 import {DeviceTransition} from '../DeviceTransition';
 import {MistLevelState} from '../../../../devices/states/MistLevel';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
-import {hexToBase64} from '../../../../util/encodingUtils';
 
 export class DeviceMistLevelTransition extends DeviceTransition<MistLevelState & GoveeDevice> {
 
   constructor(
     deviceId: string,
-    private mistLevel: number,
+    public readonly mistLevel: number,
   ) {
     super(deviceId);
   }
 
-  protected updateState(device: MistLevelState & GoveeDevice): string {
+  protected updateState(device: MistLevelState & GoveeDevice): DeviceMistLevelTransition {
     device.mistLevel = this.mistLevel;
-    return hexToBase64(device.mistLevelChange);
+    this.commandCodes = device.mistLevelChange;
+    return this;
   }
 }
