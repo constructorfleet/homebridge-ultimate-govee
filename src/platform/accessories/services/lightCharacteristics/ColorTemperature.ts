@@ -6,9 +6,9 @@ import {GoveeDevice} from '../../../../devices/GoveeDevice';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../../core/events/devices/DeviceCommand';
 import {LoggingService} from '../../../../logging/LoggingService';
-import {DeviceColorTransition} from '../../../../core/structures/devices/transitions/DeviceColorTransition';
 import {kelvinToRGB, rgbToHSV} from '../../../../util/colorUtils';
 import {ServiceRegistry} from '../../ServiceRegistry';
+import {DeviceColorTemperatureTransition} from '../../../../core/structures/devices/transitions/DeviceColorTemperatureTransition';
 
 @ServiceRegistry.register
 export class ColorTemperature extends AccessoryService {
@@ -48,9 +48,10 @@ export class ColorTemperature extends AccessoryService {
             .updateValue(hueSaturation.saturation);
           await this.emitAsync(
             new DeviceCommandEvent(
-              new DeviceColorTransition(
+              new DeviceColorTemperatureTransition(
                 device.deviceId,
                 color,
+                value as number,
               ),
             ),
           );
