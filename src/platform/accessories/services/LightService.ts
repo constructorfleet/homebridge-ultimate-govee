@@ -18,6 +18,7 @@ import {OnOffState} from '../../../devices/states/OnOff';
 @ServiceRegistry.register
 export class LightService extends AccessoryService {
   protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
+  protected readonly ServiceSubTypes?: string[] = ['Light'];
 
   constructor(
     eventEmitter: EventEmitter2,
