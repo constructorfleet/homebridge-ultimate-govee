@@ -1,11 +1,9 @@
 import {State} from './State';
 import {DeviceState} from '../../core/structures/devices/DeviceState';
 import {getCommandCodes, getCommandValues} from '../../util/opCodeUtils';
-import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
+import {COMMAND_IDENTIFIER, SEGMENT_COUNT} from '../../util/const';
 import {ColorRGB} from '../../util/colorUtils';
 import {arrayReplace} from '../../util/arrayUtils';
-
-const SEGMENT_COUNT = 15;
 
 class ColorLeftRight {
   private bitArray: number[] = new Array<number>(SEGMENT_COUNT).fill(0);
@@ -49,6 +47,10 @@ const commandIdentifiers = [
   11,
 ];
 
+const reportIdentifiers = [
+  0xa5,
+];
+
 export interface ColorSegmentsState {
   colorSegments: ColorRGB[];
 
@@ -69,7 +71,7 @@ export function ColorSegments<StateType extends State>(
 
     public override parse(deviceState: DeviceState): ThisType<this> {
       const commandValues = getCommandValues(
-        [REPORT_IDENTIFIER, ...commandIdentifiers],
+        [0xa5],
         deviceState.commands,
       );
       if ((commandValues?.length || 0) > 0) {
@@ -77,44 +79,25 @@ export function ColorSegments<StateType extends State>(
       }
       commandValues?.forEach(
         (cmdValues) => {
-          const color = new ColorRGB(
-            cmdValues[0],
-            cmdValues[1],
-            cmdValues[2],
-          );
-          const leftSegments = '0'.repeat(8)
-            .concat(
-              (cmdValues[5] >> 0)
-                .toString(2),
-            ).slice(-8)
-            .split('')
-            .reverse()
-            .map((x) => x === '1');
-          const rightSegments = '0'.repeat(SEGMENT_COUNT - 8)
-            .concat(
-              (cmdValues[6] >> 0)
-                .toString(2),
-            ).slice(-(SEGMENT_COUNT - 8))
-            .split('')
-            .reverse()
-            .map((x) => x === '1');
-          leftSegments.forEach(
-            (active, idx) => {
-              if (active) {
-                this.colorSegments[idx] = color;
-              }
-            });
-          rightSegments.forEach(
-            (active, idx) => {
-              if (active) {
-                this.colorSegments[8 + idx] = color;
-              }
-            });
+          const startIndex = (cmdValues[0] - 1) * 3;
+          for (let i = 0; i < 3; i++) {
+            const color = new ColorRGB(
+              cmdValues[i * 4 + 2],
+              cmdValues[i * 4 + 3],
+              cmdValues[i * 4 + 4],
+            );
+            arrayReplace(
+              this.colorSegments,
+              startIndex + i,
+              color,
+            );
+          }
         },
       );
 
       return super.parse(deviceState);
     }
+
 
     public get colorSegmentsChange(): number[][] {
       return Array.from(
