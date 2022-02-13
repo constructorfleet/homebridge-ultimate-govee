@@ -23,7 +23,15 @@ describe('ColorSegmentsState', () => {
   });
 
   describe('parse', () => {
-    it('processes DeviceState.commands', () => {
+    it('processes DeviceState.commands 1 match', () => {
+      expect(testState.colorSegments).toHaveLength(15);
+      testState.colorSegments.forEach(
+        (segment) => {
+          expect(segment.red).toBe(0);
+          expect(segment.green).toBe(0);
+          expect(segment.blue).toBe(0);
+        },
+      );
       testState.parse({
         deviceId: 'device',
         commands: [
@@ -47,17 +55,69 @@ describe('ColorSegmentsState', () => {
       }
     });
 
-    // it('ignores non-applicable DeviceState', () => {
-    //   expect(testState.solidColor).toBeUndefined();
-    //   testState.parse({
-    //     deviceId: 'device',
-    //     brightness: 100,
-    //     commands: [
-    //       [REPORT_IDENTIFIER, 1, 2],
-    //     ],
-    //   });
-    //   expect(testState.solidColor).toBeUndefined();
-    // });
+    it('processes DeviceState.commands 2 match', () => {
+      expect(testState.colorSegments).toHaveLength(15);
+      testState.colorSegments.forEach(
+        (segment) => {
+          expect(segment.red).toBe(0);
+          expect(segment.green).toBe(0);
+          expect(segment.blue).toBe(0);
+        },
+      );
+      testState.parse({
+        deviceId: 'device',
+        commands: [
+          [REPORT_IDENTIFIER, 5, 11, 10, 50, 255, 0, 0, 5, 0],
+          [REPORT_IDENTIFIER, 5, 11, 100, 101, 150, 0, 0, 0, 8],
+        ],
+      });
+      expect(testState.colorSegments).toHaveLength(15);
+      for (let i = 0; i < testState.colorSegments.length; i++) {
+        const color = testState.colorSegments[i];
+        if ([0, 2].includes(i)) {
+          expect(color).toBeDefined();
+          expect(color?.red).toBe(10);
+          expect(color?.green).toBe(50);
+          expect(color?.blue).toBe(255);
+        } else if ([11].includes(i)) {
+          expect(color).toBeDefined();
+          expect(color?.red).toBe(100);
+          expect(color?.green).toBe(101);
+          expect(color?.blue).toBe(150);
+        } else {
+          expect(color).toBeDefined();
+          expect(color?.red).toBe(0);
+          expect(color?.green).toBe(0);
+          expect(color?.blue).toBe(0);
+        }
+      }
+    });
+
+    it('ignores non-applicable DeviceState', () => {
+      expect(testState.colorSegments).toHaveLength(15);
+      testState.colorSegments.forEach(
+        (segment) => {
+          expect(segment.red).toBe(0);
+          expect(segment.green).toBe(0);
+          expect(segment.blue).toBe(0);
+        },
+      );
+      testState.parse({
+        deviceId: 'device',
+        brightness: 100,
+        commands: [
+          [REPORT_IDENTIFIER, 1, 2],
+        ],
+      });
+      expect(testState.colorSegments).toHaveLength(15);
+      testState.colorSegments.forEach(
+        (segment) => {
+          expect(segment.red).toBe(0);
+          expect(segment.green).toBe(0);
+          expect(segment.blue).toBe(0);
+        },
+      );
+    });
   });
 
   // describe('solidColorChange', () => {

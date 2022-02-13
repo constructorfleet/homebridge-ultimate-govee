@@ -72,41 +72,46 @@ export function ColorSegments<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        const color = new ColorRGB(
-          commandValues[0],
-          commandValues[1],
-          commandValues[2],
-        );
-        const leftSegments = '0'.repeat(8)
-          .concat(
-            (commandValues[5] >> 0)
-              .toString(2),
-          ).slice(-8)
-          .split('')
-          .reverse()
-          .map((x) => x === '1');
-        const rightSegments = '0'.repeat(8)
-          .concat(
-            (commandValues[6] >> 0)
-              .toString(2),
-          ).slice(-8)
-          .split('')
-          .reverse()
-          .map((x) => x === '1');
-        leftSegments.forEach(
-          (active, idx) => {
-            if (active) {
-              this.colorSegments[idx] = color;
-            }
-          });
-        rightSegments.forEach(
-          (active, idx) => {
-            if (active) {
-              this.colorSegments[9 + idx] = color;
-            }
-          });
+      if ((commandValues?.length || 0) > 0) {
+        this.colorSegments.fill(new ColorRGB(0, 0, 0));
       }
+      commandValues?.forEach(
+        (cmdValues) => {
+          const color = new ColorRGB(
+            cmdValues[0],
+            cmdValues[1],
+            cmdValues[2],
+          );
+          const leftSegments = '0'.repeat(8)
+            .concat(
+              (cmdValues[5] >> 0)
+                .toString(2),
+            ).slice(-8)
+            .split('')
+            .reverse()
+            .map((x) => x === '1');
+          const rightSegments = '0'.repeat(SEGMENT_COUNT - 8)
+            .concat(
+              (cmdValues[6] >> 0)
+                .toString(2),
+            ).slice(-(SEGMENT_COUNT - 8))
+            .split('')
+            .reverse()
+            .map((x) => x === '1');
+          leftSegments.forEach(
+            (active, idx) => {
+              if (active) {
+                this.colorSegments[idx] = color;
+              }
+            });
+          rightSegments.forEach(
+            (active, idx) => {
+              if (active) {
+                this.colorSegments[8 + idx] = color;
+              }
+            });
+        },
+      );
 
       return super.parse(deviceState);
     }
