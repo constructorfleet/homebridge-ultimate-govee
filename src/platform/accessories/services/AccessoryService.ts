@@ -6,6 +6,7 @@ import {LoggingService} from '../../../logging/LoggingService';
 
 export abstract class AccessoryService extends Emitter {
   protected abstract readonly ServiceType: WithUUID<typeof Service>;
+  protected readonly ServiceSubTypes?: string[];
 
   protected constructor(
     eventEmitter: EventEmitter2,
@@ -23,14 +24,18 @@ export abstract class AccessoryService extends Emitter {
     if (!this.supports(device)) {
       return accessory;
     }
-    this.updateServiceCharacteristics(
-      this.get(accessory),
-      device,
+    this.get(accessory).forEach(
+      (service) =>
+        this.updateServiceCharacteristics(
+          service,
+          device,
+        ),
     );
     accessory.context.device = device;
     return accessory;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected supports(device: GoveeDevice): boolean {
     return true;
   }
@@ -42,7 +47,24 @@ export abstract class AccessoryService extends Emitter {
 
   protected get(
     accessory: PlatformAccessory,
-  ): Service {
-    return accessory.getService(this.ServiceType) || accessory.addService(this.ServiceType);
+  ): Service[] {
+    if (!this.ServiceSubTypes || this.ServiceSubTypes?.length === 0) {
+      const service = accessory.getService(this.ServiceType) || accessory.addService(this.ServiceType, accessory.displayName, 'Primary');
+
+      if (!service.isPrimaryService) {
+        service.setPrimaryService(true);
+      }
+      return [service];
+    }
+
+    return this.ServiceSubTypes.map(
+      (subType) => accessory.getServiceById(this.ServiceType, subType)
+        || accessory.addService(
+          this.ServiceType,
+          `${accessory.displayName} ${subType}`,
+          subType,
+        ),
+    );
+
   }
 }
