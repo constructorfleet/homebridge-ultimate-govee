@@ -1,8 +1,6 @@
 import {State} from './State';
-import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
-import {ColorRGB} from '../../util/colorUtils';
+import {REPORT_IDENTIFIER} from '../../util/const';
 import {ColorSegments, ColorSegmentsState} from './ColorSegments';
-import {arrayReplace} from '../../util/arrayUtils';
 
 class TestState extends ColorSegments(State) {
   constructor(...args) {
@@ -26,55 +24,55 @@ describe('ColorSegmentsState', () => {
 
   describe('parse', () => {
     it('processes DeviceState.commands', () => {
-      expect(testState.colorSegmentsChange).toBeUndefined();
+      expect(testState.colorSegments).toStrictEqual(new Array(15).fill(undefined));
       testState.parse({
         deviceId: 'device',
         commands: [
           [REPORT_IDENTIFIER, 5, 11, 10, 50, 255, 0, 0, 5, 0],
         ],
       });
-      expect(testState.colorSegmentsChange).toBeDefined();
-      const colorSegments = arrayReplace(arrayReplace(new Array(15).fi))
-        [1, 3].forEach(
-          (idx) => {
-            const color = testState.colorSegments[idx];
-            expe;
-          },
-        );
-
-      expect(testState.solidColor?.red).toBe(10);
-      expect(testState.solidColor?.green).toBe(50);
-      expect(testState.solidColor?.blue).toBe(255);
+      expect(testState.colorSegments).toHaveLength(15);
+      for (let i = 0; i < testState.colorSegments.length; i++) {
+        if ([1, 3].includes(i)) {
+          const color = testState.colorSegments[i];
+          expect(color).toBeDefined();
+          expect(color?.red).toBe(10);
+          expect(color?.green).toBe(50);
+          expect(color?.blue).toBe(255);
+        } else {
+          expect(testState.colorSegments[i]).toBeUndefined();
+        }
+      }
     });
 
-    it('ignores non-applicable DeviceState', () => {
-      expect(testState.solidColor).toBeUndefined();
-      testState.parse({
-        deviceId: 'device',
-        brightness: 100,
-        commands: [
-          [REPORT_IDENTIFIER, 1, 2],
-        ],
-      });
-      expect(testState.solidColor).toBeUndefined();
-    });
+    // it('ignores non-applicable DeviceState', () => {
+    //   expect(testState.solidColor).toBeUndefined();
+    //   testState.parse({
+    //     deviceId: 'device',
+    //     brightness: 100,
+    //     commands: [
+    //       [REPORT_IDENTIFIER, 1, 2],
+    //     ],
+    //   });
+    //   expect(testState.solidColor).toBeUndefined();
+    // });
   });
 
-  describe('solidColorChange', () => {
-    it('returns opcode array', () => {
-      testState.solidColor = new ColorRGB(
-        20,
-        80,
-        40,
-      );
-      expect(testState.solidColorChange).toStrictEqual(
-        [
-          COMMAND_IDENTIFIER, 5, 2, 20, 80,
-          40, 0, 255, 174, 84,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 93,
-        ],
-      );
-    });
-  });
+  // describe('solidColorChange', () => {
+  //   it('returns opcode array', () => {
+  //     testState.solidColor = new ColorRGB(
+  //       20,
+  //       80,
+  //       40,
+  //     );
+  //     expect(testState.solidColorChange).toStrictEqual(
+  //       [
+  //         COMMAND_IDENTIFIER, 5, 2, 20, 80,
+  //         40, 0, 255, 174, 84,
+  //         0, 0, 0, 0, 0,
+  //         0, 0, 0, 0, 93,
+  //       ],
+  //     );
+  //   });
+  // });
 });
