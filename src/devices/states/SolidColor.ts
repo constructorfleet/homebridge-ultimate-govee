@@ -41,7 +41,7 @@ export function SolidColor<StateType extends State>(
         deviceState.commands,
       );
       const solidColorCommandValues = commandValues?.find(
-        (cmd) => cmd[0] !== 255 && cmd[1] !== 255 && cmd[2] !== 255,
+        (cmd) => (cmd[3] || 0) === 0,
       );
       if (solidColorCommandValues) {
         this.solidColor = new ColorRGB(
