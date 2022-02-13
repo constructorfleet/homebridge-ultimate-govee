@@ -14,7 +14,7 @@ export class DeviceColorTransition extends DeviceTransition<SolidColorState & Go
 
   protected updateState(device: SolidColorState & GoveeDevice): DeviceColorTransition {
     device.solidColor = this.color;
-    this.commandCodes = device.solidColorChange;
+    this.commandCodes = [device.solidColorChange];
     return this;
   }
 }

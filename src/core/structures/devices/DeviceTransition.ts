@@ -4,7 +4,7 @@ import {State} from '../../../devices/states/State';
 import {hexToBase64} from '../../../util/encodingUtils';
 
 export abstract class DeviceTransition<StateType extends State & GoveeDevice> {
-  protected commandCodes: number[] = [];
+  protected commandCodes: number[][] = [];
 
   protected constructor(public readonly deviceId: string) {
   }
@@ -19,12 +19,12 @@ export abstract class DeviceTransition<StateType extends State & GoveeDevice> {
     );
   }
 
-  public get opCodeCommand(): number[] {
+  public get opCodeCommand(): number[][] {
     return this.commandCodes;
   }
 
-  public get opCodeCommandString(): string {
-    return hexToBase64(this.opCodeCommand);
+  public get opCodeCommandString(): string[] {
+    return this.opCodeCommand.map(hexToBase64);
   }
 
   protected abstract updateState(device: StateType): DeviceTransition<StateType>;

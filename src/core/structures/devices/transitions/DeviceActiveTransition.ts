@@ -13,7 +13,7 @@ export class DeviceActiveTransition extends DeviceTransition<ActiveState & Govee
 
   protected updateState(device: ActiveState & GoveeDevice): DeviceActiveTransition {
     device.isActive = this.active;
-    this.commandCodes = device.activeStateChange;
+    this.commandCodes = [device.activeStateChange];
     return this;
   }
 }

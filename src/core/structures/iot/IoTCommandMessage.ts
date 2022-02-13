@@ -131,7 +131,7 @@ export class IoTOpCodeCommandMessage extends BaseIoTCommandMessage {
       transition,
       'ptReal',
       {
-        command: [transition.opCodeCommandString],
+        command: transition.opCodeCommandString,
       },
     );
   }
