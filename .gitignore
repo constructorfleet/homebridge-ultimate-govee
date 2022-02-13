@@ -126,3 +126,5 @@ test.ts
 .env
 .idea/
 .vscode/
+
+assets/testiot.key.pem
