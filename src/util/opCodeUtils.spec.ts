@@ -29,7 +29,7 @@ describe('opCodeUtils', () => {
       expect(getCommandValues(
         identifier,
         commands,
-      )).toStrictEqual([10, 25]);
+      )).toStrictEqual([[10, 25]]);
     });
   });
 });
