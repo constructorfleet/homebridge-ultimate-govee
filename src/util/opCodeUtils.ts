@@ -29,7 +29,7 @@ export function getCommandCodes(
 export function getCommandValues(
   identifier: number[],
   commands?: number[][],
-): number[] | undefined {
+): number[][] | undefined {
   return commands
     ?.filter(
       (cmd) =>
@@ -44,5 +44,7 @@ export function getCommandValues(
           ),
           true,
         ),
-    )[0]?.slice(identifier.length);
+    ).map(
+      (cmd) => cmd.slice(identifier.length),
+    );
 }

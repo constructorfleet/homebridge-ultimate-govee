@@ -41,12 +41,12 @@ export function MusicMode<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.musicMode = commandValues[0];
+      if (commandValues?.length === 1) {
+        this.musicMode = commandValues[0][0];
         this.musicColor = new ColorRGB(
-          commandValues[2],
-          commandValues[3],
-          commandValues[4],
+          commandValues[0][2],
+          commandValues[0][3],
+          commandValues[0][4],
         );
       }
 

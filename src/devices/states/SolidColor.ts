@@ -40,11 +40,14 @@ export function SolidColor<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
+      const solidColorCommandValues = commandValues?.find(
+        (cmd) => cmd[0] !== 255 && cmd[1] !== 255 && cmd[2] !== 255,
+      );
+      if (solidColorCommandValues) {
         this.solidColor = new ColorRGB(
-          commandValues[0],
-          commandValues[1],
-          commandValues[2],
+          solidColorCommandValues[0],
+          solidColorCommandValues[1],
+          solidColorCommandValues[2],
         );
       }
 

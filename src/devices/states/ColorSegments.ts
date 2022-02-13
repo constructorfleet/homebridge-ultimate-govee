@@ -59,8 +59,8 @@ export function ColorSegments<StateType extends State>(
   stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
-  return class extends stateType implements LightSegmentsState {
-    public colorSegments: (ColorRGB | undefined)[] = new Array(SEGMENT_COUNT).fill(undefined);
+  return class extends stateType implements ColorSegmentsState {
+    public colorSegments: ColorRGB[] = new Array(SEGMENT_COUNT).fill(new ColorRGB(0, 0, 0));
 
     public constructor(...args) {
       super(...args);
@@ -68,16 +68,6 @@ export function ColorSegments<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
-      if (deviceState.color !== undefined) {
-        this.colorSegments.fill(
-          new ColorRGB(
-            deviceState.color.red,
-            deviceState.color.green,
-            deviceState.color.blue,
-          ),
-        );
-        return super.parse(deviceState);
-      }
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
@@ -88,13 +78,21 @@ export function ColorSegments<StateType extends State>(
           commandValues[1],
           commandValues[2],
         );
-        const leftSegments = (commandValues[5] >> 0)
-          .toString(2)
+        const leftSegments = '0'.repeat(8)
+          .concat(
+            (commandValues[5] >> 0)
+              .toString(2),
+          ).slice(-8)
           .split('')
+          .reverse()
           .map((x) => x === '1');
-        const rightSegments = (commandValues[6] >> 0)
-          .toString(2)
+        const rightSegments = '0'.repeat(8)
+          .concat(
+            (commandValues[6] >> 0)
+              .toString(2),
+          ).slice(-8)
           .split('')
+          .reverse()
           .map((x) => x === '1');
         leftSegments.forEach(
           (active, idx) => {

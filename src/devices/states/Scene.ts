@@ -31,8 +31,8 @@ export function Scene<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.sceneId = commandValues[0];
+      if (commandValues?.length === 1) {
+        this.sceneId = commandValues[0][0];
       }
 
       return super.parse(deviceState);

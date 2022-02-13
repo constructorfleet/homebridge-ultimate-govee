@@ -24,7 +24,6 @@ describe('ColorSegmentsState', () => {
 
   describe('parse', () => {
     it('processes DeviceState.commands', () => {
-      expect(testState.colorSegments).toStrictEqual(new Array(15).fill(undefined));
       testState.parse({
         deviceId: 'device',
         commands: [
@@ -33,14 +32,17 @@ describe('ColorSegmentsState', () => {
       });
       expect(testState.colorSegments).toHaveLength(15);
       for (let i = 0; i < testState.colorSegments.length; i++) {
-        if ([1, 3].includes(i)) {
-          const color = testState.colorSegments[i];
+        const color = testState.colorSegments[i];
+        if ([0, 2].includes(i)) {
           expect(color).toBeDefined();
           expect(color?.red).toBe(10);
           expect(color?.green).toBe(50);
           expect(color?.blue).toBe(255);
         } else {
-          expect(testState.colorSegments[i]).toBeUndefined();
+          expect(color).toBeDefined();
+          expect(color?.red).toBe(0);
+          expect(color?.green).toBe(0);
+          expect(color?.blue).toBe(0);
         }
       }
     });
