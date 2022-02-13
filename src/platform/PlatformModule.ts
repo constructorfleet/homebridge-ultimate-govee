@@ -19,20 +19,14 @@ import {HumidifierService} from './accessories/services/HumidifierService';
 import {InformationService} from './accessories/services/InformationService';
 import {LightService} from './accessories/services/LightService';
 import {PurifierService} from './accessories/services/PurifierService';
-import {ColorTemperature} from './accessories/services/lights/ColorTemperature';
-import {Hue} from './accessories/services/lights/Hue';
-import {Saturation} from './accessories/services/lights/Saturation';
 import {LightColorSegments} from './accessories/services/lights/LightColorSegments';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ACCESSORY_SERVICES = [
-  HumidifierService,
   InformationService,
+  HumidifierService,
   LightService,
   PurifierService,
-  ColorTemperature,
-  Hue,
-  Saturation,
   LightColorSegments,
 ];
 

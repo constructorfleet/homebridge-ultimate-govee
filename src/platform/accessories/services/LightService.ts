@@ -14,11 +14,15 @@ import {GoveeRGBLight} from '../../../devices/GoveeRGBLight';
 import {GoveeRGBICLight} from '../../../devices/GoveeRGBICLight';
 import {DeviceOnOffTransition} from '../../../core/structures/devices/transitions/DeviceOnOffTransition';
 import {OnOffState} from '../../../devices/states/OnOff';
+import {DeviceColorTransition} from '../../../core/structures/devices/transitions/DeviceColorTransition';
+import {hsvToRGB, kelvinToRGB, rgbToHSV} from '../../../util/colorUtils';
+import {DeviceColorTemperatureTransition} from '../../../core/structures/devices/transitions/DeviceColorTemperatureTransition';
 
 @ServiceRegistry.register
 export class LightService extends AccessoryService {
-  protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
-  protected readonly ServiceSubTypes?: string[] = ['Light'];
+  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
+  protected readonly subTypes?: string[] = ['Light'];
+  protected readonly isPrimary: boolean = true;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -66,6 +70,63 @@ export class LightService extends AccessoryService {
               new DeviceBrightnessTransition(
                 device.deviceId,
                 value as number || 0,
+              ),
+            ),
+          ),
+      );
+    service
+      .getCharacteristic(this.CHARACTERISTICS.ColorTemperature)
+      .onSet(
+        async (value: CharacteristicValue) => {
+          const color = kelvinToRGB(value as number || 0);
+          const hueSaturation = rgbToHSV(color);
+          service.getCharacteristic(this.CHARACTERISTICS.Hue)
+            .updateValue(hueSaturation.hue);
+          service.getCharacteristic(this.CHARACTERISTICS.Saturation)
+            .updateValue(hueSaturation.saturation);
+          await this.emitAsync(
+            new DeviceCommandEvent(
+              new DeviceColorTemperatureTransition(
+                device.deviceId,
+                color,
+                value as number,
+              ),
+            ),
+          );
+        },
+      );
+    service
+      .getCharacteristic(this.CHARACTERISTICS.Hue)
+      .onSet(
+        async (value: CharacteristicValue) =>
+          await this.emitAsync(
+            new DeviceCommandEvent(
+              new DeviceColorTransition(
+                device.deviceId,
+                hsvToRGB(
+                  value as number || 0,
+                  service.getCharacteristic(
+                    this.CHARACTERISTICS.Saturation,
+                  ).value as number || 0,
+                ),
+              ),
+            ),
+          ),
+      );
+    service
+      .getCharacteristic(this.CHARACTERISTICS.Saturation)
+      .onSet(
+        async (value: CharacteristicValue) =>
+          await this.emitAsync(
+            new DeviceCommandEvent(
+              new DeviceColorTransition(
+                device.deviceId,
+                hsvToRGB(
+                  service.getCharacteristic(
+                    this.CHARACTERISTICS.Hue,
+                  ).value as number || 0,
+                  value as number || 0,
+                ),
               ),
             ),
           ),

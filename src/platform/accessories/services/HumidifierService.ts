@@ -18,7 +18,8 @@ import {GoveeHumidifier} from '../../../devices/GoveeHumidifier';
 
 @ServiceRegistry.register
 export class HumidifierService extends AccessoryService {
-  protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
+  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
+  protected readonly isPrimary: boolean = true;
 
   constructor(
     eventEmitter: EventEmitter2,

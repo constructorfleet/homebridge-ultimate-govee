@@ -5,9 +5,9 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 import {LoggingService} from '../../../logging/LoggingService';
 
 export abstract class AccessoryService extends Emitter {
-  protected abstract readonly ServiceType: WithUUID<typeof Service>;
-  protected readonly ServiceSubTypes?: string[];
-  protected readonly PrimaryService: boolean = true;
+  protected abstract readonly serviceType: WithUUID<typeof Service>;
+  protected readonly subTypes?: string[] = undefined;
+  protected readonly isPrimary?: boolean = undefined;
 
   protected constructor(
     eventEmitter: EventEmitter2,
@@ -49,23 +49,50 @@ export abstract class AccessoryService extends Emitter {
   protected get(
     accessory: PlatformAccessory,
   ): Service[] {
-    if (!this.ServiceSubTypes || this.ServiceSubTypes?.length === 0) {
-      const service = accessory.getService(this.ServiceType) || accessory.addService(this.ServiceType, accessory.displayName, 'Primary');
+    if (!this.subTypes || this.subTypes.length === 0) {
+      return [this.getService(accessory)];
+    }
+    return this.subTypes.map(
+      (subType) => this.getSubTypeService(
+        accessory,
+        subType,
+      ),
+    );
+  }
 
-      if (service.isPrimaryService !== this.PrimaryService) {
-        service.setPrimaryService(this.PrimaryService);
-      }
-      return [service];
+  private getService(
+    accessory: PlatformAccessory,
+  ): Service {
+    return this.setServicePrimary(
+      accessory.getService(
+        this.serviceType,
+      ) || accessory.addService(this.serviceType),
+    );
+  }
+
+  private getSubTypeService(
+    accessory: PlatformAccessory,
+    subType: string,
+  ): Service {
+    return this.setServicePrimary(
+      accessory.getServiceById(
+        this.serviceType,
+        subType,
+      ) || accessory.addService(
+        this.serviceType,
+        subType,
+        subType,
+      ),
+    );
+  }
+
+  private setServicePrimary(
+    service: Service,
+  ): Service {
+    if (service.isPrimaryService !== this.isPrimary) {
+      service.setPrimaryService(this.isPrimary);
     }
 
-    return this.ServiceSubTypes.map(
-      (subType) => accessory.getServiceById(this.ServiceType, subType)
-        || accessory.addService(
-          this.ServiceType,
-          `${accessory.displayName} ${subType}`,
-          subType,
-        ),
-    );
-
+    return service;
   }
 }

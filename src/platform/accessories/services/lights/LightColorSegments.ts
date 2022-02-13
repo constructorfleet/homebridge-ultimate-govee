@@ -15,14 +15,14 @@ import {DeviceBrightnessTransition} from '../../../../core/structures/devices/tr
 
 @ServiceRegistry.register
 export class LightColorSegments extends LightService {
-  protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
+  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
   protected readonly ServiceSubType?: string[] = new Array<string>(SEGMENT_COUNT)
     .fill('Segment')
     .map(
       (subType, idx) => `${subType} ${idx + 1}`,
     );
 
-  protected readonly PrimaryService: boolean = false;
+  protected readonly isPrimary: boolean = false;
 
   constructor(
     eventEmitter: EventEmitter2,
