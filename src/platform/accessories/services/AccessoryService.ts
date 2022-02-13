@@ -7,6 +7,7 @@ import {LoggingService} from '../../../logging/LoggingService';
 export abstract class AccessoryService extends Emitter {
   protected abstract readonly ServiceType: WithUUID<typeof Service>;
   protected readonly ServiceSubTypes?: string[];
+  protected readonly PrimaryService: boolean = true;
 
   protected constructor(
     eventEmitter: EventEmitter2,
@@ -51,8 +52,8 @@ export abstract class AccessoryService extends Emitter {
     if (!this.ServiceSubTypes || this.ServiceSubTypes?.length === 0) {
       const service = accessory.getService(this.ServiceType) || accessory.addService(this.ServiceType, accessory.displayName, 'Primary');
 
-      if (!service.isPrimaryService) {
-        service.setPrimaryService(true);
+      if (service.isPrimaryService !== this.PrimaryService) {
+        service.setPrimaryService(this.PrimaryService);
       }
       return [service];
     }

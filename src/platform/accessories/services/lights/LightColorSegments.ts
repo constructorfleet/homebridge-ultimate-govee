@@ -9,6 +9,9 @@ import {hsvToRGB, kelvinToRGB, rgbToHSV} from '../../../../util/colorUtils';
 import {ServiceRegistry} from '../../ServiceRegistry';
 import {DeviceColorSegmentTransition} from '../../../../core/structures/devices/transitions/DeviceColorSegmentTransition';
 import {LightService} from '../LightService';
+import {ColorSegmentsState} from '../../../../devices/states/ColorSegments';
+import {BrightnessState} from '../../../../devices/states/Brightness';
+import {DeviceBrightnessTransition} from '../../../../core/structures/devices/transitions/DeviceBrightnessTransition';
 
 @ServiceRegistry.register
 export class LightColorSegments extends LightService {
@@ -18,6 +21,8 @@ export class LightColorSegments extends LightService {
     .map(
       (subType, idx) => `${subType} ${idx + 1}`,
     );
+
+  protected readonly PrimaryService: boolean = false;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -45,7 +50,30 @@ export class LightColorSegments extends LightService {
     if (segmentIndex < 0) {
       return;
     }
+    const segmentColor = (device as unknown as ColorSegmentsState).colorSegments[segmentIndex];
 
+    service
+      .getCharacteristic(this.CHARACTERISTICS.On)
+      .updateValue(
+        segmentColor?.red > 0 &&
+        segmentColor?.green > 0 &&
+        segmentColor?.blue > 0 &&
+        (device as unknown as BrightnessState).brightness || 0 > 0,
+      );
+    service
+      .getCharacteristic(this.CHARACTERISTICS.Brightness)
+      .updateValue((device as unknown as BrightnessState).brightness || 0)
+      .onSet(
+        async (value: CharacteristicValue) =>
+          await this.emitAsync(
+            new DeviceCommandEvent(
+              new DeviceBrightnessTransition(
+                device.deviceId,
+                value as number || 0,
+              ),
+            ),
+          ),
+      );
     service
       .getCharacteristic(this.CHARACTERISTICS.Hue)
       .onSet(
