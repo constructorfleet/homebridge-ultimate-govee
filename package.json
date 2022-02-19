@@ -27,7 +27,7 @@
     "test": "jest",
     "watch": "npm run build && npm link && nodemon",
     "build": "rimraf ./dist && tsc && copyfiles assets/* dist/.",
-    "prepublishOnly": "npm run lint && && npm run test && npm run build"
+    "prepublishOnly": "npm run lint && npm run test && npm run build"
   },
   "keywords": [
     "homebridge-plugin",
