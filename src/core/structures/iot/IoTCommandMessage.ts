@@ -6,6 +6,8 @@ import {DeviceColorTransition} from '../devices/transitions/DeviceColorTransitio
 import {DeviceOnOffTransition} from '../devices/transitions/DeviceOnOffTransition';
 import {DeviceColorTemperatureTransition} from '../devices/transitions/DeviceColorTemperatureTransition';
 import {Constructor} from '@nestjs/common/utils/merge-with-values.util';
+import {DeviceColorTemperatureWCTransition} from '../devices/transitions/DeviceColorTemperatureWCTransition';
+import {DeviceColorWCTransition} from '../devices/transitions/DeviceColorWCTransition';
 
 export interface IoTCommandDataColor {
   red?: number;
@@ -104,6 +106,44 @@ export class IoTColorCommandMessage extends BaseIoTCommandMessage {
   }
 }
 
+export class IoTColorWCCommandMessage extends BaseIoTCommandMessage {
+  constructor(
+    transition: DeviceColorTransition,
+  ) {
+    super(
+      transition,
+      'colorwc',
+      {
+        colorTemInKelvin: 0,
+        color: {
+          red: transition.color.red,
+          green: transition.color.green,
+          blue: transition.color.blue,
+        },
+      },
+    );
+  }
+}
+
+export class IoTColorTemperatureWCCommandMessage extends BaseIoTCommandMessage {
+  constructor(
+    transition: DeviceColorTemperatureTransition,
+  ) {
+    super(
+      transition,
+      'colorwc',
+      {
+        colorTemInKelvin: transition.temperature,
+        color: {
+          red: transition.color.red,
+          green: transition.color.green,
+          blue: transition.color.blue,
+        },
+      },
+    );
+  }
+}
+
 export class IoTColorTemperatureCommandMessage extends BaseIoTCommandMessage {
   constructor(
     transition: DeviceColorTemperatureTransition,
@@ -140,6 +180,8 @@ export class IoTOpCodeCommandMessage extends BaseIoTCommandMessage {
 const DEVICE_TRANSITION_MAP = new Map<DeviceTransition<State & GoveeDevice>, Constructor<IoTCommandMessage>>(
   [
     [DeviceBrightnessTransition.prototype, IoTBrightnessCommandMessage],
+    [DeviceColorTemperatureWCTransition.prototype, IoTColorTemperatureWCCommandMessage],
+    [DeviceColorWCTransition.prototype, IoTColorWCCommandMessage],
     [DeviceColorTransition.prototype, IoTColorCommandMessage],
     [DeviceOnOffTransition.prototype, IoTOnOffCommandMessage],
     [DeviceColorTemperatureTransition.prototype, IoTColorTemperatureCommandMessage],
