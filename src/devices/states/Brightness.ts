@@ -34,8 +34,8 @@ export function Brightness<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.brightness = commandValues[0];
+      if (commandValues?.length === 1) {
+        this.brightness = commandValues[0][0];
       }
 
       return super.parse(deviceState);

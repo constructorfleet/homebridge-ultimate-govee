@@ -9,6 +9,17 @@ export class ColorRGB {
   ) {
   }
 
+  public update(color: ColorRGB) {
+    this.red = color.red;
+    this.green = color.green;
+    this.blue = color.blue;
+  }
+
+  get hex(): string {
+    return [this.red, this.green, this.blue]
+      .map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+
   difference(color: ColorRGB): number {
     return Math.abs(this.red - color.red) + Math.abs(this.green - color.green) - Math.abs(this.blue - color.blue);
   }

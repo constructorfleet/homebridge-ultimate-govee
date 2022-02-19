@@ -38,8 +38,8 @@ export function Active<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.isActive = commandValues[0] === 1;
+      if (commandValues?.length === 1) {
+        this.isActive = commandValues[0][0] === 1;
       }
 
       return super.parse(deviceState);

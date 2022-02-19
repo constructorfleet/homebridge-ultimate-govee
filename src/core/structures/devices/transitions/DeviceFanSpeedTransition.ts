@@ -13,7 +13,7 @@ export class DeviceFanSpeedTransition extends DeviceTransition<FanSpeedState & G
 
   protected updateState(device: FanSpeedState & GoveeDevice): DeviceFanSpeedTransition {
     device.fanSpeed = this.fanSpeed;
-    this.commandCodes = device.fanSpeedChange;
+    this.commandCodes = [device.fanSpeedChange];
     return this;
   }
 }

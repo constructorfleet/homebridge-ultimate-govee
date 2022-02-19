@@ -5,10 +5,9 @@ import {Injectable} from '@nestjs/common';
 import {ModuleRef} from '@nestjs/core';
 
 export class ServiceRegistry {
-  private static readonly services: Constructor<AccessoryService>[] = [];
+  private static readonly services: Constructor<AccessoryService<unknown>>[] = [];
 
   static getServices(): Provider {
-
     return {
       provide: AccessoryService,
       useFactory: async (moduleRef: ModuleRef) =>
@@ -21,7 +20,7 @@ export class ServiceRegistry {
     };
   }
 
-  static register<T extends Constructor<AccessoryService>>(ctor: T) {
+  static register<IdentifierType, T extends Constructor<AccessoryService<IdentifierType>>>(ctor: T) {
     ServiceRegistry.services.push(ctor);
 
     return Injectable()(ctor);

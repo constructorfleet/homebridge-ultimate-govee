@@ -11,6 +11,8 @@ export interface DeviceState {
 
   model?: string;
 
+  command?: string;
+
   on?: boolean;
 
   connected?: boolean;
@@ -22,6 +24,14 @@ export interface DeviceState {
   mode?: number;
 
   color?: DeviceStateColor;
+
+  modeValue?: number[];
+
+  sleepValue?: number[];
+
+  wakeupValue?: number[];
+
+  timerValue?: number[];
 
   commands?: number[][];
 }

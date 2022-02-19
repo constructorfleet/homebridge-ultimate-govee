@@ -31,8 +31,8 @@ export function MistLevel<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.mistLevel = commandValues[0];
+      if (commandValues?.length === 1) {
+        this.mistLevel = commandValues[0][0];
       }
 
       return super.parse(deviceState);

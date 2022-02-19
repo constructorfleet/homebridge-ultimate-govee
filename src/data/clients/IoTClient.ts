@@ -126,7 +126,7 @@ export class IoTClient
         await this.emitAsync(
           new IotReceive(
             topic,
-            JSON.parse(payload.toString()),
+            payload.toString(),
           ),
         );
       },

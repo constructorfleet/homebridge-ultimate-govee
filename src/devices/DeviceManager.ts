@@ -10,6 +10,7 @@ import {DeviceDiscoveredEvent} from '../core/events/devices/DeviceDiscovered';
 import {DeviceUpdatedEvent} from '../core/events/devices/DeviceUpdated';
 import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
 import {LoggingService} from '../logging/LoggingService';
+import {PersistService} from '../persist/PersistService';
 
 
 @Injectable()
@@ -18,6 +19,7 @@ export class DeviceManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
+    private persist: PersistService,
     private readonly log: LoggingService,
     public moduleRef: ModuleRef,
   ) {
@@ -102,9 +104,11 @@ export class DeviceManager extends Emitter {
       );
       return;
     }
+    const accountTopic = this.persist.oauthData?.accountIoTTopic;
     deviceTransition.apply(
       device,
       this,
+      accountTopic,
     );
   }
 

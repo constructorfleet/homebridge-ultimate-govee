@@ -5,9 +5,13 @@ import {DeviceBrightnessTransition} from '../devices/transitions/DeviceBrightnes
 import {DeviceColorTransition} from '../devices/transitions/DeviceColorTransition';
 import {DeviceOnOffTransition} from '../devices/transitions/DeviceOnOffTransition';
 import {DeviceColorTemperatureTransition} from '../devices/transitions/DeviceColorTemperatureTransition';
-import {Constructor} from '@nestjs/common/utils/merge-with-values.util';
+import {DeviceColorTemperatureWCTransition} from '../devices/transitions/DeviceColorTemperatureWCTransition';
+import {DeviceColorWCTransition} from '../devices/transitions/DeviceColorWCTransition';
 
 export interface IoTCommandDataColor {
+  r?: number;
+  g?: number;
+  b?: number;
   red?: number;
   green?: number;
   blue?: number;
@@ -21,9 +25,11 @@ export interface IoTCommandData {
   blue?: number;
   val?: number;
   colorTemInKelvin?: number;
+  opcode?: string;
+  value?: string[];
 }
 
-export type IoTCommand = 'pt' | 'ptReal' | 'turn' | 'brightness' | 'color' | 'colorTem';
+export type IoTCommand = 'pt' | 'ptReal' | 'turn' | 'brightness' | 'color' | 'colorTem' | 'colorwc';
 
 export interface IoTCommandMessage {
   device: string;
@@ -32,12 +38,15 @@ export interface IoTCommandMessage {
   transaction: string;
   type: number;
   data: IoTCommandData;
+  accountTopic?: string;
+
+  isValid(): boolean;
 }
 
 export function getIoTCommandMessage<T extends DeviceTransition<State & GoveeDevice>>(
   transition: T,
 ): IoTCommandMessage {
-  const ctor = DEVICE_TRANSITION_MAP.get(transition) || IoTOpCodeCommandMessage;
+  const ctor = getIoTCommandFromTransition(transition);
   return new ctor(transition);
 }
 
@@ -58,9 +67,13 @@ export abstract class BaseIoTCommandMessage implements IoTCommandMessage {
     this.cmd = command;
     this.data = commandData;
   }
+
+  public abstract isValid(): boolean;
 }
 
 export class IoTOnOffCommandMessage extends BaseIoTCommandMessage {
+  public static readonly TRANSITION_TYPE = DeviceOnOffTransition;
+
   constructor(
     transition: DeviceOnOffTransition,
   ) {
@@ -72,9 +85,15 @@ export class IoTOnOffCommandMessage extends BaseIoTCommandMessage {
       },
     );
   }
+
+  isValid(): boolean {
+    return [0, 1].includes(this.data.val ?? -1);
+  }
 }
 
 export class IoTBrightnessCommandMessage extends BaseIoTCommandMessage {
+  public static readonly TRANSITION_TYPE = DeviceBrightnessTransition;
+
   constructor(
     transition: DeviceBrightnessTransition,
   ) {
@@ -86,25 +105,88 @@ export class IoTBrightnessCommandMessage extends BaseIoTCommandMessage {
       },
     );
   }
+
+  isValid(): boolean {
+    return (this.data.val ?? -1) >= 0;
+  }
 }
 
 export class IoTColorCommandMessage extends BaseIoTCommandMessage {
+  public static readonly TRANSITION_TYPE = DeviceColorTransition;
+
+  // TODO: Determine pt vs color commands
   constructor(
     transition: DeviceColorTransition,
   ) {
     super(
       transition,
-      'color',
+      'pt',
       {
-        red: transition.color.red,
-        green: transition.color.green,
-        blue: transition.color.blue,
+        opcode: 'mode',
+        value: transition.opCodeCommandString,
       },
     );
+  }
+
+  isValid(): boolean {
+    return this.data.opcode === 'mode' && (this.data.value?.length ?? -1) > 0;
+  }
+}
+
+export class IoTColorWCCommandMessage extends BaseIoTCommandMessage {
+  public static readonly TRANSITION_TYPE = DeviceColorWCTransition;
+
+  constructor(
+    transition: DeviceColorTransition,
+  ) {
+    super(
+      transition,
+      'colorwc',
+      {
+        colorTemInKelvin: 0,
+        color: {
+          r: transition.color.red,
+          g: transition.color.green,
+          b: transition.color.blue,
+        },
+      },
+    );
+  }
+
+  isValid(): boolean {
+    return true;
+  }
+}
+
+export class IoTColorTemperatureWCCommandMessage extends BaseIoTCommandMessage {
+  public static readonly TRANSITION_TYPE = DeviceColorTemperatureWCTransition;
+
+  constructor(
+    transition: DeviceColorTemperatureTransition,
+  ) {
+    super(
+      transition,
+      'colorwc',
+      {
+        colorTemInKelvin: transition.temperature,
+        color: {
+          r: transition.color.red,
+          g: transition.color.green,
+          b: transition.color.blue,
+        },
+      },
+    );
+  }
+
+  isValid(): boolean {
+    return ![this.data.color?.r, this.data.color?.g, this.data.color?.b]
+      .some((color) => color === undefined || color < 0 || color > 255);
   }
 }
 
 export class IoTColorTemperatureCommandMessage extends BaseIoTCommandMessage {
+  public static readonly TRANSITION_TYPE = DeviceColorTemperatureTransition;
+
   constructor(
     transition: DeviceColorTemperatureTransition,
   ) {
@@ -121,6 +203,11 @@ export class IoTColorTemperatureCommandMessage extends BaseIoTCommandMessage {
       },
     );
   }
+
+  isValid(): boolean {
+    return ![this.data.color?.red, this.data.color?.green, this.data.color?.blue]
+      .some((color) => color === undefined || color < 0 || color > 255);
+  }
 }
 
 export class IoTOpCodeCommandMessage extends BaseIoTCommandMessage {
@@ -131,17 +218,27 @@ export class IoTOpCodeCommandMessage extends BaseIoTCommandMessage {
       transition,
       'ptReal',
       {
-        command: [transition.opCodeCommandString],
+        command: transition.opCodeCommandString,
       },
     );
   }
+
+  isValid(): boolean {
+    return (this.data.command?.length || -1) > 0;
+  }
 }
 
-const DEVICE_TRANSITION_MAP = new Map<DeviceTransition<State & GoveeDevice>, Constructor<IoTCommandMessage>>(
-  [
-    [DeviceBrightnessTransition.prototype, IoTBrightnessCommandMessage],
-    [DeviceColorTransition.prototype, IoTColorCommandMessage],
-    [DeviceOnOffTransition.prototype, IoTOnOffCommandMessage],
-    [DeviceColorTemperatureTransition.prototype, IoTColorTemperatureCommandMessage],
-  ],
-);
+const IoTCommandTypes = [
+  IoTBrightnessCommandMessage,
+  IoTColorTemperatureWCCommandMessage,
+  IoTColorWCCommandMessage,
+  IoTColorCommandMessage,
+  IoTOnOffCommandMessage,
+  IoTColorTemperatureCommandMessage,
+];
+
+const getIoTCommandFromTransition =
+  (transition: DeviceTransition<GoveeDevice>): new (...args) => BaseIoTCommandMessage =>
+    IoTCommandTypes.find(
+      (commandMessageType) => transition instanceof commandMessageType.TRANSITION_TYPE,
+    ) ?? IoTOpCodeCommandMessage;

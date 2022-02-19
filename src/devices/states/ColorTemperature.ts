@@ -44,11 +44,11 @@ export function ColorTemperature<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
+      if (commandValues?.length === 1) {
         this.colorTemperature = new ColorRGB(
-          commandValues[0],
-          commandValues[1],
-          commandValues[2],
+          commandValues[0][0],
+          commandValues[0][1],
+          commandValues[0][2],
         );
         this.temperatureKelvin = rgbToKelvin(this.colorTemperature);
       }

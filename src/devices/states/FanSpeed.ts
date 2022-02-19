@@ -30,8 +30,8 @@ export function FanSpeed<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.fanSpeed = commandValues[0];
+      if (commandValues?.length === 1) {
+        this.fanSpeed = commandValues[0][0];
       }
 
       return super.parse(deviceState);

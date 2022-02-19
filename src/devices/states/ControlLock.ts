@@ -30,8 +30,8 @@ export function ControlLock<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.areControlsLocked = commandValues[0] === 1;
+      if (commandValues?.length === 1) {
+        this.areControlsLocked = commandValues[0][0] === 1;
       }
 
       return super.parse(deviceState);

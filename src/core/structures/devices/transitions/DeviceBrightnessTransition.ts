@@ -13,7 +13,7 @@ export class DeviceBrightnessTransition extends DeviceTransition<BrightnessState
 
   protected updateState(device: BrightnessState & GoveeDevice): DeviceBrightnessTransition {
     device.brightness = this.brightness;
-    this.commandCodes = device.brightnessChange;
+    this.commandCodes = [device.brightnessChange];
     return this;
   }
 }
