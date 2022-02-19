@@ -15,10 +15,10 @@ export interface ModesState {
   get modeChange(): number[];
 }
 
-export function Modes<StateType extends State>(
-  ...deviceModes: DeviceMode[]
+export function Modes(
+  ...deviceModeCtors: (new (...args) => DeviceMode)[]
 ) {
-  return function(
+  return function <StateType extends State>(
     stateType: new (...args) => StateType,
   ) {
     // @ts-ignore
@@ -26,9 +26,13 @@ export function Modes<StateType extends State>(
       public activeMode?: number;
       public modes: Map<number, DeviceMode> =
         new Map<number, DeviceMode>(
-          deviceModes.map(
-            (deviceMode: DeviceMode) => [deviceMode.modeIdentifier, deviceMode],
-          ),
+          deviceModeCtors
+            .map(
+              (ctor: new (...args) => DeviceMode) => new ctor(),
+            )
+            .map(
+              (deviceMode: DeviceMode) => [deviceMode.modeIdentifier, deviceMode],
+            ),
         );
 
       public constructor(...args) {
