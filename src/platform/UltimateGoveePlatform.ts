@@ -62,7 +62,7 @@ implements DynamicPlatformPlugin {
       while (this.cachedAccessories.length) {
         const acc = this.cachedAccessories.pop();
         if (acc) {
-          this.service.configureAccessory(acc);
+          await this.service.configureAccessory(acc);
         }
       }
       if (this.loaded) {
@@ -91,7 +91,8 @@ implements DynamicPlatformPlugin {
    */
   configureAccessory(accessory: PlatformAccessory): void {
     if (this.service) {
-      this.service.configureAccessory(accessory);
+      this.service.configureAccessory(accessory)
+        .then();
     } else {
       this.cachedAccessories.push(accessory);
     }

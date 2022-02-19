@@ -77,16 +77,20 @@ export class AccessoryManager extends Emitter {
         device.name,
         deviceUUID,
       );
+    accessory.context.config = deviceConfig;
 
-    this.services.forEach((service) => service.updateAccessory(accessory, device));
-    this.api.updatePlatformAccessories([accessory]);
+    await this.onDeviceUpdated(device);
 
     if (!this.accessories.has(deviceUUID)) {
       this.accessories.set(
         deviceUUID,
         accessory,
       );
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      this.api.registerPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
     }
     this.platformConfigService.updateConfigurationWithDevices(device);
   }
@@ -103,6 +107,8 @@ export class AccessoryManager extends Emitter {
     if (!accessory) {
       return;
     }
+
+    accessory.context.device = device;
 
     this.services.forEach((service) => service.updateAccessory(accessory, device));
 
