@@ -5,14 +5,26 @@ import {Active} from './states/Active';
 import {Timer} from './states/Timer';
 import {GoveeDevice} from './GoveeDevice';
 import {ControlLock} from './states/ControlLock';
-import {DeviceFactory} from './DeviceFactory';
+import {Connected} from './states/Connected';
 
 @DeviceFactory.register(
   'H7121',
   'H7122',
 )
 export class GoveeAirPurifier
-  extends ControlLock(FanSpeed(Timer(Active(OnOff(GoveeDevice))))) {
+  extends ControlLock(
+    FanSpeed(
+      Timer(
+        Active(
+          OnOff(
+            Connected(
+              GoveeDevice,
+            ),
+          ),
+        ),
+      ),
+    ),
+  ) {
 
   constructor(
     deviceConfig: DeviceConfig,

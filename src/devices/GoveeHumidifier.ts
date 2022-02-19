@@ -6,14 +6,28 @@ import {MistLevel} from './states/MistLevel';
 import {ProgrammableMistLevel} from './states/ProgrammableMistLevel';
 import {GoveeDevice} from './GoveeDevice';
 import {ControlLock} from './states/ControlLock';
-import {DeviceFactory} from './DeviceFactory';
+import {Connected} from './states/Connected';
 
 @DeviceFactory.register(
   'H7141',
   'H7141',
 )
 export class GoveeHumidifier
-  extends ControlLock(ProgrammableMistLevel(MistLevel(StatusMode(Active(OnOff(GoveeDevice)))))) {
+  extends ControlLock(
+    ProgrammableMistLevel(
+      MistLevel(
+        StatusMode(
+          Active(
+            OnOff(
+              Connected(
+                GoveeDevice,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ) {
 
   constructor(
     deviceConfig: DeviceConfig,
