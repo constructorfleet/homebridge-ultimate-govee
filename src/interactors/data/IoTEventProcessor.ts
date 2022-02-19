@@ -87,6 +87,7 @@ export class IoTEventProcessor extends Emitter {
         JSON.stringify({
           topic: device.iotTopic,
           msg: {
+            accountTopic: this.persist.oauthData?.accountIoTTopic,
             cmd: 'status',
             cmdVersion: 0,
             transaction: `u_${Date.now()}`,
