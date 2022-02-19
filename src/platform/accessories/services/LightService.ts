@@ -349,7 +349,7 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
       ...Array.from(
         new Array(SEGMENT_COUNT),
         (value, index: number) => {
-          const name = `Segment ${index}`;
+          const name = `Segment ${index + 1}`;
           return new ServiceSubType(
             name,
             index,
