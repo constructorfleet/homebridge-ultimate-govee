@@ -73,7 +73,10 @@ export class ColorSegmentsMode extends DeviceMode {
         : Math.pow(2, index - 8);
     return getCommandCodes(
       COMMAND_IDENTIFIER,
-      [5, 21, 1],
+      [
+        ...this.commandIdentifiers,
+        1,
+      ],
       color.red,
       color.green,
       color.blue,
@@ -98,7 +101,10 @@ export class ColorSegmentsMode extends DeviceMode {
         : Math.pow(2, index - 8);
     return getCommandCodes(
       COMMAND_IDENTIFIER,
-      [5, 21, 2],
+      [
+        ...this.commandIdentifiers,
+        2,
+      ],
       brightness,
       leftSegments,
       rightSegments,

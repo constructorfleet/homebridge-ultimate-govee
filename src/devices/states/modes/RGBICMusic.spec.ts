@@ -1,11 +1,11 @@
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
-import {ColorMode, IntensityMode, MusicMode, MusicModeType} from './Music';
+import {ColorMode, IntensityMode, MusicModeType, RGBICMusicMode} from './RGBICMusic';
 
-let testMode: MusicMode;
+let testMode: RGBICMusicMode;
 
 describe('MusicMode', () => {
   beforeEach(() => {
-    testMode = new MusicMode();
+    testMode = new RGBICMusicMode();
   });
 
   describe('parse', () => {

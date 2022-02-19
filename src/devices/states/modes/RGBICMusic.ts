@@ -16,11 +16,6 @@ import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
 import {ColorRGB} from '../../../util/colorUtils';
 
-const commandIdentifiers = [
-  5,
-  19,
-];
-
 export enum MusicModeType {
   ENERGETIC = 0x05,
   SPECTRUM = 0x04,
@@ -38,7 +33,8 @@ export enum IntensityMode {
   CALM = 0x01,
 }
 
-export class MusicMode extends DeviceMode {
+export class RGBICMusicMode extends DeviceMode {
+  public modeIdentifier = 19;
   public musicModeType: MusicModeType = MusicModeType.ENERGETIC;
   public sensitivity = 0;
   public intensity: IntensityMode = IntensityMode.DYNAMIC;
@@ -48,7 +44,10 @@ export class MusicMode extends DeviceMode {
 
   public parse(deviceState: DeviceState): ThisType<this> {
     const commandValues = getCommandValues(
-      [REPORT_IDENTIFIER, ...commandIdentifiers],
+      [
+        REPORT_IDENTIFIER,
+        ...this.commandIdentifiers,
+      ],
       deviceState.commands,
     );
 
@@ -69,7 +68,7 @@ export class MusicMode extends DeviceMode {
   public musicChange(): number[] {
     return getCommandCodes(
       COMMAND_IDENTIFIER,
-      commandIdentifiers,
+      this.commandIdentifiers,
       this.musicModeType,
       this.sensitivity,
       this.intensity,
