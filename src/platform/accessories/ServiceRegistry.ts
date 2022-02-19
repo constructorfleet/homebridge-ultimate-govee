@@ -8,7 +8,6 @@ export class ServiceRegistry {
   private static readonly services: Constructor<AccessoryService<unknown>>[] = [];
 
   static getServices(): Provider {
-    console.log(this.services);
     return {
       provide: AccessoryService,
       useFactory: async (moduleRef: ModuleRef) =>

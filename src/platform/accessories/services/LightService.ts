@@ -411,8 +411,7 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     identifier: number,
   ): DeviceTransition<GoveeRGBICLight> {
     if (identifier < 0) {
-      console.log(identifier, 'BrightnessWC');
-      return new DeviceBrightnessWCTransition(
+      return new DeviceBrightnessTransition(
         device.deviceId,
         brightness,
       );
@@ -455,7 +454,6 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     color: ColorRGB,
     identifier: number,
   ): DeviceTransition<GoveeRGBICLight> {
-    console.log(identifier);
     if (identifier < 0) {
       return new DeviceColorWCTransition(
         device.deviceId,

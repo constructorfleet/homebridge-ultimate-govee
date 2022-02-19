@@ -27,7 +27,6 @@ export class DeviceColorSegmentTransition extends DeviceTransition<ModesState & 
       return this;
     }
 
-    console.log(this.segmentIndex);
     device.activeMode = colorSegmentMode.modeIdentifier;
     colorSegmentMode.colorSegments[this.segmentIndex].color.update(this.color);
 
