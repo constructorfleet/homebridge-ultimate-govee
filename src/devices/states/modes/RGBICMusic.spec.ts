@@ -1,16 +1,16 @@
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
-import {ColorMode, IntensityMode, MusicModeType, RGBICMusicMode} from './RGBICMusic';
+import {ColorMode, IntensityMode, RGBICMusicMode} from './RGBICMusic';
 
 let testMode: RGBICMusicMode;
 
-describe('MusicMode', () => {
+describe('RGBICMusicMode', () => {
   beforeEach(() => {
     testMode = new RGBICMusicMode();
   });
 
   describe('parse', () => {
     it('processes DeviceState.commands', () => {
-      expect(testMode.musicModeType).toBe(MusicModeType.ENERGETIC);
+      expect(testMode.musicModeType).toBe(0);
       expect(testMode.sensitivity).toBe(0);
       expect(testMode.intensity).toBe(IntensityMode.DYNAMIC);
       expect(testMode.colorMode).toBe(ColorMode.AUTOMATIC);
@@ -23,7 +23,7 @@ describe('MusicMode', () => {
           [REPORT_IDENTIFIER, 5, 19, 3, 36, 1, 1, 50, 100, 255, 0, 0, 0, 0, 0],
         ],
       });
-      expect(testMode.musicModeType).toBe(MusicModeType.RHYTHM);
+      expect(testMode.musicModeType).toBe(3);
       expect(testMode.sensitivity).toBe(36);
       expect(testMode.intensity).toBe(IntensityMode.CALM);
       expect(testMode.colorMode).toBe(ColorMode.SPECIFIED);
@@ -33,7 +33,7 @@ describe('MusicMode', () => {
     });
 
     it('ignores non-applicable DeviceState', () => {
-      expect(testMode.musicModeType).toBe(MusicModeType.ENERGETIC);
+      expect(testMode.musicModeType).toBe(0);
       expect(testMode.sensitivity).toBe(0);
       expect(testMode.intensity).toBe(IntensityMode.DYNAMIC);
       expect(testMode.colorMode).toBe(ColorMode.AUTOMATIC);
@@ -47,7 +47,7 @@ describe('MusicMode', () => {
           [REPORT_IDENTIFIER, 1, 2],
         ],
       });
-      expect(testMode.musicModeType).toBe(MusicModeType.ENERGETIC);
+      expect(testMode.musicModeType).toBe(0);
       expect(testMode.sensitivity).toBe(0);
       expect(testMode.intensity).toBe(IntensityMode.DYNAMIC);
       expect(testMode.colorMode).toBe(ColorMode.AUTOMATIC);
@@ -59,7 +59,7 @@ describe('MusicMode', () => {
 
   describe('musicChange', () => {
     it('returns opcode array', () => {
-      testMode.musicModeType = MusicModeType.ENERGETIC;
+      testMode.musicModeType = 5;
       testMode.sensitivity = 50;
       testMode.intensity = IntensityMode.CALM;
       testMode.colorMode = ColorMode.AUTOMATIC;

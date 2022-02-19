@@ -10,18 +10,8 @@ Report:
   Uint8Array [ 170, 5, 19, 3, 99, 0, 0, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35 ] ]
  */
 
-import {DeviceMode} from './DeviceMode';
-import {DeviceState} from '../../../core/structures/devices/DeviceState';
-import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
-import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
 import {ColorRGB} from '../../../util/colorUtils';
-
-export enum MusicModeType {
-  ENERGETIC = 0x05,
-  SPECTRUM = 0x04,
-  ROLLING = 0x06,
-  RHYTHM = 0x03,
-}
+import {RGBMusicMode} from './RGBMusic';
 
 export enum ColorMode {
   AUTOMATIC = 0x00,
@@ -33,49 +23,29 @@ export enum IntensityMode {
   CALM = 0x01,
 }
 
-export class RGBICMusicMode extends DeviceMode {
+export class RGBICMusicMode extends RGBMusicMode {
   public modeIdentifier = 19;
-  public musicModeType: MusicModeType = MusicModeType.ENERGETIC;
-  public sensitivity = 0;
   public intensity: IntensityMode = IntensityMode.DYNAMIC;
   public colorMode: ColorMode = ColorMode.AUTOMATIC;
   public specifiedColor: ColorRGB = new ColorRGB(0, 0, 0);
 
 
-  public parse(deviceState: DeviceState): ThisType<this> {
-    const commandValues = getCommandValues(
-      [
-        REPORT_IDENTIFIER,
-        ...this.commandIdentifiers,
-      ],
-      deviceState.commands,
-    );
-
-    if (commandValues?.length === 1) {
-      const values = commandValues[0];
-      this.musicModeType = values[0];
-      this.sensitivity = values[1];
-      this.intensity = values[2];
-      this.colorMode = values[3];
-      this.specifiedColor.red = values[4];
-      this.specifiedColor.green = values[5];
-      this.specifiedColor.blue = values[6];
-    }
-
+  populateFromCommandValues(commandValues: number[]): ThisType<this> {
+    this.intensity = commandValues[0];
+    this.colorMode = commandValues[1];
+    this.specifiedColor.red = commandValues[2];
+    this.specifiedColor.green = commandValues[3];
+    this.specifiedColor.blue = commandValues[4];
     return this;
   }
 
-  public musicChange(): number[] {
-    return getCommandCodes(
-      COMMAND_IDENTIFIER,
-      this.commandIdentifiers,
-      this.musicModeType,
-      this.sensitivity,
+  extraCommandValues(): number[] {
+    return [
       this.intensity,
       this.colorMode,
       this.specifiedColor.red,
       this.specifiedColor.green,
       this.specifiedColor.blue,
-    );
+    ];
   }
 }
