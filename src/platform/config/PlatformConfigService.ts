@@ -2,11 +2,18 @@ import {Inject, Injectable} from '@nestjs/common';
 import {PLATFORM_CONFIG_FILE} from '../../util/const';
 import fs from 'fs';
 import {PLATFORM_NAME} from '../../settings';
-import {GoveeDeviceOverride, GoveeDeviceOverrides, GoveePluginConfig} from './GoveePluginConfig';
+import {
+  GoveeDeviceOverride,
+  GoveeDeviceOverrides,
+  GoveeLightOverride,
+  GoveePluginConfig,
+  GoveeRGBICLightOverride,
+} from './GoveePluginConfig';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {GoveeHumidifier} from '../../devices/GoveeHumidifier';
 import {GoveeAirPurifier} from '../../devices/GoveeAirPurifier';
 import {GoveeLight} from '../../devices/GoveeLight';
+import {GoveeRGBICLight} from '../../devices/GoveeRGBICLight';
 
 @Injectable()
 export class PlatformConfigService {
@@ -27,6 +34,12 @@ export class PlatformConfigService {
       ),
     );
     this.goveePluginConfig?.devices?.airPurifiers?.forEach(
+      (deviceOverride) => deviceMap.set(
+        deviceOverride.deviceId!,
+        deviceOverride,
+      ),
+    );
+    this.goveePluginConfig?.devices?.lights?.forEach(
       (deviceOverride) => deviceMap.set(
         deviceOverride.deviceId!,
         deviceOverride,
@@ -145,7 +158,11 @@ export class PlatformConfigService {
           (device) =>
             !deviceMap.has(device.deviceId) && (device instanceof GoveeLight),
         )
-        .map((device) => new GoveeDeviceOverride(device));
+        .map((device) =>
+          device instanceof GoveeRGBICLight
+            ? new GoveeRGBICLightOverride(device as GoveeRGBICLight)
+            : new GoveeLightOverride(device as GoveeLight),
+        );
 
     return new GoveeDeviceOverrides(
       (config.devices?.humidifiers || []).concat(...newHumidifiers),

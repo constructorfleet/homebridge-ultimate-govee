@@ -11,6 +11,8 @@ export interface DeviceState {
 
   model?: string;
 
+  command?: string;
+
   on?: boolean;
 
   connected?: boolean;

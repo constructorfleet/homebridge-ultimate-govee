@@ -8,7 +8,7 @@ import {Brightness} from './states/Brightness';
 import {Modes} from './states/Modes';
 import {SceneMode} from './states/modes/Scene';
 
-@DeviceFactory.register()
+// @DeviceFactory.register()
 export class GoveeLight
   extends ColorTemperature(
     Brightness(

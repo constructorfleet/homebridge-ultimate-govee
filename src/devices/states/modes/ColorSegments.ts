@@ -18,6 +18,8 @@ export class ColorSegment {
 
 export class ColorSegmentsMode extends DeviceMode {
   public modeIdentifier = 21;
+  public wholeColor?: ColorRGB;
+  public wholeBrightness?: number;
   public colorSegments: ColorSegment[] =
     Array.from(
       new Array(SEGMENT_COUNT),
@@ -30,6 +32,34 @@ export class ColorSegmentsMode extends DeviceMode {
     );
 
   parse(deviceState: DeviceState): ThisType<this> {
+    if (deviceState.command === 'colorwc' && deviceState.color !== undefined) {
+      if (deviceState.color !== undefined) {
+        this.wholeColor = new ColorRGB(
+          deviceState.color.red,
+          deviceState.color.green,
+          deviceState.color.blue,
+        );
+        this.colorSegments.forEach(
+          (segment: ColorSegment) => segment.color.update(
+            new ColorRGB(
+              deviceState.color?.red || 0,
+              deviceState.color?.green || 0,
+              deviceState.color?.blue || 0,
+            ),
+          ),
+        );
+      }
+      return this;
+    }
+
+    if (deviceState.command === 'brightness' && deviceState.brightness !== undefined) {
+      this.wholeBrightness = deviceState.brightness;
+      this.colorSegments.forEach(
+        (segment: ColorSegment) => segment.brightness = deviceState.brightness || 0,
+      );
+
+      return this;
+    }
     const commandValues = getCommandValues(
       [REPORT_IDENTIFIER, ...reportIdentifiers],
       deviceState.commands,
@@ -61,16 +91,20 @@ export class ColorSegmentsMode extends DeviceMode {
 
   public colorSegmentsChange(
     color: ColorRGB,
-    index: number,
+    index?: number,
   ): number[] {
     const leftSegments =
-      (index) < 8
-        ? Math.pow(2, index)
-        : 0;
+      index === undefined
+        ? 255
+        : (index) < 8
+          ? Math.pow(2, index)
+          : 0;
     const rightSegments =
-      (index) < 8
-        ? 0
-        : Math.pow(2, index - 8);
+      index === undefined
+        ? 255
+        : (index - 8) < 0
+          ? 0
+          : Math.pow(2, index - 8);
     return getCommandCodes(
       COMMAND_IDENTIFIER,
       [
@@ -82,6 +116,9 @@ export class ColorSegmentsMode extends DeviceMode {
       color.blue,
       0,
       0,
+      0,
+      0,
+      0,
       leftSegments,
       rightSegments,
     );
@@ -89,16 +126,20 @@ export class ColorSegmentsMode extends DeviceMode {
 
   public brightnessSegmentsChange(
     brightness: number,
-    index: number,
+    index?: number,
   ): number[] {
     const leftSegments =
-      (index) < 8
-        ? Math.pow(2, index)
-        : 0;
+      index === undefined
+        ? 255
+        : (index) < 8
+          ? Math.pow(2, index)
+          : 0;
     const rightSegments =
-      (index) < 8
-        ? 0
-        : Math.pow(2, index - 8);
+      index === undefined
+        ? 255
+        : (index - 8) < 0
+          ? 0
+          : Math.pow(2, index - 8);
     return getCommandCodes(
       COMMAND_IDENTIFIER,
       [

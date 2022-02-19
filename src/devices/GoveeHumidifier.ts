@@ -6,7 +6,7 @@ import {MistLevel} from './states/MistLevel';
 import {ProgrammableMistLevel} from './states/ProgrammableMistLevel';
 import {GoveeDevice} from './GoveeDevice';
 import {ControlLock} from './states/ControlLock';
-import {Connected} from './states/Connected';
+import {DeviceFactory} from './DeviceFactory';
 
 @DeviceFactory.register(
   'H7141',
@@ -19,9 +19,7 @@ export class GoveeHumidifier
         StatusMode(
           Active(
             OnOff(
-              Connected(
-                GoveeDevice,
-              ),
+              GoveeDevice,
             ),
           ),
         ),

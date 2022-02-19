@@ -8,6 +8,7 @@ import {IoTPublishToEvent} from '../core/events/dataClients/iot/IoTPublish';
 import {BLEPeripheralCommandSend, BLEPeripheralSendEvent} from '../core/events/dataClients/ble/BLEPeripheral';
 import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
 import {getIoTCommandMessage} from '../core/structures/iot/IoTCommandMessage';
+import {DeviceColorWCTransition} from '../core/structures/devices/transitions/DeviceColorWCTransition';
 
 export class GoveeDevice extends State {
 
@@ -47,8 +48,9 @@ export class GoveeDevice extends State {
   public send<StateType extends State & GoveeDevice>(
     transition: DeviceTransition<StateType>,
     emitter: Emitter,
+    accountTopic?: string,
   ) {
-    const event = this.getIoTEvent(transition) || this.getBleEvent(transition);
+    const event = this.getIoTEvent(transition, accountTopic) || this.getBleEvent(transition);
     if (event) {
       emitter.emit(event);
       return;
@@ -59,15 +61,27 @@ export class GoveeDevice extends State {
     this.parse(state);
   }
 
-  getIoTEvent<StateType extends State & GoveeDevice>(transition: DeviceTransition<StateType>): IoTPublishToEvent | undefined {
+  getIoTEvent<StateType extends State & GoveeDevice>(
+    transition: DeviceTransition<StateType>,
+    accountTopic?: string,
+  ): IoTPublishToEvent | undefined {
     if (!this.iotTopic) {
+      return undefined;
+    }
+    const commandMessage = getIoTCommandMessage(transition);
+    commandMessage.accountTopic = accountTopic;
+
+    if (transition instanceof DeviceColorWCTransition) {
+      console.log(commandMessage, commandMessage.isValid());
+    }
+    if (!commandMessage.isValid()) {
       return undefined;
     }
     return new IoTPublishToEvent(
       this.iotTopic,
       JSON.stringify({
         topic: this.iotTopic,
-        msg: getIoTCommandMessage(transition),
+        msg: commandMessage,
       }),
     );
   }

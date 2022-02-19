@@ -16,7 +16,7 @@ export class AccessoryManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
-    @Inject(AccessoryService) private readonly services: AccessoryService[],
+    @Inject(AccessoryService) private readonly services: AccessoryService<unknown>[],
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
@@ -28,6 +28,14 @@ export class AccessoryManager extends Emitter {
     accessory: PlatformAccessory,
   ) {
     const device = accessory.context.device;
+    if (!device || !device.deviceId) {
+      this.api.unregisterPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
+      return;
+    }
     const deviceConfig =
       this.platformConfigService.getDeviceConfiguration(device.deviceId);
 

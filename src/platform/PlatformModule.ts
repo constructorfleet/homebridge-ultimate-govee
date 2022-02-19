@@ -17,17 +17,16 @@ import {PlatformConfigService} from './config/PlatformConfigService';
 import {ServiceRegistry} from './accessories/ServiceRegistry';
 import {HumidifierService} from './accessories/services/HumidifierService';
 import {InformationService} from './accessories/services/InformationService';
-import {LightService} from './accessories/services/LightService';
 import {PurifierService} from './accessories/services/PurifierService';
-import {LightColorSegments} from './accessories/services/lights/LightColorSegments';
+import {RGBLightService, WhiteLightService} from './accessories/services/LightService';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ACCESSORY_SERVICES = [
   InformationService,
   HumidifierService,
-  LightService,
   PurifierService,
-  LightColorSegments,
+  WhiteLightService,
+  RGBLightService,
 ];
 
 export interface GoveeCredentials {

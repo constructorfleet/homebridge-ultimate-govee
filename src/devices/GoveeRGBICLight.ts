@@ -9,6 +9,7 @@ import {SceneMode} from './states/modes/Scene';
 import {RGBICMusicMode} from './states/modes/RGBICMusic';
 import {ColorSegmentsMode} from './states/modes/ColorSegments';
 import {Connected} from './states/Connected';
+import {Brightness} from './states/Brightness';
 
 
 @DeviceFactory.register(
@@ -20,11 +21,13 @@ export class GoveeRGBICLight
     RGBICMusicMode,
     ColorSegmentsMode,
   )(
-    Timer(
-      Active(
-        OnOff(
-          Connected(
-            GoveeDevice,
+    Brightness(
+      Timer(
+        Active(
+          OnOff(
+            Connected(
+              GoveeDevice,
+            ),
           ),
         ),
       ),

@@ -5,7 +5,7 @@ import {Active} from './states/Active';
 import {Timer} from './states/Timer';
 import {GoveeDevice} from './GoveeDevice';
 import {ControlLock} from './states/ControlLock';
-import {Connected} from './states/Connected';
+import {DeviceFactory} from './DeviceFactory';
 
 @DeviceFactory.register(
   'H7121',
@@ -17,9 +17,7 @@ export class GoveeAirPurifier
       Timer(
         Active(
           OnOff(
-            Connected(
-              GoveeDevice,
-            ),
+            GoveeDevice,
           ),
         ),
       ),

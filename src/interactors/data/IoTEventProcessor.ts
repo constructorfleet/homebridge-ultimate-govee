@@ -88,7 +88,7 @@ export class IoTEventProcessor extends Emitter {
           topic: device.iotTopic,
           msg: {
             cmd: 'status',
-            cmdVersion: 2,
+            cmdVersion: 0,
             transaction: `u_${Date.now()}`,
             type: 0,
           },
@@ -104,6 +104,7 @@ export function toDeviceState(
   return {
     deviceId: message.deviceId,
     model: message.model,
+    command: message.command,
     on: message?.state?.onOff === undefined
       ? undefined
       : message?.state?.onOff === 1,

@@ -8,7 +8,7 @@ import {LoggingService} from '../../../logging/LoggingService';
 import {ServiceRegistry} from '../ServiceRegistry';
 
 @ServiceRegistry.register
-export class InformationService extends AccessoryService {
+export class InformationService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AccessoryInformation;
 
   constructor(

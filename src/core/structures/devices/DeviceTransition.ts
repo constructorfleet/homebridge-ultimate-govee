@@ -12,10 +12,12 @@ export abstract class DeviceTransition<StateType extends State & GoveeDevice> {
   public apply(
     device: StateType,
     emitter: Emitter,
+    accountTopic?: string,
   ) {
     device.send(
       this.updateState(device),
       emitter,
+      accountTopic,
     );
   }
 

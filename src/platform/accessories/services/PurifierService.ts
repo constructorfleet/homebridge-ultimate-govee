@@ -16,9 +16,8 @@ import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeAirPurifier} from '../../../devices/GoveeAirPurifier';
 
 @ServiceRegistry.register
-export class PurifierService extends AccessoryService {
+export class PurifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
-  protected readonly isPrimary: boolean = true;
 
   constructor(
     eventEmitter: EventEmitter2,

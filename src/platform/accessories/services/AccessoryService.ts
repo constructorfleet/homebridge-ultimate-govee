@@ -4,10 +4,44 @@ import {Emitter} from '../../../util/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {LoggingService} from '../../../logging/LoggingService';
 
-export abstract class AccessoryService extends Emitter {
+export class ServiceSubType<IdentifierType> {
+  constructor(
+    public readonly subType: string,
+    public readonly identifier?: IdentifierType,
+    public readonly name?: string,
+    public readonly primary?: boolean,
+    public readonly linkToPrimary?: boolean,
+  ) {
+  }
+}
+
+export interface IdentifiedService<IdentifierType> {
+  service: Service;
+  identifier?: IdentifierType;
+}
+
+export abstract class AccessoryService<IdentifierType> extends Emitter {
+  private static setServicePrimary(
+    accessory: PlatformAccessory,
+    service: Service,
+    primary?: boolean,
+    linkToPrimary?: boolean,
+  ): Service {
+    if (service.isPrimaryService !== primary) {
+      service.setPrimaryService(primary);
+    }
+
+    if (linkToPrimary) {
+      accessory.services.find(
+        (service) => service.isPrimaryService,
+      )?.addLinkedService(service);
+    }
+
+    return service;
+  }
+
   protected abstract readonly serviceType: WithUUID<typeof Service>;
-  protected readonly subTypes?: string[] = undefined;
-  protected readonly isPrimary?: boolean = undefined;
+  protected readonly subTypes?: ServiceSubType<IdentifierType>[] = undefined;
 
   protected constructor(
     eventEmitter: EventEmitter2,
@@ -26,13 +60,13 @@ export abstract class AccessoryService extends Emitter {
       return accessory;
     }
     this.get(accessory).forEach(
-      (service) =>
+      (identifiedService: IdentifiedService<IdentifierType>) =>
         this.updateServiceCharacteristics(
-          service,
+          identifiedService.service,
           device,
+          identifiedService.identifier,
         ),
     );
-    accessory.context.device = device;
     return accessory;
   }
 
@@ -44,11 +78,12 @@ export abstract class AccessoryService extends Emitter {
   protected abstract updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
+    serviceIdentifier?: IdentifierType,
   );
 
   protected get(
     accessory: PlatformAccessory,
-  ): Service[] {
+  ): IdentifiedService<IdentifierType>[] {
     if (!this.subTypes || this.subTypes.length === 0) {
       return [this.getService(accessory)];
     }
@@ -62,37 +97,38 @@ export abstract class AccessoryService extends Emitter {
 
   private getService(
     accessory: PlatformAccessory,
-  ): Service {
-    return this.setServicePrimary(
-      accessory.getService(
-        this.serviceType,
-      ) || accessory.addService(this.serviceType),
-    );
+  ): IdentifiedService<IdentifierType> {
+    return {
+      service: AccessoryService.setServicePrimary(
+        accessory,
+        accessory.getService(
+          this.serviceType,
+        ) || accessory.addService(
+          this.serviceType,
+        ),
+      ),
+    };
   }
 
   private getSubTypeService(
     accessory: PlatformAccessory,
-    subType: string,
-  ): Service {
-    return this.setServicePrimary(
-      accessory.getServiceById(
-        this.serviceType,
-        subType,
-      ) || accessory.addService(
-        this.serviceType,
-        subType,
-        subType,
+    subType: ServiceSubType<IdentifierType>,
+  ): IdentifiedService<IdentifierType> {
+    return {
+      service: AccessoryService.setServicePrimary(
+        accessory,
+        accessory.getServiceById(
+          this.serviceType,
+          subType.subType,
+        ) || accessory.addService(
+          this.serviceType,
+          subType.name,
+          subType.subType,
+        ),
+        subType.primary,
+        subType.linkToPrimary,
       ),
-    );
-  }
-
-  private setServicePrimary(
-    service: Service,
-  ): Service {
-    if (service.isPrimaryService !== this.isPrimary) {
-      service.setPrimaryService(this.isPrimary);
-    }
-
-    return service;
+      identifier: subType.identifier,
+    };
   }
 }

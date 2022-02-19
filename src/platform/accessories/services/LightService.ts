@@ -1,30 +1,39 @@
-import {AccessoryService} from './AccessoryService';
+import {AccessoryService, ServiceSubType} from './AccessoryService';
 import {Inject} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
+import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES, SEGMENT_COUNT} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {LoggingService} from '../../../logging/LoggingService';
-import {BrightnessState} from '../../../devices/states/Brightness';
-import {DeviceBrightnessTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
-import {ServiceRegistry} from '../ServiceRegistry';
-import {GoveeLight} from '../../../devices/GoveeLight';
-import {GoveeRGBLight} from '../../../devices/GoveeRGBLight';
-import {GoveeRGBICLight} from '../../../devices/GoveeRGBICLight';
 import {DeviceOnOffTransition} from '../../../core/structures/devices/transitions/DeviceOnOffTransition';
 import {OnOffState} from '../../../devices/states/OnOff';
 import {DeviceColorTransition} from '../../../core/structures/devices/transitions/DeviceColorTransition';
-import {hsvToRGB, kelvinToRGB, rgbToHSV} from '../../../util/colorUtils';
+import {ColorRGB, hsvToRGB, kelvinToRGB, rgbToHSV, rgbToKelvin} from '../../../util/colorUtils';
 import {DeviceColorTemperatureTransition} from '../../../core/structures/devices/transitions/DeviceColorTemperatureTransition';
+import {GoveeLight} from '../../../devices/GoveeLight';
+import {DeviceTransition} from '../../../core/structures/devices/DeviceTransition';
+import {GoveeRGBLight} from '../../../devices/GoveeRGBLight';
+import {ServiceRegistry} from '../ServiceRegistry';
+import {DeviceBrightnessTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
+import {ConnectedState} from '../../../devices/states/Connected';
+import {SolidColorState} from '../../../devices/states/SolidColor';
+import {ModesState} from '../../../devices/states/Modes';
+import {DeviceMode} from '../../../devices/states/modes/DeviceMode';
+import {SolidColorMode} from '../../../devices/states/modes/SolidColor';
+import {GoveeRGBICLight} from '../../../devices/GoveeRGBICLight';
+import {ColorSegmentsMode} from '../../../devices/states/modes/ColorSegments';
+import {
+  DeviceBrightnessSegmentTransition,
+  DeviceColorSegmentTransition,
+} from '../../../core/structures/devices/transitions/DeviceColorSegmentTransition';
+import {DeviceColorWCTransition} from '../../../core/structures/devices/transitions/DeviceColorWCTransition';
+import {DeviceBrightnessWCTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessWCTransition';
 
-@ServiceRegistry.register
-export class LightService extends AccessoryService {
+abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> extends AccessoryService<IdentifierType> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
-  protected readonly subTypes?: string[] = ['Light'];
-  protected readonly isPrimary: boolean = true;
 
-  constructor(
+  protected constructor(
     eventEmitter: EventEmitter2,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
@@ -38,17 +47,21 @@ export class LightService extends AccessoryService {
     );
   }
 
-  protected supports(device: GoveeDevice): boolean {
-    return device instanceof GoveeLight || device instanceof GoveeRGBLight || device instanceof GoveeRGBICLight;
-  }
-
   protected updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
+    serviceIdentifier?: IdentifierType,
   ) {
+    const deviceColor =
+      this.getColor(
+        device as LightType,
+        serviceIdentifier,
+      );
     service
       .getCharacteristic(this.CHARACTERISTICS.On)
-      .updateValue((device as unknown as OnOffState).isOn ?? false)
+      .updateValue(!((device as unknown as ConnectedState)).isConnected
+        ? new Error('Device is offline.')
+        : (device as unknown as OnOffState).isOn ?? false)
       .onSet(
         async (value: CharacteristicValue) =>
           this.emit(
@@ -62,14 +75,20 @@ export class LightService extends AccessoryService {
       );
     service
       .getCharacteristic(this.CHARACTERISTICS.Brightness)
-      .updateValue((device as unknown as BrightnessState).brightness || 0)
+      .updateValue(
+        this.getBrightness(
+          device as LightType,
+          serviceIdentifier,
+        ) || 0,
+      )
       .onSet(
         async (value: CharacteristicValue) =>
           await this.emitAsync(
             new DeviceCommandEvent(
-              new DeviceBrightnessTransition(
-                device.deviceId,
-                value as number || 0,
+              this.getBrightnessTransition(
+                device as LightType,
+                value as number,
+                serviceIdentifier,
               ),
             ),
           ),
@@ -79,17 +98,13 @@ export class LightService extends AccessoryService {
       .onSet(
         async (value: CharacteristicValue) => {
           const color = kelvinToRGB(value as number || 0);
-          const hueSaturation = rgbToHSV(color);
-          service.getCharacteristic(this.CHARACTERISTICS.Hue)
-            .updateValue(hueSaturation.hue);
-          service.getCharacteristic(this.CHARACTERISTICS.Saturation)
-            .updateValue(hueSaturation.saturation);
           await this.emitAsync(
             new DeviceCommandEvent(
-              new DeviceColorTemperatureTransition(
-                device.deviceId,
+              this.getColorTemperatureTransition(
+                device as LightType,
                 color,
                 value as number,
+                serviceIdentifier,
               ),
             ),
           );
@@ -101,35 +116,351 @@ export class LightService extends AccessoryService {
         async (value: CharacteristicValue) =>
           await this.emitAsync(
             new DeviceCommandEvent(
-              new DeviceColorTransition(
-                device.deviceId,
+              this.getColorTransition(
+                device as LightType,
                 hsvToRGB(
                   value as number || 0,
                   service.getCharacteristic(
                     this.CHARACTERISTICS.Saturation,
                   ).value as number || 0,
                 ),
+                serviceIdentifier,
               ),
             ),
           ),
       );
     service
-      .getCharacteristic(this.CHARACTERISTICS.Saturation)
-      .onSet(
-        async (value: CharacteristicValue) =>
-          await this.emitAsync(
-            new DeviceCommandEvent(
-              new DeviceColorTransition(
-                device.deviceId,
-                hsvToRGB(
-                  service.getCharacteristic(
-                    this.CHARACTERISTICS.Hue,
-                  ).value as number || 0,
-                  value as number || 0,
-                ),
-              ),
-            ),
-          ),
+      .getCharacteristic(this.CHARACTERISTICS.Saturation);
+    if (deviceColor) {
+      service.updateCharacteristic(
+        this.CHARACTERISTICS.Hue,
+        rgbToHSV(deviceColor).hue,
       );
+      service.updateCharacteristic(
+        this.CHARACTERISTICS.Saturation,
+        rgbToHSV(deviceColor).saturation,
+      );
+      // service.updateCharacteristic(
+      //   this.CHARACTERISTICS.ColorTemperature,
+      //   rgbToKelvin(deviceColor),
+      // );
+    }
+  }
+
+  protected abstract getColor(
+    device: LightType,
+    identifier?: IdentifierType,
+  ): ColorRGB | undefined;
+
+  protected abstract getBrightness(
+    device: LightType,
+    identifier?: IdentifierType,
+  ): number | undefined;
+
+  protected abstract getBrightnessTransition(
+    device: LightType,
+    brightness: number,
+    identifier?: IdentifierType,
+  ): DeviceTransition<LightType>;
+
+  protected abstract getColorTransition(
+    device: LightType,
+    color: ColorRGB,
+    identifier?: IdentifierType,
+  ): DeviceTransition<LightType>;
+
+  protected abstract getColorTemperatureTransition(
+    device: LightType,
+    color: ColorRGB,
+    temperature: number,
+    identifier?: IdentifierType,
+  ): DeviceTransition<LightType>;
+}
+
+@ServiceRegistry.register
+export class WhiteLightService extends BaseLightService<GoveeLight, void> {
+
+  constructor(
+    eventEmitter: EventEmitter2,
+    SERVICES: typeof Service,
+    CHARACTERISTICS: typeof Characteristic,
+    log: LoggingService,
+  ) {
+    super(
+      eventEmitter,
+      SERVICES,
+      CHARACTERISTICS,
+      log,
+    );
+  }
+
+  protected supports(device: GoveeDevice): boolean {
+    return device instanceof GoveeLight
+      && !(device instanceof GoveeRGBLight);
+  }
+
+  protected getBrightness(
+    device: GoveeLight,
+  ): number | undefined {
+    return device.brightness;
+  }
+
+  protected getColor(
+    device: GoveeLight,
+  ): ColorRGB | undefined {
+    return device.colorTemperature;
+  }
+
+  protected getBrightnessTransition(
+    device: GoveeLight,
+    brightness: number,
+  ): DeviceTransition<GoveeLight> {
+    return new DeviceBrightnessTransition(
+      device.deviceId,
+      brightness,
+    );
+  }
+
+  protected getColorTransition(
+    device: GoveeLight,
+    color: ColorRGB,
+  ): DeviceTransition<GoveeLight> {
+    return this.getColorTemperatureTransition(
+      device,
+      color,
+      rgbToKelvin(color),
+    );
+  }
+
+  protected getColorTemperatureTransition(
+    device: GoveeLight,
+    color: ColorRGB,
+    temperature: number,
+  ): DeviceColorTemperatureTransition {
+    return new DeviceColorTemperatureTransition(
+      device.deviceId,
+      color,
+      temperature,
+    );
+  }
+}
+
+@ServiceRegistry.register
+export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
+  constructor(
+    eventEmitter: EventEmitter2,
+    SERVICES: typeof Service,
+    CHARACTERISTICS: typeof Characteristic,
+    log: LoggingService,
+  ) {
+    super(
+      eventEmitter,
+      SERVICES,
+      CHARACTERISTICS,
+      log,
+    );
+  }
+
+  protected supports(device: GoveeDevice): boolean {
+    return device instanceof GoveeRGBLight;
+  }
+
+  protected getBrightness(
+    device: GoveeRGBLight,
+  ): number | undefined {
+    return device.brightness;
+  }
+
+  protected getColor(
+    device: GoveeRGBLight,
+  ): ColorRGB | undefined {
+    const colorState = device as unknown as SolidColorState;
+    const modeState = device as unknown as ModesState;
+    if (colorState) {
+      return colorState.solidColor;
+    } else if (modeState) {
+      const colorMode = Array.from(
+        modeState.modes.values(),
+      ).find(
+        (deviceMode: DeviceMode) => deviceMode instanceof SolidColorMode,
+      ) as SolidColorMode;
+      return colorMode.solidColor;
+    }
+  }
+
+  protected getBrightnessTransition(
+    device: GoveeLight,
+    brightness: number,
+  ): DeviceTransition<GoveeLight> {
+    return new DeviceBrightnessTransition(
+      device.deviceId,
+      brightness,
+    );
+  }
+
+  protected getColorTransition(
+    device: GoveeRGBLight,
+    color: ColorRGB,
+  ): DeviceTransition<GoveeRGBLight> {
+    return new DeviceColorTransition(
+      device.deviceId,
+      color,
+    );
+  }
+
+  protected getColorTemperatureTransition(
+    device: GoveeRGBLight,
+    color: ColorRGB,
+    temperature: number,
+  ): DeviceColorTemperatureTransition {
+    return new DeviceColorTemperatureTransition(
+      device.deviceId,
+      color,
+      temperature,
+    );
+  }
+}
+
+
+@ServiceRegistry.register
+export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, number> {
+  protected readonly subTypes?: ServiceSubType<number>[] =
+    Array.of(
+      new ServiceSubType(
+        'All Segments',
+        -1,
+        'All Segments',
+        true,
+      ),
+    ).concat(
+      ...Array.from(
+        new Array(SEGMENT_COUNT),
+        (value, index: number) => {
+          const name = `Segment ${index}`;
+          return new ServiceSubType(
+            name,
+            index,
+            name,
+            undefined,
+            true,
+          );
+        },
+      ),
+    );
+
+  constructor(
+    eventEmitter: EventEmitter2,
+    SERVICES: typeof Service,
+    CHARACTERISTICS: typeof Characteristic,
+    log: LoggingService,
+  ) {
+    super(eventEmitter, SERVICES, CHARACTERISTICS, log);
+  }
+
+  protected supports(device: GoveeDevice): boolean {
+    return device instanceof GoveeRGBICLight;
+  }
+
+  protected getBrightness(
+    device: GoveeRGBICLight,
+    identifier: number,
+  ): number | undefined {
+    const colorSegmentMode = Array.from(
+      device.modes.values(),
+    ).find(
+      (deviceMode: DeviceMode) => deviceMode instanceof ColorSegmentsMode,
+    ) as ColorSegmentsMode;
+    if (!colorSegmentMode) {
+      return undefined;
+    }
+
+    if (identifier < 0) {
+      return colorSegmentMode.wholeBrightness;
+    }
+    return colorSegmentMode.colorSegments[identifier].brightness;
+  }
+
+  protected getColor(
+    device: GoveeRGBICLight,
+    identifier: number,
+  ): ColorRGB | undefined {
+    const colorSegmentMode = Array.from(
+      device.modes.values(),
+    ).find(
+      (deviceMode: DeviceMode) => deviceMode instanceof ColorSegmentsMode,
+    ) as ColorSegmentsMode;
+    if (!colorSegmentMode) {
+      return undefined;
+    }
+
+    if (identifier < 0) {
+      return colorSegmentMode.wholeColor;
+    }
+    return colorSegmentMode.colorSegments[identifier].color;
+  }
+
+
+  protected getBrightnessTransition(
+    device: GoveeRGBICLight,
+    brightness: number,
+    identifier: number,
+  ): DeviceTransition<GoveeRGBICLight> {
+    if (identifier < 0) {
+      console.log(identifier, 'BrightnessWC');
+      return new DeviceBrightnessWCTransition(
+        device.deviceId,
+        brightness,
+      );
+    }
+    return new DeviceBrightnessSegmentTransition(
+      device.deviceId,
+      identifier,
+      brightness,
+    );
+  }
+
+
+  protected getColorTemperatureTransition(
+    device: GoveeRGBICLight,
+    color: ColorRGB,
+    temperature: number,
+    identifier: number,
+  ): DeviceTransition<GoveeRGBICLight> {
+    return SegmentedLightService.getSegmentColorTransition(
+      device,
+      color,
+      identifier,
+    );
+  }
+
+  protected getColorTransition(
+    device: GoveeRGBICLight,
+    color: ColorRGB,
+    identifier: number,
+  ): DeviceTransition<GoveeRGBICLight> {
+    return SegmentedLightService.getSegmentColorTransition(
+      device,
+      color,
+      identifier,
+    );
+  }
+
+  private static getSegmentColorTransition(
+    device: GoveeRGBICLight,
+    color: ColorRGB,
+    identifier: number,
+  ): DeviceTransition<GoveeRGBICLight> {
+    console.log(identifier);
+    if (identifier < 0) {
+      return new DeviceColorWCTransition(
+        device.deviceId,
+        color,
+      );
+    }
+    return new DeviceColorSegmentTransition(
+      device.deviceId,
+      identifier,
+      color,
+    );
   }
 }

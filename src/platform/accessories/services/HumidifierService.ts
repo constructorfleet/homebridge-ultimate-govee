@@ -17,9 +17,8 @@ import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeHumidifier} from '../../../devices/GoveeHumidifier';
 
 @ServiceRegistry.register
-export class HumidifierService extends AccessoryService {
+export class HumidifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
-  protected readonly isPrimary: boolean = true;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -97,18 +96,16 @@ export class HumidifierService extends AccessoryService {
         ],
       })
       .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive
-            && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
-            && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
+        (((device as unknown as ActiveState).isActive
+          && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
+          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
           ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
           : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
       );
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
       .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive ?? false)
+        (((device as unknown as ActiveState).isActive ?? false)
           && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
           ? this.CHARACTERISTICS.Active.ACTIVE
           : this.CHARACTERISTICS.Active.INACTIVE,
