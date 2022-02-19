@@ -51,7 +51,7 @@ export class BLEEventProcessor extends Emitter {
       );
     } catch (err) {
       this.log.error(
-        'BLEEventProcessory',
+        'BLEEventProcessor',
         'onPeripheralReceive',
         err,
       );

@@ -47,8 +47,9 @@ export class IoTEventProcessor extends Emitter {
     try {
       const acctMessage = plainToInstance(
         IoTAccountMessage,
-        message.payload,
+        JSON.parse(message.payload),
       );
+
       const devState = toDeviceState(acctMessage);
       await this.emitAsync(
         new DeviceStateReceived(devState),
@@ -87,8 +88,9 @@ export class IoTEventProcessor extends Emitter {
         JSON.stringify({
           topic: device.iotTopic,
           msg: {
+            accountTopic: this.persist.oauthData?.accountIoTTopic,
             cmd: 'status',
-            cmdVersion: 2,
+            cmdVersion: 0,
             transaction: `u_${Date.now()}`,
             type: 0,
           },
@@ -104,6 +106,7 @@ export function toDeviceState(
   return {
     deviceId: message.deviceId,
     model: message.model,
+    command: message.command,
     on: message?.state?.onOff === undefined
       ? undefined
       : message?.state?.onOff === 1,

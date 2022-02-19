@@ -16,7 +16,7 @@ export class DeviceColorTemperatureTransition extends DeviceTransition<ColorTemp
   protected updateState(device: ColorTemperatureState & GoveeDevice): DeviceColorTemperatureTransition {
     device.colorTemperature = this.color;
     device.temperatureKelvin = rgbToKelvin(this.color);
-    this.commandCodes = device.colorTemperatureChange;
+    this.commandCodes = [device.colorTemperatureChange];
     return this;
   }
 }

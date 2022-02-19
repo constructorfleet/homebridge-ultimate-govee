@@ -13,7 +13,7 @@ export class DeviceMistLevelTransition extends DeviceTransition<MistLevelState &
 
   protected updateState(device: MistLevelState & GoveeDevice): DeviceMistLevelTransition {
     device.mistLevel = this.mistLevel;
-    this.commandCodes = device.mistLevelChange;
+    this.commandCodes = [device.mistLevelChange];
     return this;
   }
 }

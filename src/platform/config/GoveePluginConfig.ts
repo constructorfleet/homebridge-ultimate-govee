@@ -2,12 +2,14 @@ import {Exclude, Expose, Type} from 'class-transformer';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 
+type LightType = 'WW' | 'RGB' | 'RGBIC';
+
 export class GoveeDeviceOverride {
-  constructor(device: GoveeDevice) {
+  constructor(device?: GoveeDevice) {
     this.ignore = false;
-    this.deviceId = device.deviceId;
-    this.model = device.model;
-    this.displayName = device.name;
+    this.deviceId = device?.deviceId;
+    this.model = device?.model;
+    this.displayName = device?.name;
   }
 
   @Expose({name: 'deviceId'})
@@ -21,6 +23,27 @@ export class GoveeDeviceOverride {
 
   @Expose({name: 'displayName'})
   displayName?: string;
+}
+
+export class GoveeLightOverride extends GoveeDeviceOverride {
+  constructor(device?: GoveeDevice) {
+    super(device);
+    this._lightType = 'RGB';
+  }
+
+  @Expose({name: '_lightType'})
+  _lightType?: LightType;
+}
+
+export class GoveeRGBICLightOverride extends GoveeLightOverride {
+  constructor(device?: GoveeDevice) {
+    super(device);
+    this._lightType = 'RGBIC';
+    this.hideSegments = false;
+  }
+
+  @Expose({name: 'hideSegments'})
+  hideSegments?: boolean;
 }
 
 export class GoveeDeviceOverrides {
@@ -43,7 +66,20 @@ export class GoveeDeviceOverrides {
   humidifiers?: GoveeDeviceOverride[];
 
   @Expose({name: 'lights'})
-  @Type(() => GoveeDeviceOverrides)
+  @Type(
+    () => GoveeLightOverride,
+    {
+      discriminator: {
+        property: '_lightType',
+        subTypes: [
+          {
+            value: GoveeRGBICLightOverride,
+            name: 'RGBIC',
+          },
+        ],
+      },
+    },
+  )
   lights?: GoveeDeviceOverride[];
 }
 

@@ -20,11 +20,11 @@ import {RestEventProcessor} from '../interactors/data/RestEventProcessor';
 import {Md5} from 'ts-md5';
 import {v4 as uuidv4} from 'uuid';
 import {DeviceFactory} from '../devices/DeviceFactory';
-import {GoveeRGBICLight} from '../devices/GoveeRGBICLight';
-import {GoveeRGBLight} from '../devices/GoveeRGBLight';
-import {GoveeLight} from '../devices/GoveeLight';
-import {GoveeAirPurifier} from '../devices/GoveeAirPurifier';
-import {GoveeHumidifier} from '../devices/GoveeHumidifier';
+import {GoveeRGBICLight} from '../devices/implmentations/GoveeRGBICLight';
+import {GoveeRGBLight} from '../devices/implmentations/GoveeRGBLight';
+import {GoveeLight} from '../devices/implmentations/GoveeLight';
+import {GoveeAirPurifier} from '../devices/implmentations/GoveeAirPurifier';
+import {GoveeHumidifier} from '../devices/implmentations/GoveeHumidifier';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const GOVEE_DEVICE_TYPES = [

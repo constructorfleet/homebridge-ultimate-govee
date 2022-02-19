@@ -6,7 +6,6 @@ export class DeviceFactory {
   private static readonly providers: Provider[] = [];
 
   static getProviders(): Provider[] {
-    console.log(DeviceFactory.providers);
     return DeviceFactory.providers;
   }
 

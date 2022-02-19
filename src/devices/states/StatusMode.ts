@@ -36,9 +36,9 @@ export function StatusMode<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.statusMode = commandValues[0];
-        this.subStatusMode = commandValues[1];
+      if (commandValues?.length === 1) {
+        this.statusMode = commandValues[0][0];
+        this.subStatusMode = commandValues[0][1];
       }
 
       return super.parse(deviceState);

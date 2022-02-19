@@ -30,9 +30,9 @@ export function Timer<StateType extends State>(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.timerOn = commandValues[0] === 1;
-        this.timerDuration = commandValues[1] * 255 + commandValues[2];
+      if (commandValues?.length === 1) {
+        this.timerOn = commandValues[0][0] === 1;
+        this.timerDuration = commandValues[0][1] * 255 + commandValues[0][2];
       }
 
       return super.parse(deviceState);

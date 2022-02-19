@@ -13,7 +13,7 @@ export class DeviceControlLockTransition extends DeviceTransition<ControlLockSta
 
   protected updateState(device: ControlLockState & GoveeDevice): DeviceControlLockTransition {
     device.areControlsLocked = this.controlsLocked;
-    this.commandCodes = device.controlLockChange;
+    this.commandCodes = [device.controlLockChange];
     return this;
   }
 }

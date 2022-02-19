@@ -14,20 +14,23 @@ import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 import {ServiceRegistry} from '../ServiceRegistry';
-import {GoveeHumidifier} from '../../../devices/GoveeHumidifier';
+import {GoveeHumidifier} from '../../../devices/implmentations/GoveeHumidifier';
+import {PlatformConfigService} from '../../config/PlatformConfigService';
 
 @ServiceRegistry.register
-export class HumidifierService extends AccessoryService {
-  protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
+export class HumidifierService extends AccessoryService<void> {
+  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
 
   constructor(
     eventEmitter: EventEmitter2,
+    confgService: PlatformConfigService,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
     super(
       eventEmitter,
+      confgService,
       SERVICES,
       CHARACTERISTICS,
       log,
@@ -96,18 +99,16 @@ export class HumidifierService extends AccessoryService {
         ],
       })
       .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive
-            && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
-            && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
+        (((device as unknown as ActiveState).isActive
+          && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
+          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
           ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
           : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
       );
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
       .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive ?? false)
+        (((device as unknown as ActiveState).isActive ?? false)
           && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
           ? this.CHARACTERISTICS.Active.ACTIVE
           : this.CHARACTERISTICS.Active.INACTIVE,

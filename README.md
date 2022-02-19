@@ -21,6 +21,9 @@ A Homebridge plugin to provide comprehensive and intuitive control of Govee devi
         - Control Device Mist Output Level
         - Reports Device Water Level
         - Lock/Unlock the Physical Controls on the Device
+    - RGBIC Lights
+        - Control the entire light's brightness and color
+        - Control each of the 15 segments' color and relative brightness individually
 - Required Information
     - Govee Account Credentials (Username, Password)
 
@@ -153,4 +156,7 @@ Once available, each device will display:
 `deviceId` - The Govee device identifier (READ-ONLY)  
 `model` - The Govee device model identifier (READ-ONLY)  
 `ignore` - Check this box to prevent this device from being exposed to Apple HomeKit  
-`displayName` - Defaults to the device name set in Govee Home, change this to update the device name reported to HomeKit  
+`displayName` - Defaults to the device name set in Govee Home, change this to update the device name reported to HomeKit
+
+RGBIC lights will also offer the ability to hide the segment lights from HomeKit, leaving the primary control:  
+`hideSegments` - Setting to `true` will remove all 15 segments from HomeKit.  

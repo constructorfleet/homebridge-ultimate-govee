@@ -16,7 +16,7 @@ export class AccessoryManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
-    @Inject(AccessoryService) private readonly services: AccessoryService[],
+    @Inject(AccessoryService) private readonly services: AccessoryService<unknown>[],
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
@@ -28,6 +28,14 @@ export class AccessoryManager extends Emitter {
     accessory: PlatformAccessory,
   ) {
     const device = accessory.context.device;
+    if (!device || !device.deviceId) {
+      this.api.unregisterPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
+      return;
+    }
     const deviceConfig =
       this.platformConfigService.getDeviceConfiguration(device.deviceId);
 
@@ -39,6 +47,12 @@ export class AccessoryManager extends Emitter {
       );
       return;
     }
+
+    const nameOverride = deviceConfig?.displayName;
+    if (nameOverride) {
+      accessory.displayName = nameOverride;
+    }
+
     this.accessories.set(
       accessory.UUID,
       accessory,
@@ -74,19 +88,23 @@ export class AccessoryManager extends Emitter {
     const accessory =
       this.accessories.get(deviceUUID)
       || new this.api.platformAccessory(
-        device.name,
+        deviceConfig?.displayName ?? device.name,
         deviceUUID,
       );
+    accessory.context.config = deviceConfig;
 
-    this.services.forEach((service) => service.updateAccessory(accessory, device));
-    this.api.updatePlatformAccessories([accessory]);
+    await this.onDeviceUpdated(device);
 
     if (!this.accessories.has(deviceUUID)) {
       this.accessories.set(
         deviceUUID,
         accessory,
       );
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      this.api.registerPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
     }
     this.platformConfigService.updateConfigurationWithDevices(device);
   }
@@ -99,12 +117,20 @@ export class AccessoryManager extends Emitter {
     if (!this.accessories.has(deviceUUID)) {
       return;
     }
+
     const accessory = this.accessories.get(deviceUUID);
     if (!accessory) {
       return;
     }
 
-    this.services.forEach((service) => service.updateAccessory(accessory, device));
+    accessory.context.device = device;
+
+    this.services.forEach((service) =>
+      service.updateAccessory(
+        accessory,
+        device,
+      ),
+    );
 
     this.api.updatePlatformAccessories([accessory]);
   }
