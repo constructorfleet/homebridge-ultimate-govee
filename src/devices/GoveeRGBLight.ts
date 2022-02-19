@@ -9,6 +9,7 @@ import {OnOff} from './states/OnOff';
 import {GoveeDevice} from './GoveeDevice';
 import {RGBMusicMode} from './states/modes/RGBMusic';
 import {Connected} from './states/Connected';
+import {SolidColor} from './states/SolidColor';
 
 @DeviceFactory.register(
   'H6107',
@@ -59,17 +60,19 @@ import {Connected} from './states/Connected';
   'B7082',
 )
 export class GoveeRGBLight
-  extends ColorTemperature(
-    Brightness(
-      Modes(
-        RGBMusicMode,
-        SceneMode,
-      )(
-        Timer(
-          Active(
-            OnOff(
-              Connected(
-                GoveeDevice,
+  extends SolidColor(
+    ColorTemperature(
+      Brightness(
+        Modes(
+          RGBMusicMode,
+          SceneMode,
+        )(
+          Timer(
+            Active(
+              OnOff(
+                Connected(
+                  GoveeDevice,
+                ),
               ),
             ),
           ),
