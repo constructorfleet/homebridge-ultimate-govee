@@ -23,5 +23,13 @@ export interface DeviceState {
 
   color?: DeviceStateColor;
 
+  modeValue?: number[];
+
+  sleepValue?: number[];
+
+  wakeupValue?: number[];
+
+  timerValue?: number[];
+
   commands?: number[][];
 }
