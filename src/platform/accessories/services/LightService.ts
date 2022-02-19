@@ -268,6 +268,9 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
   protected getBrightness(
     device: GoveeRGBLight,
   ): number | undefined {
+    if (device.pactType === 1 && device.brightness !== undefined) {
+      return Math.round(device.brightness / 255 * 100);
+    }
     return device.brightness;
   }
 
@@ -292,6 +295,9 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
     device: GoveeLight,
     brightness: number,
   ): DeviceTransition<GoveeLight> {
+    if (device.pactType === 1) {
+      brightness = Math.floor(brightness / 100 * 255);
+    }
     return new DeviceBrightnessTransition(
       device.deviceId,
       brightness,
@@ -312,11 +318,10 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
     device: GoveeRGBLight,
     color: ColorRGB,
     temperature: number,
-  ): DeviceColorTemperatureTransition {
-    return new DeviceColorTemperatureTransition(
+  ): DeviceTransition<GoveeRGBLight> {
+    return new DeviceColorTransition(
       device.deviceId,
       color,
-      temperature,
     );
   }
 }
