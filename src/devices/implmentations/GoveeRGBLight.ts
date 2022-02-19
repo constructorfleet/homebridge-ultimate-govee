@@ -1,16 +1,16 @@
-import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
-import {ColorTemperature} from './states/ColorTemperature';
-import {Brightness} from './states/Brightness';
-import {Modes} from './states/Modes';
-import {SceneMode} from './states/modes/Scene';
-import {Timer} from './states/Timer';
-import {Active} from './states/Active';
-import {OnOff} from './states/OnOff';
-import {GoveeDevice} from './GoveeDevice';
-import {RGBMusicMode} from './states/modes/RGBMusic';
-import {Connected} from './states/Connected';
-import {DeviceFactory} from './DeviceFactory';
-import {SolidColorMode} from './states/modes/SolidColor';
+import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
+import {ColorTemperature} from '../states/ColorTemperature';
+import {Brightness} from '../states/Brightness';
+import {Modes} from '../states/Modes';
+import {SceneMode} from '../states/modes/Scene';
+import {Timer} from '../states/Timer';
+import {Active} from '../states/Active';
+import {OnOff} from '../states/OnOff';
+import {GoveeDevice} from '../GoveeDevice';
+import {RGBMusicMode} from '../states/modes/RGBMusic';
+import {Connected} from '../states/Connected';
+import {DeviceFactory} from '../DeviceFactory';
+import {SolidColorMode} from '../states/modes/SolidColor';
 
 @DeviceFactory.register(
   'H6107',

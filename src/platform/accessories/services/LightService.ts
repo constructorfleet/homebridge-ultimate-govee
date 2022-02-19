@@ -11,9 +11,9 @@ import {OnOffState} from '../../../devices/states/OnOff';
 import {DeviceColorTransition} from '../../../core/structures/devices/transitions/DeviceColorTransition';
 import {ColorRGB, hsvToRGB, kelvinToRGB, rgbToHSV, rgbToKelvin} from '../../../util/colorUtils';
 import {DeviceColorTemperatureTransition} from '../../../core/structures/devices/transitions/DeviceColorTemperatureTransition';
-import {GoveeLight} from '../../../devices/GoveeLight';
+import {GoveeLight} from '../../../devices/implmentations/GoveeLight';
 import {DeviceTransition} from '../../../core/structures/devices/DeviceTransition';
-import {GoveeRGBLight} from '../../../devices/GoveeRGBLight';
+import {GoveeRGBLight} from '../../../devices/implmentations/GoveeRGBLight';
 import {ServiceRegistry} from '../ServiceRegistry';
 import {DeviceBrightnessTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
 import {ConnectedState} from '../../../devices/states/Connected';
@@ -21,7 +21,7 @@ import {SolidColorState} from '../../../devices/states/SolidColor';
 import {ModesState} from '../../../devices/states/Modes';
 import {DeviceMode} from '../../../devices/states/modes/DeviceMode';
 import {SolidColorMode} from '../../../devices/states/modes/SolidColor';
-import {GoveeRGBICLight} from '../../../devices/GoveeRGBICLight';
+import {GoveeRGBICLight} from '../../../devices/implmentations/GoveeRGBICLight';
 import {ColorSegmentsMode} from '../../../devices/states/modes/ColorSegments';
 import {
   DeviceBrightnessSegmentTransition,

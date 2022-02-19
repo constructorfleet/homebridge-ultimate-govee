@@ -10,10 +10,10 @@ import {
   GoveeRGBICLightOverride,
 } from './GoveePluginConfig';
 import {GoveeDevice} from '../../devices/GoveeDevice';
-import {GoveeHumidifier} from '../../devices/GoveeHumidifier';
-import {GoveeAirPurifier} from '../../devices/GoveeAirPurifier';
-import {GoveeLight} from '../../devices/GoveeLight';
-import {GoveeRGBICLight} from '../../devices/GoveeRGBICLight';
+import {GoveeHumidifier} from '../../devices/implmentations/GoveeHumidifier';
+import {GoveeAirPurifier} from '../../devices/implmentations/GoveeAirPurifier';
+import {GoveeLight} from '../../devices/implmentations/GoveeLight';
+import {GoveeRGBICLight} from '../../devices/implmentations/GoveeRGBICLight';
 
 @Injectable()
 export class PlatformConfigService {

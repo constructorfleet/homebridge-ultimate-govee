@@ -14,7 +14,7 @@ import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 import {ServiceRegistry} from '../ServiceRegistry';
-import {GoveeHumidifier} from '../../../devices/GoveeHumidifier';
+import {GoveeHumidifier} from '../../../devices/implmentations/GoveeHumidifier';
 
 @ServiceRegistry.register
 export class HumidifierService extends AccessoryService<void> {

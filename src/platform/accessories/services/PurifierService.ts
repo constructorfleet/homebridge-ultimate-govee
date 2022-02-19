@@ -13,7 +13,7 @@ import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 import {ServiceRegistry} from '../ServiceRegistry';
-import {GoveeAirPurifier} from '../../../devices/GoveeAirPurifier';
+import {GoveeAirPurifier} from '../../../devices/implmentations/GoveeAirPurifier';
 
 @ServiceRegistry.register
 export class PurifierService extends AccessoryService<void> {
