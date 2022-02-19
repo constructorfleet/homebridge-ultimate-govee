@@ -4,6 +4,7 @@ import {Emitter} from '../../../util/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {LoggingService} from '../../../logging/LoggingService';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
+import {GoveeDeviceOverride} from '../../config/GoveePluginConfig';
 
 export class ServiceSubType<IdentifierType> {
   constructor(
@@ -17,7 +18,7 @@ export class ServiceSubType<IdentifierType> {
 }
 
 export interface IdentifiedService<IdentifierType> {
-  service: Service;
+  service?: Service;
   identifier?: IdentifierType;
   subType?: ServiceSubType<IdentifierType>;
 }
@@ -25,10 +26,13 @@ export interface IdentifiedService<IdentifierType> {
 export abstract class AccessoryService<IdentifierType> extends Emitter {
   private static setServicePrimary(
     accessory: PlatformAccessory,
-    service: Service,
+    service?: Service,
     primary?: boolean,
     linkToPrimary?: boolean,
-  ): Service {
+  ): Service | undefined {
+    if (!service) {
+      return undefined;
+    }
     if (service.isPrimaryService !== primary) {
       service.setPrimaryService(primary);
     }
@@ -62,23 +66,30 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     if (!this.supports(device)) {
       return accessory;
     }
-    this.get(accessory).forEach(
-      (identifiedService: IdentifiedService<IdentifierType>) =>
-        this.processDeviceOverrides(
-          device,
+    const deviceOverride =
+      this.configService.getDeviceConfiguration(device.deviceId);
+
+    this.get(
+      accessory,
+      deviceOverride,
+    ).forEach(
+      (identifiedService: IdentifiedService<IdentifierType>) => {
+        const serviceOverride = this.processDeviceOverrides(
           accessory,
           identifiedService,
-        ).then(
-          (identifiedService: IdentifiedService<IdentifierType> | undefined) => {
-            if (identifiedService) {
-              this.updateServiceCharacteristics(
-                identifiedService.service,
-                device,
-                identifiedService.identifier,
-              );
-            }
-          },
-        ),
+          device,
+          deviceOverride,
+        );
+        if (!serviceOverride || !serviceOverride.service) {
+          return;
+        }
+
+        this.updateServiceCharacteristics(
+          serviceOverride.service,
+          device,
+          identifiedService.identifier,
+        );
+      },
     );
     return accessory;
   }
@@ -88,13 +99,25 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     return true;
   }
 
-  protected async processDeviceOverrides(
-    device: GoveeDevice,
+  protected shouldAddService(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    deviceOverride?: GoveeDeviceOverride,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    subType?: ServiceSubType<IdentifierType>,
+  ): boolean {
+    return true;
+  }
+
+  protected processDeviceOverrides(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     accessory: PlatformAccessory,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     identifiedService: IdentifiedService<IdentifierType>,
-  ): Promise<IdentifiedService<IdentifierType> | undefined> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    device: GoveeDevice,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    deviceOverride?: GoveeDeviceOverride,
+  ): IdentifiedService<IdentifierType> | undefined {
     return identifiedService;
   }
 
@@ -106,36 +129,44 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
 
   protected get(
     accessory: PlatformAccessory,
+    deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType>[] {
     if (!this.subTypes || this.subTypes.length === 0) {
-      return [this.getService(accessory)];
+      return this.getService(
+        accessory,
+        deviceOverride,
+      );
     }
     return this.subTypes.map(
       (subType) => this.getSubTypeService(
         accessory,
         subType,
+        deviceOverride,
       ),
     );
   }
 
   private getService(
     accessory: PlatformAccessory,
-  ): IdentifiedService<IdentifierType> {
-    return {
+    deviceOverride?: GoveeDeviceOverride,
+  ): IdentifiedService<IdentifierType>[] {
+    return [{
       service: AccessoryService.setServicePrimary(
         accessory,
         accessory.getService(
           this.serviceType,
-        ) || accessory.addService(
-          this.serviceType,
+        ) || this.tryAddService(
+          accessory,
+          deviceOverride,
         ),
       ),
-    };
+    }];
   }
 
   private getSubTypeService(
     accessory: PlatformAccessory,
     subType: ServiceSubType<IdentifierType>,
+    deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType> {
     return {
       service: AccessoryService.setServicePrimary(
@@ -143,10 +174,10 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
         accessory.getServiceById(
           this.serviceType,
           subType.subType,
-        ) || accessory.addService(
-          this.serviceType,
-          `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
-          subType.subType,
+        ) || this.tryAddService(
+          accessory,
+          deviceOverride,
+          subType,
         ),
         subType.primary,
         subType.linkToPrimary,
@@ -154,5 +185,24 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
       subType: subType,
       identifier: subType.identifier,
     };
+  }
+
+  private tryAddService(
+    accessory: PlatformAccessory,
+    deviceOverride?: GoveeDeviceOverride,
+    subType?: ServiceSubType<IdentifierType>,
+  ): Service | undefined {
+    if (!this.shouldAddService(deviceOverride, subType)) {
+      return undefined;
+    }
+    if (!subType) {
+      return accessory.addService(this.serviceType);
+    }
+
+    return accessory.addService(
+      this.serviceType,
+      `${deviceOverride?.displayName ?? accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+      subType.subType,
+    );
   }
 }

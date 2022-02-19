@@ -29,7 +29,7 @@ import {
 } from '../../../core/structures/devices/transitions/DeviceColorSegmentTransition';
 import {DeviceColorWCTransition} from '../../../core/structures/devices/transitions/DeviceColorWCTransition';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
-import {GoveeRGBICLightOverride} from '../../config/GoveePluginConfig';
+import {GoveeDeviceOverride, GoveeRGBICLightOverride} from '../../config/GoveePluginConfig';
 
 abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> extends AccessoryService<IdentifierType> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
@@ -482,11 +482,23 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
   }
 
 
-  protected async processDeviceOverrides(
-    device: GoveeDevice,
+  protected shouldAddService(
+    deviceOverride?: GoveeDeviceOverride,
+    subType?: ServiceSubType<number>,
+  ): boolean {
+    if (subType?.primary) {
+      return true;
+    }
+    return (deviceOverride as GoveeRGBICLightOverride)?.hideSegments !== true
+      && !subType?.primary;
+  }
+
+  protected processDeviceOverrides(
     accessory: PlatformAccessory,
     identifiedService: IdentifiedService<number>,
-  ): Promise<IdentifiedService<number> | undefined> {
+    device: GoveeDevice,
+    deviceOverride?: GoveeDeviceOverride,
+  ): IdentifiedService<number> | undefined {
     const rgbicOverride =
       this.configService.getDeviceConfiguration<GoveeRGBICLightOverride>(
         device.deviceId,
@@ -496,15 +508,20 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
       return identifiedService;
     }
 
+    if (!identifiedService.service) {
+      return undefined;
+    }
+
     const subType = identifiedService.subType;
     if (rgbicOverride.hideSegments && !subType?.primary) {
-      identifiedService.service.setHiddenService(true);
+      accessory.removeService(identifiedService.service);
       return undefined;
     }
     const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
-    if (infoService && subType?.nameSuffix) {
+    const name = deviceOverride?.displayName ?? infoService?.displayName ?? device.name;
+    if (subType?.nameSuffix) {
       identifiedService.service.displayName =
-        `${infoService.getCharacteristic(this.CHARACTERISTICS.Name)} ${subType.nameSuffix}`;
+        `${name} ${subType.nameSuffix}`;
     }
 
     return identifiedService;
