@@ -23,7 +23,7 @@ export interface IoTCommandData {
   colorTemInKelvin?: number;
 }
 
-export type IoTCommand = 'pt' | 'ptReal' | 'turn' | 'brightness' | 'color' | 'colorTem';
+export type IoTCommand = 'pt' | 'ptReal' | 'turn' | 'brightness' | 'color' | 'colorTem' | 'colorwc';
 
 export interface IoTCommandMessage {
   device: string;
