@@ -47,6 +47,12 @@ export class AccessoryManager extends Emitter {
       );
       return;
     }
+
+    const nameOverride = deviceConfig?.displayName;
+    if (nameOverride) {
+      accessory.displayName = nameOverride;
+    }
+
     this.accessories.set(
       accessory.UUID,
       accessory,
@@ -82,7 +88,7 @@ export class AccessoryManager extends Emitter {
     const accessory =
       this.accessories.get(deviceUUID)
       || new this.api.platformAccessory(
-        device.name,
+        deviceConfig?.displayName ?? device.name,
         deviceUUID,
       );
     accessory.context.config = deviceConfig;
@@ -111,6 +117,7 @@ export class AccessoryManager extends Emitter {
     if (!this.accessories.has(deviceUUID)) {
       return;
     }
+
     const accessory = this.accessories.get(deviceUUID);
     if (!accessory) {
       return;
@@ -118,7 +125,12 @@ export class AccessoryManager extends Emitter {
 
     accessory.context.device = device;
 
-    this.services.forEach((service) => service.updateAccessory(accessory, device));
+    this.services.forEach((service) =>
+      service.updateAccessory(
+        accessory,
+        device,
+      ),
+    );
 
     this.api.updatePlatformAccessories([accessory]);
   }

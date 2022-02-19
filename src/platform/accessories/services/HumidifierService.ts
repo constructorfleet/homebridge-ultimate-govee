@@ -15,6 +15,7 @@ import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeHumidifier} from '../../../devices/implmentations/GoveeHumidifier';
+import {PlatformConfigService} from '../../config/PlatformConfigService';
 
 @ServiceRegistry.register
 export class HumidifierService extends AccessoryService<void> {
@@ -22,12 +23,14 @@ export class HumidifierService extends AccessoryService<void> {
 
   constructor(
     eventEmitter: EventEmitter2,
+    confgService: PlatformConfigService,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
     super(
       eventEmitter,
+      confgService,
       SERVICES,
       CHARACTERISTICS,
       log,

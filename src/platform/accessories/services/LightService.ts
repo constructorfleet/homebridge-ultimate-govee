@@ -1,7 +1,7 @@
-import {AccessoryService, ServiceSubType} from './AccessoryService';
+import {AccessoryService, IdentifiedService, ServiceSubType} from './AccessoryService';
 import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES, SEGMENT_COUNT} from '../../../util/const';
-import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
+import {Characteristic, CharacteristicValue, PlatformAccessory, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
@@ -28,19 +28,22 @@ import {
   DeviceColorSegmentTransition,
 } from '../../../core/structures/devices/transitions/DeviceColorSegmentTransition';
 import {DeviceColorWCTransition} from '../../../core/structures/devices/transitions/DeviceColorWCTransition';
-import {DeviceBrightnessWCTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessWCTransition';
+import {PlatformConfigService} from '../../config/PlatformConfigService';
+import {GoveeRGBICLightOverride} from '../../config/GoveePluginConfig';
 
 abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> extends AccessoryService<IdentifierType> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
 
   protected constructor(
     eventEmitter: EventEmitter2,
+    configService: PlatformConfigService,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
     super(
       eventEmitter,
+      configService,
       SERVICES,
       CHARACTERISTICS,
       log,
@@ -182,12 +185,14 @@ export class WhiteLightService extends BaseLightService<GoveeLight, void> {
 
   constructor(
     eventEmitter: EventEmitter2,
+    configService: PlatformConfigService,
     SERVICES: typeof Service,
     CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
     super(
       eventEmitter,
+      configService,
       SERVICES,
       CHARACTERISTICS,
       log,
@@ -249,12 +254,14 @@ export class WhiteLightService extends BaseLightService<GoveeLight, void> {
 export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
   constructor(
     eventEmitter: EventEmitter2,
+    configService: PlatformConfigService,
     SERVICES: typeof Service,
     CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
     super(
       eventEmitter,
+      configService,
       SERVICES,
       CHARACTERISTICS,
       log,
@@ -317,6 +324,7 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
   protected getColorTemperatureTransition(
     device: GoveeRGBLight,
     color: ColorRGB,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     temperature: number,
   ): DeviceTransition<GoveeRGBLight> {
     return new DeviceColorTransition(
@@ -355,11 +363,18 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
 
   constructor(
     eventEmitter: EventEmitter2,
+    configService: PlatformConfigService,
     SERVICES: typeof Service,
     CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
-    super(eventEmitter, SERVICES, CHARACTERISTICS, log);
+    super(
+      eventEmitter,
+      configService,
+      SERVICES,
+      CHARACTERISTICS,
+      log,
+    );
   }
 
   protected supports(device: GoveeDevice): boolean {
@@ -423,7 +438,6 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     );
   }
 
-
   protected getColorTemperatureTransition(
     device: GoveeRGBICLight,
     color: ColorRGB,
@@ -465,5 +479,34 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
       identifier,
       color,
     );
+  }
+
+
+  protected async processDeviceOverrides(
+    device: GoveeDevice,
+    accessory: PlatformAccessory,
+    identifiedService: IdentifiedService<number>,
+  ): Promise<IdentifiedService<number> | undefined> {
+    const rgbicOverride =
+      this.configService.getDeviceConfiguration<GoveeRGBICLightOverride>(
+        device.deviceId,
+      );
+
+    if (!rgbicOverride) {
+      return identifiedService;
+    }
+
+    const subType = identifiedService.subType;
+    if (rgbicOverride.hideSegments && !subType?.primary) {
+      identifiedService.service.setHiddenService(true);
+      return undefined;
+    }
+    const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
+    if (infoService && subType?.nameSuffix) {
+      identifiedService.service.displayName =
+        `${infoService.getCharacteristic(this.CHARACTERISTICS.Name)} ${subType.nameSuffix}`;
+    }
+
+    return identifiedService;
   }
 }

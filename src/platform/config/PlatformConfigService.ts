@@ -66,9 +66,9 @@ export class PlatformConfigService {
     return platformConfig;
   }
 
-  getDeviceConfiguration(
+  getDeviceConfiguration<OverrideType extends GoveeDeviceOverride>(
     deviceId: string,
-  ): GoveeDeviceOverride | undefined {
+  ): OverrideType | undefined {
     const deviceConfigurations: GoveeDeviceOverride[] =
       new Array<GoveeDeviceOverride>(
         ...(this.pluginConfiguration.devices?.humidifiers || []),
@@ -77,7 +77,7 @@ export class PlatformConfigService {
       );
     return deviceConfigurations.find(
       (deviceConfig) => deviceConfig.deviceId === deviceId,
-    );
+    ) as OverrideType;
   }
 
   updateConfigurationWithDevices(

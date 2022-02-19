@@ -3,12 +3,13 @@ import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {Emitter} from '../../../util/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {LoggingService} from '../../../logging/LoggingService';
+import {PlatformConfigService} from '../../config/PlatformConfigService';
 
 export class ServiceSubType<IdentifierType> {
   constructor(
     public readonly subType: string,
     public readonly identifier?: IdentifierType,
-    public readonly name?: string,
+    public readonly nameSuffix?: string,
     public readonly primary?: boolean,
     public readonly linkToPrimary?: boolean,
   ) {
@@ -18,6 +19,7 @@ export class ServiceSubType<IdentifierType> {
 export interface IdentifiedService<IdentifierType> {
   service: Service;
   identifier?: IdentifierType;
+  subType?: ServiceSubType<IdentifierType>;
 }
 
 export abstract class AccessoryService<IdentifierType> extends Emitter {
@@ -45,6 +47,7 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
 
   protected constructor(
     eventEmitter: EventEmitter2,
+    protected readonly configService: PlatformConfigService,
     protected readonly SERVICES: typeof Service,
     protected readonly CHARACTERISTICS: typeof Characteristic,
     protected readonly log: LoggingService,
@@ -61,10 +64,20 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     }
     this.get(accessory).forEach(
       (identifiedService: IdentifiedService<IdentifierType>) =>
-        this.updateServiceCharacteristics(
-          identifiedService.service,
+        this.processDeviceOverrides(
           device,
-          identifiedService.identifier,
+          accessory,
+          identifiedService,
+        ).then(
+          (identifiedService: IdentifiedService<IdentifierType> | undefined) => {
+            if (identifiedService) {
+              this.updateServiceCharacteristics(
+                identifiedService.service,
+                device,
+                identifiedService.identifier,
+              );
+            }
+          },
         ),
     );
     return accessory;
@@ -73,6 +86,16 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected supports(device: GoveeDevice): boolean {
     return true;
+  }
+
+  protected async processDeviceOverrides(
+    device: GoveeDevice,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    accessory: PlatformAccessory,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    identifiedService: IdentifiedService<IdentifierType>,
+  ): Promise<IdentifiedService<IdentifierType> | undefined> {
+    return identifiedService;
   }
 
   protected abstract updateServiceCharacteristics(
@@ -122,12 +145,13 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
           subType.subType,
         ) || accessory.addService(
           this.serviceType,
-          `${accessory.displayName} ${subType.name}`,
+          `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
           subType.subType,
         ),
         subType.primary,
         subType.linkToPrimary,
       ),
+      subType: subType,
       identifier: subType.identifier,
     };
   }

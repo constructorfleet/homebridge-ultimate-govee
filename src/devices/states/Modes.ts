@@ -58,9 +58,9 @@ export function Modes(
         );
         if (commandValues?.length === 1) {
           this.activeMode = commandValues[0][0];
-          this.parseModes(deviceState);
         }
 
+        this.parseModes(deviceState);
         return super.parse(deviceState);
       }
 

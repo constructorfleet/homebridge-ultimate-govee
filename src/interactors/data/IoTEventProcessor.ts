@@ -47,8 +47,9 @@ export class IoTEventProcessor extends Emitter {
     try {
       const acctMessage = plainToInstance(
         IoTAccountMessage,
-        message.payload,
+        JSON.parse(message.payload),
       );
+
       const devState = toDeviceState(acctMessage);
       await this.emitAsync(
         new DeviceStateReceived(devState),

@@ -32,34 +32,28 @@ export class ColorSegmentsMode extends DeviceMode {
     );
 
   parse(deviceState: DeviceState): ThisType<this> {
-    if (deviceState.command === 'colorwc' && deviceState.color !== undefined) {
-      if (deviceState.color !== undefined) {
-        this.wholeColor = new ColorRGB(
-          deviceState.color.red,
-          deviceState.color.green,
-          deviceState.color.blue,
-        );
-        this.colorSegments.forEach(
-          (segment: ColorSegment) => segment.color.update(
-            new ColorRGB(
-              deviceState.color?.red || 0,
-              deviceState.color?.green || 0,
-              deviceState.color?.blue || 0,
-            ),
-          ),
-        );
-      }
-      return this;
-    }
-
-    if (deviceState.command === 'brightness' && deviceState.brightness !== undefined) {
+    if (deviceState.brightness !== undefined) {
       this.wholeBrightness = deviceState.brightness;
+    }
+    if (deviceState.color !== undefined) {
+      this.wholeColor = new ColorRGB(
+        deviceState.color.red,
+        deviceState.color.green,
+        deviceState.color.blue,
+      );
       this.colorSegments.forEach(
-        (segment: ColorSegment) => segment.brightness = deviceState.brightness || 0,
+        (segment: ColorSegment) => segment.color.update(
+          new ColorRGB(
+            this.wholeColor!.red!,
+            this.wholeColor!.green!,
+            this.wholeColor!.blue!,
+          ),
+        ),
       );
 
       return this;
     }
+
     const commandValues = getCommandValues(
       [REPORT_IDENTIFIER, ...reportIdentifiers],
       deviceState.commands,
