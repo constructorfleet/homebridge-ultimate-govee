@@ -25,6 +25,8 @@ export interface IoTCommandData {
   blue?: number;
   val?: number;
   colorTemInKelvin?: number;
+  opcode?: string;
+  value?: string[];
 }
 
 export type IoTCommand = 'pt' | 'ptReal' | 'turn' | 'brightness' | 'color' | 'colorTem' | 'colorwc';
@@ -117,18 +119,16 @@ export class IoTColorCommandMessage extends BaseIoTCommandMessage {
   ) {
     super(
       transition,
-      'color',
+      'pt',
       {
-        red: transition.color.red,
-        green: transition.color.green,
-        blue: transition.color.blue,
+        opcode: 'mode',
+        value: transition.opCodeCommandString,
       },
     );
   }
 
   isValid(): boolean {
-    return ![this.data.red, this.data.green, this.data.blue]
-      .some((color) => color === undefined || color < 0 || color > 255);
+    return this.data.opcode === 'mode' && (this.data.value?.length ?? -1) > 0;
   }
 }
 
