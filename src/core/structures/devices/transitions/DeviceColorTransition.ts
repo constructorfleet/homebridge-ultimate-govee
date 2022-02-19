@@ -18,10 +18,7 @@ export class DeviceColorTransition extends DeviceTransition<GoveeDevice> {
   protected updateState(device: GoveeDevice): DeviceColorTransition {
     const colorState = device as unknown as SolidColorState;
     const modeState = device as unknown as ModesState;
-    if (colorState) {
-      colorState.solidColor = this.color;
-      this.commandCodes = [colorState.solidColorChange];
-    } else if (modeState) {
+    if (modeState) {
       const colorMode = Array.from(
         modeState.modes.values(),
       ).find(
@@ -32,6 +29,9 @@ export class DeviceColorTransition extends DeviceTransition<GoveeDevice> {
         modeState.modeChange,
         colorMode.colorChange(),
       ];
+    } else if (colorState) {
+      colorState.solidColor = this.color;
+      this.commandCodes = [colorState.solidColorChange];
     }
     return this;
   }

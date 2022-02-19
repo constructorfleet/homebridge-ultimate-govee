@@ -8,7 +8,6 @@ import {IoTPublishToEvent} from '../core/events/dataClients/iot/IoTPublish';
 import {BLEPeripheralCommandSend, BLEPeripheralSendEvent} from '../core/events/dataClients/ble/BLEPeripheral';
 import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
 import {getIoTCommandMessage} from '../core/structures/iot/IoTCommandMessage';
-import {DeviceColorWCTransition} from '../core/structures/devices/transitions/DeviceColorWCTransition';
 
 export class GoveeDevice extends State {
 
@@ -71,9 +70,6 @@ export class GoveeDevice extends State {
     const commandMessage = getIoTCommandMessage(transition);
     commandMessage.accountTopic = accountTopic;
 
-    if (transition instanceof DeviceColorWCTransition) {
-      console.log(commandMessage, commandMessage.isValid());
-    }
     if (!commandMessage.isValid()) {
       return undefined;
     }

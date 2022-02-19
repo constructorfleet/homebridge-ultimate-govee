@@ -114,6 +114,7 @@ export class IoTBrightnessCommandMessage extends BaseIoTCommandMessage {
 export class IoTColorCommandMessage extends BaseIoTCommandMessage {
   public static readonly TRANSITION_TYPE = DeviceColorTransition;
 
+  // TODO: Determine pt vs color commands
   constructor(
     transition: DeviceColorTransition,
   ) {
