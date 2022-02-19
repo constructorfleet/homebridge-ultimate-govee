@@ -41,17 +41,20 @@ export class ColorSegmentsMode extends DeviceMode {
         deviceState.color.green,
         deviceState.color.blue,
       );
-      this.colorSegments.forEach(
-        (segment: ColorSegment) => segment.color.update(
-          new ColorRGB(
-            this.wholeColor!.red!,
-            this.wholeColor!.green!,
-            this.wholeColor!.blue!,
-          ),
-        ),
-      );
 
-      return this;
+      if (deviceState.command === 'colorwc') {
+        this.colorSegments.forEach(
+          (segment: ColorSegment) => segment.color.update(
+            new ColorRGB(
+              this.wholeColor!.red!,
+              this.wholeColor!.green!,
+              this.wholeColor!.blue!,
+            ),
+          ),
+        );
+
+        return this;
+      }
     }
 
     const commandValues = getCommandValues(
