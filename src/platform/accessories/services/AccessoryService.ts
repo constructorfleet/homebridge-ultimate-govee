@@ -122,7 +122,7 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
           subType.subType,
         ) || accessory.addService(
           this.serviceType,
-          subType.name,
+          `${accessory.displayName} ${subType.name}`,
           subType.subType,
         ),
         subType.primary,
