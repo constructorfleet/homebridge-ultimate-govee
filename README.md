@@ -19,8 +19,7 @@ A Homebridge plugin to provide comprehensive and intuitive control of Govee devi
     - Humidifiers (H7141, H7142)
         - Control Device Power
         - Control Device Mist Output Level
-        - Reports Device Water Level
-        - Lock/Unlock the Physical Controls on the Device
+        - Reports When Device Water Level is Empty
     - RGBIC Lights
         - Control the entire light's brightness and color
         - Control each of the 15 segments' color and relative brightness individually
