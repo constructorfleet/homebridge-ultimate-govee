@@ -23,20 +23,20 @@ export abstract class DeviceEffectEvent<EventDataType>
 }
 
 export class DeviceEffectReceived
-  extends DeviceEffectEvent<CategoryScene> {
+  extends DeviceEffectEvent<CategoryScene[]> {
 
   constructor(
-    eventData: CategoryScene,
+    eventData: CategoryScene[],
   ) {
     super('Received', eventData);
   }
 }
 
 export class DeviceEffectDiscovered
-  extends DeviceEffectEvent<DeviceLightEffect> {
+  extends DeviceEffectEvent<DeviceLightEffect[]> {
 
   constructor(
-    eventData: DeviceLightEffect,
+    eventData: DeviceLightEffect[],
   ) {
     super('Discovered', eventData);
   }

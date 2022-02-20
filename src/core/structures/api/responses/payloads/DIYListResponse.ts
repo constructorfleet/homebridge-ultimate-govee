@@ -12,13 +12,13 @@ export class DIYEffect {
   public effectCommandString!: string;
 
   @Expose({name: 'diyName'})
-  public name!: string;
+  public diyName!: string;
 
   @Expose({name: 'coverUrl'})
   public coverUrl!: string;
 
   @Expose({name: 'diyCode'})
-  public id!: number;
+  public diyCode!: number;
 
   @Expose({name: 'createTime'})
   public createdTimestamp!: number;

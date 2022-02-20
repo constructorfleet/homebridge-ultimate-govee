@@ -61,11 +61,9 @@ export class RestEventProcessor extends Emitter {
       [] as DIYEffect[],
     );
 
-    for (let i = 0; i < effects.length; i++) {
-      await this.emitAsync(
-        new DIYEffectReceived(effects[i]),
-      );
-    }
+    await this.emitAsync(
+      new DIYEffectReceived(effects),
+    );
   }
 
   @OnEvent(
@@ -87,11 +85,10 @@ export class RestEventProcessor extends Emitter {
       [] as CategoryScene[],
     );
 
-    for (let i = 0; i < effects.length; i++) {
-      await this.emitAsync(
-        new DeviceEffectReceived(effects[i]),
-      );
-    }
+    await this.emitAsync(
+      new DeviceEffectReceived(effects),
+    );
+
   }
 
   @OnEvent(

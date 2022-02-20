@@ -141,22 +141,14 @@ export class AccessoryManager extends Emitter {
   @OnEvent(
     'EFFECT.DEVICE.Discovered',
   )
-  async onDeviceEffectDiscovered(effect: DeviceLightEffect) {
-    this.log.info(
-      'AccessoryManager',
-      'onDeviceEffectDiscovered',
-      effect,
-    );
+  async onDeviceEffectDiscovered(effects: DeviceLightEffect[]) {
+    await this.platformConfigService.updateConfigurationWithEffects(undefined, effects);
   }
 
   @OnEvent(
     'EFFECT.DIY.Discovered',
   )
-  async onDIYEffectDiscovered(effect: DIYLightEffect) {
-    this.log.info(
-      'AccessoryManager',
-      'onDIYEffectDiscovered',
-      effect,
-    );
+  async onDIYEffectDiscovered(effects: DIYLightEffect[]) {
+    await this.platformConfigService.updateConfigurationWithEffects(effects);
   }
 }

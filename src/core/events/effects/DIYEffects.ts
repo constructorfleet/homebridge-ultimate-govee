@@ -17,20 +17,20 @@ export abstract class DIYEffectEvent<EventDataType>
 }
 
 export class DIYEffectReceived
-  extends DIYEffectEvent<DIYEffect> {
+  extends DIYEffectEvent<DIYEffect[]> {
 
   constructor(
-    eventData: DIYEffect,
+    eventData: DIYEffect[],
   ) {
     super('Received', eventData);
   }
 }
 
 export class DIYEffectDiscovered
-  extends DIYEffectEvent<DIYLightEffect> {
+  extends DIYEffectEvent<DIYLightEffect[]> {
 
   constructor(
-    eventData: DIYLightEffect,
+    eventData: DIYLightEffect[],
   ) {
     super('Discovered', eventData);
   }

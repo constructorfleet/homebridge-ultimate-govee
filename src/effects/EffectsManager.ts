@@ -27,42 +27,52 @@ export class EffectsManager extends Emitter {
   @OnEvent(
     'EFFECT.DIY.Received',
   )
-  async onDIYEffectReceived(effect: DIYEffect) {
-    const lightEffect =
-      new DIYLightEffect(
-        effect.id,
-        effect.name,
+  async onDIYEffectReceived(effects: DIYEffect[]) {
+    const lightEffects =
+      effects.map(
+        (effect) =>
+          new DIYLightEffect(
+            effect.diyCode,
+            effect.diyName,
+          ),
       );
-    if (this.diyEffects.has(lightEffect.id)) {
-      return;
-    }
 
-    this.diyEffects.set(lightEffect.id, lightEffect);
+    const newEffects = lightEffects.filter(
+      (effect: DIYLightEffect) => !this.diyEffects.has(effect.id),
+    ).map(
+      (effect: DIYLightEffect) => {
+        this.diyEffects.set(effect.id, effect);
+        return effect;
+      },
+    );
     await this.emitAsync(
-      new DIYEffectDiscovered(lightEffect),
+      new DIYEffectDiscovered(newEffects),
     );
   }
 
   @OnEvent(
     'EFFECT.DEVICE.Received',
   )
-  async onDeviceEffectReceived(effect: CategoryScene) {
-    const lightEffect =
-      new DeviceLightEffect(
-        effect.sceneId,
-        effect.sceneName,
-        effect.scenesHint,
-        effect.deviceId,
+  async onDeviceEffectReceived(effects: CategoryScene[]) {
+    const lightEffects =
+      effects.map(
+        (effect) => new DeviceLightEffect(
+          effect.sceneId,
+          effect.sceneName,
+          effect.scenesHint,
+          effect.deviceId,
+        ),
       );
 
-    this.deviceEffects.set(
-      lightEffect.id,
-      (this.deviceEffects.get(lightEffect.id) || []).concat(lightEffect),
+    lightEffects.forEach(
+      (lightEffect: DeviceLightEffect) => this.deviceEffects.set(
+        lightEffect.id,
+        (this.deviceEffects.get(lightEffect.id) || []).concat(lightEffect),
+      ),
     );
 
-
     await this.emitAsync(
-      new DeviceEffectDiscovered(lightEffect),
+      new DeviceEffectDiscovered(lightEffects),
     );
   }
 }
