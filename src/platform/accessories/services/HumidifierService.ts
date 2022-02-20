@@ -12,7 +12,6 @@ import {DeviceMistLevelTransition} from '../../../core/structures/devices/transi
 import {StatusModeState} from '../../../devices/states/StatusMode';
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
-import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeHumidifier} from '../../../devices/implmentations/GoveeHumidifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
@@ -57,23 +56,6 @@ export class HumidifierService extends AccessoryService<void> {
         validValues: [100],
       })
       .updateValue(100);
-    service
-      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
-      .updateValue(
-        (device as unknown as ControlLockState).areControlsLocked
-          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
-          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED)
-      .onSet(
-        async (value: CharacteristicValue) =>
-          this.emit(
-            new DeviceCommandEvent(
-              new DeviceControlLockTransition(
-                device.deviceId,
-                value === this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED,
-              ),
-            ),
-          ),
-      );
 
     service
       .getCharacteristic(this.CHARACTERISTICS.WaterLevel)
