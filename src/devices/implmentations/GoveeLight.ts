@@ -8,6 +8,11 @@ import {Brightness} from '../states/Brightness';
 import {Modes} from '../states/Modes';
 import {SceneMode} from '../states/modes/Scene';
 
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface LightDevice {
+}
+
 // @DeviceFactory.register()
 export class GoveeLight
   extends ColorTemperature(
@@ -24,7 +29,7 @@ export class GoveeLight
         ),
       ),
     ),
-  ) {
+  ) implements LightDevice {
 
   constructor(
     deviceConfig: DeviceConfig,

@@ -10,6 +10,7 @@ import {ColorSegmentsMode} from '../states/modes/ColorSegments';
 import {Connected} from '../states/Connected';
 import {Brightness} from '../states/Brightness';
 import {DeviceFactory} from '../DeviceFactory';
+import {LightDevice} from './GoveeLight';
 
 
 @DeviceFactory.register(
@@ -32,7 +33,7 @@ export class GoveeRGBICLight
         ),
       ),
     ),
-  ) {
+  ) implements LightDevice {
 
   constructor(
     deviceConfig: DeviceConfig,

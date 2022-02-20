@@ -11,6 +11,7 @@ import {RGBMusicMode} from '../states/modes/RGBMusic';
 import {Connected} from '../states/Connected';
 import {DeviceFactory} from '../DeviceFactory';
 import {SolidColorMode} from '../states/modes/SolidColor';
+import {LightDevice} from './GoveeLight';
 
 @DeviceFactory.register(
   'H6107',
@@ -79,7 +80,7 @@ export class GoveeRGBLight
         ),
       ),
     ),
-  ) {
+  ) implements LightDevice {
 
   constructor(
     deviceConfig: DeviceConfig,
