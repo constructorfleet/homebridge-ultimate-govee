@@ -20,9 +20,9 @@ export interface IoTCommandDataColor {
 export interface IoTCommandData {
   command?: string[];
   color?: IoTCommandDataColor;
-  red?: number;
-  green?: number;
-  blue?: number;
+  r?: number;
+  g?: number;
+  b?: number;
   val?: number;
   colorTemInKelvin?: number;
   opcode?: string;
@@ -120,10 +120,11 @@ export class IoTColorCommandMessage extends BaseIoTCommandMessage {
   ) {
     super(
       transition,
-      'pt',
+      'color',
       {
-        opcode: 'mode',
-        value: transition.opCodeCommandString,
+        r: transition.color.red,
+        g: transition.color.green,
+        b: transition.color.blue,
       },
     );
   }

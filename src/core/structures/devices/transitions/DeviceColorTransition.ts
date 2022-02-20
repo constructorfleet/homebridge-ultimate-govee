@@ -4,7 +4,7 @@ import {ColorRGB} from '../../../../util/colorUtils';
 import {SolidColorState} from '../../../../devices/states/SolidColor';
 import {ModesState} from '../../../../devices/states/Modes';
 import {DeviceMode} from '../../../../devices/states/modes/DeviceMode';
-import {SolidColorMode} from '../../../../devices/states/modes/SolidColor';
+import {ColorMode} from '../../../../devices/states/modes/Color';
 
 export class DeviceColorTransition extends DeviceTransition<GoveeDevice> {
 
@@ -22,8 +22,8 @@ export class DeviceColorTransition extends DeviceTransition<GoveeDevice> {
       const colorMode = Array.from(
         modeState.modes.values(),
       ).find(
-        (deviceMode: DeviceMode) => deviceMode instanceof SolidColorMode,
-      ) as SolidColorMode;
+        (deviceMode: DeviceMode) => deviceMode instanceof ColorMode,
+      ) as ColorMode;
       colorMode.solidColor = this.color;
       this.commandCodes = [
         modeState.modeChange,
