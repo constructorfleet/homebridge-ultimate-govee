@@ -5,13 +5,13 @@ export class CategoryScene {
   public deviceId!: string;
 
   @Expose({name: 'sceneId'})
-  public id!: number;
+  public sceneId!: number;
 
   @Expose({name: 'sceneName'})
-  public name!: string;
+  public sceneName!: string;
 
   @Expose({name: 'scenesHint'})
-  public description!: string;
+  public scenesHint!: string;
 
   @Expose({name: 'iconUrls'})
   public iconUrls!: string[];
@@ -29,8 +29,14 @@ export class DeviceSceneCategory {
   public scenes!: CategoryScene[];
 }
 
-export class DeviceSceneListResponse extends BaseResponse {
+export class DeviceSceneListData {
   @Expose({name: 'categories'})
   @Type(() => DeviceSceneCategory)
   public categories!: DeviceSceneCategory[];
+}
+
+export class DeviceSceneListResponse extends BaseResponse {
+  @Expose({name: 'data'})
+  @Type(() => DeviceSceneListData)
+  public data!: DeviceSceneListData;
 }

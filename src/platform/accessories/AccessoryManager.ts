@@ -9,6 +9,8 @@ import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
 import {AccessoryService} from './services/AccessoryService';
 import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
+import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
+import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -134,5 +136,27 @@ export class AccessoryManager extends Emitter {
     );
 
     this.api.updatePlatformAccessories([accessory]);
+  }
+
+  @OnEvent(
+    'EFFECT.DEVICE.Discovered',
+  )
+  async onDeviceEffectDiscovered(effect: DeviceLightEffect) {
+    this.log.info(
+      'AccessoryManager',
+      'onDeviceEffectDiscovered',
+      effect,
+    );
+  }
+
+  @OnEvent(
+    'EFFECT.DIY.Discovered',
+  )
+  async onDIYEffectDiscovered(effect: DIYLightEffect) {
+    this.log.info(
+      'AccessoryManager',
+      'onDIYEffectDiscovered',
+      effect,
+    );
   }
 }

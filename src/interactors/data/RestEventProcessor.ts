@@ -12,7 +12,7 @@ import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
 import {ApiResponseStatus} from '../../core/structures/api/ApiResponseStatus';
 import {LoggingService} from '../../logging/LoggingService';
 import {RestAuthenticateEvent} from '../../core/events/dataClients/rest/RestAuthentication';
-import {DIYEffect, DIYGroup, DIYGroupList, DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
+import {DIYEffect, DIYGroup, DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
 import {
   CategoryScene,
   DeviceSceneCategory,
@@ -53,12 +53,10 @@ export class RestEventProcessor extends Emitter {
   async onDIYEffectListReceived(
     payload: DIYListResponse,
   ) {
-    const effects = payload.data.reduce(
-      (effects: DIYEffect[], groupList: DIYGroupList) => effects
+    const effects = payload.data.diys.reduce(
+      (effects: DIYEffect[], group: DIYGroup) => effects
         .concat(
-          ...groupList.diyGroups.map(
-            (group: DIYGroup) => group.diyEffects,
-          ).flat(),
+          ...group.diys,
         ),
       [] as DIYEffect[],
     );
@@ -76,7 +74,7 @@ export class RestEventProcessor extends Emitter {
   async onDeviceScenesReceived(
     payload: ResponseWithDevice<DeviceSceneListResponse>,
   ) {
-    const effects = payload.response.categories.reduce(
+    const effects = payload.response.data.categories.reduce(
       (effects: CategoryScene[], category: DeviceSceneCategory) => effects
         .concat(
           ...category.scenes.map(

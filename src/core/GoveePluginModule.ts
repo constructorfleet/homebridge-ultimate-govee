@@ -25,6 +25,7 @@ import {GoveeRGBLight} from '../devices/implementations/GoveeRGBLight';
 import {GoveeLight} from '../devices/implementations/GoveeLight';
 import {GoveeAirPurifier} from '../devices/implementations/GoveeAirPurifier';
 import {GoveeHumidifier} from '../devices/implementations/GoveeHumidifier';
+import {EffectsManager} from '../effects/EffectsManager';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const GOVEE_DEVICE_TYPES = [
@@ -106,6 +107,7 @@ export class GoveePluginModule {
         ...DeviceFactory.getProviders(),
         ...connectionProviders,
         DeviceManager,
+        EffectsManager,
       ],
       exports: [
         ...DeviceFactory.getProviders(),
@@ -117,6 +119,7 @@ export class GoveePluginModule {
         LoggingModule,
         ...connectionProviders,
         DeviceManager,
+        EffectsManager,
         ConfigurationModule,
         PersistModule,
         LoggingModule,

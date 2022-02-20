@@ -36,18 +36,18 @@ export class DIYGroup {
 
   @Expose({name: 'diys'})
   @Type(() => DIYEffect)
-  public diyEffects!: DIYEffect[];
+  public diys!: DIYEffect[];
 }
 
 export class DIYGroupList {
   @Expose({name: 'diys'})
   @Type(() => DIYGroup)
-  public diyGroups!: DIYGroup[];
+  public diys!: DIYGroup[];
 }
 
 export class DIYListResponse
   extends BaseResponse {
   @Expose({name: 'data'})
   @Type(() => DIYGroupList)
-  public data!: DIYGroupList[];
+  public data!: DIYGroupList;
 }

@@ -7,13 +7,15 @@ import {DIYEffectDiscovered} from '../core/events/effects/DIYEffects';
 import {DeviceLightEffect} from './implementations/DeviceLightEffect';
 import {CategoryScene} from '../core/structures/api/responses/payloads/DeviceSceneListResponse';
 import {DeviceEffectDiscovered} from '../core/events/effects/DeviceEffects';
+import {Injectable} from '@nestjs/common';
 
+@Injectable()
 export class EffectsManager extends Emitter {
   private readonly diyEffects: Map<number, DIYLightEffect> =
     new Map<number, DIYLightEffect>();
 
-  private readonly deviceEffects: Map<number, DeviceLightEffect> =
-    new Map<number, DeviceLightEffect>();
+  private readonly deviceEffects: Map<number, DeviceLightEffect[]> =
+    new Map<number, DeviceLightEffect[]>();
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -47,14 +49,17 @@ export class EffectsManager extends Emitter {
   async onDeviceEffectReceived(effect: CategoryScene) {
     const lightEffect =
       new DeviceLightEffect(
-        effect.id,
-        effect.name,
+        effect.sceneId,
+        effect.sceneName,
+        effect.scenesHint,
         effect.deviceId,
       );
 
-    if (this.deviceEffects.has(lightEffect.id)) {
-      return;
-    }
+    this.deviceEffects.set(
+      lightEffect.id,
+      (this.deviceEffects.get(lightEffect.id) || []).concat(lightEffect),
+    );
+
 
     await this.emitAsync(
       new DeviceEffectDiscovered(lightEffect),
