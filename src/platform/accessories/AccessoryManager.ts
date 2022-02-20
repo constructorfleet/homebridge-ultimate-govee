@@ -61,6 +61,7 @@ export class AccessoryManager extends Emitter {
     this.api.updatePlatformAccessories([accessory]);
     await this.emitAsync(
       new DeviceSettingsReceived({
+        goodsType: device.goodsType,
         deviceId: device.deviceId,
         name: accessory.displayName,
         model: device.model,

@@ -196,7 +196,12 @@ export class RestClient
         deviceSceneRequest(device),
       ).get();
       await this.emitAsync(
-        new RestDeviceScenesResponse(res.data),
+        new RestDeviceScenesResponse(
+          {
+            device: device,
+            response: res.data,
+          },
+        ),
       );
     } catch (error) {
       this.log.error('RestClient', 'getDIYGroups', error);
