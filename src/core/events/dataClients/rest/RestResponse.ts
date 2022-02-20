@@ -5,7 +5,7 @@ import {DeviceSceneListResponse} from '../../../structures/api/responses/payload
 import {BaseResponse} from '../../../structures/api/responses/payloads/BaseResponse';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
 
-export interface ResponseWIthDevice<ResponseType extends BaseResponse> {
+export interface ResponseWithDevice<ResponseType extends BaseResponse> {
   device: GoveeDevice;
   response: ResponseType;
 }
@@ -51,10 +51,10 @@ export class RestDIYEffectResponse
 }
 
 export class RestDeviceScenesResponse
-  extends RestResponseEvent<ResponseWIthDevice<DeviceSceneListResponse>> {
+  extends RestResponseEvent<ResponseWithDevice<DeviceSceneListResponse>> {
 
   constructor(
-    eventData: ResponseWIthDevice<DeviceSceneListResponse>,
+    eventData: ResponseWithDevice<DeviceSceneListResponse>,
   ) {
     super(
       'DeviceScenes',

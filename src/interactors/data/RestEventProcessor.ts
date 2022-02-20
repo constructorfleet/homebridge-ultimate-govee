@@ -14,6 +14,7 @@ import {LoggingService} from '../../logging/LoggingService';
 import {RestAuthenticateEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 import {DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
 import {DeviceSceneListResponse} from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
+import {ResponseWithDevice} from '../../core/events/dataClients/rest/RestResponse';
 
 @Injectable()
 export class RestEventProcessor extends Emitter {
@@ -50,7 +51,7 @@ export class RestEventProcessor extends Emitter {
   @OnEvent(
     'REST.RESPONSE.DeviceScenes',
   )
-  async onDeviceScenesReceived(payload: DeviceSceneListResponse) {
+  async onDeviceScenesReceived(payload: ResponseWithDevice<DeviceSceneListResponse>) {
 
   }
 
