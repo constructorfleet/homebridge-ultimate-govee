@@ -8,7 +8,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
 import {RestAuthenticatedEvent, RestAuthenticationFailureEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
-import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
+import {RestRequestDevices, RestRequestDIYEffects} from '../../core/events/dataClients/rest/RestRequest';
 import {ConfigurationService} from '../../config/ConfigurationService';
 import {PersistService} from '../../persist/PersistService';
 import {LoggingService} from '../../logging/LoggingService';
@@ -18,13 +18,16 @@ import {JWTPayload} from '../../core/structures/api/JsonWebToken';
 import {BaseRequest} from '../../core/structures/api/requests/payloads/BaseRequest';
 import {AppDeviceListResponse} from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
 import {AuthenticatedHeader} from '../../core/structures/api/requests/headers/AuthenticatedHeader';
-import {RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
+import {RestDIYEffectResponse, RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
 import {GOVEE_CLIENT_ID} from '../../util/const';
+import {DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
+import {GoveeDevice} from '../../devices/GoveeDevice';
 
 const GOVEE_APP_VERSION = '3.7.0';
 const BASE_GOVEE_APP_URL = 'https://app2.govee.com';
 const BASE_GOVEE_APP_ACCOUNT_URL = `${BASE_GOVEE_APP_URL}/account/rest/account/v1`;
 const BASE_GOVEE_APP_DEVICE_URL = `${BASE_GOVEE_APP_URL}/device/rest/devices/v1`;
+const BASE_GOVEE_APP_SKU_URL = `${BASE_GOVEE_APP_URL}/appsku/v1`;
 
 @Injectable()
 export class RestClient
@@ -171,6 +174,58 @@ export class RestClient
   //       },
   //     );
   // }
+  @OnEvent(
+    'REST.REQUEST.DeviceScenes',
+  )
+  async getDeviceScenes(device: GoveeDevice) {
+    try {
+      const authData = await this.login(false);
+      if (!authData) {
+        return;
+      }
+
+      const res = await request<BaseRequest, DIYListResponse>(
+        `${BASE_GOVEE_APP_SKU_URL}/light-effect-libraries`,
+        AuthenticatedHeader(
+          this.clientId,
+          GOVEE_APP_VERSION,
+          authData.token || '',
+        ),
+      ).get();
+      await this.emitAsync(
+        new RestDIYEffectResponse(res.data),
+      );
+    } catch (error) {
+      this.log.error('RestClient', 'getDIYGroups', error);
+    }
+  }
+
+  ///appsku/v1/light-effect-libraries
+  @OnEvent(
+    'REST.REQUEST.DIYEffects',
+  )
+  async getDIYGroups() {
+    try {
+      const authData = await this.login(false);
+      if (!authData) {
+        return;
+      }
+
+      const res = await request<BaseRequest, DIYListResponse>(
+        `${BASE_GOVEE_APP_SKU_URL}/diys/groups-diys`,
+        AuthenticatedHeader(
+          this.clientId,
+          GOVEE_APP_VERSION,
+          authData.token || '',
+        ),
+      ).get();
+      await this.emitAsync(
+        new RestDIYEffectResponse(res.data),
+      );
+    } catch (error) {
+      this.log.error('RestClient', 'getDIYGroups', error);
+    }
+  }
 
   @OnEvent(
     'REST.REQUEST.Devices',
@@ -196,6 +251,9 @@ export class RestClient
       ).post();
       await this.emitAsync(
         new RestResponseDeviceList(res.data),
+      );
+      await this.emitAsync(
+        new RestRequestDIYEffects(),
       );
       setTimeout(
         () => this.emit(
