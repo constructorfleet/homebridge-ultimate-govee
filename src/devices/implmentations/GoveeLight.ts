@@ -7,29 +7,35 @@ import {ColorTemperature} from '../states/ColorTemperature';
 import {Brightness} from '../states/Brightness';
 import {Modes} from '../states/Modes';
 import {SceneMode} from '../states/modes/Scene';
+import {Connected} from '../states/Connected';
 
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface LightDevice {
-}
-
-// @DeviceFactory.register()
-export class GoveeLight
-  extends ColorTemperature(
+export class LightDevice extends Timer(
+  ColorTemperature(
     Brightness(
-      Modes(
-        SceneMode,
-      )(
-        Timer(
-          Active(
-            OnOff(
-              GoveeDevice,
-            ),
+      Active(
+        Connected(
+          OnOff(
+            GoveeDevice,
           ),
         ),
       ),
     ),
-  ) implements LightDevice {
+  ),
+) {
+  constructor(
+    deviceConfig: DeviceConfig,
+  ) {
+    super(deviceConfig);
+  }
+}
+
+// @DeviceFactory.register()
+export class GoveeLight
+  extends Modes(
+    SceneMode,
+  )(LightDevice) {
 
   constructor(
     deviceConfig: DeviceConfig,
