@@ -1,5 +1,6 @@
 import {RestEvent} from './RestEvent';
 import {AppDeviceListResponse} from '../../../structures/api/responses/payloads/AppDeviceListResponse';
+import {DIYListResponse} from '../../../structures/api/responses/payloads/DIYListResponse';
 
 export abstract class RestResponseEvent<DataType>
   extends RestEvent<DataType> {
@@ -23,6 +24,19 @@ export class RestResponseDeviceList
   ) {
     super(
       'DeviceList',
+      eventData,
+    );
+  }
+}
+
+export class RestDIYEffectResponse
+  extends RestResponseEvent<DIYListResponse> {
+
+  constructor(
+    eventData: DIYListResponse,
+  ) {
+    super(
+      'DIYEffects',
       eventData,
     );
   }
