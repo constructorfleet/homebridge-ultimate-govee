@@ -20,7 +20,6 @@ import {ConnectedState} from '../../../devices/states/Connected';
 import {SolidColorState} from '../../../devices/states/SolidColor';
 import {ModesState} from '../../../devices/states/Modes';
 import {DeviceMode} from '../../../devices/states/modes/DeviceMode';
-import {SolidColorMode} from '../../../devices/states/modes/SolidColor';
 import {GoveeRGBICLight} from '../../../devices/implmentations/GoveeRGBICLight';
 import {ColorSegmentsMode} from '../../../devices/states/modes/ColorSegments';
 import {
@@ -30,6 +29,7 @@ import {
 import {DeviceColorWCTransition} from '../../../core/structures/devices/transitions/DeviceColorWCTransition';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 import {GoveeDeviceOverride, GoveeRGBICLightOverride} from '../../config/GoveePluginConfig';
+import {ColorMode} from '../../../devices/states/modes/Color';
 
 abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> extends AccessoryService<IdentifierType> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
@@ -292,8 +292,8 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
       const colorMode = Array.from(
         modeState.modes.values(),
       ).find(
-        (deviceMode: DeviceMode) => deviceMode instanceof SolidColorMode,
-      ) as SolidColorMode;
+        (deviceMode: DeviceMode) => deviceMode instanceof ColorMode,
+      ) as ColorMode;
       return colorMode.solidColor;
     }
   }

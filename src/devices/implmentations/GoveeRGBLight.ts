@@ -3,8 +3,8 @@ import {Modes} from '../states/Modes';
 import {SceneMode} from '../states/modes/Scene';
 import {RGBMusicMode} from '../states/modes/RGBMusic';
 import {DeviceFactory} from '../DeviceFactory';
-import {SolidColorMode} from '../states/modes/SolidColor';
 import {LightDevice} from './GoveeLight';
+import {ColorMode} from '../states/modes/Color';
 
 @DeviceFactory.register(
   'H6107',
@@ -56,7 +56,7 @@ import {LightDevice} from './GoveeLight';
 )
 export class GoveeRGBLight
   extends Modes(
-    SolidColorMode,
+    ColorMode,
     RGBMusicMode,
     SceneMode,
   )(LightDevice) {

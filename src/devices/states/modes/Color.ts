@@ -4,7 +4,7 @@ import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
 import {ColorRGB} from '../../../util/colorUtils';
 
-export class SolidColorMode extends DeviceMode {
+export class ColorMode extends DeviceMode {
   public modeIdentifier = 13;
   public solidColor: ColorRGB = new ColorRGB(0, 0, 0);
 
