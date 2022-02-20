@@ -13,6 +13,7 @@ import {ApiResponseStatus} from '../../core/structures/api/ApiResponseStatus';
 import {LoggingService} from '../../logging/LoggingService';
 import {RestAuthenticateEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 import {DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
+import {DeviceSceneListResponse} from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
 
 @Injectable()
 export class RestEventProcessor extends Emitter {
@@ -43,6 +44,13 @@ export class RestEventProcessor extends Emitter {
     'REST.RESPONSE.DIYEffects',
   )
   async onDIYEffectListReceived(payload: DIYListResponse) {
+
+  }
+
+  @OnEvent(
+    'REST.RESPONSE.DeviceScenes',
+  )
+  async onDeviceScenesReceived(payload: DeviceSceneListResponse) {
 
   }
 

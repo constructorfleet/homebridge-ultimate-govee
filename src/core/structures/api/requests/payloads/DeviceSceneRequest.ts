@@ -6,7 +6,7 @@ export function deviceSceneRequest(
 ): DeviceSceneRequest {
   const request = new DeviceSceneRequest();
   request.sku = device.model;
-  // request.model = model;
+  request.goodsType = device.goodsType;
 
   return request;
 }

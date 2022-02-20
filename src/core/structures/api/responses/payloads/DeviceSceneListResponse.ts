@@ -1,4 +1,5 @@
 import {Expose, Type} from 'class-transformer';
+import {BaseResponse} from './BaseResponse';
 
 export class CategoryScene {
   @Expose({name: 'sceneId'})
@@ -26,7 +27,7 @@ export class DeviceSceneCategory {
   public scenes!: CategoryScene[];
 }
 
-export class DeviceSceneResponse {
+export class DeviceSceneListResponse extends BaseResponse {
   @Expose({name: 'categories'})
   @Type(() => DeviceSceneCategory)
   public categories!: DeviceSceneCategory[];

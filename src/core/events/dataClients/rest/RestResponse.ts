@@ -1,6 +1,14 @@
 import {RestEvent} from './RestEvent';
 import {AppDeviceListResponse} from '../../../structures/api/responses/payloads/AppDeviceListResponse';
 import {DIYListResponse} from '../../../structures/api/responses/payloads/DIYListResponse';
+import {DeviceSceneListResponse} from '../../../structures/api/responses/payloads/DeviceSceneListResponse';
+import {BaseResponse} from '../../../structures/api/responses/payloads/BaseResponse';
+import {GoveeDevice} from '../../../../devices/GoveeDevice';
+
+export interface ResponseWIthDevice<ResponseType extends BaseResponse> {
+  device: GoveeDevice;
+  response: ResponseType;
+}
 
 export abstract class RestResponseEvent<DataType>
   extends RestEvent<DataType> {
@@ -37,6 +45,19 @@ export class RestDIYEffectResponse
   ) {
     super(
       'DIYEffects',
+      eventData,
+    );
+  }
+}
+
+export class RestDeviceScenesResponse
+  extends RestResponseEvent<ResponseWIthDevice<DeviceSceneListResponse>> {
+
+  constructor(
+    eventData: ResponseWIthDevice<DeviceSceneListResponse>,
+  ) {
+    super(
+      'DeviceScenes',
       eventData,
     );
   }

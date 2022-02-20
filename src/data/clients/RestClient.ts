@@ -18,10 +18,12 @@ import {JWTPayload} from '../../core/structures/api/JsonWebToken';
 import {BaseRequest} from '../../core/structures/api/requests/payloads/BaseRequest';
 import {AppDeviceListResponse} from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
 import {AuthenticatedHeader} from '../../core/structures/api/requests/headers/AuthenticatedHeader';
-import {RestDIYEffectResponse, RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
+import {RestDeviceScenesResponse, RestDIYEffectResponse, RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
 import {GOVEE_CLIENT_ID} from '../../util/const';
 import {DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
 import {GoveeDevice} from '../../devices/GoveeDevice';
+import {DeviceSceneRequest, deviceSceneRequest} from '../../core/structures/api/requests/payloads/DeviceSceneRequest';
+import {DeviceSceneListResponse} from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
 
 const GOVEE_APP_VERSION = '3.7.0';
 const BASE_GOVEE_APP_URL = 'https://app2.govee.com';
@@ -184,16 +186,17 @@ export class RestClient
         return;
       }
 
-      const res = await request<BaseRequest, DIYListResponse>(
+      const res = await request<DeviceSceneRequest, DeviceSceneListResponse>(
         `${BASE_GOVEE_APP_SKU_URL}/light-effect-libraries`,
         AuthenticatedHeader(
           this.clientId,
           GOVEE_APP_VERSION,
           authData.token || '',
         ),
+        deviceSceneRequest(device),
       ).get();
       await this.emitAsync(
-        new RestDIYEffectResponse(res.data),
+        new RestDeviceScenesResponse(res.data),
       );
     } catch (error) {
       this.log.error('RestClient', 'getDIYGroups', error);
