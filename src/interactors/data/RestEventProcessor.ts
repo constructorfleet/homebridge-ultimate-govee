@@ -44,14 +44,18 @@ export class RestEventProcessor extends Emitter {
   @OnEvent(
     'REST.RESPONSE.DIYEffects',
   )
-  async onDIYEffectListReceived(payload: DIYListResponse) {
+  async onDIYEffectListReceived(
+    payload: DIYListResponse,
+  ) {
 
   }
 
   @OnEvent(
     'REST.RESPONSE.DeviceScenes',
   )
-  async onDeviceScenesReceived(payload: ResponseWithDevice<DeviceSceneListResponse>) {
+  async onDeviceScenesReceived(
+    payload: ResponseWithDevice<DeviceSceneListResponse>,
+  ) {
 
   }
 
