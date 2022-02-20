@@ -2,11 +2,13 @@ import {Expose, Type} from 'class-transformer';
 import {BaseResponse} from './BaseResponse';
 
 export class CategoryScene {
+  public deviceId!: string;
+
   @Expose({name: 'sceneId'})
   public id!: number;
 
   @Expose({name: 'sceneName'})
-  public name!: number;
+  public name!: string;
 
   @Expose({name: 'scenesHint'})
   public description!: string;

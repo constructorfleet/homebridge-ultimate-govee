@@ -1,6 +1,5 @@
 import {BaseResponse} from './BaseResponse';
 import {Expose, Type} from 'class-transformer';
-import {AppDeviceResponse} from './AppDeviceListResponse';
 
 export class DIYEffect {
   @Expose({name: 'effectId'})
@@ -49,6 +48,6 @@ export class DIYGroupList {
 export class DIYListResponse
   extends BaseResponse {
   @Expose({name: 'data'})
-  @Type(() => AppDeviceResponse)
-  public data!: AppDeviceResponse[];
+  @Type(() => DIYGroupList)
+  public data!: DIYGroupList[];
 }

@@ -12,9 +12,15 @@ import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
 import {ApiResponseStatus} from '../../core/structures/api/ApiResponseStatus';
 import {LoggingService} from '../../logging/LoggingService';
 import {RestAuthenticateEvent} from '../../core/events/dataClients/rest/RestAuthentication';
-import {DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
-import {DeviceSceneListResponse} from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
+import {DIYEffect, DIYGroup, DIYGroupList, DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
+import {
+  CategoryScene,
+  DeviceSceneCategory,
+  DeviceSceneListResponse,
+} from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
 import {ResponseWithDevice} from '../../core/events/dataClients/rest/RestResponse';
+import {DIYEffectReceived} from '../../core/events/effects/DIYEffects';
+import {DeviceEffectReceived} from '../../core/events/effects/DeviceEffects';
 
 @Injectable()
 export class RestEventProcessor extends Emitter {
@@ -47,7 +53,21 @@ export class RestEventProcessor extends Emitter {
   async onDIYEffectListReceived(
     payload: DIYListResponse,
   ) {
+    const effects = payload.data.reduce(
+      (effects: DIYEffect[], groupList: DIYGroupList) => effects
+        .concat(
+          ...groupList.diyGroups.map(
+            (group: DIYGroup) => group.diyEffects,
+          ).flat(),
+        ),
+      [] as DIYEffect[],
+    );
 
+    for (let i = 0; i < effects.length; i++) {
+      await this.emitAsync(
+        new DIYEffectReceived(effects[i]),
+      );
+    }
   }
 
   @OnEvent(
@@ -56,7 +76,24 @@ export class RestEventProcessor extends Emitter {
   async onDeviceScenesReceived(
     payload: ResponseWithDevice<DeviceSceneListResponse>,
   ) {
+    const effects = payload.response.categories.reduce(
+      (effects: CategoryScene[], category: DeviceSceneCategory) => effects
+        .concat(
+          ...category.scenes.map(
+            (scene: CategoryScene) => {
+              scene.deviceId = payload.device.deviceId;
+              return scene;
+            },
+          ),
+        ),
+      [] as CategoryScene[],
+    );
 
+    for (let i = 0; i < effects.length; i++) {
+      await this.emitAsync(
+        new DeviceEffectReceived(effects[i]),
+      );
+    }
   }
 
   @OnEvent(
