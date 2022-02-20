@@ -1,12 +1,12 @@
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
-import {SolidColorMode} from './SolidColor';
 import {ColorRGB} from '../../../util/colorUtils';
+import {ColorMode} from './Color';
 
-let testMode: SolidColorMode;
+let testMode: ColorMode;
 
 describe('SolidColorMode', () => {
   beforeEach(() => {
-    testMode = new SolidColorMode();
+    testMode = new ColorMode();
   });
 
   describe('parse', () => {
