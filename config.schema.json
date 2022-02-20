@@ -195,11 +195,11 @@
                       "items": [
                         {
                           "key": "devices.airPurifiers[].deviceId",
-                          "flex": "4 4 80%"
+                          "flex": "4 4 50%"
                         },
                         {
                           "key": "devices.airPurifiers[].model",
-                          "flex": "1 1 20%"
+                          "flex": "1 1 50%"
                         }
                       ]
                     },
@@ -247,11 +247,11 @@
                       "items": [
                         {
                           "key": "devices.humidifiers[].deviceId",
-                          "flex": "4 4 80%"
+                          "flex": "4 4 50%"
                         },
                         {
                           "key": "devices.humidifiers[].model",
-                          "flex": "1 1 20%"
+                          "flex": "1 1 50%"
                         }
                       ]
                     },
@@ -299,11 +299,11 @@
                       "items": [
                         {
                           "key": "devices.lights[].deviceId",
-                          "flex": "4 4 80%"
+                          "flex": "4 4 50%"
                         },
                         {
                           "key": "devices.lights[].model",
-                          "flex": "1 1 20%"
+                          "flex": "1 1 50%"
                         }
                       ]
                     },
