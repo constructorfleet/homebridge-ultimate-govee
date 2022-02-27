@@ -126,6 +126,16 @@
                 "displayName": {
                   "title": "Display Name",
                   "type": "string"
+                },
+                "_lightType": {
+                  "type": "string"
+                },
+                "hideSegments": {
+                  "title": "Hide Segment Controls",
+                  "type": "boolean",
+                  "condition": {
+                    "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && model.devices.lights[arrayIndices]._lightType === 'RGBIC');"
+                  }
                 }
               }
             }
@@ -318,7 +328,11 @@
                         },
                         {
                           "key": "devices.lights[].displayName",
-                          "flex": "4 4 80%"
+                          "flex": "4 4 60%"
+                        },
+                        {
+                          "key": "devices.lights[].hideSegment",
+                          "flex": "1 1 20%"
                         }
                       ]
                     }
