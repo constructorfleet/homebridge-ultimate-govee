@@ -2,11 +2,18 @@ import {DeviceState} from '../../../core/structures/devices/DeviceState';
 import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER, SEGMENT_COUNT} from '../../../util/const';
 import {ColorRGB} from '../../../util/colorUtils';
-import {DeviceMode} from './DeviceMode';
+import {State} from '../State';
+import {modeCommandIdentifiers, ModesState} from '../Modes';
+import {GoveeDeviceConstructorArgs} from '../../GoveeDevice';
 
 const reportIdentifiers = [
   165,
 ];
+
+export interface ColorSegmentsModeConstructorArgs {
+  colorSegmentsModeIdentifier?: number;
+  colorSegmentCount?: number;
+}
 
 export class ColorSegment {
   constructor(
@@ -16,53 +23,80 @@ export class ColorSegment {
   }
 }
 
-export class ColorSegmentsMode extends DeviceMode {
-  public modeIdentifier = 21;
-  public wholeColor?: ColorRGB;
-  public wholeBrightness?: number;
-  public colorSegments: ColorSegment[] =
-    Array.from(
-      new Array(SEGMENT_COUNT),
-      () => {
-        return new ColorSegment(
-          new ColorRGB(0, 0, 0),
-          0,
-        );
-      },
-    );
+export interface ColorSegmentsState extends ModesState {
+  colorSegmentCount: number;
+  colorSegments: ColorSegment[];
+  colorModeIdentifier?: number;
 
-  parse(deviceState: DeviceState): ThisType<this> {
-    if (deviceState.brightness !== undefined) {
-      this.wholeBrightness = deviceState.brightness;
-    }
-    if (deviceState.color !== undefined) {
-      this.wholeColor = new ColorRGB(
-        deviceState.color.red,
-        deviceState.color.green,
-        deviceState.color.blue,
+  colorSegmentsChange(
+    color: ColorRGB,
+    index?: number,
+  ): number[];
+
+  brightnessSegmentsChange(
+    brightness: number,
+    index?: number,
+  ): number[];
+}
+
+export function ColorSegmentsMode<StateType extends State>(
+  stateType: new (...args) => StateType,
+) {
+  // @ts-ignore
+  return class extends stateType implements ColorSegmentsState {
+    public activeMode?: number;
+    public modes!: number[];
+    public colorSegmentCount: number;
+    public colorSegmentModeIdentifier!: number;
+    public colorSegments: ColorSegment[] =
+      Array.from(
+        new Array(SEGMENT_COUNT),
+        () => {
+          return new ColorSegment(
+            new ColorRGB(0, 0, 0),
+            0,
+          );
+        },
       );
 
-      if (deviceState.command === 'colorwc') {
+    public constructor(args: ColorSegmentsModeConstructorArgs & GoveeDeviceConstructorArgs) {
+      super(args);
+      this.addDeviceStatusCodes(modeCommandIdentifiers);
+      this.colorSegmentModeIdentifier = args.colorSegmentsModeIdentifier ?? 21;
+      this.colorSegmentCount = args.colorSegmentCount ?? SEGMENT_COUNT;
+    }
+
+    public override parse(deviceState: DeviceState): ThisType<this> {
+      if (deviceState.mode !== undefined) {
+        this.activeMode = deviceState.mode;
+      }
+      if (deviceState.color !== undefined
+        && (deviceState?.command ?? '') in ['colorwc', 'color']) {
         this.colorSegments.forEach(
           (segment: ColorSegment) => segment.color.update(
             new ColorRGB(
-              this.wholeColor!.red!,
-              this.wholeColor!.green!,
-              this.wholeColor!.blue!,
+              deviceState.color!.red!,
+              deviceState.color!.green!,
+              deviceState.color!.blue!,
             ),
           ),
         );
 
         return this;
       }
-    }
+      const commandValues = getCommandValues(
+        [
+          REPORT_IDENTIFIER,
+          ...reportIdentifiers,
+        ],
+        deviceState.commands,
+      );
 
-    const commandValues = getCommandValues(
-      [REPORT_IDENTIFIER, ...reportIdentifiers],
-      deviceState.commands,
-    );
+      if (!commandValues || (commandValues?.length || 0) === 0) {
+        return super.parse(deviceState);
+      }
 
-    if ((commandValues?.length || 0) > 0) {
+      // TODO: Handle Flow Bars
       commandValues?.forEach(
         (cmdValues) => {
           const startIndex = (cmdValues[0] - 1) * 3;
@@ -81,71 +115,67 @@ export class ColorSegmentsMode extends DeviceMode {
           }
         },
       );
+
+      return super.parse(deviceState);
     }
 
-    return this;
-  }
+    public indexToSegmentBits(index: number): number[] {
+      const segmentBits: number[] = [];
+      while (index < 8) {
+        segmentBits.push(
+          index < 8
+            ? Math.pow(2, index)
+            : 0,
+        );
+        index -= 8;
+      }
 
-  public colorSegmentsChange(
-    color: ColorRGB,
-    index?: number,
-  ): number[] {
-    const leftSegments =
-      index === undefined
-        ? 255
-        : (index) < 8
-          ? Math.pow(2, index)
-          : 0;
-    const rightSegments =
-      index === undefined
-        ? 255
-        : (index - 8) < 0
-          ? 0
-          : Math.pow(2, index - 8);
-    return getCommandCodes(
-      COMMAND_IDENTIFIER,
-      [
-        ...this.commandIdentifiers,
-        1,
-      ],
-      color.red,
-      color.green,
-      color.blue,
-      0,
-      0,
-      0,
-      0,
-      0,
-      leftSegments,
-      rightSegments,
-    );
-  }
+      return segmentBits;
+    }
 
-  public brightnessSegmentsChange(
-    brightness: number,
-    index?: number,
-  ): number[] {
-    const leftSegments =
-      index === undefined
-        ? 255
-        : (index) < 8
-          ? Math.pow(2, index)
-          : 0;
-    const rightSegments =
-      index === undefined
-        ? 255
-        : (index - 8) < 0
-          ? 0
-          : Math.pow(2, index - 8);
-    return getCommandCodes(
-      COMMAND_IDENTIFIER,
-      [
-        ...this.commandIdentifiers,
-        2,
-      ],
-      brightness,
-      leftSegments,
-      rightSegments,
-    );
-  }
+    public colorSegmentsChange(
+      color: ColorRGB,
+      index?: number,
+    ): number[] {
+      if (!index || index < 0 || index > this.colorSegments.length) {
+        return [];
+      }
+
+      return getCommandCodes(
+        COMMAND_IDENTIFIER,
+        [
+          ...modeCommandIdentifiers,
+          1,
+        ],
+        color.red,
+        color.green,
+        color.blue,
+        0,
+        0,
+        0,
+        0,
+        0,
+        ...this.indexToSegmentBits(index),
+      );
+    }
+
+    public brightnessSegmentsChange(
+      brightness: number,
+      index?: number,
+    ): number[] {
+      if (!index || index < 0 || index > this.colorSegments.length) {
+        return [];
+      }
+
+      return getCommandCodes(
+        COMMAND_IDENTIFIER,
+        [
+          ...modeCommandIdentifiers,
+          2,
+        ],
+        brightness,
+        ...this.indexToSegmentBits(index),
+      );
+    }
+  };
 }

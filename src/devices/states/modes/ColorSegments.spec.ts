@@ -1,24 +1,98 @@
 import {REPORT_IDENTIFIER} from '../../../util/const';
-import {ColorSegmentsMode} from './ColorSegments';
+import {State} from '../State';
+import {ColorSegment, ColorSegmentsMode, ColorSegmentsState} from './ColorSegments';
+import {ColorRGB} from '../../../util/colorUtils';
 
-let testMode: ColorSegmentsMode;
+
+type AssertChain<ArgumentType> = (actual: ArgumentType, expected: ArgumentType) => AssertChain<ArgumentType>;
+
+class TestMode extends ColorSegmentsMode(State) {
+  constructor() {
+    super({
+      colorSegmentsModeIdentifier: 21,
+      deviceConfig: {
+        name: 'TestDevice',
+        deviceId: 'device',
+        model: 'H1234',
+        pactType: 1,
+        pactCode: 2,
+        goodsType: 21,
+      },
+    });
+  }
+}
+
+let testMode: ColorSegmentsState & State;
+
+const assertNumber: AssertChain<number | undefined> = (
+  actual?: number,
+  expected?: number,
+): AssertChain<number | undefined> => {
+  if (expected === undefined) {
+    expect(actual).toBeUndefined();
+  } else {
+    expect(actual).toBe(expected);
+  }
+  return assertNumber;
+};
+
+const assertColorSegment = (
+  expected: ColorSegment,
+  segmentIndex: number,
+) => {
+  assertNumber(
+    testMode.colorSegments[segmentIndex].color?.red,
+    expected.color.red,
+  );
+  assertNumber(
+    testMode.colorSegments[segmentIndex].color?.green,
+    expected.color.green,
+  );
+  assertNumber(
+    testMode.colorSegments[segmentIndex].color?.blue,
+    expected.color.blue,
+  );
+  assertNumber(
+    testMode.colorSegments[segmentIndex].brightness,
+    expected.brightness,
+  );
+};
+
+const assertColorSegments = (
+  ...colorSegments: ColorSegment[]
+) => {
+  colorSegments.concat(
+    ...Array.from(
+      new Array(testMode.colorSegments.length - colorSegments.length)
+        .fill(new ColorSegment(
+          new ColorRGB(0, 0, 0),
+          0,
+        )),
+    ),
+  ).forEach(assertColorSegment);
+};
 
 describe('ColorSegmentsMode', () => {
   beforeEach(() => {
-    testMode = new ColorSegmentsMode();
+    testMode = new TestMode();
   });
 
   describe('parse', () => {
+    it('processes DeviceState.mode', () => {
+      expect(testMode.colorSegments).toHaveLength(15);
+      assertColorSegments();
+      expect(testMode.activeMode).toBeUndefined();
+      testMode.parse({
+        deviceId: 'testDevice',
+        command: 'status',
+        mode: 10,
+      });
+      assertColorSegments();
+      expect(testMode.activeMode).toBe(10);
+    });
     it('processes DeviceState.commands 1 segment', () => {
       expect(testMode.colorSegments).toHaveLength(15);
-      testMode.colorSegments.forEach(
-        (segment) => {
-          expect(segment.color.red).toBe(0);
-          expect(segment.color.green).toBe(0);
-          expect(segment.color.blue).toBe(0);
-          expect(segment.brightness).toBe(0);
-        },
-      );
+      assertColorSegments();
       testMode.parse({
         deviceId: 'device',
         commands: [
@@ -26,32 +100,17 @@ describe('ColorSegmentsMode', () => {
         ],
       });
       expect(testMode.colorSegments).toHaveLength(15);
-      for (let i = 0; i < testMode.colorSegments.length; i++) {
-        const segment = testMode.colorSegments[i];
-        if ([0].includes(i)) {
-          expect(segment.color.red).toBe(50);
-          expect(segment.color.green).toBe(255);
-          expect(segment.color.blue).toBe(0);
-          expect(segment.brightness).toBe(75);
-        } else {
-          expect(segment.color.red).toBe(0);
-          expect(segment.color.green).toBe(0);
-          expect(segment.color.blue).toBe(0);
-          expect(segment.brightness).toBe(0);
-        }
-      }
+      assertColorSegments(
+        new ColorSegment(
+          new ColorRGB(50, 255, 0),
+          75,
+        ),
+      );
     });
 
     it('processes DeviceState.commands 2 segment', () => {
       expect(testMode.colorSegments).toHaveLength(15);
-      testMode.colorSegments.forEach(
-        (segment) => {
-          expect(segment.color.red).toBe(0);
-          expect(segment.color.green).toBe(0);
-          expect(segment.color.blue).toBe(0);
-          expect(segment.brightness).toBe(0);
-        },
-      );
+      assertColorSegments();
       testMode.parse({
         deviceId: 'device',
         commands: [
@@ -60,32 +119,34 @@ describe('ColorSegmentsMode', () => {
         ],
       });
       expect(testMode.colorSegments).toHaveLength(15);
-      for (let i = 0; i < testMode.colorSegments.length; i++) {
-        const segment = testMode.colorSegments[i];
-        if ([0, 4].includes(i)) {
-          expect(segment.color.red).toBe(50);
-          expect(segment.color.green).toBe(255);
-          expect(segment.color.blue).toBe(0);
-          expect(segment.brightness).toBe(75);
-        } else {
-          expect(segment.color.red).toBe(0);
-          expect(segment.color.green).toBe(0);
-          expect(segment.color.blue).toBe(0);
-          expect(segment.brightness).toBe(0);
-        }
-      }
+      // expect(testMode.colorSegments).toBeUndefined();
+      assertColorSegments(
+        new ColorSegment(
+          new ColorRGB(50, 255, 0),
+          75,
+        ),
+        new ColorSegment(
+          new ColorRGB(0, 0, 0),
+          0,
+        ),
+        new ColorSegment(
+          new ColorRGB(0, 0, 0),
+          0,
+        ),
+        new ColorSegment(
+          new ColorRGB(0, 0, 0),
+          0,
+        ),
+        new ColorSegment(
+          new ColorRGB(50, 255, 0),
+          75,
+        ),
+      );
     });
 
     it('ignores non-applicable DeviceState', () => {
       expect(testMode.colorSegments).toHaveLength(15);
-      testMode.colorSegments.forEach(
-        (segment) => {
-          expect(segment.color.red).toBe(0);
-          expect(segment.color.green).toBe(0);
-          expect(segment.color.blue).toBe(0);
-          expect(segment.brightness).toBe(0);
-        },
-      );
+      assertColorSegments();
       testMode.parse({
         deviceId: 'device',
         brightness: 100,
@@ -94,32 +155,7 @@ describe('ColorSegmentsMode', () => {
         ],
       });
       expect(testMode.colorSegments).toHaveLength(15);
-      testMode.colorSegments.forEach(
-        (segment) => {
-          expect(segment.color.red).toBe(0);
-          expect(segment.color.green).toBe(0);
-          expect(segment.color.blue).toBe(0);
-          expect(segment.brightness).toBe(0);
-        },
-      );
+      assertColorSegments();
     });
   });
-
-  // describe('solidColorChange', () => {
-  //   it('returns opcode array', () => {
-  //     testState.solidColor = new ColorRGB(
-  //       20,
-  //       80,
-  //       40,
-  //     );
-  //     expect(testState.solidColorChange).toStrictEqual(
-  //       [
-  //         COMMAND_IDENTIFIER, 5, 2, 20, 80,
-  //         40, 0, 255, 174, 84,
-  //         0, 0, 0, 0, 0,
-  //         0, 0, 0, 0, 93,
-  //       ],
-  //     );
-  //   });
-  // });
 });
