@@ -9,10 +9,14 @@ import {BLEPeripheralCommandSend, BLEPeripheralSendEvent} from '../core/events/d
 import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
 import {getIoTCommandMessage} from '../core/structures/iot/IoTCommandMessage';
 
+export interface GoveeDeviceConstructorArgs {
+  deviceConfig: DeviceConfig;
+}
+
 export class GoveeDevice extends State {
 
   constructor(
-    deviceConfig: DeviceConfig,
+    {deviceConfig}: GoveeDeviceConstructorArgs,
   ) {
     super();
     this.updateConfig(deviceConfig);
