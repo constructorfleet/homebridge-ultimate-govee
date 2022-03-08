@@ -2,9 +2,7 @@ import {DeviceTransition} from '../DeviceTransition';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
 import {ColorRGB} from '../../../../util/colorUtils';
 import {SolidColorState} from '../../../../devices/states/SolidColor';
-import {ModesState} from '../../../../devices/states/Modes';
-import {DeviceMode} from '../../../../devices/states/modes/DeviceMode';
-import {ColorMode} from '../../../../devices/states/modes/Color';
+import {ColorModeState} from '../../../../devices/states/modes/Color';
 
 export class DeviceColorTransition extends DeviceTransition<GoveeDevice> {
 
@@ -17,21 +15,14 @@ export class DeviceColorTransition extends DeviceTransition<GoveeDevice> {
 
   protected updateState(device: GoveeDevice): DeviceColorTransition {
     const colorState = device as unknown as SolidColorState;
-    const modeState = device as unknown as ModesState;
-    if (modeState) {
-      const colorMode = Array.from(
-        modeState.modes.values(),
-      ).find(
-        (deviceMode: DeviceMode) => deviceMode instanceof ColorMode,
-      ) as ColorMode;
-      colorMode.solidColor = this.color;
-      this.commandCodes = [
-        modeState.modeChange,
-        colorMode.colorChange(),
-      ];
-    } else if (colorState) {
+    if (colorState) {
       colorState.solidColor = this.color;
-      this.commandCodes = [colorState.solidColorChange];
+    }
+
+    const colorMode = device as unknown as ColorModeState;
+    if (colorMode) {
+      colorMode.activeMode = colorMode.colorModeIdentifier;
+      colorMode.color = this.color;
     }
     return this;
   }

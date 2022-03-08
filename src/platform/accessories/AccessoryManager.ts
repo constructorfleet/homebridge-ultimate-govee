@@ -109,7 +109,7 @@ export class AccessoryManager extends Emitter {
         [accessory],
       );
     }
-    this.platformConfigService.updateConfigurationWithDevices(device);
+    await this.platformConfigService.updateConfigurationWithDevices(device);
   }
 
   @OnEvent(

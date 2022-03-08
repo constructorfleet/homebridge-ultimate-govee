@@ -1,6 +1,6 @@
 import {REPORT_IDENTIFIER} from '../../../util/const';
 import {State} from '../State';
-import {ColorSegment, ColorSegmentsMode, ColorSegmentsState} from './ColorSegments';
+import {ColorSegment, ColorSegmentsMode, ColorSegmentsModeState} from './ColorSegments';
 import {ColorRGB} from '../../../util/colorUtils';
 
 
@@ -22,7 +22,7 @@ class TestMode extends ColorSegmentsMode(State) {
   }
 }
 
-let testMode: ColorSegmentsState & State;
+let testMode: ColorSegmentsModeState & State;
 
 const assertNumber: AssertChain<number | undefined> = (
   actual?: number,

@@ -7,28 +7,25 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {LoggingService} from '../../../logging/LoggingService';
 import {OnOffState} from '../../../devices/states/OnOff';
-import {DeviceColorTransition} from '../../../core/structures/devices/transitions/DeviceColorTransition';
 import {ColorRGB, hsvToRGB, kelvinToRGB, rgbToHSV, rgbToKelvin} from '../../../util/colorUtils';
 import {DeviceColorTemperatureTransition} from '../../../core/structures/devices/transitions/DeviceColorTemperatureTransition';
-import {GoveeLight} from '../../../devices/implementations/GoveeLight';
+import {GoveeLight, LightDevice} from '../../../devices/implementations/GoveeLight';
 import {DeviceTransition} from '../../../core/structures/devices/DeviceTransition';
 import {GoveeRGBLight} from '../../../devices/implementations/GoveeRGBLight';
 import {ServiceRegistry} from '../ServiceRegistry';
 import {DeviceBrightnessTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
 import {SolidColorState} from '../../../devices/states/SolidColor';
-import {ModesState} from '../../../devices/states/Modes';
-import {DeviceMode} from '../../../devices/states/modes/DeviceMode';
 import {GoveeRGBICLight} from '../../../devices/implementations/GoveeRGBICLight';
-import {ColorSegmentsMode} from '../../../devices/states/modes/ColorSegments';
+import {ColorSegmentsModeState} from '../../../devices/states/modes/ColorSegments';
+import {PlatformConfigService} from '../../config/PlatformConfigService';
+import {GoveeDeviceOverride, GoveeRGBICLightOverride} from '../../config/GoveePluginConfig';
+import {DeviceOnOffTransition} from '../../../core/structures/devices/transitions/DeviceOnOffTransition';
+import {DeviceColorTransition} from '../../../core/structures/devices/transitions/DeviceColorTransition';
 import {
   DeviceBrightnessSegmentTransition,
   DeviceColorSegmentTransition,
 } from '../../../core/structures/devices/transitions/DeviceColorSegmentTransition';
 import {DeviceColorWCTransition} from '../../../core/structures/devices/transitions/DeviceColorWCTransition';
-import {PlatformConfigService} from '../../config/PlatformConfigService';
-import {GoveeDeviceOverride, GoveeRGBICLightOverride} from '../../config/GoveePluginConfig';
-import {ColorMode} from '../../../devices/states/modes/Color';
-import {DeviceOnOffTransition} from '../../../core/structures/devices/transitions/DeviceOnOffTransition';
 
 abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> extends AccessoryService<IdentifierType> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
@@ -193,7 +190,7 @@ abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> e
 }
 
 @ServiceRegistry.register
-export class WhiteLightService extends BaseLightService<GoveeLight, void> {
+export class WhiteLightService extends BaseLightService<LightDevice, void> {
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -217,21 +214,21 @@ export class WhiteLightService extends BaseLightService<GoveeLight, void> {
   }
 
   protected getBrightness(
-    device: GoveeLight,
+    device: LightDevice,
   ): number | undefined {
     return device.brightness;
   }
 
   protected getColor(
-    device: GoveeLight,
+    device: LightDevice,
   ): ColorRGB | undefined {
     return device.colorTemperature;
   }
 
   protected getPowerTransition(
-    device: GoveeLight,
+    device: LightDevice,
     on: boolean,
-  ): DeviceTransition<GoveeLight> {
+  ): DeviceTransition<LightDevice> {
     return new DeviceOnOffTransition(
       device.deviceId,
       on,
@@ -240,9 +237,9 @@ export class WhiteLightService extends BaseLightService<GoveeLight, void> {
 
 
   protected getBrightnessTransition(
-    device: GoveeLight,
+    device: LightDevice,
     brightness: number,
-  ): DeviceTransition<GoveeLight> {
+  ): DeviceTransition<LightDevice> {
     return new DeviceBrightnessTransition(
       device.deviceId,
       brightness,
@@ -250,9 +247,9 @@ export class WhiteLightService extends BaseLightService<GoveeLight, void> {
   }
 
   protected getColorTransition(
-    device: GoveeLight,
+    device: LightDevice,
     color: ColorRGB,
-  ): DeviceTransition<GoveeLight> {
+  ): DeviceTransition<LightDevice> {
     return this.getColorTemperatureTransition(
       device,
       color,
@@ -261,7 +258,7 @@ export class WhiteLightService extends BaseLightService<GoveeLight, void> {
   }
 
   protected getColorTemperatureTransition(
-    device: GoveeLight,
+    device: LightDevice,
     color: ColorRGB,
     temperature: number,
   ): DeviceColorTemperatureTransition {
@@ -308,17 +305,11 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
     device: GoveeRGBLight,
   ): ColorRGB | undefined {
     const colorState = device as unknown as SolidColorState;
-    const modeState = device as unknown as ModesState;
-    if (colorState) {
-      return colorState.solidColor;
-    } else if (modeState) {
-      const colorMode = Array.from(
-        modeState.modes.values(),
-      ).find(
-        (deviceMode: DeviceMode) => deviceMode instanceof ColorMode,
-      ) as ColorMode;
-      return colorMode.solidColor;
+    if (!colorState) {
+      return undefined;
     }
+
+    return colorState.solidColor;
   }
 
   protected getPowerTransition(
@@ -418,17 +409,13 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     device: GoveeRGBICLight,
     identifier: number,
   ): number | undefined {
-    const colorSegmentMode = Array.from(
-      device.modes.values(),
-    ).find(
-      (deviceMode: DeviceMode) => deviceMode instanceof ColorSegmentsMode,
-    ) as ColorSegmentsMode;
+    const colorSegmentMode = device as ColorSegmentsModeState;
     if (!colorSegmentMode) {
       return undefined;
     }
 
     if (identifier < 0) {
-      return colorSegmentMode.wholeBrightness;
+      return undefined;
     }
     return colorSegmentMode.colorSegments[identifier].brightness;
   }
@@ -437,17 +424,13 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     device: GoveeRGBICLight,
     identifier: number,
   ): ColorRGB | undefined {
-    const colorSegmentMode = Array.from(
-      device.modes.values(),
-    ).find(
-      (deviceMode: DeviceMode) => deviceMode instanceof ColorSegmentsMode,
-    ) as ColorSegmentsMode;
+    const colorSegmentMode = device as ColorSegmentsModeState;
     if (!colorSegmentMode) {
       return undefined;
     }
 
     if (identifier < 0) {
-      return colorSegmentMode.wholeColor;
+      return undefined;
     }
     return colorSegmentMode.colorSegments[identifier].color;
   }

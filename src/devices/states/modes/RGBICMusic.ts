@@ -20,7 +20,7 @@ export enum IntensityMode {
   CALM = 0x01,
 }
 
-export interface RGBICMusicState extends ModesState {
+export interface RGBICMusicModeState extends ModesState {
   rgbicMusicModeIdentifier?: number;
   musicModeType?: number;
   sensitivity?: number;
@@ -36,7 +36,7 @@ export function RGBICMusicMode<StateType extends State>(
   stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
-  return class extends stateType implements RGBICMusicState {
+  return class extends stateType implements RGBICMusicModeState {
     public activeMode?: number;
     public rgbicMusicModeIdentifier!: number;
     public musicModeType?: number;
@@ -49,7 +49,7 @@ export function RGBICMusicMode<StateType extends State>(
     constructor(args: RGBICMusicModeConstructorArgs & GoveeDeviceConstructorArgs) {
       super(args);
       this.addDeviceStatusCodes(modeCommandIdentifiers);
-      this.rgbicMusicModeIdentifier = args.rgbicMusicModeIdentifier ?? 19;
+      this.rgbicMusicModeIdentifier = args.rgbicMusicModeIdentifier ?? 109;
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {

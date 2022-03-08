@@ -2,8 +2,7 @@ import {DeviceTransition} from '../DeviceTransition';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
 import {ColorRGB} from '../../../../util/colorUtils';
 import {ModesState} from '../../../../devices/states/Modes';
-import {DeviceMode} from '../../../../devices/states/modes/DeviceMode';
-import {ColorSegmentsMode} from '../../../../devices/states/modes/ColorSegments';
+import {ColorSegmentsModeState} from '../../../../devices/states/modes/ColorSegments';
 import {getCommandCodes} from '../../../../util/opCodeUtils';
 import {REPORT_IDENTIFIER} from '../../../../util/const';
 
@@ -18,16 +17,12 @@ export class DeviceColorSegmentTransition extends DeviceTransition<ModesState & 
   }
 
   protected updateState(device: ModesState & GoveeDevice): DeviceColorSegmentTransition {
-    const colorSegmentMode = Array.from(
-      device.modes.values(),
-    ).find(
-      (deviceMode: DeviceMode) => deviceMode instanceof ColorSegmentsMode,
-    ) as ColorSegmentsMode;
+    const colorSegmentMode = device as unknown as ColorSegmentsModeState;
     if (!colorSegmentMode) {
       return this;
     }
 
-    device.activeMode = colorSegmentMode.modeIdentifier;
+    device.activeMode = colorSegmentMode.colorSegmentModeIdentifier;
     colorSegmentMode.colorSegments[this.segmentIndex].color.update(this.color);
 
     this.commandCodes = [
@@ -77,16 +72,12 @@ export class DeviceBrightnessSegmentTransition extends DeviceTransition<ModesSta
   }
 
   protected updateState(device: ModesState & GoveeDevice): DeviceBrightnessSegmentTransition {
-    const colorSegmentMode = Array.from(
-      device.modes.values(),
-    ).find(
-      (deviceMode: DeviceMode) => deviceMode instanceof ColorSegmentsMode,
-    ) as ColorSegmentsMode;
+    const colorSegmentMode = device as unknown as ColorSegmentsModeState;
     if (!colorSegmentMode) {
       return this;
     }
 
-    device.activeMode = colorSegmentMode.modeIdentifier;
+    device.activeMode = colorSegmentMode.colorSegmentModeIdentifier;
     colorSegmentMode.colorSegments[this.segmentIndex].brightness = this.brightness;
 
     this.commandCodes = [

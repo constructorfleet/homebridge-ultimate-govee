@@ -82,7 +82,7 @@ export class BLEEventProcessor extends Emitter {
         new BLEPeripheralCommandSend(
           bleAddress,
           device.deviceId,
-          device.deviceStatusCodes.map(
+          Array.from(device.deviceStatusCodes).map(
             (statusCodes) =>
               getCommandCodes(
                 REPORT_IDENTIFIER,

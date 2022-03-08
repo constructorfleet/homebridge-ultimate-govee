@@ -23,10 +23,10 @@ export class ColorSegment {
   }
 }
 
-export interface ColorSegmentsState extends ModesState {
+export interface ColorSegmentsModeState extends ModesState {
   colorSegmentCount: number;
   colorSegments: ColorSegment[];
-  colorModeIdentifier?: number;
+  colorSegmentModeIdentifier?: number;
 
   colorSegmentsChange(
     color: ColorRGB,
@@ -43,7 +43,7 @@ export function ColorSegmentsMode<StateType extends State>(
   stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
-  return class extends stateType implements ColorSegmentsState {
+  return class extends stateType implements ColorSegmentsModeState {
     public activeMode?: number;
     public modes!: number[];
     public colorSegmentCount: number;

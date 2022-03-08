@@ -1,5 +1,5 @@
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
-import {ColorMode, IntensityMode, RGBICMusicMode, RGBICMusicState} from './RGBICMusic';
+import {ColorMode, IntensityMode, RGBICMusicMode, RGBICMusicModeState} from './RGBICMusic';
 import {State} from '../State';
 
 type AssertChain<ArgumentType> = (actual: ArgumentType, expected: ArgumentType) => AssertChain<ArgumentType>;
@@ -20,7 +20,7 @@ class TestMode extends RGBICMusicMode(State) {
   }
 }
 
-let testMode: RGBICMusicState & State;
+let testMode: RGBICMusicModeState & State;
 
 const assertColor: AssertChain<number | undefined> = (
   actual?: number,

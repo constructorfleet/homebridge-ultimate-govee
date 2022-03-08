@@ -18,8 +18,9 @@ describe('ProgrammableMistLevelState', () => {
 
   describe('constructor', () => {
     it('adds command identifier', () => {
-      expect(testState.deviceStatusCodes).toHaveLength(2);
-      expect(testState.deviceStatusCodes).toStrictEqual([[5, 1], [5, 2]]);
+      expect(testState.deviceStatusCodes.size).toBe(2);
+
+      expect(Array.from(testState.deviceStatusCodes)).toStrictEqual([[5, 1], [5, 2]]);
     });
   });
 

@@ -5,8 +5,6 @@ import {Timer} from '../states/Timer';
 import {GoveeDevice} from '../GoveeDevice';
 import {ColorTemperature} from '../states/ColorTemperature';
 import {Brightness} from '../states/Brightness';
-import {Modes} from '../states/Modes';
-import {SceneMode} from '../states/modes/Scene';
 import {Connected} from '../states/Connected';
 
 
@@ -33,9 +31,7 @@ export class LightDevice extends Timer(
 
 // @DeviceFactory.register()
 export class GoveeLight
-  extends Modes(
-    SceneMode,
-  )(LightDevice) {
+  extends LightDevice {
 
   constructor(
     deviceConfig: DeviceConfig,
