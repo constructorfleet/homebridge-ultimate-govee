@@ -2,7 +2,6 @@ import {DeviceState} from '../../../core/structures/devices/DeviceState';
 import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
 import {modeCommandIdentifiers, ModesState} from '../Modes';
-import {GoveeDeviceConstructorArgs} from '../../GoveeDevice';
 import {State} from '../State';
 
 export interface SceneModeConstructorArgs {
@@ -26,7 +25,7 @@ export function SceneMode<StateType extends State>(
     public sceneModeIdentifier = 4;
     public activeSceneId?: number;
 
-    constructor(args: SceneModeConstructorArgs & GoveeDeviceConstructorArgs) {
+    constructor(args) {
       super(args);
       this.addDeviceStatusCodes(modeCommandIdentifiers);
       this.sceneModeIdentifier = args.sceneModeIdentifier ?? 4;

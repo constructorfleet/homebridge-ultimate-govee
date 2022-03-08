@@ -51,6 +51,7 @@ export class DeviceManager extends Emitter {
     }
 
     try {
+      this.log.info(deviceSettings);
       const device = deviceCtor(deviceSettings);
       this.devices.set(
         deviceSettings.deviceId,

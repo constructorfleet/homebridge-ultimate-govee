@@ -1,4 +1,3 @@
-import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
 import {OnOff} from '../states/OnOff';
 import {Active} from '../states/Active';
 import {Timer} from '../states/Timer';
@@ -22,10 +21,8 @@ export class LightDevice extends Timer(
     ),
   ),
 ) {
-  constructor(
-    deviceConfig: DeviceConfig,
-  ) {
-    super(deviceConfig);
+  constructor(args) {
+    super(args);
   }
 }
 
@@ -33,9 +30,7 @@ export class LightDevice extends Timer(
 export class GoveeLight
   extends LightDevice {
 
-  constructor(
-    deviceConfig: DeviceConfig,
-  ) {
-    super(deviceConfig);
+  constructor(args) {
+    super(args);
   }
 }

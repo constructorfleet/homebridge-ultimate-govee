@@ -26,6 +26,8 @@ import {
   DeviceColorSegmentTransition,
 } from '../../../core/structures/devices/transitions/DeviceColorSegmentTransition';
 import {DeviceColorWCTransition} from '../../../core/structures/devices/transitions/DeviceColorWCTransition';
+import {ColorModeState} from '../../../devices/states/modes/Color';
+import {BrightnessState} from '../../../devices/states/Brightness';
 
 abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> extends AccessoryService<IdentifierType> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
@@ -409,12 +411,16 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     device: GoveeRGBICLight,
     identifier: number,
   ): number | undefined {
+    if (identifier < 0) {
+      const brightnessState = device as BrightnessState;
+      if (!brightnessState) {
+        return undefined;
+      }
+
+      return brightnessState.brightness;
+    }
     const colorSegmentMode = device as ColorSegmentsModeState;
     if (!colorSegmentMode) {
-      return undefined;
-    }
-
-    if (identifier < 0) {
       return undefined;
     }
     return colorSegmentMode.colorSegments[identifier].brightness;
@@ -424,14 +430,19 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     device: GoveeRGBICLight,
     identifier: number,
   ): ColorRGB | undefined {
+    if (identifier < 0) {
+      const colorMode = device as ColorModeState;
+      if (!colorMode) {
+        return undefined;
+      }
+      return colorMode.color;
+    }
+
     const colorSegmentMode = device as ColorSegmentsModeState;
     if (!colorSegmentMode) {
       return undefined;
     }
 
-    if (identifier < 0) {
-      return undefined;
-    }
     return colorSegmentMode.colorSegments[identifier].color;
   }
 

@@ -28,7 +28,6 @@ export function Brightness<StateType extends State>(
     public override parse(deviceState: DeviceState): ThisType<this> {
       if (deviceState.brightness !== undefined) {
         this.brightness = deviceState.brightness;
-        return super.parse(deviceState);
       }
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],

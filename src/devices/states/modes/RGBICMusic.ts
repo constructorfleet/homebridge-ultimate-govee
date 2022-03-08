@@ -1,7 +1,6 @@
 import {ColorRGB} from '../../../util/colorUtils';
 import {modeCommandIdentifiers, ModesState} from '../Modes';
 import {State} from '../State';
-import {GoveeDeviceConstructorArgs} from '../../GoveeDevice';
 import {DeviceState} from '../../../core/structures/devices/DeviceState';
 import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
@@ -46,7 +45,7 @@ export function RGBICMusicMode<StateType extends State>(
     public specifiedColor: ColorRGB =
       new ColorRGB(0, 0, 0);
 
-    constructor(args: RGBICMusicModeConstructorArgs & GoveeDeviceConstructorArgs) {
+    constructor(args) {
       super(args);
       this.addDeviceStatusCodes(modeCommandIdentifiers);
       this.rgbicMusicModeIdentifier = args.rgbicMusicModeIdentifier ?? 109;

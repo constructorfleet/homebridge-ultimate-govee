@@ -4,7 +4,6 @@ import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER, SEGMENT_COUNT} from '../../../uti
 import {ColorRGB} from '../../../util/colorUtils';
 import {State} from '../State';
 import {modeCommandIdentifiers, ModesState} from '../Modes';
-import {GoveeDeviceConstructorArgs} from '../../GoveeDevice';
 
 const reportIdentifiers = [
   165,
@@ -59,7 +58,7 @@ export function ColorSegmentsMode<StateType extends State>(
         },
       );
 
-    public constructor(args: ColorSegmentsModeConstructorArgs & GoveeDeviceConstructorArgs) {
+    public constructor(args) {
       super(args);
       this.addDeviceStatusCodes(modeCommandIdentifiers);
       this.colorSegmentModeIdentifier = args.colorSegmentsModeIdentifier ?? 21;
@@ -75,9 +74,9 @@ export function ColorSegmentsMode<StateType extends State>(
         this.colorSegments.forEach(
           (segment: ColorSegment) => segment.color.update(
             new ColorRGB(
-              deviceState.color!.red!,
-              deviceState.color!.green!,
-              deviceState.color!.blue!,
+              deviceState.color?.red ?? deviceState.color?.r ?? 0,
+              deviceState.color?.green ?? deviceState.color?.g ?? 0,
+              deviceState.color?.blue ?? deviceState.color?.b ?? 0,
             ),
           ),
         );
@@ -121,7 +120,8 @@ export function ColorSegmentsMode<StateType extends State>(
 
     public indexToSegmentBits(index: number): number[] {
       const segmentBits: number[] = [];
-      while (index < 8) {
+      while (index >= 0) {
+        console.error('ColorSegment', 'indexToSegmentBits', index);
         segmentBits.push(
           index < 8
             ? Math.pow(2, index)
@@ -137,7 +137,7 @@ export function ColorSegmentsMode<StateType extends State>(
       color: ColorRGB,
       index?: number,
     ): number[] {
-      if (!index || index < 0 || index > this.colorSegments.length) {
+      if (index === undefined || index < 0 || index > this.colorSegments.length) {
         return [];
       }
 
@@ -145,6 +145,7 @@ export function ColorSegmentsMode<StateType extends State>(
         COMMAND_IDENTIFIER,
         [
           ...modeCommandIdentifiers,
+          this.colorSegmentModeIdentifier,
           1,
         ],
         color.red,
@@ -163,7 +164,7 @@ export function ColorSegmentsMode<StateType extends State>(
       brightness: number,
       index?: number,
     ): number[] {
-      if (!index || index < 0 || index > this.colorSegments.length) {
+      if (index === undefined || index < 0 || index > this.colorSegments.length) {
         return [];
       }
 
@@ -171,6 +172,7 @@ export function ColorSegmentsMode<StateType extends State>(
         COMMAND_IDENTIFIER,
         [
           ...modeCommandIdentifiers,
+          this.colorSegmentModeIdentifier,
           2,
         ],
         brightness,

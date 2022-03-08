@@ -1,9 +1,15 @@
 export interface DeviceStateColor {
-  red: number;
+  red?: number;
 
-  green: number;
+  green?: number;
 
-  blue: number;
+  blue?: number;
+
+  r?: number;
+
+  g?: number;
+
+  b?: number;
 }
 
 export interface DeviceState {

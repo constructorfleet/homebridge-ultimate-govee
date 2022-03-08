@@ -4,7 +4,6 @@ import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
 import {ColorRGB} from '../../../util/colorUtils';
 import {State} from '../State';
 import {modeCommandIdentifiers, ModesState} from '../Modes';
-import {GoveeDeviceConstructorArgs} from '../../GoveeDevice';
 
 export interface ColorModeConstructorArgs {
   colorModeIdentifier?: number;
@@ -27,7 +26,7 @@ export function ColorMode<StateType extends State>(
     public colorModeIdentifier!: number;
     public color?: ColorRGB;
 
-    public constructor(args: ColorModeConstructorArgs & GoveeDeviceConstructorArgs) {
+    public constructor(args) {
       super(args);
       this.addDeviceStatusCodes(modeCommandIdentifiers);
       this.colorModeIdentifier = args.colorModeIdentifier ?? 2;
@@ -41,9 +40,9 @@ export function ColorMode<StateType extends State>(
       const isNoCommandsStatus = deviceState.color && !deviceState.commands;
       if (isColorCommand || isNoCommandsStatus) {
         this.color = new ColorRGB(
-          deviceState.color!.red!,
-          deviceState.color!.green!,
-          deviceState.color!.blue!,
+          deviceState.color?.red ?? deviceState.color?.r ?? 0,
+          deviceState.color?.green ?? deviceState.color?.g ?? 0,
+          deviceState.color?.blue ?? deviceState.color?.b ?? 0,
         );
 
         return super.parse(deviceState);
