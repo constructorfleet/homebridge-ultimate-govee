@@ -113,6 +113,7 @@ describe('ColorMode', () => {
       );
     });
     it('processes DeviceState.commands', () => {
+      expect(testMode.activeMode).toBeUndefined();
       assertColorRGB(
         undefined,
         undefined,
@@ -131,6 +132,7 @@ describe('ColorMode', () => {
           ],
         ],
       });
+      expect(testMode.activeMode).toBe(testMode.colorModeIdentifier);
       assertColorRGB(
         10,
         1,

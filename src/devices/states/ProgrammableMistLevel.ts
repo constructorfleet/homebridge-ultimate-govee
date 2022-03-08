@@ -56,7 +56,7 @@ export function ProgrammableMistLevel<StateType extends State & MistLevelState &
         this.mistLevel = this.mistPrograms.get(this.mistProgramId)?.mistLevel;
       }
 
-      return this;
+      return super.parse(deviceState);
     }
   };
 }

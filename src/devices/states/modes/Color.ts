@@ -57,6 +57,7 @@ export function ColorMode<StateType extends State>(
         deviceState.commands,
       );
       if (commandValues?.length === 1) {
+        this.activeMode = this.colorModeIdentifier;
         this.color = new ColorRGB(
           commandValues[0][0],
           commandValues[0][1],

@@ -52,7 +52,7 @@ export function SceneMode<StateType extends State>(
         this.activeSceneId = values[0];
       }
 
-      return this;
+      return super.parse(deviceState);
     }
 
     public sceneIdChange(): number[] {

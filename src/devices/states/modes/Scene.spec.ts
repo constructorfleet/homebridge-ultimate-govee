@@ -1,4 +1,4 @@
-import {REPORT_IDENTIFIER} from '../../../util/const';
+import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
 import {SceneMode, SceneModeState} from './Scene';
 import {State} from '../State';
 
@@ -58,17 +58,18 @@ describe('SceneMode', () => {
     });
   });
 
-  // describe('sceneChange', () => {
-  //   it('returns opcode array', () => {
-  //     testMode.sceneId = 22;
-  //     expect(testMode.sceneChange()).toStrictEqual(
-  //       [
-  //         COMMAND_IDENTIFIER, 5, 4, 22, 0,
-  //         0, 0, 0, 0, 0,
-  //         0, 0, 0, 0, 0,
-  //         0, 0, 0, 0, 36,
-  //       ],
-  //     );
-  //   });
-  // });
+  describe('sceneChange', () => {
+    it('returns opcode array', () => {
+      testMode.activeMode = testMode.sceneModeIdentifier;
+      testMode.activeSceneId = 22;
+      expect(testMode.sceneIdChange()).toStrictEqual(
+        [
+          COMMAND_IDENTIFIER, 5, 4, 22, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 36,
+        ],
+      );
+    });
+  });
 });

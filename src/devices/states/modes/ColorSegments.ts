@@ -82,7 +82,7 @@ export function ColorSegmentsMode<StateType extends State>(
           ),
         );
 
-        return this;
+        return super.parse(deviceState);
       }
       const commandValues = getCommandValues(
         [
@@ -96,7 +96,7 @@ export function ColorSegmentsMode<StateType extends State>(
         return super.parse(deviceState);
       }
 
-      // TODO: Handle Flow Bars
+      this.activeMode = this.colorSegmentModeIdentifier;
       commandValues?.forEach(
         (cmdValues) => {
           const startIndex = (cmdValues[0] - 1) * 3;

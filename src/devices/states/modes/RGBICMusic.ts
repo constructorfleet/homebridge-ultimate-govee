@@ -77,7 +77,7 @@ export function RGBICMusicMode<StateType extends State>(
       this.specifiedColor.red = commandValues[0][4];
       this.specifiedColor.green = commandValues[0][5];
       this.specifiedColor.blue = commandValues[0][6];
-      return this;
+      return super.parse(deviceState);
     }
 
     rgbicMusicChange(): number[] {
