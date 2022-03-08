@@ -121,7 +121,6 @@ export function ColorSegmentsMode<StateType extends State>(
     public indexToSegmentBits(index: number): number[] {
       const segmentBits: number[] = [];
       while (index >= 0) {
-        console.error('ColorSegment', 'indexToSegmentBits', index);
         segmentBits.push(
           index < 8
             ? Math.pow(2, index)

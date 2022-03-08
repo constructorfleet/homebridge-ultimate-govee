@@ -7,6 +7,9 @@ export class CategoryScene {
   @Expose({name: 'sceneId'})
   public sceneId!: number;
 
+  @Expose({name: 'sceneCode'})
+  public sceneCode!: number;
+
   @Expose({name: 'sceneName'})
   public sceneName!: string;
 

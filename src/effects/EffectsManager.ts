@@ -57,7 +57,7 @@ export class EffectsManager extends Emitter {
     const lightEffects =
       effects.map(
         (effect) => new DeviceLightEffect(
-          effect.sceneId,
+          effect.sceneCode,
           effect.sceneName,
           effect.scenesHint,
           effect.deviceId,
