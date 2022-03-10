@@ -13,7 +13,7 @@ import {StatusModeState} from '../../../devices/states/StatusMode';
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {ServiceRegistry} from '../ServiceRegistry';
-import {GoveeHumidifier} from '../../../devices/implmentations/GoveeHumidifier';
+import {GoveeHumidifier} from '../../../devices/implementations/GoveeHumidifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 
 @ServiceRegistry.register

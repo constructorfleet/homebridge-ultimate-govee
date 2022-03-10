@@ -10,14 +10,18 @@ import {
   GoveeRGBICLightOverride,
 } from './GoveePluginConfig';
 import {GoveeDevice} from '../../devices/GoveeDevice';
-import {GoveeHumidifier} from '../../devices/implmentations/GoveeHumidifier';
-import {GoveeAirPurifier} from '../../devices/implmentations/GoveeAirPurifier';
-import {GoveeLight, LightDevice} from '../../devices/implmentations/GoveeLight';
-import {GoveeRGBICLight} from '../../devices/implmentations/GoveeRGBICLight';
+import {GoveeHumidifier} from '../../devices/implementations/GoveeHumidifier';
+import {GoveeAirPurifier} from '../../devices/implementations/GoveeAirPurifier';
+import {GoveeLight, LightDevice} from '../../devices/implementations/GoveeLight';
+import {GoveeRGBICLight} from '../../devices/implementations/GoveeRGBICLight';
+import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
+import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
+import {Lock} from 'async-await-mutex-lock';
 
 @Injectable()
 export class PlatformConfigService {
   private readonly goveePluginConfig: GoveePluginConfig;
+  private readonly writeLock: Lock<void> = new Lock<void>();
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
@@ -80,21 +84,50 @@ export class PlatformConfigService {
     ) as OverrideType;
   }
 
-  updateConfigurationWithDevices(
+  async updateConfigurationWithEffects(
+    diyEffects?: DIYLightEffect[],
+    deviceEffects?: DeviceLightEffect[],
+  ) {
+    await this.writeLock.acquire();
+    try {
+      const configFile = this.configurationFile(
+        this.buildGoveePluginConfigurationFromEffects(
+          this.goveePluginConfig,
+          diyEffects,
+          deviceEffects,
+        ),
+      );
+
+      fs.writeFileSync(
+        this.configFilePath,
+        JSON.stringify(configFile, null, 2),
+        {encoding: 'utf8'},
+      );
+    } finally {
+      this.writeLock.release();
+    }
+  }
+
+  async updateConfigurationWithDevices(
     ...devices: GoveeDevice[]
   ) {
-    const configFile = this.configurationFile(
-      this.buildGoveePluginConfiguration(
-        this.goveePluginConfig,
-        ...devices,
-      ),
-    );
+    await this.writeLock.acquire();
+    try {
+      const configFile = this.configurationFile(
+        this.buildGoveePluginConfigurationFromDevices(
+          this.goveePluginConfig,
+          ...devices,
+        ),
+      );
 
-    fs.writeFileSync(
-      this.configFilePath,
-      JSON.stringify(configFile, null, 2),
-      {encoding: 'utf8'},
-    );
+      fs.writeFileSync(
+        this.configFilePath,
+        JSON.stringify(configFile, null, 2),
+        {encoding: 'utf8'},
+      );
+    } finally {
+      this.writeLock.release();
+    }
   }
 
   private configurationFile(updatedPluginConfig?: GoveePluginConfig): unknown {
@@ -121,7 +154,7 @@ export class PlatformConfigService {
     return config;
   }
 
-  private buildGoveePluginConfiguration(
+  private buildGoveePluginConfigurationFromDevices(
     config: GoveePluginConfig,
     ...devices: GoveeDevice[]
   ): GoveePluginConfig {
@@ -129,6 +162,27 @@ export class PlatformConfigService {
       config,
       ...devices,
     );
+
+    return config;
+  }
+
+  private buildGoveePluginConfigurationFromEffects(
+    config: GoveePluginConfig,
+    diyEffects?: DIYLightEffect[],
+    deviceEffects?: DeviceLightEffect[],
+  ): GoveePluginConfig {
+    if (diyEffects) {
+      config.devices = this.buildGoveeDIYEffectOverrides(
+        config,
+        ...diyEffects,
+      );
+    }
+    if (deviceEffects) {
+      config.devices = this.buildGoveeDeviceEffectOverrides(
+        config,
+        ...deviceEffects,
+      );
+    }
 
     return config;
   }
@@ -168,6 +222,52 @@ export class PlatformConfigService {
       (config.devices?.humidifiers || []).concat(...newHumidifiers),
       (config?.devices?.airPurifiers || []).concat(...newPurifiers),
       (config?.devices?.lights || []).concat(...newLights),
+    );
+  }
+
+  private buildGoveeDeviceEffectOverrides(
+    config: GoveePluginConfig,
+    ...deviceEffects: DeviceLightEffect[]
+  ): GoveeDeviceOverrides {
+    const lightOverrides: GoveeLightOverride[] =
+      ((config?.devices?.lights || []) as GoveeLightOverride[]);
+
+    lightOverrides.forEach(
+      (override: GoveeLightOverride) => {
+        const effects = deviceEffects.filter(
+          (effect: DeviceLightEffect) => effect.deviceId === override.deviceId,
+        );
+        if (!effects || effects.length === 0) {
+          return;
+        }
+        override.effects = effects;
+      },
+    );
+
+    return new GoveeDeviceOverrides(
+      (config.devices?.humidifiers || []),
+      (config?.devices?.airPurifiers || []),
+      lightOverrides,
+    );
+  }
+
+  private buildGoveeDIYEffectOverrides(
+    config: GoveePluginConfig,
+    ...diyEffects: DIYLightEffect[]
+  ): GoveeDeviceOverrides {
+    const lightOverrides: GoveeLightOverride[] =
+      ((config?.devices?.lights || []) as GoveeLightOverride[]);
+
+    lightOverrides.forEach(
+      (override: GoveeLightOverride) => {
+        override.diyEffects = diyEffects;
+      },
+    );
+
+    return new GoveeDeviceOverrides(
+      (config.devices?.humidifiers || []),
+      (config?.devices?.airPurifiers || []),
+      lightOverrides,
     );
   }
 }

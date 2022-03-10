@@ -24,6 +24,7 @@ export class GoveeDevice extends State {
   public pactCode!: number;
   public pactType!: number;
   public iotTopic?: string;
+  public goodsType!: number;
   public bleAddress?: string;
   public macAddress?: string;
   public hardwareVersion?: string;
@@ -37,6 +38,7 @@ export class GoveeDevice extends State {
     this.name = deviceConfig.name;
     this.pactCode = deviceConfig.pactCode;
     this.pactType = deviceConfig.pactType;
+    this.goodsType = deviceConfig.goodsType;
     this.macAddress = deviceConfig.macAddress;
     this.iotTopic = supportsIoT(deviceConfig)?.deviceTopic ?? undefined;
     this.bleAddress = supportsBLE(deviceConfig)?.bleAddress ?? undefined;

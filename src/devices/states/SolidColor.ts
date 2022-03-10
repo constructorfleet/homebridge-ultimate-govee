@@ -30,9 +30,9 @@ export function SolidColor<StateType extends State>(
     public override parse(deviceState: DeviceState): ThisType<this> {
       if (deviceState.color !== undefined) {
         this.solidColor = new ColorRGB(
-          deviceState.color.red,
-          deviceState.color.green,
-          deviceState.color.blue,
+          deviceState.color.red ?? deviceState.color.r ?? 0,
+          deviceState.color.green ?? deviceState.color.g ?? 0,
+          deviceState.color.blue ?? deviceState.color.b ?? 0,
         );
         return super.parse(deviceState);
       }

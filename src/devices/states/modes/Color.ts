@@ -1,39 +1,81 @@
-import {DeviceMode} from './DeviceMode';
 import {DeviceState} from '../../../core/structures/devices/DeviceState';
 import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
 import {ColorRGB} from '../../../util/colorUtils';
+import {State} from '../State';
+import {modeCommandIdentifiers, ModesState} from '../Modes';
 
-export class ColorMode extends DeviceMode {
-  public modeIdentifier = 13;
-  public solidColor: ColorRGB = new ColorRGB(0, 0, 0);
+export interface ColorModeConstructorArgs {
+  colorModeIdentifier?: number;
+}
 
-  public parse(deviceState: DeviceState): ThisType<this> {
-    const commandValues = getCommandValues(
-      [
-        REPORT_IDENTIFIER,
-        ...this.commandIdentifiers,
-      ],
-      deviceState.commands,
-    );
+export interface ColorModeState extends ModesState {
+  color?: ColorRGB;
+  colorModeIdentifier: number;
 
-    if (commandValues?.length === 1) {
-      const values = commandValues[0];
-      this.solidColor.red = values[0];
-      this.solidColor.green = values[1];
-      this.solidColor.blue = values[2];
+  colorChange(): number[];
+}
+
+export function ColorMode<StateType extends State>(
+  stateType: new (...args) => StateType,
+) {
+  // @ts-ignore
+  return class extends stateType implements ColorModeState {
+    public activeMode?: number;
+    public modes!: number[];
+    public colorModeIdentifier!: number;
+    public color?: ColorRGB;
+
+    public constructor(args) {
+      super(args);
+      this.addDeviceStatusCodes(modeCommandIdentifiers);
+      this.colorModeIdentifier = args.colorModeIdentifier ?? 2;
     }
 
-    return this;
-  }
+    public override parse(deviceState: DeviceState): ThisType<this> {
+      if (deviceState.mode !== undefined) {
+        this.activeMode = deviceState.mode;
+      }
+      const isColorCommand = deviceState.color && (deviceState.command ?? '') in ['color', 'colorwc'];
+      const isNoCommandsStatus = deviceState.color && !deviceState.commands;
+      if (isColorCommand || isNoCommandsStatus) {
+        this.color = new ColorRGB(
+          deviceState.color?.red ?? deviceState.color?.r ?? 0,
+          deviceState.color?.green ?? deviceState.color?.g ?? 0,
+          deviceState.color?.blue ?? deviceState.color?.b ?? 0,
+        );
 
-  public colorChange(): number[] {
-    return getCommandCodes(
-      COMMAND_IDENTIFIER,
-      this.commandIdentifiers,
-      this.solidColor.red,
-      this.solidColor.green,
-      this.solidColor.blue,
-    );
-  }
+        return super.parse(deviceState);
+      }
+      const commandValues = getCommandValues(
+        [
+          REPORT_IDENTIFIER,
+          ...modeCommandIdentifiers,
+          this.colorModeIdentifier,
+        ],
+        deviceState.commands,
+      );
+      if (commandValues?.length === 1) {
+        this.activeMode = this.colorModeIdentifier;
+        this.color = new ColorRGB(
+          commandValues[0][0],
+          commandValues[0][1],
+          commandValues[0][2],
+        );
+      }
+
+      return super.parse(deviceState);
+    }
+
+    public colorChange(): number[] {
+      return getCommandCodes(
+        COMMAND_IDENTIFIER,
+        modeCommandIdentifiers,
+        this.colorModeIdentifier,
+        this.color?.red ?? 0,
+        this.color?.green ?? 0,
+        this.color?.blue ?? 0,
+      );
+    }
+  };
 }

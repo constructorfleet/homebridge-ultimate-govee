@@ -17,8 +17,8 @@ describe('OnOffState', () => {
 
   describe('constructor', () => {
     it('adds command identifier', () => {
-      expect(testState.deviceStatusCodes).toHaveLength(0);
-      expect(testState.deviceStatusCodes).toStrictEqual([]);
+      expect(testState.deviceStatusCodes.size).toBe(0);
+      expect(Array.from(testState.deviceStatusCodes)).toStrictEqual([]);
     });
   });
 

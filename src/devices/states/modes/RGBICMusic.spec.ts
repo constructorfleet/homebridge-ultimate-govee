@@ -1,22 +1,68 @@
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
-import {ColorMode, IntensityMode, RGBICMusicMode} from './RGBICMusic';
+import {ColorMode, IntensityMode, RGBICMusicMode, RGBICMusicModeState} from './RGBICMusic';
+import {State} from '../State';
 
-let testMode: RGBICMusicMode;
+type AssertChain<ArgumentType> = (actual: ArgumentType, expected: ArgumentType) => AssertChain<ArgumentType>;
+
+class TestMode extends RGBICMusicMode(State) {
+  constructor() {
+    super({
+      rgbicMusicModeIdentifier: 19,
+      deviceConfig: {
+        name: 'TestDevice',
+        deviceId: 'device',
+        model: 'H1234',
+        pactType: 1,
+        pactCode: 2,
+        goodsType: 21,
+      },
+    });
+  }
+}
+
+let testMode: RGBICMusicModeState & State;
+
+const assertColor: AssertChain<number | undefined> = (
+  actual?: number,
+  expected?: number,
+): AssertChain<number | undefined> => {
+  if (expected === undefined) {
+    expect(actual).toBeUndefined();
+  } else {
+    expect(actual).toBe(expected);
+  }
+  return assertColor;
+};
+
+const assertColorRGB = (
+  red?: number,
+  green?: number,
+  blue?: number,
+) => {
+  assertColor(
+    testMode.specifiedColor?.red,
+    red,
+  )(
+    testMode.specifiedColor?.green,
+    green,
+  )(
+    testMode.specifiedColor?.blue,
+    blue,
+  );
+};
 
 describe('RGBICMusicMode', () => {
   beforeEach(() => {
-    testMode = new RGBICMusicMode();
+    testMode = new TestMode();
   });
 
   describe('parse', () => {
     it('processes DeviceState.commands', () => {
-      expect(testMode.musicModeType).toBe(0);
-      expect(testMode.sensitivity).toBe(0);
+      assertColorRGB(0, 0, 0);
+      expect(testMode.musicModeType).toBeUndefined();
+      expect(testMode.sensitivity).toBeUndefined();
       expect(testMode.intensity).toBe(IntensityMode.DYNAMIC);
       expect(testMode.colorMode).toBe(ColorMode.AUTOMATIC);
-      expect(testMode.specifiedColor.red).toBe(0);
-      expect(testMode.specifiedColor.green).toBe(0);
-      expect(testMode.specifiedColor.blue).toBe(0);
       testMode.parse({
         deviceId: 'device',
         commands: [
@@ -27,19 +73,14 @@ describe('RGBICMusicMode', () => {
       expect(testMode.sensitivity).toBe(36);
       expect(testMode.intensity).toBe(IntensityMode.CALM);
       expect(testMode.colorMode).toBe(ColorMode.SPECIFIED);
-      expect(testMode.specifiedColor.red).toBe(50);
-      expect(testMode.specifiedColor.green).toBe(100);
-      expect(testMode.specifiedColor.blue).toBe(255);
+      assertColorRGB(50, 100, 255);
     });
 
     it('ignores non-applicable DeviceState', () => {
-      expect(testMode.musicModeType).toBe(0);
-      expect(testMode.sensitivity).toBe(0);
+      assertColorRGB(0, 0, 0);
+      expect(testMode.musicModeType).toBeUndefined();
       expect(testMode.intensity).toBe(IntensityMode.DYNAMIC);
       expect(testMode.colorMode).toBe(ColorMode.AUTOMATIC);
-      expect(testMode.specifiedColor.red).toBe(0);
-      expect(testMode.specifiedColor.green).toBe(0);
-      expect(testMode.specifiedColor.blue).toBe(0);
       testMode.parse({
         deviceId: 'device',
         brightness: 100,
@@ -47,13 +88,10 @@ describe('RGBICMusicMode', () => {
           [REPORT_IDENTIFIER, 1, 2],
         ],
       });
-      expect(testMode.musicModeType).toBe(0);
-      expect(testMode.sensitivity).toBe(0);
+      assertColorRGB(0, 0, 0);
+      expect(testMode.musicModeType).toBeUndefined();
       expect(testMode.intensity).toBe(IntensityMode.DYNAMIC);
       expect(testMode.colorMode).toBe(ColorMode.AUTOMATIC);
-      expect(testMode.specifiedColor.red).toBe(0);
-      expect(testMode.specifiedColor.green).toBe(0);
-      expect(testMode.specifiedColor.blue).toBe(0);
     });
   });
 
@@ -66,7 +104,7 @@ describe('RGBICMusicMode', () => {
       testMode.specifiedColor.red = 50;
       testMode.specifiedColor.green = 100;
       testMode.specifiedColor.blue = 255;
-      expect(testMode.musicChange()).toStrictEqual(
+      expect(testMode.rgbicMusicChange()).toStrictEqual(
         [
           COMMAND_IDENTIFIER, 5, 19, testMode.musicModeType, testMode.sensitivity,
           testMode.intensity, testMode.colorMode, testMode.specifiedColor.red,

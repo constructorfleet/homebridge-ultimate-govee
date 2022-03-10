@@ -1,4 +1,3 @@
-import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
 import {OnOff} from '../states/OnOff';
 import {FanSpeed} from '../states/FanSpeed';
 import {Active} from '../states/Active';
@@ -24,9 +23,7 @@ export class GoveeAirPurifier
     ),
   ) {
 
-  constructor(
-    deviceConfig: DeviceConfig,
-  ) {
-    super(deviceConfig);
+  constructor(args) {
+    super(args);
   }
 }

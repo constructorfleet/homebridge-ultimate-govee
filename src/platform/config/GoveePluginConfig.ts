@@ -1,6 +1,8 @@
 import {Exclude, Expose, Type} from 'class-transformer';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
+import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
+import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
 
 type LightType = 'WW' | 'RGB' | 'RGBIC';
 
@@ -30,6 +32,18 @@ export class GoveeLightOverride extends GoveeDeviceOverride {
     super(device);
     this._lightType = 'RGB';
   }
+
+  @Expose({name: 'enabledDIYEffects'})
+  enabledDIYEffects?: number[];
+
+  @Expose({name: 'enabledEffects'})
+  enabledEffects?: number[];
+
+  @Expose({name: 'diyEffects'})
+  diyEffects?: DIYLightEffect[];
+
+  @Expose({name: 'effects'})
+  effects?: DeviceLightEffect[];
 
   @Expose({name: '_lightType'})
   _lightType?: LightType;
