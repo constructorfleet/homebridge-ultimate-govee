@@ -13,6 +13,8 @@ export interface DeviceConfig extends BLEConfig, WiFiConfig, IoTConfig {
 
   pactCode: number;
 
+  goodsType: number;
+
   hardwareVersion?: string;
 
   softwareVersion?: string;

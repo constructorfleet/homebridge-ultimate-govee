@@ -13,7 +13,7 @@ import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 import {ServiceRegistry} from '../ServiceRegistry';
-import {GoveeAirPurifier} from '../../../devices/implmentations/GoveeAirPurifier';
+import {GoveeAirPurifier} from '../../../devices/implementations/GoveeAirPurifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 
 @ServiceRegistry.register

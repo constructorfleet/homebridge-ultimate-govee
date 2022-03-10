@@ -1,17 +1,13 @@
-/*
-Command:
-[ Uint8Array [ 51, 5, 19, 3, 99, 0, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 186 ],
-  Uint8Array [ 170, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 174 ] ]
- */
-
-/*
-Report:
-[ Uint8Array [ 51, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 54 ],
-  Uint8Array [ 170, 5, 19, 3, 99, 0, 0, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35 ] ]
- */
-
 import {ColorRGB} from '../../../util/colorUtils';
-import {RGBMusicMode} from './RGBMusic';
+import {modeCommandIdentifiers, ModesState} from '../Modes';
+import {State} from '../State';
+import {DeviceState} from '../../../core/structures/devices/DeviceState';
+import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
+import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
+
+export interface RGBICMusicModeConstructorArgs {
+  rgbicMusicModeIdentifier?: number;
+}
 
 export enum ColorMode {
   AUTOMATIC = 0x00,
@@ -23,29 +19,81 @@ export enum IntensityMode {
   CALM = 0x01,
 }
 
-export class RGBICMusicMode extends RGBMusicMode {
-  public modeIdentifier = 19;
-  public intensity: IntensityMode = IntensityMode.DYNAMIC;
-  public colorMode: ColorMode = ColorMode.AUTOMATIC;
-  public specifiedColor: ColorRGB = new ColorRGB(0, 0, 0);
+export interface RGBICMusicModeState extends ModesState {
+  rgbicMusicModeIdentifier?: number;
+  musicModeType?: number;
+  sensitivity?: number;
+  intensity?: IntensityMode;
+  colorMode?: ColorMode;
+  specifiedColor: ColorRGB;
+
+  rgbicMusicChange(): number[];
+}
 
 
-  populateFromCommandValues(commandValues: number[]): ThisType<this> {
-    this.intensity = commandValues[0];
-    this.colorMode = commandValues[1];
-    this.specifiedColor.red = commandValues[2];
-    this.specifiedColor.green = commandValues[3];
-    this.specifiedColor.blue = commandValues[4];
-    return this;
-  }
+export function RGBICMusicMode<StateType extends State>(
+  stateType: new (...args) => StateType,
+) {
+  // @ts-ignore
+  return class extends stateType implements RGBICMusicModeState {
+    public activeMode?: number;
+    public rgbicMusicModeIdentifier!: number;
+    public musicModeType?: number;
+    public sensitivity?: number;
+    public intensity: IntensityMode = IntensityMode.DYNAMIC;
+    public colorMode: ColorMode = ColorMode.AUTOMATIC;
+    public specifiedColor: ColorRGB =
+      new ColorRGB(0, 0, 0);
 
-  extraCommandValues(): number[] {
-    return [
-      this.intensity,
-      this.colorMode,
-      this.specifiedColor.red,
-      this.specifiedColor.green,
-      this.specifiedColor.blue,
-    ];
-  }
+    constructor(args) {
+      super(args);
+      this.addDeviceStatusCodes(modeCommandIdentifiers);
+      this.rgbicMusicModeIdentifier = args.rgbicMusicModeIdentifier ?? 109;
+    }
+
+    public override parse(deviceState: DeviceState): ThisType<this> {
+      if (deviceState.mode !== undefined) {
+        this.activeMode = deviceState.mode;
+      }
+
+      const commandValues = getCommandValues(
+        [
+          REPORT_IDENTIFIER,
+          ...modeCommandIdentifiers,
+          this.rgbicMusicModeIdentifier,
+        ],
+        deviceState.commands,
+      );
+
+      if (!commandValues || (commandValues?.length || 0) === 0) {
+        return super.parse(deviceState);
+      }
+
+      this.musicModeType = commandValues[0][0];
+      this.sensitivity = commandValues[0][1];
+      this.intensity = commandValues[0][2];
+      this.colorMode = commandValues[0][3];
+      this.specifiedColor.red = commandValues[0][4];
+      this.specifiedColor.green = commandValues[0][5];
+      this.specifiedColor.blue = commandValues[0][6];
+      return super.parse(deviceState);
+    }
+
+    rgbicMusicChange(): number[] {
+      return getCommandCodes(
+        COMMAND_IDENTIFIER,
+        [
+          ...modeCommandIdentifiers,
+          this.rgbicMusicModeIdentifier,
+        ],
+        this.musicModeType || 0,
+        this.sensitivity || 0,
+        this.intensity,
+        this.colorMode,
+        this.specifiedColor.red,
+        this.specifiedColor.green,
+        this.specifiedColor.blue,
+      );
+    }
+  };
 }

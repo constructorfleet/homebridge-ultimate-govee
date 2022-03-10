@@ -17,8 +17,8 @@ describe('TimerState', () => {
 
   describe('constructor', () => {
     it('adds command identifier', () => {
-      expect(testState.deviceStatusCodes).toHaveLength(1);
-      expect(testState.deviceStatusCodes).toStrictEqual([[11]]);
+      expect(testState.deviceStatusCodes.size).toBe(1);
+      expect(Array.from(testState.deviceStatusCodes)).toStrictEqual([[11]]);
     });
   });
 

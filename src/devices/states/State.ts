@@ -1,7 +1,7 @@
 import {DeviceState} from '../../core/structures/devices/DeviceState';
 
 export class State {
-  deviceStatusCodes: number[][] = [];
+  deviceStatusCodes: Set<number[]> = new Set<number[]>();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public constructor(...args) {
@@ -13,6 +13,6 @@ export class State {
   }
 
   addDeviceStatusCodes(statusCodes: number[]) {
-    this.deviceStatusCodes.push(statusCodes);
+    this.deviceStatusCodes.add(statusCodes);
   }
 }

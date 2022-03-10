@@ -9,6 +9,8 @@ import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
 import {AccessoryService} from './services/AccessoryService';
 import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
+import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
+import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -61,6 +63,7 @@ export class AccessoryManager extends Emitter {
     this.api.updatePlatformAccessories([accessory]);
     await this.emitAsync(
       new DeviceSettingsReceived({
+        goodsType: device.goodsType,
         deviceId: device.deviceId,
         name: accessory.displayName,
         model: device.model,
@@ -106,7 +109,7 @@ export class AccessoryManager extends Emitter {
         [accessory],
       );
     }
-    this.platformConfigService.updateConfigurationWithDevices(device);
+    await this.platformConfigService.updateConfigurationWithDevices(device);
   }
 
   @OnEvent(
@@ -133,5 +136,19 @@ export class AccessoryManager extends Emitter {
     );
 
     this.api.updatePlatformAccessories([accessory]);
+  }
+
+  @OnEvent(
+    'EFFECT.DEVICE.Discovered',
+  )
+  async onDeviceEffectDiscovered(effects: DeviceLightEffect[]) {
+    await this.platformConfigService.updateConfigurationWithEffects(undefined, effects);
+  }
+
+  @OnEvent(
+    'EFFECT.DIY.Discovered',
+  )
+  async onDIYEffectDiscovered(effects: DIYLightEffect[]) {
+    await this.platformConfigService.updateConfigurationWithEffects(effects);
   }
 }

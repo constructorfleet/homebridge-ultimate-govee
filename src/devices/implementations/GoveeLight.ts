@@ -1,12 +1,9 @@
-import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
 import {OnOff} from '../states/OnOff';
 import {Active} from '../states/Active';
 import {Timer} from '../states/Timer';
 import {GoveeDevice} from '../GoveeDevice';
 import {ColorTemperature} from '../states/ColorTemperature';
 import {Brightness} from '../states/Brightness';
-import {Modes} from '../states/Modes';
-import {SceneMode} from '../states/modes/Scene';
 import {Connected} from '../states/Connected';
 
 
@@ -24,22 +21,16 @@ export class LightDevice extends Timer(
     ),
   ),
 ) {
-  constructor(
-    deviceConfig: DeviceConfig,
-  ) {
-    super(deviceConfig);
+  constructor(args) {
+    super(args);
   }
 }
 
 // @DeviceFactory.register()
 export class GoveeLight
-  extends Modes(
-    SceneMode,
-  )(LightDevice) {
+  extends LightDevice {
 
-  constructor(
-    deviceConfig: DeviceConfig,
-  ) {
-    super(deviceConfig);
+  constructor(args) {
+    super(args);
   }
 }

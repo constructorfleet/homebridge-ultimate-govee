@@ -196,7 +196,10 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
       return undefined;
     }
     if (!subType) {
-      return accessory.addService(this.serviceType);
+      return accessory.addService(
+        this.serviceType,
+        `${deviceOverride?.displayName ?? accessory.displayName}`,
+      );
     }
 
     return accessory.addService(

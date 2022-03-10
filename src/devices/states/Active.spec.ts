@@ -17,8 +17,8 @@ describe('ActiveState', () => {
 
   describe('constructor', () => {
     it('adds command identifier', () => {
-      expect(activeState.deviceStatusCodes).toHaveLength(1);
-      expect(activeState.deviceStatusCodes).toStrictEqual([[1]]);
+      expect(activeState.deviceStatusCodes.size).toBe(1);
+      expect(Array.from(activeState.deviceStatusCodes)).toStrictEqual([[1]]);
     });
   });
 

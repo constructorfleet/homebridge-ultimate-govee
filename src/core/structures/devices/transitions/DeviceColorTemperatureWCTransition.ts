@@ -2,8 +2,9 @@ import {DeviceTransition} from '../DeviceTransition';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
 import {ColorRGB} from '../../../../util/colorUtils';
 import {ModesState} from '../../../../devices/states/Modes';
-import {DeviceMode} from '../../../../devices/states/modes/DeviceMode';
-import {ColorSegmentsMode} from '../../../../devices/states/modes/ColorSegments';
+import {ColorSegmentsModeState} from '../../../../devices/states/modes/ColorSegments';
+import {ColorTemperatureState} from '../../../../devices/states/ColorTemperature';
+import {ColorModeState} from '../../../../devices/states/modes/Color';
 
 export class DeviceColorTemperatureWCTransition extends DeviceTransition<ModesState & GoveeDevice> {
 
@@ -16,19 +17,26 @@ export class DeviceColorTemperatureWCTransition extends DeviceTransition<ModesSt
   }
 
   protected updateState(device: ModesState & GoveeDevice): DeviceColorTemperatureWCTransition {
-    const colorSegmentMode = Array.from(
-      device.modes.values(),
-    ).find(
-      (deviceMode: DeviceMode) => deviceMode instanceof ColorSegmentsMode,
-    ) as ColorSegmentsMode;
-    if (!colorSegmentMode) {
+    const colorSegmentMode = device as unknown as ColorSegmentsModeState;
+    if (colorSegmentMode) {
+      colorSegmentMode.colorSegments.forEach(
+        (segment) => segment.color.update(this.color),
+      );
       return this;
     }
 
-    colorSegmentMode.colorSegments.forEach(
-      (segment) => segment.color.update(this.color),
-    );
+    const colorTemperatureState = device as unknown as ColorTemperatureState;
+    if (colorTemperatureState) {
+      colorTemperatureState.colorTemperature = this.color;
+      colorTemperatureState.temperatureKelvin = this.temperature;
+      return this;
+    }
 
+    const colorMode = device as unknown as ColorModeState;
+    if (colorMode) {
+      colorMode.color = this.color;
+      return this;
+    }
     return this;
   }
 }
