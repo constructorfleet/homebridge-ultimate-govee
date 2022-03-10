@@ -92,7 +92,6 @@ export class EffectService extends AccessoryService<number> {
       );
   }
 
-
   protected supports(device: GoveeDevice): boolean {
     if (!Reflect.has(device, 'activeMode') && !Reflect.has(device, 'activeSceneId')) {
       return false;
@@ -108,8 +107,8 @@ export class EffectService extends AccessoryService<number> {
     deviceOverride?: GoveeDeviceOverride,
     subType?: ServiceSubType<number>,
   ): boolean {
-    return (deviceOverride as GoveeLightOverride)?.enabledEffects?.some(
-      (effectId: number) => effectId === subType?.identifier,
+    return (deviceOverride as GoveeLightOverride).effects?.some(
+      (effect: DeviceLightEffect) => effect.id === subType?.identifier && effect.enabled,
     ) ?? false;
   }
 
@@ -129,9 +128,12 @@ export class EffectService extends AccessoryService<number> {
     }
 
     const subType = identifiedService.subType;
+    const enabledEffects = lightOverride.effects?.filter(
+      (effect: DeviceLightEffect) => effect.enabled,
+    ) ?? [];
     if (
-      (lightOverride.enabledEffects?.length ?? 0) === 0
-      && !lightOverride.enabledEffects?.includes(subType?.identifier ?? NaN)
+      enabledEffects.length === 0
+      || !enabledEffects?.some((effect) => effect.id === subType?.identifier)
     ) {
       accessory.removeService(identifiedService.service);
       return undefined;

@@ -33,12 +33,6 @@ export class GoveeLightOverride extends GoveeDeviceOverride {
     this._lightType = 'RGB';
   }
 
-  @Expose({name: 'enabledDIYEffects'})
-  enabledDIYEffects?: number[];
-
-  @Expose({name: 'enabledEffects'})
-  enabledEffects?: number[];
-
   @Expose({name: 'diyEffects'})
   diyEffects?: DIYLightEffect[];
 
