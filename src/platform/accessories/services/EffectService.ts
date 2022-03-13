@@ -139,11 +139,20 @@ export class EffectService extends AccessoryService<number> {
       return undefined;
     }
     const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
+    const configuredName = infoService?.getCharacteristic(this.CHARACTERISTICS.ConfiguredName);
+    if (configuredName) {
+      return identifiedService;
+    }
     const name = deviceOverride?.displayName ?? infoService?.displayName ?? device.name;
     if (subType?.nameSuffix) {
       identifiedService.service.displayName =
         `${name} ${subType.nameSuffix}`;
+    } else {
+      identifiedService.service.displayName = name;
     }
+    infoService
+      ?.addCharacteristic(this.CHARACTERISTICS.ConfiguredName)
+      .updateValue(identifiedService.service.displayName);
 
     return identifiedService;
   }
