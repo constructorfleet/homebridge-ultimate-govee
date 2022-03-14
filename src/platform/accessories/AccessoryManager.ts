@@ -50,11 +50,6 @@ export class AccessoryManager extends Emitter {
       return;
     }
 
-    const nameOverride = deviceConfig?.displayName;
-    if (nameOverride) {
-      accessory.displayName = nameOverride;
-    }
-
     this.accessories.set(
       accessory.UUID,
       accessory,

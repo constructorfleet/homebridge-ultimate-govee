@@ -34,8 +34,8 @@ export class InformationService extends AccessoryService<void> {
   ) {
     const deviceConfig = this.configService.getDeviceConfiguration(device.deviceId);
     service.updateCharacteristic(this.CHARACTERISTICS.Manufacturer, 'Govee')
-      .updateCharacteristic(this.CHARACTERISTICS.Name, deviceConfig?.displayName ?? device.name)
-      .updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, deviceConfig?.displayName ?? device.name)
+      .updateCharacteristic(this.CHARACTERISTICS.Name, device.name)
+      .updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, device.name)
       .updateCharacteristic(this.CHARACTERISTICS.Model, device.model)
       .updateCharacteristic(this.CHARACTERISTICS.SerialNumber, device.deviceId);
     if (device.hardwareVersion) {

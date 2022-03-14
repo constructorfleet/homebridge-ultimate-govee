@@ -563,12 +563,20 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
       accessory.removeService(identifiedService.service);
       return undefined;
     }
+    const configuredNameChar =
+      identifiedService.service.getCharacteristic(this.CHARACTERISTICS.ConfiguredName)
+      || identifiedService.service.addCharacteristic(this.CHARACTERISTICS.ConfiguredName);
+    if ((configuredNameChar.value ?? '') !== '') {
+      return identifiedService;
+    }
     const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
-    const name = deviceOverride?.displayName ?? infoService?.displayName ?? device.name;
+    const name = infoService?.displayName ?? device.name;
     if (subType?.nameSuffix) {
       identifiedService.service.displayName =
         `${name} ${subType.nameSuffix}`;
     }
+
+    configuredNameChar.updateValue(identifiedService.service.displayName);
 
     return identifiedService;
   }

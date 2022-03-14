@@ -11,7 +11,6 @@ export class GoveeDeviceOverride {
     this.ignore = false;
     this.deviceId = device?.deviceId;
     this.model = device?.model;
-    this.displayName = device?.name;
   }
 
   @Expose({name: 'deviceId'})
@@ -22,9 +21,6 @@ export class GoveeDeviceOverride {
 
   @Expose({name: 'ignore'})
   ignore?: boolean;
-
-  @Expose({name: 'displayName'})
-  displayName?: string;
 }
 
 export class GoveeLightOverride extends GoveeDeviceOverride {

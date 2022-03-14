@@ -93,20 +93,16 @@ export class EffectService extends AccessoryService<number> {
   }
 
   protected supports(device: GoveeDevice): boolean {
-    if (!Reflect.has(device, 'activeMode') && !Reflect.has(device, 'activeSceneId')) {
-      return false;
-    }
-    const sceneModeState = device as unknown as SceneModeState;
-    if (!sceneModeState) {
-      return false;
-    }
-    return true;
+    return !(!Reflect.has(device, 'activeMode') && !Reflect.has(device, 'activeSceneId'));
   }
 
   protected shouldAddService(
     deviceOverride?: GoveeDeviceOverride,
     subType?: ServiceSubType<number>,
   ): boolean {
+    if (!deviceOverride) {
+      return false;
+    }
     return (deviceOverride as GoveeLightOverride).effects?.some(
       (effect: DeviceLightEffect) => effect.id === subType?.identifier && effect.enabled,
     ) ?? false;
@@ -123,12 +119,12 @@ export class EffectService extends AccessoryService<number> {
         device.deviceId,
       );
 
-    if (!lightOverride || !identifiedService.service) {
+    if (!deviceOverride || !identifiedService.service) {
       return undefined;
     }
 
     const subType = identifiedService.subType;
-    const enabledEffects = lightOverride.effects?.filter(
+    const enabledEffects = (deviceOverride as GoveeLightOverride).effects.filter(
       (effect: DeviceLightEffect) => effect.enabled,
     ) ?? [];
     if (
@@ -138,21 +134,21 @@ export class EffectService extends AccessoryService<number> {
       accessory.removeService(identifiedService.service);
       return undefined;
     }
-    const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
-    const configuredName = infoService?.getCharacteristic(this.CHARACTERISTICS.ConfiguredName);
-    if (configuredName) {
+    const configuredNameChar =
+      identifiedService.service.getCharacteristic(this.CHARACTERISTICS.ConfiguredName)
+      || identifiedService.service.addCharacteristic(this.CHARACTERISTICS.ConfiguredName);
+    if ((configuredNameChar.value ?? '') !== '') {
       return identifiedService;
     }
-    const name = deviceOverride?.displayName ?? infoService?.displayName ?? device.name;
+    const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
+    const name = infoService?.displayName ?? device.name;
     if (subType?.nameSuffix) {
       identifiedService.service.displayName =
         `${name} ${subType.nameSuffix}`;
     } else {
       identifiedService.service.displayName = name;
     }
-    infoService
-      ?.addCharacteristic(this.CHARACTERISTICS.ConfiguredName)
-      .updateValue(identifiedService.service.displayName);
+    configuredNameChar.updateValue(identifiedService.service.displayName);
 
     return identifiedService;
   }
