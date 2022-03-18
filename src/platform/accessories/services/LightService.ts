@@ -545,12 +545,8 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     device: GoveeDevice,
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<number> | undefined {
-    const rgbicOverride =
-      this.configService.getDeviceConfiguration<GoveeRGBICLightOverride>(
-        device.deviceId,
-      );
 
-    if (!rgbicOverride) {
+    if (!deviceOverride) {
       return identifiedService;
     }
 
@@ -559,24 +555,10 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     }
 
     const subType = identifiedService.subType;
-    if (rgbicOverride.hideSegments && !subType?.primary) {
+    if ((deviceOverride as GoveeRGBICLightOverride).hideSegments && !subType?.primary) {
       accessory.removeService(identifiedService.service);
       return undefined;
     }
-    const configuredNameChar =
-      identifiedService.service.getCharacteristic(this.CHARACTERISTICS.ConfiguredName)
-      || identifiedService.service.addCharacteristic(this.CHARACTERISTICS.ConfiguredName);
-    if ((configuredNameChar.value ?? '') !== '') {
-      return identifiedService;
-    }
-    const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
-    const name = infoService?.displayName ?? device.name;
-    if (subType?.nameSuffix) {
-      identifiedService.service.displayName =
-        `${name} ${subType.nameSuffix}`;
-    }
-
-    configuredNameChar.updateValue(identifiedService.service.displayName);
 
     return identifiedService;
   }

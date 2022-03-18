@@ -45,11 +45,6 @@ export class BLEClient
     noble.on(
       'stateChange',
       async (state) => {
-        this.log.debug(
-          'BLEClient',
-          'StateChange',
-          state,
-        );
         if (state === BLEClient.STATE_POWERED_ON) {
           this.isOnline = true;
           this.emit(
@@ -70,10 +65,6 @@ export class BLEClient
       'scanStart',
       async () => {
         this.isScanning = true;
-        this.log.debug(
-          'BLEClient',
-          'ScanStart',
-        );
       },
     );
 
@@ -81,10 +72,6 @@ export class BLEClient
       'scanStop',
       async () => {
         this.isScanning = false;
-        this.log.debug(
-          'BLEClient',
-          'ScanStop',
-        );
       },
     );
 
@@ -196,31 +183,16 @@ export class BLEClient
   ) {
     await this.lock.acquire();
     await this.stopScanning();
-    this.log.debug(
-      'BLEClient',
-      'AcquireLock',
-      ...log,
-    );
   }
 
   async releaseLock(
     ...log: string[]
   ) {
     await this.startScanning();
-    this.log.debug(
-      'BLEClient',
-      'ReleaseLock',
-      ...log,
-    );
     this.lock.release();
   }
 
   onDataCallback = async (data: Buffer) => {
-    this.log.debug(
-      'BLEClient',
-      'OnDataCallback',
-      data,
-    );
     if (data.length > 0 && this.connectedDevice) {
       await this.emitAsync(
         new BLEPeripheralReceiveEvent(

@@ -51,6 +51,18 @@ export class EffectsManager extends Emitter {
   }
 
   @OnEvent(
+    'EFFECT.DEVICE.Configured',
+  )
+  async onDeviceEffectConfigured(effects: DeviceLightEffect[]) {
+    effects.forEach(
+      (lightEffect) => this.deviceEffects.set(
+        lightEffect.id,
+        (this.deviceEffects.get(lightEffect.id) || []).concat(lightEffect),
+      ),
+    );
+  }
+
+  @OnEvent(
     'EFFECT.DEVICE.Received',
   )
   async onDeviceEffectReceived(effects: CategoryScene[]) {

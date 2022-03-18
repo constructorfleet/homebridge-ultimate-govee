@@ -53,12 +53,6 @@ export class RestClient
     'REST.AUTHENTICATION.Authenticate',
   )
   async login(requestDevices = false): Promise<OAuthData | undefined> {
-    this.log.debug(
-      'RestClient',
-      'login',
-      'Request Devices?',
-      requestDevices,
-    );
     if (this.isTokenValid(this.persist.oauthData?.token)) {
       const oauthData = this.persist.oauthData!;
       this.persist.oauthData = oauthData;
@@ -132,7 +126,6 @@ export class RestClient
     };
 
     this.persist.oauthData = oauthData;
-    this.log.debug('RestClient', 'authenticate', oauthData);
     return oauthData;
   }
 
@@ -239,10 +232,6 @@ export class RestClient
     'REST.REQUEST.Devices',
   )
   async getDevices(): Promise<void> {
-    this.log.debug(
-      'RestClient',
-      'getDevices',
-    );
     try {
       const authData = await this.login(false);
       if (!authData) {

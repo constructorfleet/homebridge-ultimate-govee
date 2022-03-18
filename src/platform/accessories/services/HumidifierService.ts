@@ -22,14 +22,14 @@ export class HumidifierService extends AccessoryService<void> {
 
   constructor(
     eventEmitter: EventEmitter2,
-    confgService: PlatformConfigService,
+    configService: PlatformConfigService,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
     super(
       eventEmitter,
-      confgService,
+      configService,
       SERVICES,
       CHARACTERISTICS,
       log,

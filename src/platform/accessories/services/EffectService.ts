@@ -114,41 +114,27 @@ export class EffectService extends AccessoryService<number> {
     device: GoveeDevice,
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<number> | undefined {
-    const lightOverride =
-      this.configService.getDeviceConfiguration<GoveeLightOverride>(
-        device.deviceId,
-      );
-
     if (!deviceOverride || !identifiedService.service) {
       return undefined;
     }
 
     const subType = identifiedService.subType;
-    const enabledEffects = (deviceOverride as GoveeLightOverride).effects.filter(
+    const enabledEffects = (deviceOverride as GoveeLightOverride).effects?.filter(
       (effect: DeviceLightEffect) => effect.enabled,
     ) ?? [];
     if (
       enabledEffects.length === 0
       || !enabledEffects?.some((effect) => effect.id === subType?.identifier)
     ) {
+      this.log.debug(
+        'EffectService',
+        'Removing Effect',
+        subType?.identifier,
+        enabledEffects.length,
+      );
       accessory.removeService(identifiedService.service);
       return undefined;
     }
-    const configuredNameChar =
-      identifiedService.service.getCharacteristic(this.CHARACTERISTICS.ConfiguredName)
-      || identifiedService.service.addCharacteristic(this.CHARACTERISTICS.ConfiguredName);
-    if ((configuredNameChar.value ?? '') !== '') {
-      return identifiedService;
-    }
-    const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
-    const name = infoService?.displayName ?? device.name;
-    if (subType?.nameSuffix) {
-      identifiedService.service.displayName =
-        `${name} ${subType.nameSuffix}`;
-    } else {
-      identifiedService.service.displayName = name;
-    }
-    configuredNameChar.updateValue(identifiedService.service.displayName);
 
     return identifiedService;
   }

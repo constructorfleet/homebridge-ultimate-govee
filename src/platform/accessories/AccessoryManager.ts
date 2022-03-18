@@ -86,7 +86,7 @@ export class AccessoryManager extends Emitter {
     const accessory =
       this.accessories.get(deviceUUID)
       || new this.api.platformAccessory(
-        deviceConfig?.displayName ?? device.name,
+        device.name,
         deviceUUID,
       );
     accessory.context.config = deviceConfig;
