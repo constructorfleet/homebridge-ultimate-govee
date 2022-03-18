@@ -12,38 +12,19 @@ import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {LoggingService} from '../../../logging/LoggingService';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {DeviceSceneTransition} from '../../../core/structures/devices/transitions/DeviceModeTransition';
+import {GoveeRGBLight} from '../../../devices/implementations/GoveeRGBLight';
+import {GoveeLight} from '../../../devices/implementations/GoveeLight';
+import {GoveeRGBICLight} from '../../../devices/implementations/GoveeTVLight';
 
 
-@ServiceRegistry.register
+@ServiceRegistry.register(
+  GoveeRGBICLight,
+  GoveeLight,
+  GoveeRGBLight,
+)
 export class EffectService extends AccessoryService<number> {
-  private readonly effects: DeviceLightEffect[] =
-    Array.from(
-      this.configService.pluginConfiguration.devices?.lights?.reduce(
-        (effectMap: Map<number, DeviceLightEffect>, light: GoveeLightOverride) => {
-          light.effects?.reduce(
-            (effectMap: Map<number, DeviceLightEffect>, effect: DeviceLightEffect) => {
-              effectMap.set(effect.id, effect);
-              return effectMap;
-            },
-            effectMap,
-          );
-          return effectMap;
-        },
-        new Map<number, DeviceLightEffect>(),
-      ).values() ?? [],
-    );
-
   protected readonly serviceType = this.SERVICES.Switch;
-  protected readonly subTypes: ServiceSubType<number>[] =
-    this.effects.map(
-      (effect: DeviceLightEffect) => new ServiceSubType<number>(
-        effect.name,
-        effect.id,
-        effect.name,
-        undefined,
-        true,
-      ),
-    );
+  protected subTypes?: ServiceSubType<number>[];
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -61,25 +42,74 @@ export class EffectService extends AccessoryService<number> {
     );
   }
 
+  public override setup(
+    device: GoveeDevice,
+    deviceOverride: GoveeDeviceOverride,
+  ) {
+    const lightOverride = deviceOverride as GoveeLightOverride;
+    if (this.subTypes !== undefined) {
+      const newTypes = lightOverride.effects
+        ?.filter(
+          (effect) =>
+            this.subTypes?.find(
+              (subType) => subType.identifier === effect.id,
+            ),
+        )
+        ?.map(
+          (effect: DeviceLightEffect) =>
+            new ServiceSubType(
+              effect.name,
+              effect.id,
+              effect.name,
+              undefined,
+              true,
+            ),
+        ) || [];
+
+      this.subTypes.push(...newTypes);
+      return;
+    }
+    this.subTypes =
+      lightOverride.effects
+        ?.filter(
+          (effect) => effect.enabled,
+        )
+        ?.map(
+          (effect: DeviceLightEffect) =>
+            new ServiceSubType(
+              effect.name,
+              effect.id,
+              effect.name,
+              undefined,
+              true,
+            ),
+        );
+  }
+
   updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
     serviceIdentifier: number) {
+    console.log('EffectService', 'updateServiceCharacteristics');
     const serviceName =
       service.name
-      ?? `${device.name} ${this.subTypes.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
+      ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
     const sceneModeState: SceneModeState = device as unknown as SceneModeState;
+    console.log('EffectService', 'updateServiceCharacteristics', serviceName);
     if (!sceneModeState) {
+      console.log('EffectService', 'updateServiceCharacteristics', 'Not SceneMode');
       return;
     }
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
 
+    console.log('EffectService', 'updateServiceCharacteristics', sceneModeState);
     service.getCharacteristic(this.CHARACTERISTICS.Name)
       .updateValue(serviceName);
     service.getCharacteristic(this.CHARACTERISTICS.On)
       .updateValue(isModeActive && isSceneActive)
       .onSet(async (value: CharacteristicValue) => {
+        console.log('Effect Transition');
         await this.emitAsync(
           new DeviceCommandEvent(
             new DeviceSceneTransition(

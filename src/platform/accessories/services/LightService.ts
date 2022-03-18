@@ -1,6 +1,6 @@
 import {AccessoryService, IdentifiedService, ServiceSubType} from './AccessoryService';
 import {Inject} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES, SEGMENT_COUNT} from '../../../util/const';
+import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, PlatformAccessory, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {EventEmitter2} from '@nestjs/event-emitter';
@@ -191,7 +191,7 @@ abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> e
   ): DeviceTransition<LightType>;
 }
 
-@ServiceRegistry.register
+@ServiceRegistry.register(GoveeLight)
 export class WhiteLightService extends BaseLightService<LightDevice, void> {
 
   constructor(
@@ -237,7 +237,6 @@ export class WhiteLightService extends BaseLightService<LightDevice, void> {
     );
   }
 
-
   protected getBrightnessTransition(
     device: LightDevice,
     brightness: number,
@@ -272,7 +271,7 @@ export class WhiteLightService extends BaseLightService<LightDevice, void> {
   }
 }
 
-@ServiceRegistry.register
+@ServiceRegistry.register(GoveeRGBLight)
 export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
   constructor(
     eventEmitter: EventEmitter2,
@@ -361,31 +360,9 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
 }
 
 
-@ServiceRegistry.register
+@ServiceRegistry.register(GoveeRGBICLight)
 export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, number> {
-  protected readonly subTypes?: ServiceSubType<number>[] =
-    Array.of(
-      new ServiceSubType(
-        'All Segments',
-        -1,
-        'All Segments',
-        true,
-      ),
-    ).concat(
-      ...Array.from(
-        new Array(SEGMENT_COUNT),
-        (value, index: number) => {
-          const name = `Segment ${index + 1}`;
-          return new ServiceSubType(
-            name,
-            index,
-            name,
-            undefined,
-            true,
-          );
-        },
-      ),
-    );
+  protected subTypes?: ServiceSubType<number>[];
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -400,6 +377,39 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
       SERVICES,
       CHARACTERISTICS,
       log,
+    );
+  }
+
+  public override setup(
+    device: GoveeDevice,
+    deviceOverride: GoveeDeviceOverride,
+  ) {
+    if (this.subTypes !== undefined) {
+      return;
+    }
+    this.subTypes = Array.of(
+      new ServiceSubType(
+        'All Segments',
+        -1,
+        'All Segments',
+        true,
+      ),
+    ).concat(
+      ...Array.from(
+        new Array(
+          (device as unknown as ColorSegmentsModeState).colorSegmentCount,
+        ),
+        (value, index: number) => {
+          const name = `Segment ${index + 1}`;
+          return new ServiceSubType(
+            name,
+            index,
+            name,
+            undefined,
+            true,
+          );
+        },
+      ),
     );
   }
 

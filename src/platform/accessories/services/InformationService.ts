@@ -8,7 +8,7 @@ import {LoggingService} from '../../../logging/LoggingService';
 import {ServiceRegistry} from '../ServiceRegistry';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 
-@ServiceRegistry.register
+@ServiceRegistry.register(GoveeDevice)
 export class InformationService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AccessoryInformation;
 

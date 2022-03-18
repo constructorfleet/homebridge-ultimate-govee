@@ -16,7 +16,7 @@ import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeHumidifier} from '../../../devices/implementations/GoveeHumidifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 
-@ServiceRegistry.register
+@ServiceRegistry.register(GoveeHumidifier)
 export class HumidifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
 

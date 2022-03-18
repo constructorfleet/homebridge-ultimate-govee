@@ -11,6 +11,7 @@ import {AccessoryService} from './services/AccessoryService';
 import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
 import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
 import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
+import {ServiceCreator} from './ServiceRegistry';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -18,7 +19,7 @@ export class AccessoryManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
-    @Inject(AccessoryService) private readonly services: AccessoryService<unknown>[],
+    @Inject(AccessoryService) private readonly serviceCreator: ServiceCreator<unknown>,
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
@@ -54,7 +55,10 @@ export class AccessoryManager extends Emitter {
       accessory.UUID,
       accessory,
     );
-    this.services.forEach((service) => service.updateAccessory(accessory, device));
+    (await this.serviceCreator(device))
+      .forEach(
+        (service) => service.updateAccessory(accessory, device),
+      );
     this.api.updatePlatformAccessories([accessory]);
     await this.emitAsync(
       new DeviceSettingsReceived({
@@ -123,12 +127,10 @@ export class AccessoryManager extends Emitter {
 
     accessory.context.device = device;
 
-    this.services.forEach((service) =>
-      service.updateAccessory(
-        accessory,
-        device,
-      ),
-    );
+    (await this.serviceCreator(device))
+      .forEach(
+        (service) => service.updateAccessory(accessory, device),
+      );
 
     this.api.updatePlatformAccessories([accessory]);
   }

@@ -16,7 +16,7 @@ import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeAirPurifier} from '../../../devices/implementations/GoveeAirPurifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 
-@ServiceRegistry.register
+@ServiceRegistry.register(GoveeAirPurifier)
 export class PurifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
 

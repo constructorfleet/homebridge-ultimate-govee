@@ -24,7 +24,7 @@ export interface IdentifiedService<IdentifierType> {
 }
 
 export abstract class AccessoryService<IdentifierType> extends Emitter {
-  private static setServicePrimary(
+  private setServicePrimary(
     accessory: PlatformAccessory,
     service?: Service,
     primary?: boolean,
@@ -47,7 +47,7 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
   }
 
   protected abstract readonly serviceType: WithUUID<typeof Service>;
-  protected readonly subTypes?: ServiceSubType<IdentifierType>[] = undefined;
+  protected subTypes?: ServiceSubType<IdentifierType>[] = undefined;
 
   protected constructor(
     eventEmitter: EventEmitter2,
@@ -59,6 +59,13 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     super(eventEmitter);
   }
 
+  public setup(
+    device: GoveeDevice,
+    deviceOverride: GoveeDeviceOverride,
+  ) {
+    return;
+  }
+
   public updateAccessory(
     accessory: PlatformAccessory,
     device: GoveeDevice,
@@ -68,7 +75,12 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     }
     const deviceOverride =
       this.configService.getDeviceConfiguration(device.deviceId);
-
+    if (deviceOverride !== undefined) {
+      this.setup(
+        device,
+        deviceOverride,
+      );
+    }
     this.get(
       accessory,
       deviceOverride,
@@ -151,7 +163,7 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType>[] {
     return [{
-      service: AccessoryService.setServicePrimary(
+      service: this.setServicePrimary(
         accessory,
         accessory.getService(
           this.serviceType,
@@ -169,7 +181,7 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType> {
     return {
-      service: AccessoryService.setServicePrimary(
+      service: this.setServicePrimary(
         accessory,
         accessory.getServiceById(
           this.serviceType,
