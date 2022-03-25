@@ -1,7 +1,7 @@
 {
   "private": false,
   "displayName": "Govee Ultimate",
-  "name": "homebridge-ultimate-govee",
+  "name": "@constructorfleet/homebridge-ultimate-govee",
   "author": {
     "name": "Teagan Glenn",
     "email": "that@teagantotally.rocks"
