@@ -8,16 +8,17 @@ import {Lock} from 'async-await-mutex-lock';
 
 export declare type ServiceCreator<IdentifierType> = (state: GoveeDevice) => Promise<AccessoryService<IdentifierType>[]>;
 
-export class StateAccessory {
+export class StateAccessory<StateType extends typeof State> {
   constructor(
-    public state: typeof State,
+    public state: StateType,
     public ctor: Constructor<AccessoryService<unknown>>,
   ) {
   }
 }
 
 export class ServiceRegistry {
-  private static readonly services: StateAccessory[] = [];
+  // @ts-ignore
+  private static readonly services: StateAccessory<typeof State>[] = [];
 
   private static readonly deviceServices: Map<GoveeDevice, AccessoryService<unknown>[]> =
     new Map<GoveeDevice, AccessoryService<unknown>[]>();
@@ -36,17 +37,12 @@ export class ServiceRegistry {
           const ctors = this.services
             .filter(
               (state) => {
-                if (state.state.name === 'GoveeRGBICLight') {
-                  console.log(device, state.state);
-                }
                 return device instanceof state.state;
               },
             )
             .map((state) => {
-              console.log('Found', state.ctor);
               return state.ctor;
             });
-          console.log(device, ctors.map((x) => x.name));
           if (!ctors || ctors.length === 0) {
             return [];
           }
@@ -71,18 +67,6 @@ export class ServiceRegistry {
     return (ctor: T) => {
       for (let i = 0; i < states.length; i++) {
         const state = states[i];
-        const stateName = state.name;
-        console.log('registerService', states[i], ctor);
-        ServiceRegistry.services
-          .filter(
-            (stateAccessory: StateAccessory) => {
-              console.log('Name', stateAccessory.state.name, stateName);
-              return stateAccessory.state.name === stateName;
-            },
-          )
-          .forEach(
-            (stateAccessory: StateAccessory) => stateAccessory.state = state,
-          );
         ServiceRegistry.services.push(
           new StateAccessory(state, ctor),
         );
