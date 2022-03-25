@@ -1,4 +1,3 @@
-import {ServiceRegistry} from '../ServiceRegistry';
 import {AccessoryService, IdentifiedService, ServiceSubType} from './AccessoryService';
 import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
@@ -12,6 +11,7 @@ import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {LoggingService} from '../../../logging/LoggingService';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {DeviceSceneTransition} from '../../../core/structures/devices/transitions/DeviceModeTransition';
+import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeRGBICLight} from '../../../devices/implementations/GoveeTVLight';
 
 
