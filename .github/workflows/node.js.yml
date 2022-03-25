@@ -25,9 +25,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 10.24
-      - run: npm ci && npm link
+      - run: npm ci
       - run: npm run build --if-present
       - run: npm run lint
       # - run: npm run test
       - name: Jest coverage report
-        uses: ArtiomTr/jest-coverage-report-action@v2.0-rc.4
+        uses: ArtiomTr/jest-coverage-report-action@v1.3
