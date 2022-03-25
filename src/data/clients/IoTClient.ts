@@ -117,12 +117,6 @@ export class IoTClient
     this.awsIOTDevice.on(
       'message',
       async (topic: string, payload: string) => {
-        this.log.debug(
-          'IoTClient',
-          'onMessage',
-          topic,
-          JSON.parse(payload.toString()),
-        );
         await this.emitAsync(
           new IotReceive(
             topic,
@@ -196,12 +190,7 @@ export class IoTClient
       );
       return;
     }
-    this.log.debug(
-      'IoTClient',
-      'publishTo',
-      message.topic,
-      message.payload,
-    );
+
     await promisify(this.awsIOTDevice.publish)(
       message.topic,
       message.payload,

@@ -18,7 +18,7 @@ import {ServiceRegistry} from './accessories/ServiceRegistry';
 import {HumidifierService} from './accessories/services/HumidifierService';
 import {InformationService} from './accessories/services/InformationService';
 import {PurifierService} from './accessories/services/PurifierService';
-import {RGBLightService, WhiteLightService} from './accessories/services/LightService';
+import {RGBLightService, SegmentedLightService, WhiteLightService} from './accessories/services/LightService';
 import {EffectService} from './accessories/services/EffectService';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -28,6 +28,7 @@ const ACCESSORY_SERVICES = [
   PurifierService,
   WhiteLightService,
   RGBLightService,
+  SegmentedLightService,
   EffectService,
 ];
 

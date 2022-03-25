@@ -12,11 +12,11 @@ import {DeviceFanSpeedTransition} from '../../../core/structures/devices/transit
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
-import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeAirPurifier} from '../../../devices/implementations/GoveeAirPurifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
+import {ServiceRegistry} from '../ServiceRegistry';
 
-@ServiceRegistry.register
+@ServiceRegistry.register(GoveeAirPurifier)
 export class PurifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
 

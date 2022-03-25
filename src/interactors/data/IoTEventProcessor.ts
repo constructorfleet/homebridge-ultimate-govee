@@ -77,11 +77,6 @@ export class IoTEventProcessor extends Emitter {
       );
       return;
     }
-    this.log.debug(
-      'IoTEventProcessor',
-      'RequestDeviceState',
-      device.deviceId,
-    );
     await this.emitAsync(
       new IoTPublishToEvent(
         device.iotTopic,

@@ -122,24 +122,12 @@ export class DeviceManager extends Emitter {
   async pollDeviceStates(
     deviceId: string,
   ) {
-    this.log.debug(
-      'DeviceManager',
-      'pollDeviceStates',
-      deviceId,
-    );
     const device = this.devices.get(deviceId);
     if (device) {
       await this.emitAsync(
         new DeviceStateRequest(device),
       );
     }
-
-    this.log.debug(
-      'DeviceManager',
-      'pollDeviceStates',
-      'Setting Poll Timeout',
-      deviceId,
-    );
     setTimeout(
       () => this.emit(
         new DevicePollRequest(deviceId),

@@ -1,6 +1,6 @@
 import {AccessoryService, IdentifiedService, ServiceSubType} from './AccessoryService';
 import {Inject} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES, SEGMENT_COUNT} from '../../../util/const';
+import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, PlatformAccessory, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {EventEmitter2} from '@nestjs/event-emitter';
@@ -191,7 +191,7 @@ abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> e
   ): DeviceTransition<LightType>;
 }
 
-@ServiceRegistry.register
+// @ServiceRegistry.register(GoveeLight)
 export class WhiteLightService extends BaseLightService<LightDevice, void> {
 
   constructor(
@@ -212,7 +212,8 @@ export class WhiteLightService extends BaseLightService<LightDevice, void> {
 
   protected supports(device: GoveeDevice): boolean {
     return device instanceof GoveeLight
-      && !(device instanceof GoveeRGBLight);
+      && !(device instanceof GoveeRGBLight)
+      && !(device instanceof GoveeRGBICLight);
   }
 
   protected getBrightness(
@@ -236,7 +237,6 @@ export class WhiteLightService extends BaseLightService<LightDevice, void> {
       on,
     );
   }
-
 
   protected getBrightnessTransition(
     device: LightDevice,
@@ -272,7 +272,7 @@ export class WhiteLightService extends BaseLightService<LightDevice, void> {
   }
 }
 
-@ServiceRegistry.register
+// @ServiceRegistry.register(GoveeRGBLight)
 export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
   constructor(
     eventEmitter: EventEmitter2,
@@ -361,31 +361,9 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
 }
 
 
-@ServiceRegistry.register
+@ServiceRegistry.register(GoveeRGBICLight)
 export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, number> {
-  protected readonly subTypes?: ServiceSubType<number>[] =
-    Array.of(
-      new ServiceSubType(
-        'All Segments',
-        -1,
-        'All Segments',
-        true,
-      ),
-    ).concat(
-      ...Array.from(
-        new Array(SEGMENT_COUNT),
-        (value, index: number) => {
-          const name = `Segment ${index + 1}`;
-          return new ServiceSubType(
-            name,
-            index,
-            name,
-            undefined,
-            true,
-          );
-        },
-      ),
-    );
+  protected subTypes?: ServiceSubType<number>[];
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -400,6 +378,39 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
       SERVICES,
       CHARACTERISTICS,
       log,
+    );
+  }
+
+  public override setup(
+    device: GoveeDevice,
+    deviceOverride: GoveeDeviceOverride,
+  ) {
+    if (this.subTypes !== undefined) {
+      return;
+    }
+    this.subTypes = Array.of(
+      new ServiceSubType(
+        'All Segments',
+        -1,
+        'All Segments',
+        true,
+      ),
+    ).concat(
+      ...Array.from(
+        new Array(
+          (device as unknown as ColorSegmentsModeState).colorSegmentCount,
+        ),
+        (value, index: number) => {
+          const name = `Segment ${index + 1}`;
+          return new ServiceSubType(
+            name,
+            index,
+            name,
+            undefined,
+            true,
+          );
+        },
+      ),
     );
   }
 
@@ -514,6 +525,7 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     color: ColorRGB,
     identifier: number,
   ): DeviceTransition<GoveeRGBICLight> {
+    console.log('getSegmentColorTransition', identifier);
     if (identifier < 0) {
       return new DeviceColorWCTransition(
         device.deviceId,
@@ -545,12 +557,8 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     device: GoveeDevice,
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<number> | undefined {
-    const rgbicOverride =
-      this.configService.getDeviceConfiguration<GoveeRGBICLightOverride>(
-        device.deviceId,
-      );
 
-    if (!rgbicOverride) {
+    if (!deviceOverride) {
       return identifiedService;
     }
 
@@ -559,15 +567,9 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     }
 
     const subType = identifiedService.subType;
-    if (rgbicOverride.hideSegments && !subType?.primary) {
+    if ((deviceOverride as GoveeRGBICLightOverride).hideSegments && !subType?.primary) {
       accessory.removeService(identifiedService.service);
       return undefined;
-    }
-    const infoService = accessory.getService(this.SERVICES.AccessoryInformation);
-    const name = deviceOverride?.displayName ?? infoService?.displayName ?? device.name;
-    if (subType?.nameSuffix) {
-      identifiedService.service.displayName =
-        `${name} ${subType.nameSuffix}`;
     }
 
     return identifiedService;

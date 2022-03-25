@@ -9,8 +9,9 @@ import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
 import {AccessoryService} from './services/AccessoryService';
 import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
-import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
 import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
+import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
+import {ServiceCreator} from './ServiceRegistry';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -18,7 +19,7 @@ export class AccessoryManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
-    @Inject(AccessoryService) private readonly services: AccessoryService<unknown>[],
+    @Inject(AccessoryService) private readonly serviceCreator: ServiceCreator<unknown>,
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
@@ -50,16 +51,14 @@ export class AccessoryManager extends Emitter {
       return;
     }
 
-    const nameOverride = deviceConfig?.displayName;
-    if (nameOverride) {
-      accessory.displayName = nameOverride;
-    }
-
     this.accessories.set(
       accessory.UUID,
       accessory,
     );
-    this.services.forEach((service) => service.updateAccessory(accessory, device));
+    (await this.serviceCreator(device))
+      .forEach(
+        (service) => service.updateAccessory(accessory, device),
+      );
     this.api.updatePlatformAccessories([accessory]);
     await this.emitAsync(
       new DeviceSettingsReceived({
@@ -91,7 +90,7 @@ export class AccessoryManager extends Emitter {
     const accessory =
       this.accessories.get(deviceUUID)
       || new this.api.platformAccessory(
-        deviceConfig?.displayName ?? device.name,
+        device.name,
         deviceUUID,
       );
     accessory.context.config = deviceConfig;
@@ -128,12 +127,10 @@ export class AccessoryManager extends Emitter {
 
     accessory.context.device = device;
 
-    this.services.forEach((service) =>
-      service.updateAccessory(
-        accessory,
-        device,
-      ),
-    );
+    (await this.serviceCreator(device))
+      .forEach(
+        (service) => service.updateAccessory(accessory, device),
+      );
 
     this.api.updatePlatformAccessories([accessory]);
   }

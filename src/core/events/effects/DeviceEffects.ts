@@ -22,6 +22,16 @@ export abstract class DeviceEffectEvent<EventDataType>
   }
 }
 
+export class DeviceEffectsConfigured
+  extends DeviceEffectEvent<DeviceLightEffect[]> {
+
+  constructor(
+    eventData: DeviceLightEffect[],
+  ) {
+    super('Configured', eventData);
+  }
+}
+
 export class DeviceEffectReceived
   extends DeviceEffectEvent<CategoryScene[]> {
 

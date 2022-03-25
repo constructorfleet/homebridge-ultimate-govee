@@ -20,13 +20,13 @@ import {Lock} from 'async-await-mutex-lock';
 
 @Injectable()
 export class PlatformConfigService {
-  private readonly goveePluginConfig: GoveePluginConfig;
+  private goveePluginConfig: GoveePluginConfig = new GoveePluginConfig;
   private readonly writeLock: Lock<void> = new Lock<void>();
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
   ) {
-    this.goveePluginConfig = this.pluginConfiguration;
+    this.reloadConfig().then();
   }
 
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
@@ -54,20 +54,33 @@ export class PlatformConfigService {
   }
 
   get pluginConfiguration(): GoveePluginConfig {
-    const data = fs.readFileSync(this.configFilePath, {encoding: 'utf8'});
-    const config = JSON.parse(data);
-    if (!config.platforms) {
-      return new GoveePluginConfig();
-    }
+    return this.goveePluginConfig;
+  }
 
-    const platformConfig = config.platforms.find(
-      (platformConfig) =>
-        platformConfig.platform === PLATFORM_NAME,
-    );
-    if (!platformConfig) {
-      return new GoveePluginConfig();
+  private async reloadConfig() {
+    await this.writeLock.acquire();
+    try {
+      const data = fs.readFileSync(this.configFilePath, {encoding: 'utf8'});
+      const config = JSON.parse(data);
+      if (!config.platforms) {
+        return;
+      }
+
+      const platformConfig = config.platforms.find(
+        (platformConfig) =>
+          platformConfig.platform === PLATFORM_NAME,
+      );
+      if (!platformConfig) {
+        return;
+      }
+      this.goveePluginConfig = platformConfig;
+      setTimeout(
+        async () => await this.reloadConfig(),
+        30 * 1000,
+      );
+    } finally {
+      this.writeLock.release();
     }
-    return platformConfig;
   }
 
   getDeviceConfiguration<OverrideType extends GoveeDeviceOverride>(
@@ -240,7 +253,11 @@ export class PlatformConfigService {
         if (!effects || effects.length === 0) {
           return;
         }
-        override.effects = effects;
+        const knownEffects = override.effects?.map((effect) => `${effect.id}_${effect.name}`) || [];
+        if (!override.effects) {
+          override.effects = [];
+        }
+        override.effects?.push(...effects.filter((effect) => !knownEffects.includes(`${effect.id}_${effect.name}`)));
       },
     );
 
