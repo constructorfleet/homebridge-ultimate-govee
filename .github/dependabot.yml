@@ -1,0 +1,6 @@
+version: 2
+updates:
+  - package-ecosystem: 'https://npm.pkg.github.com'
+    directory: '/'
+    schedule:
+      interval: 'daily'
