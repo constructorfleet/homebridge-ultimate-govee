@@ -13,9 +13,8 @@ jobs:
       # Setup .npmrc file to publish to GitHub Packages
       - uses: actions/setup-node@v2
         with:
-          node-version: '10.24'
-          # Defaults to the user or organization that owns the workflow file
-          scope: '@octocat'
+          node-version: 10.24
+          registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
       - run: npm publish
