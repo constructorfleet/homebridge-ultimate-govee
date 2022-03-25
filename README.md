@@ -4,6 +4,7 @@
 <span align="center">
 
 # Homebridge-Ultimate-Govee
+[![Node.js CI](https://github.com/constructorfleet/homebridge-ultimate-govee/actions/workflows/node.js.yml/badge.svg)](https://github.com/constructorfleet/homebridge-ultimate-govee/actions/workflows/node.js.yml) [![CodeQL](https://github.com/constructorfleet/homebridge-ultimate-govee/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/constructorfleet/homebridge-ultimate-govee/actions/workflows/codeql-analysis.yml) [![Publish package to GitHub Packages](https://github.com/constructorfleet/homebridge-ultimate-govee/actions/workflows/publish.yml/badge.svg)](https://github.com/constructorfleet/homebridge-ultimate-govee/actions/workflows/publish.yml)
 
 A Homebridge plugin to provide comprehensive and intuitive control of Govee devices via Apple HomeKit.
 
