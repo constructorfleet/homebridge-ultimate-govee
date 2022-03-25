@@ -525,6 +525,7 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     color: ColorRGB,
     identifier: number,
   ): DeviceTransition<GoveeRGBICLight> {
+    console.log('getSegmentColorTransition', identifier);
     if (identifier < 0) {
       return new DeviceColorWCTransition(
         device.deviceId,

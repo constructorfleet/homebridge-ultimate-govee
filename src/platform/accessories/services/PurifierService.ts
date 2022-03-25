@@ -14,8 +14,9 @@ import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
 import {GoveeAirPurifier} from '../../../devices/implementations/GoveeAirPurifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
+import {ServiceRegistry} from '../ServiceRegistry';
 
-// @ServiceRegistry.register(GoveeAirPurifier)
+@ServiceRegistry.register(GoveeAirPurifier)
 export class PurifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
 
