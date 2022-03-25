@@ -12,11 +12,11 @@ import {LoggingService} from '../../../logging/LoggingService';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {DeviceSceneTransition} from '../../../core/structures/devices/transitions/DeviceModeTransition';
 import {ServiceRegistry} from '../ServiceRegistry';
-import {GoveeRGBICLight} from '../../../devices/implementations/GoveeTVLight';
+import {LightDevice} from '../../../devices/implementations/GoveeLight';
 
 
 @ServiceRegistry.register(
-  GoveeRGBICLight,
+  LightDevice,
 )
 export class EffectService extends AccessoryService<number> {
   protected readonly serviceType = this.SERVICES.Switch;
@@ -86,12 +86,10 @@ export class EffectService extends AccessoryService<number> {
     service: Service,
     device: GoveeDevice,
     serviceIdentifier: number) {
-    console.log('EffectService', 'updateServiceCharacteristics');
     const serviceName =
       service.name
       ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
     const sceneModeState: SceneModeState = device as unknown as SceneModeState;
-    console.log('EffectService', 'updateServiceCharacteristics', serviceName);
     if (!sceneModeState) {
       console.log('EffectService', 'updateServiceCharacteristics', 'Not SceneMode');
       return;
@@ -99,7 +97,6 @@ export class EffectService extends AccessoryService<number> {
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
 
-    console.log('EffectService', 'updateServiceCharacteristics', sceneModeState);
     service.getCharacteristic(this.CHARACTERISTICS.Name)
       .updateValue(serviceName);
     service.getCharacteristic(this.CHARACTERISTICS.On)

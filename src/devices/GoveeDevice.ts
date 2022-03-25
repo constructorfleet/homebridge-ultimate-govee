@@ -8,6 +8,7 @@ import {IoTPublishToEvent} from '../core/events/dataClients/iot/IoTPublish';
 import {BLEPeripheralCommandSend, BLEPeripheralSendEvent} from '../core/events/dataClients/ble/BLEPeripheral';
 import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
 import {getIoTCommandMessage} from '../core/structures/iot/IoTCommandMessage';
+import {DevicePollRequest} from '../core/events/devices/DeviceRequests';
 
 export class GoveeDevice extends State {
 
@@ -54,6 +55,7 @@ export class GoveeDevice extends State {
     const event = this.getIoTEvent(transition, accountTopic) || this.getBleEvent(transition);
     if (event) {
       emitter.emit(event);
+      emitter.emit(new DevicePollRequest(this.deviceId));
       return;
     }
   }
