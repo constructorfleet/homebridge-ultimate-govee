@@ -14,10 +14,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14.x'
-          registry-url: 'https://npm.pkg.github.com'
           # Defaults to the user or organization that owns the workflow file
           scope: '@octocat'
       - run: npm ci
+      - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN : ${{ secrets.NPM_TOKEN }}
