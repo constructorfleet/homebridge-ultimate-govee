@@ -1,7 +1,6 @@
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {Constructor} from '@nestjs/common/utils/merge-with-values.util';
 import {AccessoryService} from './services/AccessoryService';
-import {Injectable} from '@nestjs/common';
 import {ModuleRef} from '@nestjs/core';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {State} from '../../devices/states/State';
@@ -11,8 +10,8 @@ export declare type ServiceCreator<IdentifierType> = (state: GoveeDevice) => Pro
 
 export class StateAccessory {
   constructor(
-    public readonly state: typeof State,
-    public readonly ctor: Constructor<AccessoryService<unknown>>,
+    public state: typeof State,
+    public ctor: Constructor<AccessoryService<unknown>>,
   ) {
   }
 }
@@ -34,18 +33,20 @@ export class ServiceRegistry {
           if (deviceServices !== undefined) {
             return deviceServices;
           }
-          console.log(this.services);
           const ctors = this.services
             .filter(
               (state) => {
-                console.log(state, device);
+                if (state.state.name === 'GoveeRGBICLight') {
+                  console.log(device, state.state);
+                }
                 return device instanceof state.state;
               },
             )
             .map((state) => {
-              console.log(state);
+              console.log('Found', state.ctor);
               return state.ctor;
             });
+          console.log(device, ctors.map((x) => x.name));
           if (!ctors || ctors.length === 0) {
             return [];
           }
@@ -68,20 +69,26 @@ export class ServiceRegistry {
     ...states: (typeof State)[]
   ): (ctor: T) => void {
     return (ctor: T) => {
-      states.forEach(
-        async (state) => {
-          await this.serviceLock.acquire();
-          try {
-            ServiceRegistry.services.push(
-              new StateAccessory(state, ctor),
-            );
-          } finally {
-            this.serviceLock.release();
-          }
-        },
-      );
+      for (let i = 0; i < states.length; i++) {
+        const state = states[i];
+        const stateName = state.name;
+        console.log('registerService', states[i], ctor);
+        ServiceRegistry.services
+          .filter(
+            (stateAccessory: StateAccessory) => {
+              console.log('Name', stateAccessory.state.name, stateName);
+              return stateAccessory.state.name === stateName;
+            },
+          )
+          .forEach(
+            (stateAccessory: StateAccessory) => stateAccessory.state = state,
+          );
+        ServiceRegistry.services.push(
+          new StateAccessory(state, ctor),
+        );
+      }
 
-      return Injectable()(ctor);
+      return ctor;
     };
   }
 }

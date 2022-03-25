@@ -12,15 +12,11 @@ import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {LoggingService} from '../../../logging/LoggingService';
 import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
 import {DeviceSceneTransition} from '../../../core/structures/devices/transitions/DeviceModeTransition';
-import {GoveeRGBLight} from '../../../devices/implementations/GoveeRGBLight';
-import {GoveeLight} from '../../../devices/implementations/GoveeLight';
 import {GoveeRGBICLight} from '../../../devices/implementations/GoveeTVLight';
 
 
 @ServiceRegistry.register(
   GoveeRGBICLight,
-  GoveeLight,
-  GoveeRGBLight,
 )
 export class EffectService extends AccessoryService<number> {
   protected readonly serviceType = this.SERVICES.Switch;

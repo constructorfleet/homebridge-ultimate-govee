@@ -191,7 +191,7 @@ abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> e
   ): DeviceTransition<LightType>;
 }
 
-@ServiceRegistry.register(GoveeLight)
+// @ServiceRegistry.register(GoveeLight)
 export class WhiteLightService extends BaseLightService<LightDevice, void> {
 
   constructor(
@@ -212,7 +212,8 @@ export class WhiteLightService extends BaseLightService<LightDevice, void> {
 
   protected supports(device: GoveeDevice): boolean {
     return device instanceof GoveeLight
-      && !(device instanceof GoveeRGBLight);
+      && !(device instanceof GoveeRGBLight)
+      && !(device instanceof GoveeRGBICLight);
   }
 
   protected getBrightness(
@@ -271,7 +272,7 @@ export class WhiteLightService extends BaseLightService<LightDevice, void> {
   }
 }
 
-@ServiceRegistry.register(GoveeRGBLight)
+// @ServiceRegistry.register(GoveeRGBLight)
 export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
   constructor(
     eventEmitter: EventEmitter2,

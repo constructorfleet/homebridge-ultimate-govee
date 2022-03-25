@@ -12,11 +12,10 @@ import {DeviceMistLevelTransition} from '../../../core/structures/devices/transi
 import {StatusModeState} from '../../../devices/states/StatusMode';
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
-import {ServiceRegistry} from '../ServiceRegistry';
 import {GoveeHumidifier} from '../../../devices/implementations/GoveeHumidifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 
-@ServiceRegistry.register(GoveeHumidifier)
+// @ServiceRegistry.register(GoveeHumidifier)
 export class HumidifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
 
