@@ -9,8 +9,8 @@ import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
 import {AccessoryService} from './services/AccessoryService';
 import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
-import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
 import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
+import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
 import {ServiceCreator} from './ServiceRegistry';
 
 @Injectable()
