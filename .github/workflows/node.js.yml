@@ -25,7 +25,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 10.24
-      - run: npm ci
+      - run: npm ci && npm link
       - run: npm run build --if-present
       - run: npm run lint
       # - run: npm run test
