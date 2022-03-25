@@ -1,5 +1,7 @@
 import {State} from './State';
 import {DeviceState} from '../../core/structures/devices/DeviceState';
+import {getCommandCodes, getCommandValues} from '../../util/opCodeUtils';
+import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
 
 const commandIdentifiers = [
   10,
@@ -20,23 +22,24 @@ export function ControlLock<StateType extends State>(
 
     public constructor(...args) {
       super(...args);
+      this.addDeviceStatusCodes(commandIdentifiers);
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
-      const commandValues = this.getCommandValues(
-        [170, ...commandIdentifiers],
+      const commandValues = getCommandValues(
+        [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.areControlsLocked = commandValues[0] === 1;
+      if (commandValues?.length === 1) {
+        this.areControlsLocked = commandValues[0][0] === 1;
       }
 
       return super.parse(deviceState);
     }
 
     public get controlLockChange(): number[] {
-      return this.getCommandCodes(
-        0x33,
+      return getCommandCodes(
+        COMMAND_IDENTIFIER,
         commandIdentifiers,
         this.areControlsLocked ? 1 : 0,
       );

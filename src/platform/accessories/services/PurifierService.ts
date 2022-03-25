@@ -1,5 +1,5 @@
 import {AccessoryService} from './AccessoryService';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
@@ -12,19 +12,23 @@ import {DeviceFanSpeedTransition} from '../../../core/structures/devices/transit
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
 import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
+import {GoveeAirPurifier} from '../../../devices/implementations/GoveeAirPurifier';
+import {PlatformConfigService} from '../../config/PlatformConfigService';
 
-@Injectable()
-export class PurifierService extends AccessoryService {
-  protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
+// @ServiceRegistry.register(GoveeAirPurifier)
+export class PurifierService extends AccessoryService<void> {
+  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
 
   constructor(
     eventEmitter: EventEmitter2,
+    platformConfig: PlatformConfigService,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
     super(
       eventEmitter,
+      platformConfig,
       SERVICES,
       CHARACTERISTICS,
       log,
@@ -32,10 +36,10 @@ export class PurifierService extends AccessoryService {
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return Reflect.has(device, 'fanSpeed');
+    return device instanceof GoveeAirPurifier;
   }
 
-  protected initializeServiceCharacteristics(
+  protected updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
   ) {
@@ -118,40 +122,6 @@ export class PurifierService extends AccessoryService {
             ),
           ),
         ),
-      );
-  }
-
-  protected updateServiceCharacteristics(
-    service: Service,
-    device: GoveeDevice,
-  ) {
-    const fanSpeed = (device as unknown as FanSpeedState).fanSpeed ?? 0;
-    service
-      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
-      .updateValue(
-        (device as unknown as ControlLockState).areControlsLocked
-          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
-          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED);
-    service
-      .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
-      .updateValue(
-        fanSpeed === 16
-          ? 25
-          : ((fanSpeed + 1) * 25),
-      );
-    service
-      .getCharacteristic(this.CHARACTERISTICS.CurrentAirPurifierState)
-      .updateValue(
-        ((device as unknown as ActiveState)?.isActive ?? false)
-          ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
-          : this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE,
-      );
-    service
-      .getCharacteristic(this.CHARACTERISTICS.Active)
-      .updateValue(
-        ((device as unknown as ActiveState)?.isActive ?? false)
-          ? this.CHARACTERISTICS.Active.ACTIVE
-          : this.CHARACTERISTICS.Active.INACTIVE,
       );
   }
 }

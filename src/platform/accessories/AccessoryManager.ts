@@ -4,12 +4,14 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {API, PlatformAccessory} from 'homebridge';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {HOMEBRIDGE_API} from '../../util/const';
-import {InformationService} from './services/InformationService';
-import {HumidifierService} from './services/HumidifierService';
-import {PurifierService} from './services/PurifierService';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 import {LoggingService} from '../../logging/LoggingService';
 import {PlatformConfigService} from '../config/PlatformConfigService';
+import {AccessoryService} from './services/AccessoryService';
+import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
+import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
+import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
+import {ServiceCreator} from './ServiceRegistry';
 
 @Injectable()
 export class AccessoryManager extends Emitter {
@@ -17,9 +19,7 @@ export class AccessoryManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
-    private readonly informationService: InformationService,
-    private readonly humidifierService: HumidifierService,
-    private readonly purifierService: PurifierService,
+    @Inject(AccessoryService) private readonly serviceCreator: ServiceCreator<unknown>,
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
@@ -27,27 +27,65 @@ export class AccessoryManager extends Emitter {
     super(eventEmitter);
   }
 
-  onAccessoryLoaded(
+  async onAccessoryLoaded(
     accessory: PlatformAccessory,
   ) {
+    const device = accessory.context.device;
+    if (!device || !device.deviceId) {
+      this.api.unregisterPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
+      return;
+    }
+    const deviceConfig =
+      this.platformConfigService.getDeviceConfiguration(device.deviceId);
+
+    if (deviceConfig?.ignore) {
+      this.api.unregisterPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
+      return;
+    }
+
     this.accessories.set(
       accessory.UUID,
       accessory,
     );
-    const device = accessory.context.device;
-    this.informationService.initializeAccessory(accessory, device);
-    this.humidifierService.initializeAccessory(accessory, device);
-    this.purifierService.initializeAccessory(accessory, device);
+    (await this.serviceCreator(device))
+      .forEach(
+        (service) => service.updateAccessory(accessory, device),
+      );
     this.api.updatePlatformAccessories([accessory]);
+    await this.emitAsync(
+      new DeviceSettingsReceived({
+        goodsType: device.goodsType,
+        deviceId: device.deviceId,
+        name: accessory.displayName,
+        model: device.model,
+        pactCode: device.pactCode,
+        pactType: device.pactType,
+        hardwareVersion: device.hardwareVersion,
+        softwareVersion: device.softwareVersion,
+        bleAddress: device.bleAddress,
+        deviceTopic: device.iotTopic,
+        macAddress: device.macAddress,
+      }),
+    );
   }
 
   @OnEvent(
     'DEVICE.Discovered',
-    {
-      async: true,
-    },
   )
-  onDeviceDiscovered(device: GoveeDevice) {
+  async onDeviceDiscovered(device: GoveeDevice) {
+    const deviceConfig =
+      this.platformConfigService.getDeviceConfiguration(device.deviceId);
+    if (deviceConfig?.ignore) {
+      return;
+    }
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
     const accessory =
       this.accessories.get(deviceUUID)
@@ -55,47 +93,59 @@ export class AccessoryManager extends Emitter {
         device.name,
         deviceUUID,
       );
+    accessory.context.config = deviceConfig;
+
+    await this.onDeviceUpdated(device);
 
     if (!this.accessories.has(deviceUUID)) {
-      this.informationService.initializeAccessory(accessory, device);
-      this.humidifierService.initializeAccessory(accessory, device);
-      this.purifierService.initializeAccessory(accessory, device);
       this.accessories.set(
         deviceUUID,
         accessory,
       );
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-    } else {
-      this.informationService.updateAccessory(accessory, device);
-      this.humidifierService.updateAccessory(accessory, device);
-      this.purifierService.updateAccessory(accessory, device);
-      this.api.updatePlatformAccessories([accessory]);
+      this.api.registerPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
+      );
     }
-    this.platformConfigService.updateConfigurationWithDevices(device);
+    await this.platformConfigService.updateConfigurationWithDevices(device);
   }
 
   @OnEvent(
     'DEVICE.Updated',
-    {
-      async: true,
-    },
   )
-  onDeviceUpdated(device: GoveeDevice) {
+  async onDeviceUpdated(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
-    this.log.info('UPDATED', device.deviceId, deviceUUID);
     if (!this.accessories.has(deviceUUID)) {
       return;
     }
+
     const accessory = this.accessories.get(deviceUUID);
     if (!accessory) {
       return;
     }
-    this.log.info(device);
 
-    this.informationService.updateAccessory(accessory, device);
-    this.humidifierService.updateAccessory(accessory, device);
-    this.purifierService.updateAccessory(accessory, device);
+    accessory.context.device = device;
+
+    (await this.serviceCreator(device))
+      .forEach(
+        (service) => service.updateAccessory(accessory, device),
+      );
 
     this.api.updatePlatformAccessories([accessory]);
+  }
+
+  @OnEvent(
+    'EFFECT.DEVICE.Discovered',
+  )
+  async onDeviceEffectDiscovered(effects: DeviceLightEffect[]) {
+    await this.platformConfigService.updateConfigurationWithEffects(undefined, effects);
+  }
+
+  @OnEvent(
+    'EFFECT.DIY.Discovered',
+  )
+  async onDIYEffectDiscovered(effects: DIYLightEffect[]) {
+    await this.platformConfigService.updateConfigurationWithEffects(effects);
   }
 }

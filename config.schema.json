@@ -15,6 +15,27 @@
         "title": "Govee Account Password",
         "required": true
       },
+      "connections": {
+        "title": "Connection Settings",
+        "type": "object",
+        "properties": {
+          "iot": {
+            "title": "Enable AWS IoT",
+            "type": "boolean",
+            "default": true
+          },
+          "ble": {
+            "title": "Enable Bluetooth LE",
+            "type": "boolean",
+            "default": true
+          },
+          "api": {
+            "title": "Enable API",
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
       "devices": {
         "title": "Device Overrides",
         "description": "Optional settings for your Govee devices.",
@@ -78,6 +99,73 @@
                 }
               }
             }
+          },
+          "lights": {
+            "title": "Light Overrides",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "condition": {
+                "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && model.devices.lights[arrayIndices].deviceId && model.devices.lights[arrayIndices].model);"
+              },
+              "properties": {
+                "deviceId": {
+                  "title": "Govee Device ID",
+                  "type": "string",
+                  "readonly": true
+                },
+                "model": {
+                  "title": "Govee Device Model",
+                  "type": "string",
+                  "readonly": true
+                },
+                "ignore": {
+                  "title": "Ignore Device",
+                  "type": "boolean"
+                },
+                "displayName": {
+                  "title": "Display Name",
+                  "type": "string"
+                },
+                "_lightType": {
+                  "type": "string"
+                },
+                "hideSegments": {
+                  "title": "Hide Segment Controls",
+                  "type": "boolean",
+                  "default": true
+                },
+                "effects": {
+                  "title": "Device Scenes",
+                  "type": "array",
+                  "default": [],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "default": 0,
+                        "readonly": true
+                      },
+                      "name": {
+                        "type": "string",
+                        "default": "",
+                        "readonly": true
+                      },
+                      "description": {
+                        "type": "string",
+                        "default": "",
+                        "readonly": true
+                      },
+                      "enabled": {
+                        "type": "boolean",
+                        "default": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -90,6 +178,31 @@
       "items": [
         "username",
         "password"
+      ]
+    },
+    {
+      "type": "section",
+      "key": "connections",
+      "items": [
+        {
+          "type": "div",
+          "displayFlex": true,
+          "flex-direction": "row",
+          "items": [
+            {
+              "key": "connections.iot",
+              "flex": "1 1 33%"
+            },
+            {
+              "key": "connections.ble",
+              "flex": "1 1 33%"
+            },
+            {
+              "key": "connections.api",
+              "flex": "1 1 33%"
+            }
+          ]
+        }
       ]
     },
     {
@@ -119,11 +232,11 @@
                       "items": [
                         {
                           "key": "devices.airPurifiers[].deviceId",
-                          "flex": "4 4 80%"
+                          "flex": "4 4 50%"
                         },
                         {
                           "key": "devices.airPurifiers[].model",
-                          "flex": "1 1 20%"
+                          "flex": "1 1 50%"
                         }
                       ]
                     },
@@ -171,11 +284,11 @@
                       "items": [
                         {
                           "key": "devices.humidifiers[].deviceId",
-                          "flex": "4 4 80%"
+                          "flex": "4 4 50%"
                         },
                         {
                           "key": "devices.humidifiers[].model",
-                          "flex": "1 1 20%"
+                          "flex": "1 1 50%"
                         }
                       ]
                     },
@@ -191,6 +304,97 @@
                         {
                           "key": "devices.humidifiers[].displayName",
                           "flex": "4 4 80%"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Lights",
+          "expandable": true,
+          "expanded": true,
+          "items": [
+            {
+              "type": "array",
+              "key": "devices.lights",
+              "notitle": true,
+              "items": [
+                {
+                  "type": "div",
+                  "displayFlex": true,
+                  "flex-direction": "column",
+                  "items": [
+                    {
+                      "type": "div",
+                      "displayFlex": true,
+                      "flex-direction": "row",
+                      "items": [
+                        {
+                          "key": "devices.lights[].deviceId",
+                          "flex": "4 4 50%"
+                        },
+                        {
+                          "key": "devices.lights[].model",
+                          "flex": "1 1 50%"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "div",
+                      "displayFlex": "true",
+                      "flex-direction": "row",
+                      "items": [
+                        {
+                          "key": "devices.lights[].ignore",
+                          "flex": "1 1 20%"
+                        },
+                        {
+                          "key": "devices.lights[].displayName",
+                          "flex": "4 4 60%"
+                        },
+                        {
+                          "key": "devices.lights[].hideSegments",
+                          "flex": "1 1 20%",
+                          "condition": {
+                            "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && model.devices.lights[arrayIndices]._lightType === 'RGBIC');"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "title": "Effects",
+                      "expandable": true,
+                      "expanded": false,
+                      "items": [
+                        {
+                          "type": "array",
+                          "key": "devices.lights[].effects",
+                          "notitle": true,
+                          "items": [
+                            {
+                              "type": "div",
+                              "displayFlex": true,
+                              "flex-direction": "row",
+                              "items": [
+                                {
+                                  "key": "devices.lights[].effects[].enabled",
+                                  "notitle": true,
+                                  "flex": "4 4 10%"
+                                },
+                                {
+                                  "key": "devices.lights[].effects[].name",
+                                  "notitle": true,
+                                  "flex": "1 1 90%"
+                                }
+                              ]
+                            }
+                          ]
                         }
                       ]
                     }

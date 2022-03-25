@@ -1,21 +1,14 @@
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {Event} from '../core/events/Event';
 
-export type Constructor<TypeClass> = new (...args) => TypeClass;
-
-export type StandardEnum<T> = {
-  [id: string]: T | string;
-  [nu: number]: string;
-}
-
 export abstract class Emitter {
   protected constructor(
     private eventEmitter: EventEmitter2,
   ) {
   }
 
-  public getHandlers(eventName: string) {
-    return this.eventEmitter.listeners(eventName);
+  public get emitter(): EventEmitter2 {
+    return this.eventEmitter;
   }
 
   public emit<EventData, EventType extends Event<EventData>>(
@@ -26,4 +19,17 @@ export abstract class Emitter {
       event.eventData,
     );
   }
+
+  public async emitAsync<EventData, EventType extends Event<EventData>>(
+    event: EventType,
+  ) {
+    await this.eventEmitter.emitAsync(
+      event.eventName,
+      event.eventData,
+    );
+  }
+}
+
+export async function sleep(ms: number) {
+  await new Promise(resolve => setTimeout(resolve, ms));
 }

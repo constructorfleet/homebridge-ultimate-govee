@@ -7,33 +7,51 @@ import {IoTEventData} from '../../core/events/dataClients/iot/IoTEvent';
 import {plainToInstance} from 'class-transformer';
 import {DeviceStateReceived} from '../../core/events/devices/DeviceReceived';
 import {base64ToHex} from '../../util/encodingUtils';
-import {IoTPublishTo} from '../../core/events/dataClients/iot/IoTPublish';
+import {IoTPublishToEvent} from '../../core/events/dataClients/iot/IoTPublish';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {LoggingService} from '../../logging/LoggingService';
+import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
+import {PersistService} from '../../persist/PersistService';
+import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
 
 @Injectable()
-export class IoTPayloadProcessor extends Emitter {
+export class IoTEventProcessor extends Emitter {
+  private iotConnected = false;
+
   constructor(
     private readonly log: LoggingService,
+    private persist: PersistService,
     eventEmitter: EventEmitter2,
   ) {
     super(eventEmitter);
   }
 
   @OnEvent(
-    'IOT.Received',
-    {
-      async: true,
-    },
+    'IOT.CONNECTION',
   )
-  onIoTMessage(message: IoTEventData) {
+  async onIoTConnection(connection: ConnectionState) {
+    this.iotConnected = connection === ConnectionState.Connected;
+    const accountTopic = this.persist.oauthData?.accountIoTTopic;
+    if (connection !== ConnectionState.Connected || !accountTopic) {
+      return;
+    }
+    await this.emitAsync(
+      new IoTSubscribeToEvent(accountTopic),
+    );
+  }
+
+  @OnEvent(
+    'IOT.Received',
+  )
+  async onIoTMessage(message: IoTEventData) {
     try {
       const acctMessage = plainToInstance(
         IoTAccountMessage,
-        message.payload,
+        JSON.parse(message.payload),
       );
+
       const devState = toDeviceState(acctMessage);
-      this.emit(
+      await this.emitAsync(
         new DeviceStateReceived(devState),
       );
     } catch (err) {
@@ -44,23 +62,30 @@ export class IoTPayloadProcessor extends Emitter {
   @OnEvent(
     'DEVICE.REQUEST.State',
     {
-      async: true,
+      nextTick: true,
     },
   )
-  onRequestDeviceState(
+  async onRequestDeviceState(
     device: GoveeDevice,
   ) {
     if (!device.iotTopic) {
+      this.log.info(
+        'IoTEventProcessor',
+        'RequestDeviceState',
+        'No topic',
+        device.deviceId,
+      );
       return;
     }
-    this.emit(
-      new IoTPublishTo(
+    await this.emitAsync(
+      new IoTPublishToEvent(
         device.iotTopic,
         JSON.stringify({
           topic: device.iotTopic,
           msg: {
+            accountTopic: this.persist.oauthData?.accountIoTTopic,
             cmd: 'status',
-            cmdVersion: 2,
+            cmdVersion: 0,
             transaction: `u_${Date.now()}`,
             type: 0,
           },
@@ -76,6 +101,7 @@ export function toDeviceState(
   return {
     deviceId: message.deviceId,
     model: message.model,
+    command: message.command,
     on: message?.state?.onOff === undefined
       ? undefined
       : message?.state?.onOff === 1,

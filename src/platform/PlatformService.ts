@@ -3,9 +3,9 @@ import {HOMEBRIDGE_API} from '../util/const';
 import {API, PlatformAccessory} from 'homebridge';
 import {Emitter} from '../util/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
-import {RestAuthenticateEvent} from '../core/events/dataClients/rest/RestAuthentication';
 import {AccessoryManager} from './accessories/AccessoryManager';
 import {LoggingService} from '../logging/LoggingService';
+import {RestRequestDevices} from '../core/events/dataClients/rest/RestRequest';
 
 @Injectable()
 export class PlatformService extends Emitter {
@@ -23,9 +23,9 @@ export class PlatformService extends Emitter {
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  configureAccessory(accessory: PlatformAccessory) {
+  async configureAccessory(accessory: PlatformAccessory) {
     // add the restored accessory to the accessories cache so we can track if it has already been registered
-    this.accessoryManager.onAccessoryLoaded(accessory);
+    await this.accessoryManager.onAccessoryLoaded(accessory);
   }
 
   updateAccessory(accessory: PlatformAccessory) {
@@ -37,9 +37,9 @@ export class PlatformService extends Emitter {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices() {
-    this.emit(
-      new RestAuthenticateEvent(),
+  async discoverDevices() {
+    await this.emitAsync(
+      new RestRequestDevices(),
     );
   }
 }

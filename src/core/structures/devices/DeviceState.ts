@@ -1,15 +1,23 @@
 export interface DeviceStateColor {
-  red: number;
+  red?: number;
 
-  green: number;
+  green?: number;
 
-  blue: number;
+  blue?: number;
+
+  r?: number;
+
+  g?: number;
+
+  b?: number;
 }
 
 export interface DeviceState {
   deviceId: string;
 
-  model: string;
+  model?: string;
+
+  command?: string;
 
   on?: boolean;
 
@@ -22,6 +30,14 @@ export interface DeviceState {
   mode?: number;
 
   color?: DeviceStateColor;
+
+  modeValue?: number[];
+
+  sleepValue?: number[];
+
+  wakeupValue?: number[];
+
+  timerValue?: number[];
 
   commands?: number[][];
 }

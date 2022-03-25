@@ -2,6 +2,8 @@ import {State} from './State';
 import {DeviceState} from '../../core/structures/devices/DeviceState';
 import {MistLevelState} from './MistLevel';
 import {StatusModeState} from './StatusMode';
+import {getCommandValues} from '../../util/opCodeUtils';
+import {REPORT_IDENTIFIER} from '../../util/const';
 
 const commandIdentifiers = [
   5,
@@ -29,21 +31,22 @@ export function ProgrammableMistLevel<StateType extends State & MistLevelState &
 
     public constructor(...args) {
       super(...args);
+      this.addDeviceStatusCodes(commandIdentifiers);
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
       super.parse(deviceState);
-      const commandValues = this.getCommandValues(
-        [170, ...commandIdentifiers],
+      const commandValues = getCommandValues(
+        [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      if (commandValues) {
-        this.mistProgramId = Math.floor(commandValues[0] / 16);
+      if (commandValues?.length === 1) {
+        this.mistProgramId = Math.floor(commandValues[0][0] / 16);
         for (let i = 0; i < 3; i++) {
           const program: MistLevelProgram = {
-            mistLevel: commandValues[i * 5 + 1],
-            duration: commandValues[i * 5 + 2] * 255 + commandValues[i * 5 + 3],
-            remaining: commandValues[i * 5 + 4] * 255 + commandValues[i * 5 + 5],
+            mistLevel: commandValues[0][i * 5 + 1],
+            duration: commandValues[0][i * 5 + 2] * 255 + commandValues[0][i * 5 + 3],
+            remaining: commandValues[0][i * 5 + 4] * 255 + commandValues[0][i * 5 + 5],
           };
           this.mistPrograms.set(i, program);
         }
@@ -53,7 +56,7 @@ export function ProgrammableMistLevel<StateType extends State & MistLevelState &
         this.mistLevel = this.mistPrograms.get(this.mistProgramId)?.mistLevel;
       }
 
-      return this;
+      return super.parse(deviceState);
     }
   };
 }

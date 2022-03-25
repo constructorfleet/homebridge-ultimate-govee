@@ -20,8 +20,26 @@
               rr:
               gg:
               bb:
+    13: Music
+      03: Rhythm
+      04: Spectrum
+      05: Energetic
+      06: Rolling
+        XX: Sensitivity
+          00: ??
+            00: Auto Color
+            01: Specify Color
+              Red:
+                Green:
+                  Blue:
     04: Scene
       ID: Identifier
+  a5: Segments (repeated 15 times)
+    XX: Message Number
+      64:
+        Red:
+          Green:
+            Blue:
 
 a3: SEQUENCE/EFFECT
   00:

@@ -1,5 +1,5 @@
 import {AccessoryService} from './AccessoryService';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
 import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
@@ -12,20 +12,23 @@ import {DeviceMistLevelTransition} from '../../../core/structures/devices/transi
 import {StatusModeState} from '../../../devices/states/StatusMode';
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
-import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
+import {GoveeHumidifier} from '../../../devices/implementations/GoveeHumidifier';
+import {PlatformConfigService} from '../../config/PlatformConfigService';
 
-@Injectable()
-export class HumidifierService extends AccessoryService {
-  protected readonly ServiceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
+// @ServiceRegistry.register(GoveeHumidifier)
+export class HumidifierService extends AccessoryService<void> {
+  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
 
   constructor(
     eventEmitter: EventEmitter2,
+    configService: PlatformConfigService,
     @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
     @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
     log: LoggingService,
   ) {
     super(
       eventEmitter,
+      configService,
       SERVICES,
       CHARACTERISTICS,
       log,
@@ -33,10 +36,10 @@ export class HumidifierService extends AccessoryService {
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return Reflect.has(device, 'mistLevel');
+    return device instanceof GoveeHumidifier;
   }
 
-  protected initializeServiceCharacteristics(
+  protected updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
   ) {
@@ -52,23 +55,6 @@ export class HumidifierService extends AccessoryService {
         validValues: [100],
       })
       .updateValue(100);
-    service
-      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
-      .updateValue(
-        (device as unknown as ControlLockState).areControlsLocked
-          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
-          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED)
-      .onSet(
-        async (value: CharacteristicValue) =>
-          this.emit(
-            new DeviceCommandEvent(
-              new DeviceControlLockTransition(
-                device.deviceId,
-                value === this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED,
-              ),
-            ),
-          ),
-      );
 
     service
       .getCharacteristic(this.CHARACTERISTICS.WaterLevel)
@@ -94,18 +80,16 @@ export class HumidifierService extends AccessoryService {
         ],
       })
       .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive
-            && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
-            && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
+        (((device as unknown as ActiveState).isActive
+          && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
+          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
           ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
           : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
       );
     service
       .getCharacteristic(this.CHARACTERISTICS.Active)
       .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive ?? false)
+        (((device as unknown as ActiveState).isActive ?? false)
           && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
           ? this.CHARACTERISTICS.Active.ACTIVE
           : this.CHARACTERISTICS.Active.INACTIVE,
@@ -139,39 +123,5 @@ export class HumidifierService extends AccessoryService {
             ),
           ),
       );
-  }
-
-  protected updateServiceCharacteristics(
-    service: Service,
-    device: GoveeDevice,
-  ) {
-    this.log.info(device);
-    service.getCharacteristic(this.CHARACTERISTICS.WaterLevel)
-      .updateValue(
-        ((device as unknown as StatusModeState).statusMode === 4)
-          ? 0
-          : 100);
-    service
-      .getCharacteristic(this.CHARACTERISTICS.Active)
-      .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive ?? false)
-          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
-          ? this.CHARACTERISTICS.Active.ACTIVE
-          : this.CHARACTERISTICS.Active.INACTIVE,
-      );
-    service
-      .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
-      .updateValue(
-        (
-          ((device as unknown as ActiveState).isActive
-            && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
-            && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
-          ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
-          : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
-      );
-    service
-      .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityHumidifierThreshold)
-      .updateValue(((device as unknown as MistLevelState).mistLevel ?? 0) / 8 * 100);
   }
 }
