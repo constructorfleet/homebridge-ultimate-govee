@@ -17,7 +17,7 @@ jobs:
           # Defaults to the user or organization that owns the workflow file
           scope: '@octocat'
       - run: npm ci
-      - run: npm version --allow-same-version=true --git-tag-version=false from-git
+      - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
