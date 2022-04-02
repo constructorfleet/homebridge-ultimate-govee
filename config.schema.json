@@ -43,6 +43,8 @@
         "properties": {
           "airPurifiers": {
             "type": "array",
+            "removeable": false,
+            "addable": false,
             "items": {
               "type": "object",
               "condition": {
@@ -73,6 +75,8 @@
           "humidifiers": {
             "title": "Humidifier Overrides",
             "type": "array",
+            "removeable": false,
+            "addable": false,
             "items": {
               "type": "object",
               "condition": {
@@ -103,6 +107,8 @@
           "lights": {
             "title": "Light Overrides",
             "type": "array",
+            "removeable": false,
+            "addable": false,
             "items": {
               "type": "object",
               "condition": {
@@ -138,6 +144,8 @@
                 "effects": {
                   "title": "Device Scenes",
                   "type": "array",
+                  "removeable": false,
+                  "addable": false,
                   "default": [],
                   "items": {
                     "type": "object",
@@ -270,6 +278,8 @@
             {
               "type": "array",
               "key": "devices.humidifiers",
+              "removeable": false,
+              "addable": false,
               "notitle": true,
               "items": [
                 {
@@ -375,6 +385,7 @@
                         {
                           "type": "array",
                           "key": "devices.lights[].effects",
+                          "htmlClass": "pre-scrollable",
                           "notitle": true,
                           "items": [
                             {
