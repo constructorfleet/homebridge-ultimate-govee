@@ -82,6 +82,7 @@ export class GoveeDeviceOverrides {
           },
         ],
       },
+      keepDiscriminatorProperty: true,
     },
   )
   lights?: GoveeDeviceOverride[];
