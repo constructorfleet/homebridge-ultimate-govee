@@ -96,7 +96,7 @@ export class PlatformConfigService {
         this.goveePluginConfig.featureFlags || [] as string[];
 
       setTimeout(
-        async () => await this.reloadConfig(),
+        () => (async () => await this.reloadConfig())(),
         30 * 1000,
       );
     } finally {
