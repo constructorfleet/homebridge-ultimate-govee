@@ -47,7 +47,7 @@ export class EffectService extends AccessoryService<number> {
       const newTypes = lightOverride.effects
         ?.filter(
           (effect) =>
-            this.subTypes?.find(
+            !this.subTypes?.some(
               (subType) => subType.identifier === effect.id,
             ),
         )
