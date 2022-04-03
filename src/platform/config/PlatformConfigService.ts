@@ -72,7 +72,7 @@ export class PlatformConfigService {
   }
 
   public hasFeatureFlag(featureFlag: string): boolean {
-    return featureFlag in this.goveePluginConfig.featureFlags;
+    return this.goveePluginConfig.featureFlags.includes(featureFlag);
   }
 
   private async reloadConfig() {
@@ -236,13 +236,11 @@ export class PlatformConfigService {
 
   private configurationFile(updatedPluginConfig?: GoveePluginConfig): unknown {
     const data = fs.readFileSync(this.configFilePath, {encoding: 'utf8'});
-    let config = JSON.parse(data);
+    const config = JSON.parse(data);
     if (!config.platforms) {
-      config = {
-        platforms: [
-          new GoveePluginConfig(),
-        ],
-      };
+      config.platforms = [
+        new GoveePluginConfig(),
+      ];
     }
 
     const platforms: Record<string, never>[] = [];
