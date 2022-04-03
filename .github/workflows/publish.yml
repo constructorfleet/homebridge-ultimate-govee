@@ -19,4 +19,4 @@ jobs:
       - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
       - run: npm publish
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
