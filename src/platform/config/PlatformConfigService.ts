@@ -129,9 +129,10 @@ export class PlatformConfigService {
             this.goveePluginConfig.featureFlags.concat(...featureFlags),
           ),
         ];
+      const configFile = this.configurationFile(this.goveePluginConfig);
       fs.writeFileSync(
         this.configFilePath,
-        JSON.stringify(this.goveePluginConfig, null, 2),
+        JSON.stringify(configFile, null, 2),
         {encoding: 'utf8'},
       );
     } finally {
@@ -152,9 +153,12 @@ export class PlatformConfigService {
             ),
           ),
         ];
+      const configFile = this.configurationFile(
+        this.goveePluginConfig,
+      );
       fs.writeFileSync(
         this.configFilePath,
-        JSON.stringify(this.goveePluginConfig, null, 2),
+        JSON.stringify(configFile, null, 2),
         {encoding: 'utf8'},
       );
     } finally {
