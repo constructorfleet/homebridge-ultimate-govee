@@ -70,7 +70,7 @@ export class EffectsManager extends Emitter {
       effects
         .reduce(
           (scenes: DeviceLightEffect[], effect: CategoryScene) => {
-            scenes.concat(
+            scenes = scenes.concat(
               ...effect.lightEffects.map(
                 (lightEffect: SceneLightEffect) => {
                   const deviceLightEffect = new DeviceLightEffect(
