@@ -5,6 +5,13 @@
   "schema": {
     "type": "object",
     "properties": {
+      "featureFlags": {
+        "type": "array",
+        "default": [],
+        "items": {
+          "type": "string"
+        }
+      },
       "username": {
         "type": "string",
         "title": "Govee Account E-Email Address",
@@ -371,7 +378,7 @@
                           "key": "devices.lights[].hideSegments",
                           "flex": "1 1 20%",
                           "condition": {
-                            "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && model.devices.lights[arrayIndices]._lightType === 'RGBIC');"
+                            "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && (model.devices.lights[arrayIndices]._lightType === 'RGBIC' || model.devices.lights[arrayIndices].hideSegments !== undefined);"
                           }
                         }
                       ]
