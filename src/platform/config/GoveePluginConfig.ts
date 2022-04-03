@@ -119,6 +119,9 @@ export class GoveePluginConfig {
   @Type(() => GoveeDeviceOverrides)
   devices?: GoveeDeviceOverrides;
 
+  @Expose({name: 'featureFlags'})
+  featureFlags!: string[];
+
   @Exclude()
   isValid(): boolean {
     return this.username !== undefined || this.password !== undefined;

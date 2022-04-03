@@ -20,6 +20,8 @@ import {InformationService} from './accessories/services/InformationService';
 import {PurifierService} from './accessories/services/PurifierService';
 import {RGBLightService, SegmentedLightService, WhiteLightService} from './accessories/services/LightService';
 import {EffectService} from './accessories/services/EffectService';
+import {DeviceSubEffectsFeature} from './config/features/DeviceSubEffects';
+import {Features} from './config/Features';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ACCESSORY_SERVICES = [
@@ -30,6 +32,11 @@ const ACCESSORY_SERVICES = [
   RGBLightService,
   SegmentedLightService,
   EffectService,
+];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const FEATURE_FLAG_HANDLERS = [
+  DeviceSubEffectsFeature,
 ];
 
 export interface GoveeCredentials {
@@ -114,6 +121,7 @@ export class PlatformModule {
           useValue: config.configPath,
         },
         ServiceRegistry.getServices(),
+        Features.getHandlers(),
         AccessoryManager,
         PlatformService,
         PlatformConfigService,
