@@ -17,6 +17,9 @@ import {GoveeRGBICLight} from '../../devices/implementations/GoveeRGBICLight';
 import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
 import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
 import {Lock} from 'async-await-mutex-lock';
+import {BaseFeatureHandler} from './features/BaseFeatureHandler';
+import {LoggingService} from '../../logging/LoggingService';
+import {Features} from './Features';
 
 @Injectable()
 export class PlatformConfigService {
@@ -25,8 +28,19 @@ export class PlatformConfigService {
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
+    @Inject(Features) private readonly getFeatureHandlers: () => Promise<BaseFeatureHandler[]>,
+    private readonly log: LoggingService,
   ) {
-    this.reloadConfig().then();
+    this.reloadConfig()
+      .then(() => this.getFeatureHandlers())
+      .then(
+        (handlers) =>
+          Promise.all(
+            handlers.map(
+              (handler) => handler.process(),
+            ),
+          ),
+      ).then();
   }
 
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
@@ -57,6 +71,10 @@ export class PlatformConfigService {
     return this.goveePluginConfig;
   }
 
+  public hasFeatureFlag(featureFlag: string): boolean {
+    return featureFlag in this.goveePluginConfig.featureFlags;
+  }
+
   private async reloadConfig() {
     await this.writeLock.acquire();
     try {
@@ -74,6 +92,9 @@ export class PlatformConfigService {
         return;
       }
       this.goveePluginConfig = platformConfig;
+      this.goveePluginConfig.featureFlags =
+        this.goveePluginConfig.featureFlags || [] as string[];
+
       setTimeout(
         async () => await this.reloadConfig(),
         30 * 1000,
@@ -97,6 +118,50 @@ export class PlatformConfigService {
     ) as OverrideType;
   }
 
+  async addFeatureFlags(
+    ...featureFlags: string[]
+  ) {
+    await this.writeLock.acquire();
+    try {
+      this.goveePluginConfig.featureFlags =
+        [
+          ...new Set(
+            this.goveePluginConfig.featureFlags.concat(...featureFlags),
+          ),
+        ];
+      fs.writeFileSync(
+        this.configFilePath,
+        JSON.stringify(this.goveePluginConfig, null, 2),
+        {encoding: 'utf8'},
+      );
+    } finally {
+      this.writeLock.release();
+    }
+  }
+
+  async removeFeatureFlags(
+    ...featureFlags: string[]
+  ) {
+    await this.writeLock.acquire();
+    try {
+      this.goveePluginConfig.featureFlags =
+        [
+          ...new Set(
+            this.goveePluginConfig.featureFlags.filter(
+              (flag: string) => !featureFlags.includes(flag),
+            ),
+          ),
+        ];
+      fs.writeFileSync(
+        this.configFilePath,
+        JSON.stringify(this.goveePluginConfig, null, 2),
+        {encoding: 'utf8'},
+      );
+    } finally {
+      this.writeLock.release();
+    }
+  }
+
   async updateConfigurationWithEffects(
     diyEffects?: DIYLightEffect[],
     deviceEffects?: DeviceLightEffect[],
@@ -106,6 +171,32 @@ export class PlatformConfigService {
       const configFile = this.configurationFile(
         this.buildGoveePluginConfigurationFromEffects(
           this.goveePluginConfig,
+          false,
+          diyEffects,
+          deviceEffects,
+        ),
+      );
+
+      fs.writeFileSync(
+        this.configFilePath,
+        JSON.stringify(configFile, null, 2),
+        {encoding: 'utf8'},
+      );
+    } finally {
+      this.writeLock.release();
+    }
+  }
+
+  async setConfigurationEffects(
+    diyEffects?: DIYLightEffect[],
+    deviceEffects?: DeviceLightEffect[],
+  ) {
+    await this.writeLock.acquire();
+    try {
+      const configFile = this.configurationFile(
+        this.buildGoveePluginConfigurationFromEffects(
+          this.goveePluginConfig,
+          true,
           diyEffects,
           deviceEffects,
         ),
@@ -181,18 +272,20 @@ export class PlatformConfigService {
 
   private buildGoveePluginConfigurationFromEffects(
     config: GoveePluginConfig,
+    overwrite: boolean,
     diyEffects?: DIYLightEffect[],
     deviceEffects?: DeviceLightEffect[],
   ): GoveePluginConfig {
-    if (diyEffects) {
+    if (diyEffects !== null && diyEffects !== undefined) {
       config.devices = this.buildGoveeDIYEffectOverrides(
         config,
         ...diyEffects,
       );
     }
-    if (deviceEffects) {
+    if (deviceEffects !== null && deviceEffects !== undefined) {
       config.devices = this.buildGoveeDeviceEffectOverrides(
         config,
+        overwrite,
         ...deviceEffects,
       );
     }
@@ -240,6 +333,7 @@ export class PlatformConfigService {
 
   private buildGoveeDeviceEffectOverrides(
     config: GoveePluginConfig,
+    overwrite: boolean,
     ...deviceEffects: DeviceLightEffect[]
   ): GoveeDeviceOverrides {
     const lightOverrides: GoveeLightOverride[] =
@@ -247,6 +341,10 @@ export class PlatformConfigService {
 
     lightOverrides.forEach(
       (override: GoveeLightOverride) => {
+        if (overwrite) {
+          override.effects = deviceEffects;
+          return;
+        }
         const effects = deviceEffects.filter(
           (effect: DeviceLightEffect) => effect.deviceId === override.deviceId,
         );

@@ -3,6 +3,7 @@ import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
 import {modeCommandIdentifiers, ModesState} from '../Modes';
 import {State} from '../State';
+import {hexStringToArray} from '../../../util/encodingUtils';
 
 export interface SceneModeConstructorArgs {
   sceneModeIdentifier?: number;
@@ -45,23 +46,34 @@ export function SceneMode<StateType extends State>(
         deviceState.commands,
       );
 
-      if (commandValues?.length === 1) {
-        const values = commandValues[0];
+      if (commandValues && [1, 2].includes(commandValues.length || 0)) {
+        const values = commandValues![0];
+        const hex = Buffer.from(
+          [values[1] || 0, values[0]],
+        ).toString('hex');
         this.activeMode = this.sceneModeIdentifier;
-        this.activeSceneId = values[0];
+
+        this.activeSceneId = parseInt(`0x${hex}`);
       }
 
       return super.parse(deviceState);
     }
 
     public sceneIdChange(): number[] {
+      const sceneIdHex =
+        hexStringToArray(
+          (this.activeSceneId || 0)
+            .toString(16)
+            .padStart(4, '0')
+            .replace(/(.{2})/g, '$1 '),
+        ).reverse();
       return getCommandCodes(
         COMMAND_IDENTIFIER,
         [
           ...modeCommandIdentifiers,
           this.sceneModeIdentifier,
         ],
-        this.activeSceneId ?? 0,
+        ...sceneIdHex,
       );
     }
   };

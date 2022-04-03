@@ -1,6 +1,17 @@
 import {Expose, Type} from 'class-transformer';
 import {BaseResponse} from './BaseResponse';
 
+export class SceneLightEffect {
+  @Expose({name: 'scenceParamId'})
+  public scenceParamId!: number;
+
+  @Expose({name: 'scenceName'})
+  public scenceName!: string;
+
+  @Expose({name: 'sceneCode'})
+  public sceneCode!: number;
+}
+
 export class CategoryScene {
   public deviceId!: string;
 
@@ -18,6 +29,10 @@ export class CategoryScene {
 
   @Expose({name: 'iconUrls'})
   public iconUrls!: string[];
+
+  @Expose({name: 'lightEffects'})
+  @Type(() => SceneLightEffect)
+  public lightEffects!: SceneLightEffect[];
 }
 
 export class DeviceSceneCategory {
