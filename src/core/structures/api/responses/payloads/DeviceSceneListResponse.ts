@@ -8,8 +8,8 @@ export class SceneLightEffect {
   @Expose({name: 'scenceName'})
   public scenceName!: string;
 
-  @Expose({name: 'scenceCode'})
-  public scenceCode!: number;
+  @Expose({name: 'sceneCode'})
+  public sceneCode!: number;
 }
 
 export class CategoryScene {
