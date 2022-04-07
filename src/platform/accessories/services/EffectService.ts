@@ -158,9 +158,12 @@ export class EffectService extends AccessoryService<number> {
       );
       accessory.removeService(identifiedService.service);
       if (subType) {
-        const subTypeIndex = this.subTypes?.indexOf(subType) || -1;
-        if (subTypeIndex > -1) {
-          this.subTypes?.splice(subTypeIndex, 1);
+        const subTypeItem = this.subTypes?.find((st) => st.identifier === subType.identifier);
+        if (subTypeItem) {
+          const subTypeIndex = this.subTypes?.indexOf(subTypeItem) || -1;
+          if (subTypeIndex > -1) {
+            this.subTypes?.splice(subTypeIndex, 1);
+          }
         }
       }
 
