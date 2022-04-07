@@ -152,6 +152,7 @@ export class EffectService extends AccessoryService<number> {
       this.log.debug(
         'EffectService',
         'Removing Effect',
+        device.deviceId,
         subType?.identifier,
         enabledEffects.length,
       );
