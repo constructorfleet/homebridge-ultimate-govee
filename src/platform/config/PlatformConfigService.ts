@@ -97,7 +97,7 @@ export class PlatformConfigService {
 
       setTimeout(
         async () => await this.reloadConfig(),
-        30 * 1000,
+        10 * 1000,
       );
     } finally {
       this.writeLock.release();
