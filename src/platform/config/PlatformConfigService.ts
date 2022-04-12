@@ -347,17 +347,34 @@ export class PlatformConfigService {
           override.effects = deviceEffects;
           return;
         }
-        const effects = deviceEffects.filter(
-          (effect: DeviceLightEffect) => effect.deviceId === override.deviceId,
-        );
+        const effects = deviceEffects
+          .filter(
+            (effect: DeviceLightEffect) => effect.deviceId === override.deviceId,
+          )
+          .map(
+            (effect: DeviceLightEffect) => {
+              if (override.effects !== undefined) {
+                const existing = override.effects.find(
+                  (x) => x.name === effect.name,
+                );
+                if (existing) {
+                  const existingIndex = override.effects.indexOf(existing);
+                  effect.enabled = existing.enabled;
+                  override.effects?.splice(existingIndex, 1);
+                }
+              }
+              return effect;
+            },
+          );
         if (!effects || effects.length === 0) {
           return;
         }
-        const knownEffects = override.effects?.map((effect) => `${effect.id}_${effect.name}`) || [];
         if (!override.effects) {
           override.effects = [];
         }
-        override.effects?.push(...effects.filter((effect) => !knownEffects.includes(`${effect.id}_${effect.name}`)));
+        override.effects?.push(
+          ...effects,
+        );
       },
     );
 
