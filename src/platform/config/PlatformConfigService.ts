@@ -17,9 +17,7 @@ import {GoveeRGBICLight} from '../../devices/implementations/GoveeRGBICLight';
 import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
 import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
 import {Lock} from 'async-await-mutex-lock';
-import {BaseFeatureHandler} from './features/BaseFeatureHandler';
 import {LoggingService} from '../../logging/LoggingService';
-import {Features} from './Features';
 
 @Injectable()
 export class PlatformConfigService {
@@ -28,19 +26,8 @@ export class PlatformConfigService {
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
-    @Inject(Features) private readonly getFeatureHandlers: () => Promise<BaseFeatureHandler[]>,
     private readonly log: LoggingService,
   ) {
-    this.reloadConfig()
-      .then(() => this.getFeatureHandlers())
-      .then(
-        (handlers) =>
-          Promise.all(
-            handlers.map(
-              (handler) => handler.process(),
-            ),
-          ),
-      ).then();
   }
 
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
