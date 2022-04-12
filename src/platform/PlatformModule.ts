@@ -22,6 +22,7 @@ import {RGBLightService, SegmentedLightService, WhiteLightService} from './acces
 import {EffectService} from './accessories/services/EffectService';
 import {DeviceSubEffectsFeature} from './config/features/DeviceSubEffects';
 import {Features} from './config/Features';
+import {DisableDIYEffectsFeature} from './config/features/DisableDIYEffectsFeature';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ACCESSORY_SERVICES = [
@@ -37,6 +38,7 @@ const ACCESSORY_SERVICES = [
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FEATURE_FLAG_HANDLERS = [
   DeviceSubEffectsFeature,
+  DisableDIYEffectsFeature,
 ];
 
 export interface GoveeCredentials {
