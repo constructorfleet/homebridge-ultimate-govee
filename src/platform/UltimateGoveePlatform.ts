@@ -59,6 +59,7 @@ implements DynamicPlatformPlugin {
     ).then(async (context) => {
       this.appContext = context;
       this.service = context.get(PlatformService);
+      await this.service.handleFeatureFlags();
       while (this.cachedAccessories.length) {
         const acc = this.cachedAccessories.pop();
         if (acc) {
