@@ -8,7 +8,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
 import {RestAuthenticatedEvent, RestAuthenticationFailureEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
-import {RestRequestDevices, RestRequestDIYEffects} from '../../core/events/dataClients/rest/RestRequest';
+import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
 import {ConfigurationService} from '../../config/ConfigurationService';
 import {PersistService} from '../../persist/PersistService';
 import {LoggingService} from '../../logging/LoggingService';
@@ -197,11 +197,10 @@ export class RestClient
         ),
       );
     } catch (error) {
-      this.log.error('RestClient', 'getDIYGroups', error);
+      this.log.error('RestClient', 'getDeviceScenes', error);
     }
   }
 
-  ///appsku/v1/light-effect-libraries
   @OnEvent(
     'REST.REQUEST.DIYEffects',
   )
@@ -248,9 +247,6 @@ export class RestClient
       ).post();
       await this.emitAsync(
         new RestResponseDeviceList(res.data),
-      );
-      await this.emitAsync(
-        new RestRequestDIYEffects(),
       );
       setTimeout(
         () => this.emit(
