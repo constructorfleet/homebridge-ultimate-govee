@@ -6,7 +6,7 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 import {RestRequestDIYEffects} from '../../../core/events/dataClients/rest/RestRequest';
 
 @Features.add
-export class DisableDIYEffects extends BaseFeatureHandler {
+export class DisableDIYEffectsFeature extends BaseFeatureHandler {
   public constructor(
     configService: PlatformConfigService,
     private readonly eventEmitter: EventEmitter2,
