@@ -49,6 +49,7 @@
     "deep-diff-pizza": "^1.0.1",
     "es6-shim": "^0.35.6",
     "is-base64": "^1.1.0",
+    "jmespath": "^0.16.0",
     "js-yaml": "^4.1.0",
     "jwt-decode": "^3.1.2",
     "pure-color": "^1.3.0",
