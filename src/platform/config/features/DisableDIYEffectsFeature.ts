@@ -3,7 +3,6 @@ import {PlatformConfigService} from '../PlatformConfigService';
 import {Features} from '../Features';
 import {LoggingService} from '../../../logging/LoggingService';
 import {EventEmitter2} from '@nestjs/event-emitter';
-import {RestRequestDIYEffects} from '../../../core/events/dataClients/rest/RestRequest';
 
 @Features.add
 export class DisableDIYEffectsFeature extends BaseFeatureHandler {
@@ -22,9 +21,21 @@ export class DisableDIYEffectsFeature extends BaseFeatureHandler {
 
   async onFeatureActivated(): Promise<void> {
     this.log.info('Activating Feature', this.featureFlag);
-    this.eventEmitter.removeAllListeners(
-      new RestRequestDIYEffects().eventName,
+
+    const removeAllDIYListeners = () => {
+      this.log.debug('Removing listeners for DIY Effects');
+      this.eventEmitter.removeAllListeners(
+        'REST.REQUEST.DIYEffects',
+      ).removeAllListeners(
+        'REST.RESPONSE.DIYEffects',
+      );
+    };
+
+    this.eventEmitter.prependListener(
+      'DEVICE.RECEIVED.Settings',
+      removeAllDIYListeners,
     );
+
     await this.configService.setConfigurationEffects(
       [],
     );
