@@ -38,7 +38,5 @@ export class ConfigurationChangeHandler extends Emitter {
     );
 
     this.log.info(specificChanges);
-
-
   }
 }
