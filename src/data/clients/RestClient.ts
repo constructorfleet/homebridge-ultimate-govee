@@ -173,6 +173,10 @@ export class RestClient
     'REST.REQUEST.DeviceScenes',
   )
   async getDeviceScenes(device: GoveeDevice) {
+    this.log.info(
+      'RestClient',
+      'Getting device scenes',
+    );
     try {
       const authData = await this.login(false);
       if (!authData) {
@@ -205,6 +209,10 @@ export class RestClient
     'REST.REQUEST.DIYEffects',
   )
   async getDIYGroups() {
+    this.log.info(
+      'RestClient',
+      'Getting DIY effects',
+    );
     try {
       const authData = await this.login(false);
       if (!authData) {
@@ -231,6 +239,10 @@ export class RestClient
     'REST.REQUEST.Devices',
   )
   async getDevices(): Promise<void> {
+    this.log.info(
+      'RestClient',
+      'Getting list of devices',
+    );
     try {
       const authData = await this.login(false);
       if (!authData) {
@@ -277,7 +289,8 @@ export class RestClient
         return false;
       }
       const expirationDateUTC = new Date(1970, 1, 1).setSeconds(jwt.exp);
-      const nowUTC = new Date().getUTCSeconds();
+      const nowUTC = new Date().getTime();
+      this.log.debug('RestClient', 'isTokenValid', expirationDateUTC, nowUTC);
       return nowUTC < expirationDateUTC;
     } catch (error) {
       this.log.error(
