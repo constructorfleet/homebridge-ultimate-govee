@@ -26,7 +26,7 @@ jobs:
       - name: Bump version and push tag
         uses: anothrNick/github-tag-action@1.36.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH }}
           WITH_V: true
           DEFAULT_BUMP: minor
       - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
