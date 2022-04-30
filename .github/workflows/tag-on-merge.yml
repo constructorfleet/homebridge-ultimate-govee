@@ -29,3 +29,25 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           DEFAULT_BUMP: minor
+      - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
+      - name: Commit Package Version
+        id: commit
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          if [ -n "$(git status --porcelain package.json)" ]; then
+            git add package.json
+            git add package-lock.json
+            git commit -m "[ci skip] chore(package.json): update package json"
+            echo ::set-output name=exit_code::0
+          else
+            echo ::set-output name=exit_code::1
+          fi
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        if: steps.commit.outputs.exit_code == 0
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          force: true
+          branch: main
+
