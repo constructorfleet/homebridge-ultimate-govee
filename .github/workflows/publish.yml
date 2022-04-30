@@ -15,9 +15,10 @@ jobs:
         with:
           node-version: 10.24
           registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
       - name: npm publish
         uses: JS-DevTools/npm-publish@v1
-        if: steps.commit.outputs.exist_code == 0
         with:
           access: public
           token: ${{ secrets.NPM_TOKEN }}
