@@ -53,13 +53,17 @@ export class RestEventProcessor extends Emitter {
   async onDIYEffectListReceived(
     payload: DIYListResponse,
   ) {
-    const effects = payload.data.diys.reduce(
-      (effects: DIYEffect[], group: DIYGroup) => effects
-        .concat(
-          ...group.diys,
-        ),
-      [] as DIYEffect[],
-    );
+    const effects = payload.data.diys
+      .filter(
+        (group: DIYGroup) => group.diys !== undefined && Symbol.iterator in Object(group),
+      )
+      .reduce(
+        (effects: DIYEffect[], group: DIYGroup) => effects
+          .concat(
+            ...group.diys,
+          ),
+        [] as DIYEffect[],
+      );
 
     await this.emitAsync(
       new DIYEffectReceived(effects),
@@ -72,18 +76,26 @@ export class RestEventProcessor extends Emitter {
   async onDeviceScenesReceived(
     payload: ResponseWithDevice<DeviceSceneListResponse>,
   ) {
-    const effects = payload.response.data.categories.reduce(
-      (effects: CategoryScene[], category: DeviceSceneCategory) => effects
-        .concat(
-          ...category.scenes.map(
-            (scene: CategoryScene) => {
-              scene.deviceId = payload.device.deviceId;
-              return scene;
-            },
+    const effects = payload.response.data.categories
+      .filter(
+        (category: DeviceSceneCategory) => category.scenes !== undefined && Symbol.iterator in Object(category),
+      )
+      .reduce(
+        (effects: CategoryScene[], category: DeviceSceneCategory) => effects
+          .concat(
+            ...category.scenes
+              .filter(
+                (scene: CategoryScene) => scene !== undefined,
+              )
+              .map(
+                (scene: CategoryScene) => {
+                  scene.deviceId = payload.device.deviceId;
+                  return scene;
+                },
+              ),
           ),
-        ),
-      [] as CategoryScene[],
-    );
+        [] as CategoryScene[],
+      );
 
     await this.emitAsync(
       new DeviceEffectReceived(effects),

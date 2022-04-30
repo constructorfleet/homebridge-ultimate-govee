@@ -6,6 +6,8 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 import {AccessoryManager} from './accessories/AccessoryManager';
 import {LoggingService} from '../logging/LoggingService';
 import {RestRequestDevices} from '../core/events/dataClients/rest/RestRequest';
+import {Features} from './config/Features';
+import {BaseFeatureHandler} from './config/features/BaseFeatureHandler';
 
 @Injectable()
 export class PlatformService extends Emitter {
@@ -13,10 +15,17 @@ export class PlatformService extends Emitter {
   constructor(
     eventEmitter: EventEmitter2,
     @Inject(HOMEBRIDGE_API) private readonly api: API,
+    @Inject(Features) private readonly getFeatureHandlers: () => Promise<BaseFeatureHandler[]>,
     private readonly accessoryManager: AccessoryManager,
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
+  }
+
+  async handleFeatureFlags() {
+    const processHandler = (handler: BaseFeatureHandler) => handler.process();
+    const featureHandlers = await this.getFeatureHandlers();
+    await Promise.all(featureHandlers.map(processHandler));
   }
 
   /**

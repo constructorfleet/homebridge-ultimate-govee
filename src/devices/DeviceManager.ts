@@ -11,7 +11,7 @@ import {DeviceUpdatedEvent} from '../core/events/devices/DeviceUpdated';
 import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
 import {LoggingService} from '../logging/LoggingService';
 import {PersistService} from '../persist/PersistService';
-import {RestRequestDeviceScenes} from '../core/events/dataClients/rest/RestRequest';
+import {RestRequestDeviceScenes, RestRequestDIYEffects} from '../core/events/dataClients/rest/RestRequest';
 
 
 @Injectable()
@@ -61,6 +61,9 @@ export class DeviceManager extends Emitter {
       );
       await this.emitAsync(
         new RestRequestDeviceScenes(device),
+      );
+      await this.emitAsync(
+        new RestRequestDIYEffects(),
       );
       if (newDevice) {
         await this.emitAsync(
