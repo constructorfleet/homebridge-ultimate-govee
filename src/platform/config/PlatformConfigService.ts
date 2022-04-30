@@ -17,9 +17,7 @@ import {GoveeRGBICLight} from '../../devices/implementations/GoveeRGBICLight';
 import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
 import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
 import {Lock} from 'async-await-mutex-lock';
-import {BaseFeatureHandler} from './features/BaseFeatureHandler';
 import {LoggingService} from '../../logging/LoggingService';
-import {Features} from './Features';
 
 @Injectable()
 export class PlatformConfigService {
@@ -28,19 +26,8 @@ export class PlatformConfigService {
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
-    @Inject(Features) private readonly getFeatureHandlers: () => Promise<BaseFeatureHandler[]>,
     private readonly log: LoggingService,
   ) {
-    this.reloadConfig()
-      .then(() => this.getFeatureHandlers())
-      .then(
-        (handlers) =>
-          Promise.all(
-            handlers.map(
-              (handler) => handler.process(),
-            ),
-          ),
-      ).then();
   }
 
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
@@ -72,7 +59,7 @@ export class PlatformConfigService {
   }
 
   public hasFeatureFlag(featureFlag: string): boolean {
-    return this.goveePluginConfig.featureFlags.includes(featureFlag);
+    return (this.goveePluginConfig.featureFlags)?.includes(featureFlag);
   }
 
   private async reloadConfig() {
@@ -126,7 +113,7 @@ export class PlatformConfigService {
       this.goveePluginConfig.featureFlags =
         [
           ...new Set(
-            this.goveePluginConfig.featureFlags.concat(...featureFlags),
+            (this.goveePluginConfig.featureFlags || []).concat(...featureFlags),
           ),
         ];
       const configFile = this.configurationFile(this.goveePluginConfig);
@@ -301,30 +288,24 @@ export class PlatformConfigService {
   ): GoveeDeviceOverrides {
     const deviceMap = this.deviceOverridesById;
     const newHumidifiers: GoveeDeviceOverride[] =
-      devices
-        .filter(
-          (device) =>
-            !deviceMap.has(device.deviceId) && device instanceof GoveeHumidifier,
-        )
-        .map((device) => new GoveeDeviceOverride(device));
+      devices.filter(
+        (device) =>
+          !deviceMap.has(device.deviceId) && device instanceof GoveeHumidifier,
+      ).map((device) => new GoveeDeviceOverride(device));
     const newPurifiers: GoveeDeviceOverride[] =
-      devices
-        .filter(
-          (device) =>
-            !deviceMap.has(device.deviceId) && device instanceof GoveeAirPurifier,
-        )
-        .map((device) => new GoveeDeviceOverride(device));
+      devices.filter(
+        (device) =>
+          !deviceMap.has(device.deviceId) && device instanceof GoveeAirPurifier,
+      ).map((device) => new GoveeDeviceOverride(device));
     const newLights: GoveeDeviceOverride[] =
-      devices
-        .filter(
-          (device) =>
-            !deviceMap.has(device.deviceId) && (device instanceof LightDevice),
-        )
-        .map((device) =>
-          device instanceof GoveeRGBICLight
-            ? new GoveeRGBICLightOverride(device as GoveeRGBICLight)
-            : new GoveeLightOverride(device as GoveeLight),
-        );
+      devices.filter(
+        (device) =>
+          !deviceMap.has(device.deviceId) && (device instanceof LightDevice),
+      ).map((device) =>
+        device instanceof GoveeRGBICLight
+          ? new GoveeRGBICLightOverride(device as GoveeRGBICLight)
+          : new GoveeLightOverride(device as GoveeLight),
+      );
 
     return new GoveeDeviceOverrides(
       (config.devices?.humidifiers || []).concat(...newHumidifiers),
@@ -349,15 +330,30 @@ export class PlatformConfigService {
         }
         const effects = deviceEffects.filter(
           (effect: DeviceLightEffect) => effect.deviceId === override.deviceId,
+        ).map(
+          (effect: DeviceLightEffect) => {
+            if (override.effects !== undefined) {
+              const existing = override.effects.find(
+                (x) => x.name === effect.name,
+              );
+              if (existing) {
+                const existingIndex = override.effects.indexOf(existing);
+                effect.enabled = existing.enabled;
+                override.effects?.splice(existingIndex, 1);
+              }
+            }
+            return effect;
+          },
         );
         if (!effects || effects.length === 0) {
           return;
         }
-        const knownEffects = override.effects?.map((effect) => `${effect.id}_${effect.name}`) || [];
         if (!override.effects) {
           override.effects = [];
         }
-        override.effects?.push(...effects.filter((effect) => !knownEffects.includes(`${effect.id}_${effect.name}`)));
+        override.effects?.push(
+          ...effects,
+        );
       },
     );
 

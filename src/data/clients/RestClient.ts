@@ -8,7 +8,7 @@ import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {OAuthData} from '../../core/structures/AuthenticationData';
 import {RestAuthenticatedEvent, RestAuthenticationFailureEvent} from '../../core/events/dataClients/rest/RestAuthentication';
 import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
-import {RestRequestDevices, RestRequestDIYEffects} from '../../core/events/dataClients/rest/RestRequest';
+import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
 import {ConfigurationService} from '../../config/ConfigurationService';
 import {PersistService} from '../../persist/PersistService';
 import {LoggingService} from '../../logging/LoggingService';
@@ -173,6 +173,10 @@ export class RestClient
     'REST.REQUEST.DeviceScenes',
   )
   async getDeviceScenes(device: GoveeDevice) {
+    this.log.info(
+      'RestClient',
+      'Getting device scenes',
+    );
     try {
       const authData = await this.login(false);
       if (!authData) {
@@ -197,15 +201,18 @@ export class RestClient
         ),
       );
     } catch (error) {
-      this.log.error('RestClient', 'getDIYGroups', error);
+      this.log.error('RestClient', 'getDeviceScenes', error);
     }
   }
 
-  ///appsku/v1/light-effect-libraries
   @OnEvent(
     'REST.REQUEST.DIYEffects',
   )
   async getDIYGroups() {
+    this.log.info(
+      'RestClient',
+      'Getting DIY effects',
+    );
     try {
       const authData = await this.login(false);
       if (!authData) {
@@ -232,6 +239,10 @@ export class RestClient
     'REST.REQUEST.Devices',
   )
   async getDevices(): Promise<void> {
+    this.log.info(
+      'RestClient',
+      'Getting list of devices',
+    );
     try {
       const authData = await this.login(false);
       if (!authData) {
@@ -248,9 +259,6 @@ export class RestClient
       ).post();
       await this.emitAsync(
         new RestResponseDeviceList(res.data),
-      );
-      await this.emitAsync(
-        new RestRequestDIYEffects(),
       );
       setTimeout(
         () => this.emit(
@@ -281,7 +289,8 @@ export class RestClient
         return false;
       }
       const expirationDateUTC = new Date(1970, 1, 1).setSeconds(jwt.exp);
-      const nowUTC = new Date().getUTCSeconds();
+      const nowUTC = new Date().getTime();
+      this.log.debug('RestClient', 'isTokenValid', expirationDateUTC, nowUTC);
       return nowUTC < expirationDateUTC;
     } catch (error) {
       this.log.error(
