@@ -95,8 +95,6 @@ export class AccessoryManager extends Emitter {
       );
     accessory.context.config = deviceConfig;
 
-    await this.onDeviceUpdated(device);
-
     if (!this.accessories.has(deviceUUID)) {
       this.accessories.set(
         deviceUUID,
@@ -108,6 +106,7 @@ export class AccessoryManager extends Emitter {
         [accessory],
       );
     }
+    await this.onDeviceUpdated(device);
     await this.platformConfigService.updateConfigurationWithDevices(device);
   }
 

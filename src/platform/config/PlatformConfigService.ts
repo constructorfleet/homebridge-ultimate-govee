@@ -28,6 +28,7 @@ export class PlatformConfigService {
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
     private readonly log: LoggingService,
   ) {
+    this.reloadConfig().then();
   }
 
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
