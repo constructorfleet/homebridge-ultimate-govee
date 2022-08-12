@@ -3,15 +3,15 @@ import hsv2rgb from 'pure-color/convert/hsv2rgb';
 
 export class ColorRGB {
   constructor(
-      public red: number,
-      public green: number,
-      public blue: number,
+    public red: number,
+    public green: number,
+    public blue: number,
   ) {
   }
 
   get hex(): string {
     return [this.red, this.green, this.blue]
-        .map(x => x.toString(16).padStart(2, '0')).join('');
+      .map(x => x.toString(16).padStart(2, '0')).join('');
   }
 
   public update(color: ColorRGB) {
@@ -27,8 +27,8 @@ export class ColorRGB {
 
 export class HueSaturation {
   constructor(
-      public hue: number,
-      public saturation: number,
+    public hue: number,
+    public saturation: number,
   ) {
   }
 }
@@ -95,45 +95,45 @@ export const KELVIN_MAP = {
 };
 
 export const rgbToKelvin =
-    (rgbColor: ColorRGB): number =>
-        parseInt(Object.entries(KELVIN_MAP)
-            .map(
-                (entry) => {
-                  return {
-                    temperature: entry[0],
-                    color: entry[1],
-                    difference: rgbColor.difference(entry[1]),
-                  };
-                },
-            )
-            .sort((d1, d2) => Math.abs(d1.difference - d2.difference))[0].temperature);
+  (rgbColor: ColorRGB): number =>
+    parseInt(Object.entries(KELVIN_MAP)
+      .map(
+        (entry) => {
+          return {
+            temperature: entry[0],
+            color: entry[1],
+            difference: rgbColor.difference(entry[1]),
+          };
+        },
+      )
+      .sort((d1, d2) => Math.abs(d1.difference - d2.difference))[0].temperature);
 
 export const kelvinToRGB =
-    (kelvin: number): ColorRGB =>
-        KELVIN_MAP[
-            Math.max(
-                Math.min(
-                    Math.round(kelvin / 100) * 100,
-                    7100,
-                ),
-                2000,
-            )];
+  (kelvin: number): ColorRGB =>
+    KELVIN_MAP[
+      Math.max(
+        Math.min(
+          Math.round(kelvin / 100) * 100,
+          7100,
+        ),
+        2000,
+      )];
 
 export const rgbToHSV =
-    (rgb: ColorRGB): HueSaturation => {
-      const hsv = rgb2hsv([rgb.red, rgb.green, rgb.blue]);
-      return new HueSaturation(
-          hsv[0],
-          hsv[1],
-      );
-    };
+  (rgb: ColorRGB): HueSaturation => {
+    const hsv = rgb2hsv([rgb.red, rgb.green, rgb.blue]);
+    return new HueSaturation(
+      hsv[0],
+      hsv[1],
+    );
+  };
 
 export const hsvToRGB =
-    (hue: number, saturation: number): ColorRGB => {
-      const rgb = hsv2rgb([hue, saturation, 100]);
-      return new ColorRGB(
-          rgb[0],
-          rgb[1],
-          rgb[2],
-      );
-    };
+  (hue: number, saturation: number): ColorRGB => {
+    const rgb = hsv2rgb([hue, saturation, 100]);
+    return new ColorRGB(
+      rgb[0],
+      rgb[1],
+      rgb[2],
+    );
+  };

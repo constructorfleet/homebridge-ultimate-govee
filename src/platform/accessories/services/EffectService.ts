@@ -16,79 +16,79 @@ import {LightDevice} from '../../../devices/implementations/GoveeLight';
 
 
 @ServiceRegistry.register(
-    LightDevice,
+  LightDevice,
 )
 export class EffectService extends AccessoryService<number> {
   protected readonly serviceType = this.SERVICES.Switch;
   protected subTypes?: ServiceSubType<number>[];
 
   constructor(
-      eventEmitter: EventEmitter2,
-      configService: PlatformConfigService,
-      @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
-      @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
-      log: LoggingService,
+    eventEmitter: EventEmitter2,
+    configService: PlatformConfigService,
+    @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
+    @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
+    log: LoggingService,
   ) {
     super(
-        eventEmitter,
-        configService,
-        SERVICES,
-        CHARACTERISTICS,
-        log,
+      eventEmitter,
+      configService,
+      SERVICES,
+      CHARACTERISTICS,
+      log,
     );
   }
 
   public override setup(
-      device: GoveeDevice,
-      deviceOverride: GoveeDeviceOverride,
+    device: GoveeDevice,
+    deviceOverride: GoveeDeviceOverride,
   ) {
     const lightOverride = deviceOverride as GoveeLightOverride;
     if (this.subTypes !== undefined) {
       const newTypes = lightOverride.effects
-          ?.filter(
-              (effect) =>
-                  !this.subTypes?.some(
-                      (subType) => subType.identifier === effect.id,
-                  ),
-          )
-          ?.map(
-              (effect: DeviceLightEffect) =>
-                  new ServiceSubType(
-                      effect.name,
-                      effect.id,
-                      effect.name,
-                      undefined,
-                      true,
-                  ),
-          ) || [];
+        ?.filter(
+          (effect) =>
+            !this.subTypes?.some(
+              (subType) => subType.identifier === effect.id,
+            ),
+        )
+        ?.map(
+          (effect: DeviceLightEffect) =>
+            new ServiceSubType(
+              effect.name,
+              effect.id,
+              effect.name,
+              undefined,
+              true,
+            ),
+        ) || [];
 
       this.subTypes.push(...newTypes);
       return;
     }
     this.subTypes =
-        lightOverride.effects
-            ?.filter(
-                (effect) => effect.enabled,
-            )
-            ?.map(
-                (effect: DeviceLightEffect) =>
-                    new ServiceSubType(
-                        effect.name,
-                        effect.id,
-                        effect.name,
-                        undefined,
-                        true,
-                    ),
-            );
+      lightOverride.effects
+        ?.filter(
+          (effect) => effect.enabled,
+        )
+        ?.map(
+          (effect: DeviceLightEffect) =>
+            new ServiceSubType(
+              effect.name,
+              effect.id,
+              effect.name,
+              undefined,
+              true,
+            ),
+        );
   }
 
   updateServiceCharacteristics(
-      service: Service,
-      device: GoveeDevice,
-      serviceIdentifier: number) {
+    service: Service,
+    device: GoveeDevice,
+    serviceIdentifier: number) {
     const serviceName =
-        service.name
-        ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
+      service.name
+      ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
     const sceneModeState: SceneModeState = device as unknown as SceneModeState;
     if (!sceneModeState) {
       console.log('EffectService', 'updateServiceCharacteristics', 'Not SceneMode');
@@ -98,21 +98,21 @@ export class EffectService extends AccessoryService<number> {
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
 
     service.getCharacteristic(this.CHARACTERISTICS.Name)
-        .updateValue(serviceName);
+      .updateValue(serviceName);
     service.getCharacteristic(this.CHARACTERISTICS.On)
-        .updateValue(isModeActive && isSceneActive)
-        .onSet(async (value: CharacteristicValue) => {
-              console.log('Effect Transition');
-              await this.emitAsync(
-                  new DeviceCommandEvent(
-                      new DeviceSceneTransition(
-                          device.deviceId,
-                          serviceIdentifier,
-                      ),
-                  ),
-              );
-            },
-        );
+      .updateValue(isModeActive && isSceneActive)
+      .onSet(async (value: CharacteristicValue) => {
+          console.log('Effect Transition');
+          await this.emitAsync(
+            new DeviceCommandEvent(
+              new DeviceSceneTransition(
+                device.deviceId,
+                serviceIdentifier,
+              ),
+            ),
+          );
+        },
+      );
   }
 
   protected supports(device: GoveeDevice): boolean {
@@ -120,22 +120,22 @@ export class EffectService extends AccessoryService<number> {
   }
 
   protected shouldAddService(
-      deviceOverride?: GoveeDeviceOverride,
-      subType?: ServiceSubType<number>,
+    deviceOverride?: GoveeDeviceOverride,
+    subType?: ServiceSubType<number>,
   ): boolean {
     if (!deviceOverride) {
       return false;
     }
     return (deviceOverride as GoveeLightOverride).effects?.some(
-        (effect: DeviceLightEffect) => effect.id === subType?.identifier && effect.enabled,
+      (effect: DeviceLightEffect) => effect.id === subType?.identifier && effect.enabled,
     ) ?? false;
   }
 
   protected processDeviceOverrides(
-      accessory: PlatformAccessory,
-      identifiedService: IdentifiedService<number>,
-      device: GoveeDevice,
-      deviceOverride?: GoveeDeviceOverride,
+    accessory: PlatformAccessory,
+    identifiedService: IdentifiedService<number>,
+    device: GoveeDevice,
+    deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<number> | undefined {
     if (!deviceOverride || !identifiedService.service) {
       return undefined;
@@ -143,18 +143,18 @@ export class EffectService extends AccessoryService<number> {
 
     const subType = identifiedService.subType;
     const enabledEffects = (deviceOverride as GoveeLightOverride).effects?.filter(
-        (effect: DeviceLightEffect) => effect.enabled,
+      (effect: DeviceLightEffect) => effect.enabled,
     ) ?? [];
     if (
-        enabledEffects.length === 0
-        || !enabledEffects?.some((effect) => effect.id === subType?.identifier)
+      enabledEffects.length === 0
+      || !enabledEffects?.some((effect) => effect.id === subType?.identifier)
     ) {
       this.log.debug(
-          'EffectService',
-          'Removing Effect',
-          device.deviceId,
-          subType?.identifier,
-          enabledEffects.length,
+        'EffectService',
+        'Removing Effect',
+        device.deviceId,
+        subType?.identifier,
+        enabledEffects.length,
       );
       accessory.removeService(identifiedService.service);
       if (subType) {

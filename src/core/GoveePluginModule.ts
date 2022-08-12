@@ -1,14 +1,6 @@
 import {DynamicModule, Module} from '@nestjs/common';
 import {EventEmitterModule} from '@nestjs/event-emitter';
-import {
-  DeviceFactory,
-  DeviceManager,
-  GoveeAirPurifier,
-  GoveeHumidifier,
-  GoveeLight,
-  GoveeRGBICLight,
-  GoveeRGBLight
-} from '../devices';
+import {DeviceFactory, DeviceManager, GoveeAirPurifier, GoveeHumidifier, GoveeLight, GoveeRGBICLight, GoveeRGBLight} from '../devices';
 import {BLEClient, IoTClient, RestClient} from '../data';
 import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../util';
 import path from 'path';
@@ -39,10 +31,10 @@ export class GoveePluginModule {
   }
 
   public static register(
-      config: GoveeDefaultConfiguration,
-      persistConfig: PersistConfiguration,
-      rootPath: string,
-      logger: Logger,
+    config: GoveeDefaultConfiguration,
+    persistConfig: PersistConfiguration,
+    rootPath: string,
+    logger: Logger,
   ): DynamicModule {
     const connectionProviders: Provider[] = [];
     if (config.enableBLE) {
@@ -100,8 +92,8 @@ export class GoveePluginModule {
         {
           provide: GOVEE_CLIENT_ID,
           useValue: Md5.hashStr(
-              Buffer.from(uuidv4() + (new Date().getMilliseconds()).toString()).toString('utf8'),
-              false,
+            Buffer.from(uuidv4() + (new Date().getMilliseconds()).toString()).toString('utf8'),
+            false,
           ),
         },
         ...DeviceFactory.getProviders(),

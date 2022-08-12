@@ -9,44 +9,44 @@ export interface DeviceSceneEffect {
 }
 
 export abstract class DeviceEffectEvent<EventDataType>
-    extends EffectEvent<EventDataType> {
+  extends EffectEvent<EventDataType> {
 
   protected constructor(
-      eventName: string,
-      eventData: EventDataType,
+    eventName: string,
+    eventData: EventDataType,
   ) {
     super(
-        `DEVICE.${eventName}`,
-        eventData,
+      `DEVICE.${eventName}`,
+      eventData,
     );
   }
 }
 
 export class DeviceEffectsConfigured
-    extends DeviceEffectEvent<DeviceLightEffect[]> {
+  extends DeviceEffectEvent<DeviceLightEffect[]> {
 
   constructor(
-      eventData: DeviceLightEffect[],
+    eventData: DeviceLightEffect[],
   ) {
     super('Configured', eventData);
   }
 }
 
 export class DeviceEffectReceived
-    extends DeviceEffectEvent<CategoryScene[]> {
+  extends DeviceEffectEvent<CategoryScene[]> {
 
   constructor(
-      eventData: CategoryScene[],
+    eventData: CategoryScene[],
   ) {
     super('Received', eventData);
   }
 }
 
 export class DeviceEffectDiscovered
-    extends DeviceEffectEvent<DeviceLightEffect[]> {
+  extends DeviceEffectEvent<DeviceLightEffect[]> {
 
   constructor(
-      eventData: DeviceLightEffect[],
+    eventData: DeviceLightEffect[],
   ) {
     super('Discovered', eventData);
   }

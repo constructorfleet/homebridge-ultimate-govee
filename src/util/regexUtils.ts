@@ -1,6 +1,6 @@
 export function escapeRegExp(string) {
   return string.replace(
-      /[.*\-+?^${}()|[\]\\]/g,
-      '\\$&',
+    /[.*\-+?^${}()|[\]\\]/g,
+    '\\$&',
   ); // $& means the whole matched string
 }

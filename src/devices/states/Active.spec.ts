@@ -72,12 +72,12 @@ describe('ActiveState', () => {
     it('returns opcode array', () => {
       activeState.isActive = true;
       expect(activeState.activeStateChange).toStrictEqual(
-          [
-            COMMAND_IDENTIFIER, 1, 1, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 51,
-          ],
+        [
+          COMMAND_IDENTIFIER, 1, 1, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 51,
+        ],
       );
     });
   });

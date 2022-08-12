@@ -82,64 +82,64 @@ export class AppDeviceExternalResources {
 export class DeviceExtensionProperties {
   @Type(() => AppDeviceSettingsResponse)
   @Transform(
-      (params) => JSON.stringify(
-          instanceToPlain(params.value),
-      ),
-      {
-        toPlainOnly: true,
-      },
+    (params) => JSON.stringify(
+      instanceToPlain(params.value),
+    ),
+    {
+      toPlainOnly: true,
+    },
   )
   @Transform(
-      (params) =>
-          plainToInstance<AppDeviceSettingsResponse, string>(
-              AppDeviceSettingsResponse,
-              JSON.parse(params.value),
-          ),
-      {
-        toClassOnly: true,
-      },
+    (params) =>
+      plainToInstance<AppDeviceSettingsResponse, string>(
+        AppDeviceSettingsResponse,
+        JSON.parse(params.value),
+      ),
+    {
+      toClassOnly: true,
+    },
   )
   public deviceSettings!: string;
 
   @Type(() => AppDeviceData)
   @Transform(
-      (params) => JSON.stringify(
-          instanceToPlain(params.value),
-      ),
-      {
-        toPlainOnly: true,
-      },
+    (params) => JSON.stringify(
+      instanceToPlain(params.value),
+    ),
+    {
+      toPlainOnly: true,
+    },
   )
   @Transform(
-      (params) =>
-          plainToInstance<AppDeviceData, string>(
-              AppDeviceData,
-              JSON.parse(params.value),
-          ),
-      {
-        toClassOnly: true,
-      },
+    (params) =>
+      plainToInstance<AppDeviceData, string>(
+        AppDeviceData,
+        JSON.parse(params.value),
+      ),
+    {
+      toClassOnly: true,
+    },
   )
   public lastDeviceData!: string;
 
   @Type(() => AppDeviceExternalResources)
   @Transform(
-      (params) => JSON.stringify(
-          instanceToPlain(params.value),
-      ),
-      {
-        toPlainOnly: true,
-      },
+    (params) => JSON.stringify(
+      instanceToPlain(params.value),
+    ),
+    {
+      toPlainOnly: true,
+    },
   )
   @Transform(
-      (params) =>
-          plainToInstance<AppDeviceExternalResources, string>(
-              AppDeviceExternalResources,
-              JSON.parse(params.value),
-          ),
-      {
-        toClassOnly: true,
-      },
+    (params) =>
+      plainToInstance<AppDeviceExternalResources, string>(
+        AppDeviceExternalResources,
+        JSON.parse(params.value),
+      ),
+    {
+      toClassOnly: true,
+    },
   )
   public extResources!: string;
 }
@@ -181,7 +181,7 @@ export class AppDeviceResponse {
 }
 
 export class AppDeviceListResponse
-    extends BaseResponse {
+  extends BaseResponse {
   @Expose({name: 'devices'})
   @Type(() => AppDeviceResponse)
   public devices!: AppDeviceResponse[];

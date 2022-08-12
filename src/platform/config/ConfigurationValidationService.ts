@@ -5,66 +5,66 @@ import {StringConstraints} from '../../config';
 import {escapeRegExp} from '../../util';
 
 export const TOKEN_PASSWORD_CONSTRAINTS = Symbol(
-    'Injection token for password constraints.',
+  'Injection token for password constraints.',
 );
 
 export const TOKEN_USERNAME_CONSTRAINTS = Symbol(
-    'Injection token for username constraints.',
+  'Injection token for username constraints.',
 );
 
 
 @Injectable()
 export class ConfigurationValidationService {
   private readonly BASE_CONFIG_VALUES =
-      Joi.object(
-          {
-            username: Joi.string()
-                .min(5)
-                .max(20)
-                .required(),
-            password: Joi.string()
-                .min(5)
-                .max(20)
-                .required(),
-            enableIoT: Joi.boolean()
-                .default(false),
-            enableBLE: Joi.boolean()
-                .default(false),
-            enableAPI: Joi.boolean()
-                .default(false),
-          },
-      );
+    Joi.object(
+      {
+        username: Joi.string()
+          .min(5)
+          .max(20)
+          .required(),
+        password: Joi.string()
+          .min(5)
+          .max(20)
+          .required(),
+        enableIoT: Joi.boolean()
+          .default(false),
+        enableBLE: Joi.boolean()
+          .default(false),
+        enableAPI: Joi.boolean()
+          .default(false),
+      },
+    );
   private readonly GRAPHQl_CONFIG_VALUES =
-      Joi.object(
-          {
-            graphQLListenPort: Joi.string()
-                .pattern(
-                    new RegExp(
-                        '^[a-zA-Z\\d]{3,30}$',
-                    ),
-                )
-                .optional(),
+    Joi.object(
+      {
+        graphQLListenPort: Joi.string()
+          .pattern(
+            new RegExp(
+              '^[a-zA-Z\\d]{3,30}$',
+            ),
+          )
+          .optional(),
 
-            authToken: Joi.string()
-                .min(3)
-                .max(100)
-                .optional(),
+        authToken: Joi.string()
+          .min(3)
+          .max(100)
+          .optional(),
 
-            introspection: Joi.boolean()
-                .default(false)
-                .optional(),
+        introspection: Joi.boolean()
+          .default(false)
+          .optional(),
 
-            playground: Joi.boolean()
-                .default(false)
-                .optional(),
-          },
-      );
+        playground: Joi.boolean()
+          .default(false)
+          .optional(),
+      },
+    );
 
   public constructor(
-      private readonly log: Logger,
-      private readonly goveePluginConfig: GoveePluginConfig,
-      @Inject(TOKEN_PASSWORD_CONSTRAINTS) private readonly passwordConstraints: StringConstraints,
-      @Inject(TOKEN_USERNAME_CONSTRAINTS) private readonly usernameConstraints: StringConstraints,
+    private readonly log: Logger,
+    private readonly goveePluginConfig: GoveePluginConfig,
+    @Inject(TOKEN_PASSWORD_CONSTRAINTS) private readonly passwordConstraints: StringConstraints,
+    @Inject(TOKEN_USERNAME_CONSTRAINTS) private readonly usernameConstraints: StringConstraints,
   ) {
   }
 
@@ -78,38 +78,38 @@ export class ConfigurationValidationService {
     const required = this.usernameConstraints.required;
 
     let schema =
-        Joi.string()
-            .regex(
-                this.allowedSymbolsRegex(
-                    allowedSymbols,
-                    minSymbols,
-                ),
-            )
-            .regex(
-                this.digitsRegex(minDigit),
-            )
-            .regex(
-                this.lengthRegex(
-                    minLength,
-                    maxLength,
-                ),
-            );
+      Joi.string()
+        .regex(
+          this.allowedSymbolsRegex(
+            allowedSymbols,
+            minSymbols,
+          ),
+        )
+        .regex(
+          this.digitsRegex(minDigit),
+        )
+        .regex(
+          this.lengthRegex(
+            minLength,
+            maxLength,
+          ),
+        );
     if (required) {
       schema = schema.required();
     }
 
     const validResult = schema.validate(
-        username,
-        {
-          abortEarly: true,
-        },
+      username,
+      {
+        abortEarly: true,
+      },
     );
 
     if (validResult.error || validResult.warning) {
       throw new ValidationError(
-          `${username} is not value`,
-          validResult.error || validResult.warning,
-          username,
+        `${username} is not value`,
+        validResult.error || validResult.warning,
+        username,
       );
     }
     return validResult.value as string;
@@ -125,47 +125,47 @@ export class ConfigurationValidationService {
     const required = this.usernameConstraints.required;
 
     let schema =
-        Joi.string()
-            .regex(
-                this.allowedSymbolsRegex(
-                    allowedSymbols,
-                    minSymbols,
-                ),
-            )
-            .regex(
-                this.digitsRegex(minDigit),
-            )
-            .regex(
-                this.lengthRegex(
-                    minLength,
-                    maxLength,
-                ),
-            );
+      Joi.string()
+        .regex(
+          this.allowedSymbolsRegex(
+            allowedSymbols,
+            minSymbols,
+          ),
+        )
+        .regex(
+          this.digitsRegex(minDigit),
+        )
+        .regex(
+          this.lengthRegex(
+            minLength,
+            maxLength,
+          ),
+        );
     if (required) {
       schema = schema.required();
     }
 
     const validResult = schema.validate(
-        username,
-        {
-          abortEarly: true,
-        },
+      username,
+      {
+        abortEarly: true,
+      },
     );
 
     if (validResult.error || validResult.warning) {
       throw new ValidationError(
-          `${username} is not value`,
-          validResult.error || validResult.warning,
-          username,
+        `${username} is not value`,
+        validResult.error || validResult.warning,
+        username,
       );
     }
     return validResult.value as string;
   }
 
   private validConfig(
-      configEntry: string,
-      constraints: StringConstraints,
-      maskValue = false,
+    configEntry: string,
+    constraints: StringConstraints,
+    maskValue = false,
   ): string {
     const allowedSymbols = constraints.allowedSymbols;
     const minSymbols = constraints.minSymbols;
@@ -175,74 +175,74 @@ export class ConfigurationValidationService {
     const required = constraints.required;
 
     let schema =
-        Joi.string()
-            .regex(
-                this.allowedSymbolsRegex(
-                    allowedSymbols,
-                    minSymbols,
-                ),
-            )
-            .regex(
-                this.digitsRegex(minDigit),
-            )
-            .regex(
-                this.lengthRegex(
-                    minLength,
-                    maxLength,
-                ),
-            );
+      Joi.string()
+        .regex(
+          this.allowedSymbolsRegex(
+            allowedSymbols,
+            minSymbols,
+          ),
+        )
+        .regex(
+          this.digitsRegex(minDigit),
+        )
+        .regex(
+          this.lengthRegex(
+            minLength,
+            maxLength,
+          ),
+        );
     if (required) {
       schema = schema.required();
     }
 
     const validResult = schema.validate(
-        configEntry,
-        {
-          abortEarly: true,
-        },
+      configEntry,
+      {
+        abortEarly: true,
+      },
     );
 
     if (validResult.error || validResult.warning) {
       throw new ValidationError(
-          'Username is not value',
-          validResult.error || validResult.warning,
-          maskValue ? 'CONFIG VALUE MASKED' : configEntry,
+        'Username is not value',
+        validResult.error || validResult.warning,
+        maskValue ? 'CONFIG VALUE MASKED' : configEntry,
       );
     }
     return validResult.value as string;
   }
 
   private allowedSymbolsRegex(
-      allowedSymbols: string,
-      minSymbols: number,
+    allowedSymbols: string,
+    minSymbols: number,
   ): RegExp {
     return RegExp(`^(?=.*?(?:[${escapeRegExp(allowedSymbols)}].*){${minSymbols},})$`);
   }
 
   private digitsRegex(
-      minDigits: number,
+    minDigits: number,
   ): RegExp {
     return RegExp(`^(?=.*?(?:\\d.*){${minDigits},})$`);
   }
 
   private lengthRegex(
-      minLength: number,
-      maxLength: number,
+    minLength: number,
+    maxLength: number,
   ): RegExp {
     return RegExp(`^(?:.{${minLength},${maxLength}})$`);
   }
 
   private getValidationSchema(
-      constraints: StringConstraints,
+    constraints: StringConstraints,
   ): Joi.StringSchema {
     const allowedSymbolsRegex =
-        RegExp(`^(?=.*?(?:[${escapeRegExp(constraints.allowedSymbols)}].*){${constraints.minSymbols},})$`);
+      RegExp(`^(?=.*?(?:[${escapeRegExp(constraints.allowedSymbols)}].*){${constraints.minSymbols},})$`);
     const digitsRegex = RegExp(`^(?=.*?(?:\\d.*){${constraints.minDigits},})$`);
     const lengthRegex = RegExp(`^(?:.{${constraints.minLength},${constraints.maxLength}})$`);
     return Joi.string()
-        .regex(allowedSymbolsRegex)
-        .regex(digitsRegex)
-        .regex(lengthRegex);
+      .regex(allowedSymbolsRegex)
+      .regex(digitsRegex)
+      .regex(lengthRegex);
   }
 }
 

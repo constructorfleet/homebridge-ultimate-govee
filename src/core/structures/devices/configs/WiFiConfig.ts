@@ -1,7 +1,7 @@
-import {ConnectionConfig} from "./ConnectionConfig";
+import {ConnectionConfig} from './ConnectionConfig';
 
 export interface WiFiConfig
-    extends ConnectionConfig {
+  extends ConnectionConfig {
   ssid?: string;
 
   macAddress?: string;
@@ -13,6 +13,6 @@ export interface WiFiConfig
 
 export const supportsWiFi = (arg): WiFiConfig | undefined => {
   return Reflect.has(arg, 'macAddress') && arg.macAddress
-      ? arg as WiFiConfig
-      : undefined;
+    ? arg as WiFiConfig
+    : undefined;
 };

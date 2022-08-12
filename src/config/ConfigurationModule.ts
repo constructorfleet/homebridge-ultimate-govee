@@ -5,7 +5,7 @@ import {ConfigService} from '@nestjs/config';
 
 export class ConfigurationModule {
   public static register(
-      config: GoveeDefaultConfiguration | GoveeGraphQLConfiguration,
+    config: GoveeDefaultConfiguration | GoveeGraphQLConfiguration,
   ): DynamicModule {
     if (!Object.keys(config).includes('graphQLListenPort')) {
       return {

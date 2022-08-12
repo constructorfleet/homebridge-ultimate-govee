@@ -67,9 +67,9 @@ export interface PlatformModuleConfig {
   generateUUID: (data: BinaryLike) => string;
   accessoryFactory: typeof PlatformAccessory;
   registerAccessory: (
-      pluginIdentifier: PluginIdentifier,
-      platformName: PlatformName,
-      accessories: PlatformAccessory[]
+    pluginIdentifier: PluginIdentifier,
+    platformName: PlatformName,
+    accessories: PlatformAccessory[],
   ) => void;
   updateAccessory: (accessories: PlatformAccessory[]) => void;
   credentials: GoveeCredentials;
@@ -83,17 +83,17 @@ export class PlatformModule {
       module: PlatformModule,
       imports: [
         GoveePluginModule.register({
-              username: config.credentials.username,
-              password: config.credentials.password,
-              enableBLE: config.connections.enableBLE,
-              enableIoT: config.connections.enableIoT,
-              enableAPI: config.connections.enableAPI,
-            },
-            {
-              storagePath: config.storagePath,
-            },
-            config.rootPath,
-            config.logger,
+            username: config.credentials.username,
+            password: config.credentials.password,
+            enableBLE: config.connections.enableBLE,
+            enableIoT: config.connections.enableIoT,
+            enableAPI: config.connections.enableAPI,
+          },
+          {
+            storagePath: config.storagePath,
+          },
+          config.rootPath,
+          config.logger,
         ),
       ],
       providers: [

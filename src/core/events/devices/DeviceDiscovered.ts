@@ -2,12 +2,12 @@ import {DeviceEvent} from './DeviceEvent';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 
 export class DeviceDiscoveredEvent
-    extends DeviceEvent<GoveeDevice> {
+  extends DeviceEvent<GoveeDevice> {
 
   constructor(eventData: GoveeDevice) {
     super(
-        'Discovered',
-        eventData,
+      'Discovered',
+      eventData,
     );
   }
 }

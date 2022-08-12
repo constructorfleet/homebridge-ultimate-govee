@@ -18,92 +18,92 @@ export class AccessoryManager extends Emitter {
   private readonly accessories: Map<string, PlatformAccessory> = new Map<string, PlatformAccessory>();
 
   constructor(
-      eventEmitter: EventEmitter2,
-      @Inject(AccessoryService) private readonly serviceCreator: ServiceCreator<unknown>,
-      private readonly platformConfigService: PlatformConfigService,
-      private readonly log: LoggingService,
-      @Inject(HOMEBRIDGE_API) private readonly api: API,
+    eventEmitter: EventEmitter2,
+    @Inject(AccessoryService) private readonly serviceCreator: ServiceCreator<unknown>,
+    private readonly platformConfigService: PlatformConfigService,
+    private readonly log: LoggingService,
+    @Inject(HOMEBRIDGE_API) private readonly api: API,
   ) {
     super(eventEmitter);
   }
 
   async onAccessoryLoaded(
-      accessory: PlatformAccessory,
+    accessory: PlatformAccessory,
   ) {
     const device = accessory.context.device;
     if (!device || !device.deviceId) {
       this.api.unregisterPlatformAccessories(
-          PLUGIN_NAME,
-          PLATFORM_NAME,
-          [accessory],
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
       );
       return;
     }
     const deviceConfig =
-        this.platformConfigService.getDeviceConfiguration(device.deviceId);
+      this.platformConfigService.getDeviceConfiguration(device.deviceId);
 
     if (deviceConfig?.ignore) {
       this.api.unregisterPlatformAccessories(
-          PLUGIN_NAME,
-          PLATFORM_NAME,
-          [accessory],
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
       );
       return;
     }
 
     this.accessories.set(
-        accessory.UUID,
-        accessory,
+      accessory.UUID,
+      accessory,
     );
     (await this.serviceCreator(device))
-        .forEach(
-            (service) => service.updateAccessory(accessory, device),
-        );
+      .forEach(
+        (service) => service.updateAccessory(accessory, device),
+      );
     this.api.updatePlatformAccessories([accessory]);
     await this.emitAsync(
-        new DeviceSettingsReceived({
-          goodsType: device.goodsType,
-          deviceId: device.deviceId,
-          name: accessory.displayName,
-          model: device.model,
-          pactCode: device.pactCode,
-          pactType: device.pactType,
-          hardwareVersion: device.hardwareVersion,
-          softwareVersion: device.softwareVersion,
-          bleAddress: device.bleAddress,
-          deviceTopic: device.iotTopic,
-          macAddress: device.macAddress,
-        }),
+      new DeviceSettingsReceived({
+        goodsType: device.goodsType,
+        deviceId: device.deviceId,
+        name: accessory.displayName,
+        model: device.model,
+        pactCode: device.pactCode,
+        pactType: device.pactType,
+        hardwareVersion: device.hardwareVersion,
+        softwareVersion: device.softwareVersion,
+        bleAddress: device.bleAddress,
+        deviceTopic: device.iotTopic,
+        macAddress: device.macAddress,
+      }),
     );
   }
 
   @OnEvent(
-      'DEVICE.Discovered',
+    'DEVICE.Discovered',
   )
   async onDeviceDiscovered(device: GoveeDevice) {
     const deviceConfig =
-        this.platformConfigService.getDeviceConfiguration(device.deviceId);
+      this.platformConfigService.getDeviceConfiguration(device.deviceId);
     if (deviceConfig?.ignore) {
       return;
     }
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
     const accessory =
-        this.accessories.get(deviceUUID)
-        || new this.api.platformAccessory(
-            device.name,
-            deviceUUID,
-        );
+      this.accessories.get(deviceUUID)
+      || new this.api.platformAccessory(
+        device.name,
+        deviceUUID,
+      );
     accessory.context.config = deviceConfig;
 
     if (!this.accessories.has(deviceUUID)) {
       this.accessories.set(
-          deviceUUID,
-          accessory,
+        deviceUUID,
+        accessory,
       );
       this.api.registerPlatformAccessories(
-          PLUGIN_NAME,
-          PLATFORM_NAME,
-          [accessory],
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        [accessory],
       );
     }
     await this.onDeviceUpdated(device);
@@ -111,7 +111,7 @@ export class AccessoryManager extends Emitter {
   }
 
   @OnEvent(
-      'DEVICE.Updated',
+    'DEVICE.Updated',
   )
   async onDeviceUpdated(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
@@ -127,22 +127,22 @@ export class AccessoryManager extends Emitter {
     accessory.context.device = device;
 
     (await this.serviceCreator(device))
-        .forEach(
-            (service) => service.updateAccessory(accessory, device),
-        );
+      .forEach(
+        (service) => service.updateAccessory(accessory, device),
+      );
 
     this.api.updatePlatformAccessories([accessory]);
   }
 
   @OnEvent(
-      'EFFECT.DEVICE.Discovered',
+    'EFFECT.DEVICE.Discovered',
   )
   async onDeviceEffectDiscovered(effects: DeviceLightEffect[]) {
     await this.platformConfigService.updateConfigurationWithEffects(undefined, effects);
   }
 
   @OnEvent(
-      'EFFECT.DIY.Discovered',
+    'EFFECT.DIY.Discovered',
   )
   async onDIYEffectDiscovered(effects: DIYLightEffect[]) {
     await this.platformConfigService.updateConfigurationWithEffects(effects);

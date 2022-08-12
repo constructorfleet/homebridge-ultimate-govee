@@ -30,7 +30,7 @@ export interface RGBICMusicModeState extends ModesState {
 
 
 export function RGBICMusicMode<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements RGBICMusicModeState {
@@ -41,7 +41,7 @@ export function RGBICMusicMode<StateType extends State>(
     public intensity: RGBICIntensityMode = RGBICIntensityMode.DYNAMIC;
     public colorMode: RGBICColorMode = RGBICColorMode.AUTOMATIC;
     public specifiedColor: ColorRGB =
-        new ColorRGB(0, 0, 0);
+      new ColorRGB(0, 0, 0);
 
     constructor(args) {
       super(args);
@@ -55,12 +55,12 @@ export function RGBICMusicMode<StateType extends State>(
       }
 
       const commandValues = getCommandValues(
-          [
-            REPORT_IDENTIFIER,
-            ...modeCommandIdentifiers,
-            this.rgbicMusicModeIdentifier,
-          ],
-          deviceState.commands,
+        [
+          REPORT_IDENTIFIER,
+          ...modeCommandIdentifiers,
+          this.rgbicMusicModeIdentifier,
+        ],
+        deviceState.commands,
       );
 
       if (!commandValues || (commandValues?.length || 0) === 0) {
@@ -79,18 +79,18 @@ export function RGBICMusicMode<StateType extends State>(
 
     rgbicMusicChange(): number[] {
       return getCommandCodes(
-          COMMAND_IDENTIFIER,
-          [
-            ...modeCommandIdentifiers,
-            this.rgbicMusicModeIdentifier,
-          ],
-          this.musicModeType || 0,
-          this.sensitivity || 0,
-          this.intensity,
-          this.colorMode,
-          this.specifiedColor.red,
-          this.specifiedColor.green,
-          this.specifiedColor.blue,
+        COMMAND_IDENTIFIER,
+        [
+          ...modeCommandIdentifiers,
+          this.rgbicMusicModeIdentifier,
+        ],
+        this.musicModeType || 0,
+        this.sensitivity || 0,
+        this.intensity,
+        this.colorMode,
+        this.specifiedColor.red,
+        this.specifiedColor.green,
+        this.specifiedColor.blue,
       );
     }
   };

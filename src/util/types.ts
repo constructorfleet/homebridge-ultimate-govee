@@ -3,7 +3,7 @@ import {Event} from '../core';
 
 export abstract class Emitter {
   protected constructor(
-      private eventEmitter: EventEmitter2,
+    private eventEmitter: EventEmitter2,
   ) {
   }
 
@@ -12,20 +12,20 @@ export abstract class Emitter {
   }
 
   public emit<EventData, EventType extends Event<EventData>>(
-      event: EventType,
+    event: EventType,
   ) {
     this.eventEmitter.emit(
-        event.eventName,
-        event.eventData,
+      event.eventName,
+      event.eventData,
     );
   }
 
   public async emitAsync<EventData, EventType extends Event<EventData>>(
-      event: EventType,
+    event: EventType,
   ) {
     await this.eventEmitter.emitAsync(
-        event.eventName,
-        event.eventData,
+      event.eventName,
+      event.eventData,
     );
   }
 }

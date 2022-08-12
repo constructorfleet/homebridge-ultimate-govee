@@ -13,11 +13,11 @@ import {BaseFeatureHandler} from './config/features/BaseFeatureHandler';
 export class PlatformService extends Emitter {
 
   constructor(
-      eventEmitter: EventEmitter2,
-      @Inject(HOMEBRIDGE_API) private readonly api: API,
-      @Inject(Features) private readonly getFeatureHandlers: () => Promise<BaseFeatureHandler[]>,
-      private readonly accessoryManager: AccessoryManager,
-      private readonly log: LoggingService,
+    eventEmitter: EventEmitter2,
+    @Inject(HOMEBRIDGE_API) private readonly api: API,
+    @Inject(Features) private readonly getFeatureHandlers: () => Promise<BaseFeatureHandler[]>,
+    private readonly accessoryManager: AccessoryManager,
+    private readonly log: LoggingService,
   ) {
     super(eventEmitter);
   }
@@ -48,7 +48,7 @@ export class PlatformService extends Emitter {
    */
   async discoverDevices() {
     await this.emitAsync(
-        new RestRequestDevices(),
+      new RestRequestDevices(),
     );
   }
 }

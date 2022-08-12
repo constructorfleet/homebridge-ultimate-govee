@@ -25,8 +25,8 @@ class TestMode extends ColorSegmentsMode(State) {
 let testMode: ColorSegmentsModeState & State;
 
 const assertNumber: AssertChain<number | undefined> = (
-    actual?: number,
-    expected?: number,
+  actual?: number,
+  expected?: number,
 ): AssertChain<number | undefined> => {
   if (expected === undefined) {
     expect(actual).toBeUndefined();
@@ -37,38 +37,38 @@ const assertNumber: AssertChain<number | undefined> = (
 };
 
 const assertColorSegment = (
-    expected: ColorSegment,
-    segmentIndex: number,
+  expected: ColorSegment,
+  segmentIndex: number,
 ) => {
   assertNumber(
-      testMode.colorSegments[segmentIndex].color?.red,
-      expected.color.red,
+    testMode.colorSegments[segmentIndex].color?.red,
+    expected.color.red,
   );
   assertNumber(
-      testMode.colorSegments[segmentIndex].color?.green,
-      expected.color.green,
+    testMode.colorSegments[segmentIndex].color?.green,
+    expected.color.green,
   );
   assertNumber(
-      testMode.colorSegments[segmentIndex].color?.blue,
-      expected.color.blue,
+    testMode.colorSegments[segmentIndex].color?.blue,
+    expected.color.blue,
   );
   assertNumber(
-      testMode.colorSegments[segmentIndex].brightness,
-      expected.brightness,
+    testMode.colorSegments[segmentIndex].brightness,
+    expected.brightness,
   );
 };
 
 const assertColorSegments = (
-    ...colorSegments: ColorSegment[]
+  ...colorSegments: ColorSegment[]
 ) => {
   colorSegments.concat(
-      ...Array.from(
-          new Array(testMode.colorSegments.length - colorSegments.length)
-              .fill(new ColorSegment(
-                  new ColorRGB(0, 0, 0),
-                  0,
-              )),
-      ),
+    ...Array.from(
+      new Array(testMode.colorSegments.length - colorSegments.length)
+        .fill(new ColorSegment(
+          new ColorRGB(0, 0, 0),
+          0,
+        )),
+    ),
   ).forEach(assertColorSegment);
 };
 
@@ -101,10 +101,10 @@ describe('ColorSegmentsMode', () => {
       });
       expect(testMode.colorSegments).toHaveLength(15);
       assertColorSegments(
-          new ColorSegment(
-              new ColorRGB(50, 255, 0),
-              75,
-          ),
+        new ColorSegment(
+          new ColorRGB(50, 255, 0),
+          75,
+        ),
       );
     });
 
@@ -121,26 +121,26 @@ describe('ColorSegmentsMode', () => {
       expect(testMode.colorSegments).toHaveLength(15);
       // expect(testMode.colorSegments).toBeUndefined();
       assertColorSegments(
-          new ColorSegment(
-              new ColorRGB(50, 255, 0),
-              75,
-          ),
-          new ColorSegment(
-              new ColorRGB(0, 0, 0),
-              0,
-          ),
-          new ColorSegment(
-              new ColorRGB(0, 0, 0),
-              0,
-          ),
-          new ColorSegment(
-              new ColorRGB(0, 0, 0),
-              0,
-          ),
-          new ColorSegment(
-              new ColorRGB(50, 255, 0),
-              75,
-          ),
+        new ColorSegment(
+          new ColorRGB(50, 255, 0),
+          75,
+        ),
+        new ColorSegment(
+          new ColorRGB(0, 0, 0),
+          0,
+        ),
+        new ColorSegment(
+          new ColorRGB(0, 0, 0),
+          0,
+        ),
+        new ColorSegment(
+          new ColorRGB(0, 0, 0),
+          0,
+        ),
+        new ColorSegment(
+          new ColorRGB(50, 255, 0),
+          75,
+        ),
       );
     });
 

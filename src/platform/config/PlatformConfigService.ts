@@ -25,8 +25,8 @@ export class PlatformConfigService {
   private readonly writeLock: Lock<void> = new Lock<void>();
 
   constructor(
-      @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
-      private readonly log: LoggingService,
+    @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
+    private readonly log: LoggingService,
   ) {
     this.reloadConfig().then();
   }
@@ -38,22 +38,22 @@ export class PlatformConfigService {
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
     const deviceMap = new Map<string, GoveeDeviceOverride>();
     this.goveePluginConfig?.devices?.humidifiers?.forEach(
-        (deviceOverride) => deviceMap.set(
-            deviceOverride.deviceId!,
-            deviceOverride,
-        ),
+      (deviceOverride) => deviceMap.set(
+        deviceOverride.deviceId!,
+        deviceOverride,
+      ),
     );
     this.goveePluginConfig?.devices?.airPurifiers?.forEach(
-        (deviceOverride) => deviceMap.set(
-            deviceOverride.deviceId!,
-            deviceOverride,
-        ),
+      (deviceOverride) => deviceMap.set(
+        deviceOverride.deviceId!,
+        deviceOverride,
+      ),
     );
     this.goveePluginConfig?.devices?.lights?.forEach(
-        (deviceOverride) => deviceMap.set(
-            deviceOverride.deviceId!,
-            deviceOverride,
-        ),
+      (deviceOverride) => deviceMap.set(
+        deviceOverride.deviceId!,
+        deviceOverride,
+      ),
     );
 
     return deviceMap;
@@ -64,35 +64,35 @@ export class PlatformConfigService {
   }
 
   getDeviceConfiguration<OverrideType extends GoveeDeviceOverride>(
-      deviceId: string,
+    deviceId: string,
   ): OverrideType | undefined {
     const deviceConfigurations: GoveeDeviceOverride[] =
-        new Array<GoveeDeviceOverride>(
-            ...(this.pluginConfiguration.devices?.humidifiers || []),
-            ...(this.pluginConfiguration.devices?.airPurifiers || []),
-            ...(this.pluginConfiguration.devices?.lights || []),
-        );
+      new Array<GoveeDeviceOverride>(
+        ...(this.pluginConfiguration.devices?.humidifiers || []),
+        ...(this.pluginConfiguration.devices?.airPurifiers || []),
+        ...(this.pluginConfiguration.devices?.lights || []),
+      );
     return deviceConfigurations.find(
-        (deviceConfig) => deviceConfig.deviceId === deviceId,
+      (deviceConfig) => deviceConfig.deviceId === deviceId,
     ) as OverrideType;
   }
 
   async addFeatureFlags(
-      ...featureFlags: string[]
+    ...featureFlags: string[]
   ) {
     await this.writeLock.acquire();
     try {
       this.goveePluginConfig.featureFlags =
-          [
-            ...new Set(
-                (this.goveePluginConfig.featureFlags || []).concat(...featureFlags),
-            ),
-          ];
+        [
+          ...new Set(
+            (this.goveePluginConfig.featureFlags || []).concat(...featureFlags),
+          ),
+        ];
       const configFile = this.configurationFile(this.goveePluginConfig);
       fs.writeFileSync(
-          this.configFilePath,
-          JSON.stringify(configFile, null, 2),
-          {encoding: 'utf8'},
+        this.configFilePath,
+        JSON.stringify(configFile, null, 2),
+        {encoding: 'utf8'},
       );
     } finally {
       this.writeLock.release();
@@ -100,25 +100,25 @@ export class PlatformConfigService {
   }
 
   async removeFeatureFlags(
-      ...featureFlags: string[]
+    ...featureFlags: string[]
   ) {
     await this.writeLock.acquire();
     try {
       this.goveePluginConfig.featureFlags =
-          [
-            ...new Set(
-                this.goveePluginConfig.featureFlags.filter(
-                    (flag: string) => !featureFlags.includes(flag),
-                ),
+        [
+          ...new Set(
+            this.goveePluginConfig.featureFlags.filter(
+              (flag: string) => !featureFlags.includes(flag),
             ),
-          ];
+          ),
+        ];
       const configFile = this.configurationFile(
-          this.goveePluginConfig,
+        this.goveePluginConfig,
       );
       fs.writeFileSync(
-          this.configFilePath,
-          JSON.stringify(configFile, null, 2),
-          {encoding: 'utf8'},
+        this.configFilePath,
+        JSON.stringify(configFile, null, 2),
+        {encoding: 'utf8'},
       );
     } finally {
       this.writeLock.release();
@@ -126,24 +126,24 @@ export class PlatformConfigService {
   }
 
   async updateConfigurationWithEffects(
-      diyEffects?: DIYLightEffect[],
-      deviceEffects?: DeviceLightEffect[],
+    diyEffects?: DIYLightEffect[],
+    deviceEffects?: DeviceLightEffect[],
   ) {
     await this.writeLock.acquire();
     try {
       const configFile = this.configurationFile(
-          this.buildGoveePluginConfigurationFromEffects(
-              this.goveePluginConfig,
-              false,
-              diyEffects,
-              deviceEffects,
-          ),
+        this.buildGoveePluginConfigurationFromEffects(
+          this.goveePluginConfig,
+          false,
+          diyEffects,
+          deviceEffects,
+        ),
       );
 
       fs.writeFileSync(
-          this.configFilePath,
-          JSON.stringify(configFile, null, 2),
-          {encoding: 'utf8'},
+        this.configFilePath,
+        JSON.stringify(configFile, null, 2),
+        {encoding: 'utf8'},
       );
     } finally {
       this.writeLock.release();
@@ -151,24 +151,24 @@ export class PlatformConfigService {
   }
 
   async setConfigurationEffects(
-      diyEffects?: DIYLightEffect[],
-      deviceEffects?: DeviceLightEffect[],
+    diyEffects?: DIYLightEffect[],
+    deviceEffects?: DeviceLightEffect[],
   ) {
     await this.writeLock.acquire();
     try {
       const configFile = this.configurationFile(
-          this.buildGoveePluginConfigurationFromEffects(
-              this.goveePluginConfig,
-              true,
-              diyEffects,
-              deviceEffects,
-          ),
+        this.buildGoveePluginConfigurationFromEffects(
+          this.goveePluginConfig,
+          true,
+          diyEffects,
+          deviceEffects,
+        ),
       );
 
       fs.writeFileSync(
-          this.configFilePath,
-          JSON.stringify(configFile, null, 2),
-          {encoding: 'utf8'},
+        this.configFilePath,
+        JSON.stringify(configFile, null, 2),
+        {encoding: 'utf8'},
       );
     } finally {
       this.writeLock.release();
@@ -176,21 +176,21 @@ export class PlatformConfigService {
   }
 
   async updateConfigurationWithDevices(
-      ...devices: GoveeDevice[]
+    ...devices: GoveeDevice[]
   ) {
     await this.writeLock.acquire();
     try {
       const configFile = this.configurationFile(
-          this.buildGoveePluginConfigurationFromDevices(
-              this.goveePluginConfig,
-              ...devices,
-          ),
+        this.buildGoveePluginConfigurationFromDevices(
+          this.goveePluginConfig,
+          ...devices,
+        ),
       );
 
       fs.writeFileSync(
-          this.configFilePath,
-          JSON.stringify(configFile, null, 2),
-          {encoding: 'utf8'},
+        this.configFilePath,
+        JSON.stringify(configFile, null, 2),
+        {encoding: 'utf8'},
       );
     } finally {
       this.writeLock.release();
@@ -207,19 +207,19 @@ export class PlatformConfigService {
       }
 
       const platformConfig = config.platforms.find(
-          (platformConfig) =>
-              platformConfig.platform === PLATFORM_NAME,
+        (platformConfig) =>
+          platformConfig.platform === PLATFORM_NAME,
       );
       if (!platformConfig) {
         return;
       }
       this.goveePluginConfig = platformConfig;
       this.goveePluginConfig.featureFlags =
-          this.goveePluginConfig.featureFlags || [] as string[];
+        this.goveePluginConfig.featureFlags || [] as string[];
 
       setTimeout(
-          async () => await this.reloadConfig(),
-          10 * 1000,
+        async () => await this.reloadConfig(),
+        10 * 1000,
       );
     } finally {
       this.writeLock.release();
@@ -237,10 +237,10 @@ export class PlatformConfigService {
 
     const platforms: Record<string, never>[] = [];
     config.platforms.forEach(
-        (platformConfig) =>
-            (platformConfig.platform === PLATFORM_NAME)
-                ? platforms.push(updatedPluginConfig || platformConfig)
-                : platforms.push(platformConfig),
+      (platformConfig) =>
+        (platformConfig.platform === PLATFORM_NAME)
+          ? platforms.push(updatedPluginConfig || platformConfig)
+          : platforms.push(platformConfig),
     );
 
     config.platforms = platforms;
@@ -249,34 +249,34 @@ export class PlatformConfigService {
   }
 
   private buildGoveePluginConfigurationFromDevices(
-      config: GoveePluginConfig,
-      ...devices: GoveeDevice[]
+    config: GoveePluginConfig,
+    ...devices: GoveeDevice[]
   ): GoveePluginConfig {
     config.devices = this.buildGoveeDeviceOverrides(
-        config,
-        ...devices,
+      config,
+      ...devices,
     );
 
     return config;
   }
 
   private buildGoveePluginConfigurationFromEffects(
-      config: GoveePluginConfig,
-      overwrite: boolean,
-      diyEffects?: DIYLightEffect[],
-      deviceEffects?: DeviceLightEffect[],
+    config: GoveePluginConfig,
+    overwrite: boolean,
+    diyEffects?: DIYLightEffect[],
+    deviceEffects?: DeviceLightEffect[],
   ): GoveePluginConfig {
     if (diyEffects !== null && diyEffects !== undefined) {
       config.devices = this.buildGoveeDIYEffectOverrides(
-          config,
-          ...diyEffects,
+        config,
+        ...diyEffects,
       );
     }
     if (deviceEffects !== null && deviceEffects !== undefined) {
       config.devices = this.buildGoveeDeviceEffectOverrides(
-          config,
-          overwrite,
-          ...deviceEffects,
+        config,
+        overwrite,
+        ...deviceEffects,
       );
     }
 
@@ -284,104 +284,104 @@ export class PlatformConfigService {
   }
 
   private buildGoveeDeviceOverrides(
-      config: GoveePluginConfig,
-      ...devices: GoveeDevice[]
+    config: GoveePluginConfig,
+    ...devices: GoveeDevice[]
   ): GoveeDeviceOverrides {
     const deviceMap = this.deviceOverridesById;
     const newHumidifiers: GoveeDeviceOverride[] =
-        devices.filter(
-            (device) =>
-                !deviceMap.has(device.deviceId) && device instanceof GoveeHumidifier,
-        ).map((device) => new GoveeDeviceOverride(device));
+      devices.filter(
+        (device) =>
+          !deviceMap.has(device.deviceId) && device instanceof GoveeHumidifier,
+      ).map((device) => new GoveeDeviceOverride(device));
     const newPurifiers: GoveeDeviceOverride[] =
-        devices.filter(
-            (device) =>
-                !deviceMap.has(device.deviceId) && device instanceof GoveeAirPurifier,
-        ).map((device) => new GoveeDeviceOverride(device));
+      devices.filter(
+        (device) =>
+          !deviceMap.has(device.deviceId) && device instanceof GoveeAirPurifier,
+      ).map((device) => new GoveeDeviceOverride(device));
     const newLights: GoveeDeviceOverride[] =
-        devices.filter(
-            (device) =>
-                !deviceMap.has(device.deviceId) && (device instanceof LightDevice),
-        ).map((device) =>
-            device instanceof GoveeRGBICLight
-                ? new GoveeRGBICLightOverride(device as GoveeRGBICLight)
-                : new GoveeLightOverride(device as GoveeLight),
-        );
+      devices.filter(
+        (device) =>
+          !deviceMap.has(device.deviceId) && (device instanceof LightDevice),
+      ).map((device) =>
+        device instanceof GoveeRGBICLight
+          ? new GoveeRGBICLightOverride(device as GoveeRGBICLight)
+          : new GoveeLightOverride(device as GoveeLight),
+      );
 
     return new GoveeDeviceOverrides(
-        (config.devices?.humidifiers || []).concat(...newHumidifiers),
-        (config?.devices?.airPurifiers || []).concat(...newPurifiers),
-        (config?.devices?.lights || []).concat(...newLights),
+      (config.devices?.humidifiers || []).concat(...newHumidifiers),
+      (config?.devices?.airPurifiers || []).concat(...newPurifiers),
+      (config?.devices?.lights || []).concat(...newLights),
     );
   }
 
   private buildGoveeDeviceEffectOverrides(
-      config: GoveePluginConfig,
-      overwrite: boolean,
-      ...deviceEffects: DeviceLightEffect[]
+    config: GoveePluginConfig,
+    overwrite: boolean,
+    ...deviceEffects: DeviceLightEffect[]
   ): GoveeDeviceOverrides {
     const lightOverrides: GoveeLightOverride[] =
-        ((config?.devices?.lights || []) as GoveeLightOverride[]);
+      ((config?.devices?.lights || []) as GoveeLightOverride[]);
 
     lightOverrides.forEach(
-        (override: GoveeLightOverride) => {
-          if (overwrite) {
-            override.effects = deviceEffects;
-            return;
-          }
-          const effects = deviceEffects.filter(
-              (effect: DeviceLightEffect) => effect.deviceId === override.deviceId,
-          ).map(
-              (effect: DeviceLightEffect) => {
-                if (override.effects !== undefined) {
-                  const existing = override.effects.find(
-                      (x) => x.name === effect.name,
-                  );
-                  if (existing) {
-                    const existingIndex = override.effects.indexOf(existing);
-                    effect.enabled = existing.enabled;
-                    override.effects?.splice(existingIndex, 1);
-                  }
-                }
-                return effect;
-              },
-          );
-          if (!effects || effects.length === 0) {
-            return;
-          }
-          if (!override.effects) {
-            override.effects = [];
-          }
-          override.effects?.push(
-              ...effects,
-          );
-        },
+      (override: GoveeLightOverride) => {
+        if (overwrite) {
+          override.effects = deviceEffects;
+          return;
+        }
+        const effects = deviceEffects.filter(
+          (effect: DeviceLightEffect) => effect.deviceId === override.deviceId,
+        ).map(
+          (effect: DeviceLightEffect) => {
+            if (override.effects !== undefined) {
+              const existing = override.effects.find(
+                (x) => x.name === effect.name,
+              );
+              if (existing) {
+                const existingIndex = override.effects.indexOf(existing);
+                effect.enabled = existing.enabled;
+                override.effects?.splice(existingIndex, 1);
+              }
+            }
+            return effect;
+          },
+        );
+        if (!effects || effects.length === 0) {
+          return;
+        }
+        if (!override.effects) {
+          override.effects = [];
+        }
+        override.effects?.push(
+          ...effects,
+        );
+      },
     );
 
     return new GoveeDeviceOverrides(
-        (config.devices?.humidifiers || []),
-        (config?.devices?.airPurifiers || []),
-        lightOverrides,
+      (config.devices?.humidifiers || []),
+      (config?.devices?.airPurifiers || []),
+      lightOverrides,
     );
   }
 
   private buildGoveeDIYEffectOverrides(
-      config: GoveePluginConfig,
-      ...diyEffects: DIYLightEffect[]
+    config: GoveePluginConfig,
+    ...diyEffects: DIYLightEffect[]
   ): GoveeDeviceOverrides {
     const lightOverrides: GoveeLightOverride[] =
-        ((config?.devices?.lights || []) as GoveeLightOverride[]);
+      ((config?.devices?.lights || []) as GoveeLightOverride[]);
 
     lightOverrides.forEach(
-        (override: GoveeLightOverride) => {
-          override.diyEffects = diyEffects;
-        },
+      (override: GoveeLightOverride) => {
+        override.diyEffects = diyEffects;
+      },
     );
 
     return new GoveeDeviceOverrides(
-        (config.devices?.humidifiers || []),
-        (config?.devices?.airPurifiers || []),
-        lightOverrides,
+      (config.devices?.humidifiers || []),
+      (config?.devices?.airPurifiers || []),
+      lightOverrides,
     );
   }
 }

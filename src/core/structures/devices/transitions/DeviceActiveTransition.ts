@@ -5,8 +5,8 @@ import {ActiveState} from '../../../../devices/states/Active';
 export class DeviceActiveTransition extends DeviceTransition<ActiveState & GoveeDevice> {
 
   constructor(
-      deviceId: string,
-      public readonly active: boolean,
+    deviceId: string,
+    public readonly active: boolean,
   ) {
     super(deviceId);
   }

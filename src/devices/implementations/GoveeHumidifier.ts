@@ -7,21 +7,21 @@ import {GoveeDevice} from '../GoveeDevice';
 import {DeviceFactory} from '../DeviceFactory';
 
 @DeviceFactory.register(
-    'H7141',
-    'H7141',
+  'H7141',
+  'H7141',
 )
 export class GoveeHumidifier
-    extends ProgrammableMistLevel(
-        MistLevel(
-            StatusMode(
-                Active(
-                    OnOff(
-                        GoveeDevice,
-                    ),
-                ),
-            ),
+  extends ProgrammableMistLevel(
+    MistLevel(
+      StatusMode(
+        Active(
+          OnOff(
+            GoveeDevice,
+          ),
         ),
-    ) {
+      ),
+    ),
+  ) {
 
   constructor(args) {
     super(args);

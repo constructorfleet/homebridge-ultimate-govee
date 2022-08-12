@@ -16,7 +16,7 @@ import {bufferToHex, sleep} from '../../util';
 
 @Injectable()
 export class BLEClient
-    extends GoveeClient {
+  extends GoveeClient {
   private static readonly STATE_POWERED_ON = 'poweredOn';
   private static readonly SERVICE_CONTROL_UUID = '000102030405060708090a0b0c0d1910';
   private static readonly CHARACTERISTIC_CONTROL_UUID = '000102030405060708090a0b0c0d2b11';
@@ -29,60 +29,60 @@ export class BLEClient
   private lock = new Lock<void>();
 
   constructor(
-      eventEmitter: EventEmitter2,
-      private readonly log: LoggingService,
+    eventEmitter: EventEmitter2,
+    private readonly log: LoggingService,
   ) {
     super(eventEmitter);
     noble.on(
-        'stateChange',
-        async (state) => {
-          if (state === BLEClient.STATE_POWERED_ON) {
-            this.isOnline = true;
-            this.emit(
-                new BLEConnectionStateEvent(ConnectionState.Connected),
-            );
-            await this.startScanning();
-          } else {
-            this.isScanning = false;
-            this.isOnline = false;
-            this.emit(
-                new BLEConnectionStateEvent(ConnectionState.Offline),
-            );
-          }
-        },
-    );
-
-    noble.on(
-        'scanStart',
-        async () => {
-          this.isScanning = true;
-        },
-    );
-
-    noble.on(
-        'scanStop',
-        async () => {
+      'stateChange',
+      async (state) => {
+        if (state === BLEClient.STATE_POWERED_ON) {
+          this.isOnline = true;
+          this.emit(
+            new BLEConnectionStateEvent(ConnectionState.Connected),
+          );
+          await this.startScanning();
+        } else {
           this.isScanning = false;
-        },
+          this.isOnline = false;
+          this.emit(
+            new BLEConnectionStateEvent(ConnectionState.Offline),
+          );
+        }
+      },
     );
 
     noble.on(
-        'discover',
-        async (peripheral: Peripheral) => {
-          const bleAddress = peripheral.address.toLowerCase();
-          const model = BLEClient.parsePeripheralModel(peripheral);
-          if (model && !this.peripherals.has(bleAddress)) {
-            this.peripherals.set(
-                bleAddress,
-                peripheral,
-            );
-          }
-        },
+      'scanStart',
+      async () => {
+        this.isScanning = true;
+      },
+    );
+
+    noble.on(
+      'scanStop',
+      async () => {
+        this.isScanning = false;
+      },
+    );
+
+    noble.on(
+      'discover',
+      async (peripheral: Peripheral) => {
+        const bleAddress = peripheral.address.toLowerCase();
+        const model = BLEClient.parsePeripheralModel(peripheral);
+        if (model && !this.peripherals.has(bleAddress)) {
+          this.peripherals.set(
+            bleAddress,
+            peripheral,
+          );
+        }
+      },
     );
   }
 
   private static parsePeripheralModel(
-      peripheral: Peripheral,
+    peripheral: Peripheral,
   ): string | undefined {
     const peripheralName = peripheral.advertisement.localName;
     const regexResult = BLEClient.BLE_NAME_REGEX.exec(peripheralName);
@@ -90,10 +90,10 @@ export class BLEClient
   }
 
   @OnEvent(
-      'BLE.PERIPHERAL.Send',
-      {
-        nextTick: true,
-      },
+    'BLE.PERIPHERAL.Send',
+    {
+      nextTick: true,
+    },
   )
   async onSendCommand(peripheralCommand: BLEPeripheralCommandSend) {
     const peripheralAddress = peripheralCommand.bleAddress.toLowerCase();
@@ -103,8 +103,8 @@ export class BLEClient
     }
 
     await this.acquireLock(
-        'OnSendCommand',
-        peripheralCommand,
+      'OnSendCommand',
+      peripheralCommand,
     );
 
     if (peripheral.state !== 'connected') {
@@ -114,24 +114,24 @@ export class BLEClient
 
     try {
       const serviceCharacteristics = await peripheral.discoverSomeServicesAndCharacteristicsAsync(
-          [BLEClient.SERVICE_CONTROL_UUID],
-          [
-            BLEClient.CHARACTERISTIC_REPORT_UUID,
-            BLEClient.CHARACTERISTIC_CONTROL_UUID,
-          ],
+        [BLEClient.SERVICE_CONTROL_UUID],
+        [
+          BLEClient.CHARACTERISTIC_REPORT_UUID,
+          BLEClient.CHARACTERISTIC_CONTROL_UUID,
+        ],
       );
 
       const controlCharacteristic = serviceCharacteristics.characteristics.find(
-          (characteristic) => characteristic.uuid === BLEClient.CHARACTERISTIC_CONTROL_UUID,
+        (characteristic) => characteristic.uuid === BLEClient.CHARACTERISTIC_CONTROL_UUID,
       );
       const reportCharacteristic = serviceCharacteristics.characteristics.find(
-          (characteristic) => characteristic.uuid === BLEClient.CHARACTERISTIC_REPORT_UUID,
+        (characteristic) => characteristic.uuid === BLEClient.CHARACTERISTIC_REPORT_UUID,
       );
 
       if (controlCharacteristic && reportCharacteristic) {
         this.connectedDevice = new BLEDeviceIdentification(
-            peripheralCommand.bleAddress,
-            peripheralCommand.deviceId,
+          peripheralCommand.bleAddress,
+          peripheralCommand.deviceId,
         );
 
         for (let i = 0; i < peripheralCommand.commands.length; i++) {
@@ -139,13 +139,13 @@ export class BLEClient
           reportCharacteristic.removeAllListeners();
           await reportCharacteristic.subscribeAsync();
           reportCharacteristic.on(
-              'data',
-              this.onDataCallback,
+            'data',
+            this.onDataCallback,
           );
 
           await controlCharacteristic.writeAsync(
-              Buffer.of(...command),
-              true,
+            Buffer.of(...command),
+            true,
           );
           await sleep(200);
         }
@@ -154,8 +154,8 @@ export class BLEClient
     } finally {
       this.connectedDevice = undefined;
       await this.releaseLock(
-          'OnSendCommand',
-          peripheralCommand.bleAddress,
+        'OnSendCommand',
+        peripheralCommand.bleAddress,
       );
     }
   }
@@ -171,21 +171,21 @@ export class BLEClient
     if (!this.isScanning && this.isOnline) {
       this.isScanning = true;
       await noble.startScanningAsync(
-          [],
-          false,
+        [],
+        false,
       );
     }
   }
 
   async acquireLock(
-      ...log: unknown[]
+    ...log: unknown[]
   ) {
     await this.lock.acquire();
     await this.stopScanning();
   }
 
   async releaseLock(
-      ...log: string[]
+    ...log: string[]
   ) {
     await this.startScanning();
     this.lock.release();
@@ -194,13 +194,13 @@ export class BLEClient
   onDataCallback = async (data: Buffer) => {
     if (data.length > 0 && this.connectedDevice) {
       await this.emitAsync(
-          new BLEPeripheralReceiveEvent(
-              new BLEPeripheralStateReceive(
-                  this.connectedDevice.bleAddress,
-                  this.connectedDevice.deviceId,
-                  bufferToHex(data),
-              ),
+        new BLEPeripheralReceiveEvent(
+          new BLEPeripheralStateReceive(
+            this.connectedDevice.bleAddress,
+            this.connectedDevice.deviceId,
+            bufferToHex(data),
           ),
+        ),
       );
     }
   };

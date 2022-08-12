@@ -14,7 +14,7 @@ class CommandData {
 }
 
 export class IoTDeviceMessage
-    implements IoTMessage {
+  implements IoTMessage {
   @Expose({name: 'cmd'})
   public command!: string;
   @Expose({name: 'cmdVersion'})

@@ -54,17 +54,17 @@ describe('ColorTemperatureState', () => {
   describe('colorTemperatureChange', () => {
     it('returns opcode array', () => {
       testState.colorTemperature = new ColorRGB(
-          20,
-          80,
-          40,
+        20,
+        80,
+        40,
       );
       expect(testState.colorTemperatureChange).toStrictEqual(
-          [
-            COMMAND_IDENTIFIER, 5, 2, 255, 255,
-            255, 1, 20, 80, 40,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 166,
-          ],
+        [
+          COMMAND_IDENTIFIER, 5, 2, 255, 255,
+          255, 1, 20, 80, 40,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 166,
+        ],
       );
     });
   });

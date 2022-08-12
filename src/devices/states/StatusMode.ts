@@ -14,7 +14,7 @@ export interface StatusModeState {
 }
 
 export function StatusMode<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements StatusModeState {
@@ -33,8 +33,8 @@ export function StatusMode<StateType extends State>(
         return super.parse(deviceState);
       }
       const commandValues = getCommandValues(
-          [REPORT_IDENTIFIER, ...commandIdentifiers],
-          deviceState.commands,
+        [REPORT_IDENTIFIER, ...commandIdentifiers],
+        deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.statusMode = commandValues[0][0];

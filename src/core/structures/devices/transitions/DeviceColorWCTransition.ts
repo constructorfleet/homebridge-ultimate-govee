@@ -7,8 +7,8 @@ import {ColorSegmentsModeState} from '../../../../devices/states/modes/ColorSegm
 export class DeviceColorWCTransition extends DeviceTransition<ModesState & GoveeDevice> {
 
   constructor(
-      deviceId: string,
-      public readonly color: ColorRGB,
+    deviceId: string,
+    public readonly color: ColorRGB,
   ) {
     super(deviceId);
   }
@@ -20,7 +20,7 @@ export class DeviceColorWCTransition extends DeviceTransition<ModesState & Govee
     }
 
     colorSegmentMode.colorSegments.forEach(
-        (segment) => segment.color.update(this.color),
+      (segment) => segment.color.update(this.color),
     );
 
     return this;

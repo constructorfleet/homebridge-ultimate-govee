@@ -5,14 +5,14 @@ import {plainToInstance} from 'class-transformer';
 import * as fs from 'fs';
 import {PLUGIN_NAME} from '../settings';
 import {OAuthData} from '../core/structures/AuthenticationData';
-import {PERSIST_CONFIGURATION} from "../util";
+import {PERSIST_CONFIGURATION} from '../util';
 
 @Injectable()
 export class PersistService {
   private readonly storageFilePath: string = `${this.config.storagePath}/${PLUGIN_NAME}.json`;
 
   constructor(
-      @Inject(PERSIST_CONFIGURATION) private readonly config: PersistConfiguration,
+    @Inject(PERSIST_CONFIGURATION) private readonly config: PersistConfiguration,
   ) {
     if (!fs.existsSync(this.storageFilePath)) {
       fs.writeFileSync(this.storageFilePath, '{}');

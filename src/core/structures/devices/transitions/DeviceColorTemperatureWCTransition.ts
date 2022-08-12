@@ -9,9 +9,9 @@ import {ColorModeState} from '../../../../devices/states/modes/Color';
 export class DeviceColorTemperatureWCTransition extends DeviceTransition<ModesState & GoveeDevice> {
 
   constructor(
-      deviceId: string,
-      public readonly color: ColorRGB,
-      public readonly temperature: number,
+    deviceId: string,
+    public readonly color: ColorRGB,
+    public readonly temperature: number,
   ) {
     super(deviceId);
   }
@@ -20,7 +20,7 @@ export class DeviceColorTemperatureWCTransition extends DeviceTransition<ModesSt
     const colorSegmentMode = device as unknown as ColorSegmentsModeState;
     if (colorSegmentMode) {
       colorSegmentMode.colorSegments.forEach(
-          (segment) => segment.color.update(this.color),
+        (segment) => segment.color.update(this.color),
       );
       return this;
     }

@@ -54,17 +54,17 @@ describe('SolidColorState', () => {
   describe('solidColorChange', () => {
     it('returns opcode array', () => {
       testState.solidColor = new ColorRGB(
-          20,
-          80,
-          40,
+        20,
+        80,
+        40,
       );
       expect(testState.solidColorChange).toStrictEqual(
-          [
-            COMMAND_IDENTIFIER, 5, 2, 20, 80,
-            40, 0, 255, 174, 84,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 93,
-          ],
+        [
+          COMMAND_IDENTIFIER, 5, 2, 20, 80,
+          40, 0, 255, 174, 84,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 93,
+        ],
       );
     });
   });

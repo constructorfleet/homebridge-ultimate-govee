@@ -1,7 +1,7 @@
 import {BaseResponse} from './BaseResponse';
 
 export class LoginResponse
-    extends BaseResponse {
+  extends BaseResponse {
   public client!: ClientInfo;
 
   constructor() {

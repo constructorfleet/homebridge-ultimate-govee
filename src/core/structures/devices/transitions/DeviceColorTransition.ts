@@ -7,8 +7,8 @@ import {ColorModeState} from '../../../../devices/states/modes/Color';
 export class DeviceColorTransition extends DeviceTransition<GoveeDevice> {
 
   constructor(
-      deviceId: string,
-      public readonly color: ColorRGB,
+    deviceId: string,
+    public readonly color: ColorRGB,
   ) {
     super(deviceId);
   }

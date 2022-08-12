@@ -17,7 +17,7 @@ export interface ColorModeState extends ModesState {
 }
 
 export function ColorMode<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements ColorModeState {
@@ -40,27 +40,27 @@ export function ColorMode<StateType extends State>(
       const isNoCommandsStatus = deviceState.color && !deviceState.commands;
       if (isColorCommand || isNoCommandsStatus) {
         this.color = new ColorRGB(
-            deviceState.color?.red ?? deviceState.color?.r ?? 0,
-            deviceState.color?.green ?? deviceState.color?.g ?? 0,
-            deviceState.color?.blue ?? deviceState.color?.b ?? 0,
+          deviceState.color?.red ?? deviceState.color?.r ?? 0,
+          deviceState.color?.green ?? deviceState.color?.g ?? 0,
+          deviceState.color?.blue ?? deviceState.color?.b ?? 0,
         );
 
         return super.parse(deviceState);
       }
       const commandValues = getCommandValues(
-          [
-            REPORT_IDENTIFIER,
-            ...modeCommandIdentifiers,
-            this.colorModeIdentifier,
-          ],
-          deviceState.commands,
+        [
+          REPORT_IDENTIFIER,
+          ...modeCommandIdentifiers,
+          this.colorModeIdentifier,
+        ],
+        deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.activeMode = this.colorModeIdentifier;
         this.color = new ColorRGB(
-            commandValues[0][0],
-            commandValues[0][1],
-            commandValues[0][2],
+          commandValues[0][0],
+          commandValues[0][1],
+          commandValues[0][2],
         );
       }
 
@@ -69,12 +69,12 @@ export function ColorMode<StateType extends State>(
 
     public colorChange(): number[] {
       return getCommandCodes(
-          COMMAND_IDENTIFIER,
-          modeCommandIdentifiers,
-          this.colorModeIdentifier,
-          this.color?.red ?? 0,
-          this.color?.green ?? 0,
-          this.color?.blue ?? 0,
+        COMMAND_IDENTIFIER,
+        modeCommandIdentifiers,
+        this.colorModeIdentifier,
+        this.color?.red ?? 0,
+        this.color?.green ?? 0,
+        this.color?.blue ?? 0,
       );
     }
   };

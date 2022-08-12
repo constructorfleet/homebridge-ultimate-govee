@@ -1,39 +1,34 @@
-import {
-  ConnectionState,
-  DataClientConnectionStateEvent,
-  DataClientErrorEvent,
-  DataClientEvent
-} from '../DataClientEvent';
+import {ConnectionState, DataClientConnectionStateEvent, DataClientErrorEvent, DataClientEvent} from '../DataClientEvent';
 
 export class RestConnectionStateEvent
-    extends DataClientConnectionStateEvent {
+  extends DataClientConnectionStateEvent {
 
   constructor(
-      eventData: ConnectionState,
+    eventData: ConnectionState,
   ) {
     super('REST', eventData);
   }
 }
 
 export class RestErrorEvent
-    extends DataClientErrorEvent {
+  extends DataClientErrorEvent {
 
   constructor(
-      eventData: (Error | string),
+    eventData: (Error | string),
   ) {
     super('REST', eventData);
   }
 }
 
 export abstract class RestEvent<EventDataType>
-    extends DataClientEvent<EventDataType> {
+  extends DataClientEvent<EventDataType> {
   protected constructor(
-      eventName: string,
-      eventData?: EventDataType,
+    eventName: string,
+    eventData?: EventDataType,
   ) {
     super(
-        `REST.${eventName}`,
-        eventData,
+      `REST.${eventName}`,
+      eventData,
     );
   }
 }

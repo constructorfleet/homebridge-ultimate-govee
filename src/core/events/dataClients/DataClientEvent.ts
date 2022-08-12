@@ -8,43 +8,43 @@ export enum ConnectionState {
 }
 
 export abstract class DataClientEvent<EventDataType>
-    extends Event<EventDataType> {
+  extends Event<EventDataType> {
 
   protected constructor(
-      eventName: string,
-      eventData?: EventDataType,
+    eventName: string,
+    eventData?: EventDataType,
   ) {
     super(
-        eventName,
-        eventData,
+      eventName,
+      eventData,
     );
   }
 }
 
 export abstract class DataClientConnectionStateEvent
-    extends DataClientEvent<ConnectionState> {
+  extends DataClientEvent<ConnectionState> {
 
   protected constructor(
-      clientName: string,
-      eventData: ConnectionState,
+    clientName: string,
+    eventData: ConnectionState,
   ) {
     super(
-        `${clientName}.CONNECTION`,
-        eventData,
+      `${clientName}.CONNECTION`,
+      eventData,
     );
   }
 }
 
 export abstract class DataClientErrorEvent
-    extends DataClientEvent<Error | string> {
+  extends DataClientEvent<Error | string> {
 
   protected constructor(
-      clientName: string,
-      eventData: (Error | string),
+    clientName: string,
+    eventData: (Error | string),
   ) {
     super(
-        `${clientName}.ERROR`,
-        eventData,
+      `${clientName}.ERROR`,
+      eventData,
     );
   }
 }

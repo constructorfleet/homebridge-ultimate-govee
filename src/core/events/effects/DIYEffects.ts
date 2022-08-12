@@ -3,34 +3,34 @@ import {DIYEffect} from '../../structures/api/responses/payloads/DIYListResponse
 import {DIYLightEffect} from '../../../effects/implementations/DIYLightEffect';
 
 export abstract class DIYEffectEvent<EventDataType>
-    extends EffectEvent<EventDataType> {
+  extends EffectEvent<EventDataType> {
 
   protected constructor(
-      eventName: string,
-      eventData: EventDataType,
+    eventName: string,
+    eventData: EventDataType,
   ) {
     super(
-        `DIY.${eventName}`,
-        eventData,
+      `DIY.${eventName}`,
+      eventData,
     );
   }
 }
 
 export class DIYEffectReceived
-    extends DIYEffectEvent<DIYEffect[]> {
+  extends DIYEffectEvent<DIYEffect[]> {
 
   constructor(
-      eventData: DIYEffect[],
+    eventData: DIYEffect[],
   ) {
     super('Received', eventData);
   }
 }
 
 export class DIYEffectDiscovered
-    extends DIYEffectEvent<DIYLightEffect[]> {
+  extends DIYEffectEvent<DIYLightEffect[]> {
 
   constructor(
-      eventData: DIYLightEffect[],
+    eventData: DIYLightEffect[],
   ) {
     super('Discovered', eventData);
   }

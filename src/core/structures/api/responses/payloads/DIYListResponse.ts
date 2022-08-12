@@ -46,7 +46,7 @@ export class DIYGroupList {
 }
 
 export class DIYListResponse
-    extends BaseResponse {
+  extends BaseResponse {
   @Expose({name: 'data'})
   @Type(() => DIYGroupList)
   public data!: DIYGroupList;

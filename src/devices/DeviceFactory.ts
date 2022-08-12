@@ -10,20 +10,20 @@ export class DeviceFactory {
   }
 
   static register<T extends Constructor<GoveeDevice>>(
-      ...models: string[]
+    ...models: string[]
   ): (ctor: T) => void {
     return (ctor: T) => {
       DeviceFactory.providers.push(
-          ...models.map(
-              (model) => {
-                return {
-                  provide: model,
-                  useValue: function () {
-                    return (config) => new ctor(config);
-                  },
-                };
+        ...models.map(
+          (model) => {
+            return {
+              provide: model,
+              useValue: function () {
+                return (config) => new ctor(config);
               },
-          ),
+            };
+          },
+        ),
       );
 
       return ctor;

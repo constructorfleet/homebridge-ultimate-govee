@@ -6,7 +6,7 @@ export interface ConnectedState {
 }
 
 export function Connected<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements ConnectedState {

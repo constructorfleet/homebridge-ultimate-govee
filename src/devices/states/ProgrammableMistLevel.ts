@@ -22,7 +22,7 @@ export interface ProgrammableMistLevelState {
 }
 
 export function ProgrammableMistLevel<StateType extends State & MistLevelState & StatusModeState>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements ProgrammableMistLevelState {
@@ -37,8 +37,8 @@ export function ProgrammableMistLevel<StateType extends State & MistLevelState &
     public override parse(deviceState: DeviceState): ThisType<this> {
       super.parse(deviceState);
       const commandValues = getCommandValues(
-          [REPORT_IDENTIFIER, ...commandIdentifiers],
-          deviceState.commands,
+        [REPORT_IDENTIFIER, ...commandIdentifiers],
+        deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.mistProgramId = Math.floor(commandValues[0][0] / 16);

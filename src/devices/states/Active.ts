@@ -14,7 +14,7 @@ export interface ActiveState {
 }
 
 export function Active<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements ActiveState {
@@ -31,9 +31,9 @@ export function Active<StateType extends State>(
 
     public get activeStateChange(): number[] {
       return getCommandCodes(
-          COMMAND_IDENTIFIER,
-          commandIdentifiers,
-          this.isActive ? 1 : 0,
+        COMMAND_IDENTIFIER,
+        commandIdentifiers,
+        this.isActive ? 1 : 0,
       );
     }
 
@@ -43,8 +43,8 @@ export function Active<StateType extends State>(
         return super.parse(deviceState);
       }
       const commandValues = getCommandValues(
-          [REPORT_IDENTIFIER, ...commandIdentifiers],
-          deviceState.commands,
+        [REPORT_IDENTIFIER, ...commandIdentifiers],
+        deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.isActive = commandValues[0][0] === 1;

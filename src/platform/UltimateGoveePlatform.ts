@@ -13,16 +13,16 @@ import {GoveePluginConfig} from './config/GoveePluginConfig';
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class UltimateGoveePlatform
-    implements DynamicPlatformPlugin {
+  implements DynamicPlatformPlugin {
   private appContext!: INestApplicationContext;
   private service!: PlatformService;
   private loaded = false;
   private cachedAccessories: PlatformAccessory[] = [];
 
   constructor(
-      public readonly log: Logger,
-      public readonly config: PlatformConfig,
-      public readonly api: API,
+    public readonly log: Logger,
+    public readonly config: PlatformConfig,
+    public readonly api: API,
   ) {
     const goveeConfig = plainToInstance(GoveePluginConfig, config);
     if (!goveeConfig.isValid()) {
@@ -30,32 +30,32 @@ export class UltimateGoveePlatform
       return;
     }
     NestFactory.createApplicationContext(
-        PlatformModule.register({
-          rootPath: path.resolve(path.join(__dirname, '..')),
-          api: this.api,
-          Service: this.api.hap.Service,
-          Characteristic: this.api.hap.Characteristic,
-          logger: this.log,
-          storagePath: this.api.user.persistPath(),
-          configPath: this.api.user.configPath(),
-          generateUUID: this.api.hap.uuid.generate,
-          accessoryFactory: this.api.platformAccessory,
-          registerAccessory: this.api.registerPlatformAccessories,
-          updateAccessory: this.api.updatePlatformAccessories,
-          credentials: {
-            username: goveeConfig.username!,
-            password: goveeConfig.password!,
-          },
-          connections: {
-            enableIoT: goveeConfig.connections?.iot ?? true,
-            enableBLE: goveeConfig.connections?.ble ?? true,
-            enableAPI: goveeConfig.connections?.api ?? true,
-          },
-        }),
-        {
-          logger: console,
-          abortOnError: false,
+      PlatformModule.register({
+        rootPath: path.resolve(path.join(__dirname, '..')),
+        api: this.api,
+        Service: this.api.hap.Service,
+        Characteristic: this.api.hap.Characteristic,
+        logger: this.log,
+        storagePath: this.api.user.persistPath(),
+        configPath: this.api.user.configPath(),
+        generateUUID: this.api.hap.uuid.generate,
+        accessoryFactory: this.api.platformAccessory,
+        registerAccessory: this.api.registerPlatformAccessories,
+        updateAccessory: this.api.updatePlatformAccessories,
+        credentials: {
+          username: goveeConfig.username!,
+          password: goveeConfig.password!,
         },
+        connections: {
+          enableIoT: goveeConfig.connections?.iot ?? true,
+          enableBLE: goveeConfig.connections?.ble ?? true,
+          enableAPI: goveeConfig.connections?.api ?? true,
+        },
+      }),
+      {
+        logger: console,
+        abortOnError: false,
+      },
     ).then(async (context) => {
       this.appContext = context;
       this.service = context.get(PlatformService);
@@ -93,7 +93,7 @@ export class UltimateGoveePlatform
   configureAccessory(accessory: PlatformAccessory): void {
     if (this.service) {
       this.service.configureAccessory(accessory)
-          .then();
+        .then();
     } else {
       this.cachedAccessories.push(accessory);
     }

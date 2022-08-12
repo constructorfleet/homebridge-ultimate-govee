@@ -2,7 +2,7 @@ import {BaseRequest} from './BaseRequest';
 import {GoveeDevice} from '../../../../../devices/GoveeDevice';
 
 export function deviceSceneRequest(
-    device: GoveeDevice,
+  device: GoveeDevice,
 ): DeviceSceneRequest {
   const request = new DeviceSceneRequest();
   request.sku = device.model;
@@ -12,7 +12,7 @@ export function deviceSceneRequest(
 }
 
 export class DeviceSceneRequest
-    extends BaseRequest {
+  extends BaseRequest {
   public sku!: string;
   public goodsType!: number;
 

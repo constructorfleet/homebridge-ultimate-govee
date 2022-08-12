@@ -11,54 +11,54 @@ export interface ResponseWithDevice<ResponseType extends BaseResponse> {
 }
 
 export abstract class RestResponseEvent<DataType>
-    extends RestEvent<DataType> {
+  extends RestEvent<DataType> {
 
   protected constructor(
-      eventName: string,
-      eventData: DataType,
+    eventName: string,
+    eventData: DataType,
   ) {
     super(
-        `RESPONSE.${eventName}`,
-        eventData,
+      `RESPONSE.${eventName}`,
+      eventData,
     );
   }
 }
 
 export class RestResponseDeviceList
-    extends RestResponseEvent<AppDeviceListResponse> {
+  extends RestResponseEvent<AppDeviceListResponse> {
 
   constructor(
-      eventData: AppDeviceListResponse,
+    eventData: AppDeviceListResponse,
   ) {
     super(
-        'DeviceList',
-        eventData,
+      'DeviceList',
+      eventData,
     );
   }
 }
 
 export class RestDIYEffectResponse
-    extends RestResponseEvent<DIYListResponse> {
+  extends RestResponseEvent<DIYListResponse> {
 
   constructor(
-      eventData: DIYListResponse,
+    eventData: DIYListResponse,
   ) {
     super(
-        'DIYEffects',
-        eventData,
+      'DIYEffects',
+      eventData,
     );
   }
 }
 
 export class RestDeviceScenesResponse
-    extends RestResponseEvent<ResponseWithDevice<DeviceSceneListResponse>> {
+  extends RestResponseEvent<ResponseWithDevice<DeviceSceneListResponse>> {
 
   constructor(
-      eventData: ResponseWithDevice<DeviceSceneListResponse>,
+    eventData: ResponseWithDevice<DeviceSceneListResponse>,
   ) {
     super(
-        'DeviceScenes',
-        eventData,
+      'DeviceScenes',
+      eventData,
     );
   }
 }

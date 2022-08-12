@@ -13,7 +13,7 @@ export interface TimerState {
 }
 
 export function Timer<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements TimerState {
@@ -27,8 +27,8 @@ export function Timer<StateType extends State>(
 
     public override parse(deviceState: DeviceState): ThisType<this> {
       const commandValues = getCommandValues(
-          [REPORT_IDENTIFIER, ...commandIdentifiers],
-          deviceState.commands,
+        [REPORT_IDENTIFIER, ...commandIdentifiers],
+        deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.timerOn = commandValues[0][0] === 1;

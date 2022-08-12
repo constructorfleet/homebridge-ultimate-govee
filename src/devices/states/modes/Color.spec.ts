@@ -14,8 +14,8 @@ class TestMode extends ColorMode(State) {
 let testMode: ColorModeState & State;
 
 const assertColor: AssertChain<number | undefined> = (
-    actual?: number,
-    expected?: number,
+  actual?: number,
+  expected?: number,
 ): AssertChain<number | undefined> => {
   if (expected === undefined) {
     expect(actual).toBeUndefined();
@@ -26,36 +26,36 @@ const assertColor: AssertChain<number | undefined> = (
 };
 
 const assertColorRGB = (
-    red?: number,
-    green?: number,
-    blue?: number,
+  red?: number,
+  green?: number,
+  blue?: number,
 ) => {
   assertColor(
-      testMode.color?.red,
-      red,
+    testMode.color?.red,
+    red,
   )(
-      testMode.color?.green,
-      green,
+    testMode.color?.green,
+    green,
   )(
-      testMode.color?.blue,
-      blue,
+    testMode.color?.blue,
+    blue,
   );
 };
 
 describe('ColorMode', () => {
   beforeEach(() => {
     testMode = new TestMode(
-        {
-          colorModeIdentifier: 19,
-        });
+      {
+        colorModeIdentifier: 19,
+      });
   });
 
   describe('parse', () => {
     it('processes DeviceState.mode', () => {
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
       expect(testMode.activeMode).toBeUndefined();
       testMode.parse({
@@ -64,17 +64,17 @@ describe('ColorMode', () => {
         mode: 10,
       });
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
       expect(testMode.activeMode).toBe(10);
     });
     it('processes DeviceState.command === color', () => {
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
       testMode.parse({
         deviceId: 'testDevice',
@@ -86,16 +86,16 @@ describe('ColorMode', () => {
         },
       });
       assertColorRGB(
-          10,
-          100,
-          50,
+        10,
+        100,
+        50,
       );
     });
     it('processes DeviceState.command === colorwc', () => {
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
       testMode.parse({
         deviceId: 'testDevice',
@@ -107,17 +107,17 @@ describe('ColorMode', () => {
         },
       });
       assertColorRGB(
-          100,
-          10,
-          5,
+        100,
+        10,
+        5,
       );
     });
     it('processes DeviceState.commands', () => {
       expect(testMode.activeMode).toBeUndefined();
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
       testMode.parse({
         deviceId: 'device',
@@ -134,17 +134,17 @@ describe('ColorMode', () => {
       });
       expect(testMode.activeMode).toBe(testMode.colorModeIdentifier);
       assertColorRGB(
-          10,
-          1,
-          255,
+        10,
+        1,
+        255,
       );
     });
 
     it('ignores non-applicable DeviceState', () => {
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
       testMode.parse({
         deviceId: 'device',
@@ -154,17 +154,17 @@ describe('ColorMode', () => {
         ],
       });
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
     });
 
     it('ignores non-applicable DeviceState modeIdentifier', () => {
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
       testMode.parse({
         deviceId: 'device',
@@ -181,9 +181,9 @@ describe('ColorMode', () => {
         ],
       });
       assertColorRGB(
-          undefined,
-          undefined,
-          undefined,
+        undefined,
+        undefined,
+        undefined,
       );
     });
   });
@@ -192,12 +192,12 @@ describe('ColorMode', () => {
     it('returns opcode array', () => {
       testMode.color = new ColorRGB(40, 10, 99);
       expect(testMode.colorChange()).toStrictEqual(
-          [
-            COMMAND_IDENTIFIER, 5, testMode.colorModeIdentifier, 40, 10,
-            99, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 100,
-          ],
+        [
+          COMMAND_IDENTIFIER, 5, testMode.colorModeIdentifier, 40, 10,
+          99, 0, 0, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 100,
+        ],
       );
     });
   });

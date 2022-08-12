@@ -21,7 +21,7 @@ export interface ColorTemperatureState {
 }
 
 export function ColorTemperature<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements ColorTemperatureState {
@@ -35,11 +35,11 @@ export function ColorTemperature<StateType extends State>(
 
     public get colorTemperatureChange(): number[] {
       return getCommandCodes(
-          COMMAND_IDENTIFIER,
-          commandIdentifiers,
-          this.colorTemperature?.red || 0,
-          this.colorTemperature?.green || 0,
-          this.colorTemperature?.blue || 0,
+        COMMAND_IDENTIFIER,
+        commandIdentifiers,
+        this.colorTemperature?.red || 0,
+        this.colorTemperature?.green || 0,
+        this.colorTemperature?.blue || 0,
       );
     }
 
@@ -51,14 +51,14 @@ export function ColorTemperature<StateType extends State>(
       }
 
       const commandValues = getCommandValues(
-          [REPORT_IDENTIFIER, ...commandIdentifiers],
-          deviceState.commands,
+        [REPORT_IDENTIFIER, ...commandIdentifiers],
+        deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.colorTemperature = new ColorRGB(
-            commandValues[0][0],
-            commandValues[0][1],
-            commandValues[0][2],
+          commandValues[0][0],
+          commandValues[0][1],
+          commandValues[0][2],
         );
         this.temperatureKelvin = rgbToKelvin(this.colorTemperature);
       }

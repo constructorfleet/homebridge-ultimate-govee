@@ -2,7 +2,7 @@ import {GoveeDevice} from '../../devices';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
 import {DeviceLightEffect, DIYLightEffect} from '../../effects';
 import {Exclude, Expose, Type} from 'class-transformer';
-import {Injectable} from "@nestjs/common";
+import {Injectable} from '@nestjs/common';
 
 
 type LightType = 'WW' | 'RGB' | 'RGBIC';
@@ -56,26 +56,26 @@ export class GoveeDeviceOverrides {
   humidifiers?: GoveeDeviceOverride[];
   @Expose({name: 'lights'})
   @Type(
-      () => GoveeLightOverride,
-      {
-        discriminator: {
-          property: '_lightType',
-          subTypes: [
-            {
-              value: GoveeRGBICLightOverride,
-              name: 'RGBIC',
-            },
-          ],
-        },
-        keepDiscriminatorProperty: true,
+    () => GoveeLightOverride,
+    {
+      discriminator: {
+        property: '_lightType',
+        subTypes: [
+          {
+            value: GoveeRGBICLightOverride,
+            name: 'RGBIC',
+          },
+        ],
       },
+      keepDiscriminatorProperty: true,
+    },
   )
   lights?: GoveeDeviceOverride[];
 
   constructor(
-      humidifiers: GoveeDeviceOverride[],
-      purifiers: GoveeDeviceOverride[],
-      lights: GoveeDeviceOverride[],
+    humidifiers: GoveeDeviceOverride[],
+    purifiers: GoveeDeviceOverride[],
+    lights: GoveeDeviceOverride[],
   ) {
     this.humidifiers = humidifiers;
     this.airPurifiers = purifiers;

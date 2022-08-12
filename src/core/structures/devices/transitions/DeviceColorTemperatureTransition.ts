@@ -6,9 +6,9 @@ import {ColorTemperatureState} from '../../../../devices/states/ColorTemperature
 export class DeviceColorTemperatureTransition extends DeviceTransition<ColorTemperatureState & GoveeDevice> {
 
   constructor(
-      deviceId: string,
-      public readonly color: ColorRGB,
-      public readonly temperature: number,
+    deviceId: string,
+    public readonly color: ColorRGB,
+    public readonly temperature: number,
   ) {
     super(deviceId);
   }

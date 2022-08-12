@@ -18,7 +18,7 @@ export interface RGBMusicModeState extends ModesState {
 
 
 export function RGBMusicMode<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements RGBMusicModeState {
@@ -39,12 +39,12 @@ export function RGBMusicMode<StateType extends State>(
       }
 
       const commandValues = getCommandValues(
-          [
-            REPORT_IDENTIFIER,
-            ...modeCommandIdentifiers,
-            this.rgbMusicModeIdentifier,
-          ],
-          deviceState.commands,
+        [
+          REPORT_IDENTIFIER,
+          ...modeCommandIdentifiers,
+          this.rgbMusicModeIdentifier,
+        ],
+        deviceState.commands,
       );
 
       if (!commandValues || (commandValues?.length || 0) === 0) {
@@ -59,13 +59,13 @@ export function RGBMusicMode<StateType extends State>(
 
     rgbMusicChange(): number[] {
       return getCommandCodes(
-          COMMAND_IDENTIFIER,
-          [
-            ...modeCommandIdentifiers,
-            this.rgbMusicModeIdentifier,
-          ],
-          this.musicModeType || 0,
-          this.sensitivity || 0,
+        COMMAND_IDENTIFIER,
+        [
+          ...modeCommandIdentifiers,
+          this.rgbMusicModeIdentifier,
+        ],
+        this.musicModeType || 0,
+        this.sensitivity || 0,
       );
     }
   };

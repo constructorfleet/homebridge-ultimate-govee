@@ -21,18 +21,18 @@ export class PurifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
 
   constructor(
-      eventEmitter: EventEmitter2,
-      platformConfig: PlatformConfigService,
-      @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
-      @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
-      log: LoggingService,
+    eventEmitter: EventEmitter2,
+    platformConfig: PlatformConfigService,
+    @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
+    @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
+    log: LoggingService,
   ) {
     super(
-        eventEmitter,
-        platformConfig,
-        SERVICES,
-        CHARACTERISTICS,
-        log,
+      eventEmitter,
+      platformConfig,
+      SERVICES,
+      CHARACTERISTICS,
+      log,
     );
   }
 
@@ -41,88 +41,88 @@ export class PurifierService extends AccessoryService<void> {
   }
 
   protected updateServiceCharacteristics(
-      service: Service,
-      device: GoveeDevice,
+    service: Service,
+    device: GoveeDevice,
   ) {
     service
-        .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
-        .updateValue(
-            (device as unknown as ControlLockState).areControlsLocked
-                ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
-                : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED)
-        .onSet(
-            async (value: CharacteristicValue) =>
-                this.emit(
-                    new DeviceCommandEvent(
-                        new DeviceControlLockTransition(
-                            device.deviceId,
-                            value === this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED,
-                        ),
-                    ),
-                ),
-        );
-    service
-        .getCharacteristic(this.CHARACTERISTICS.Active)
-        .updateValue(
-            (device as unknown as ActiveState)?.isActive
-                ? this.CHARACTERISTICS.Active.ACTIVE
-                : this.CHARACTERISTICS.Active.INACTIVE,
-        )
-        .onSet(async (value: CharacteristicValue) =>
-            this.emit(
-                new DeviceCommandEvent(
-                    new DeviceActiveTransition(
-                        device.deviceId,
-                        value === this.CHARACTERISTICS.Active.ACTIVE,
-                    ),
-                ),
+      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
+      .updateValue(
+        (device as unknown as ControlLockState).areControlsLocked
+          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
+          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED)
+      .onSet(
+        async (value: CharacteristicValue) =>
+          this.emit(
+            new DeviceCommandEvent(
+              new DeviceControlLockTransition(
+                device.deviceId,
+                value === this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED,
+              ),
             ),
-        );
+          ),
+      );
     service
-        .getCharacteristic(this.CHARACTERISTICS.TargetAirPurifierState)
-        .setProps({
-          minValue: 1,
-          maxValue: 1,
-          validValues: [1],
-        })
-        .updateValue(1);
-    service
-        .getCharacteristic(this.CHARACTERISTICS.CurrentAirPurifierState)
-        .updateValue(
-            (device as unknown as ActiveState)?.isActive
-                ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
-                : this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE,
-        )
-        .onSet(async (value: CharacteristicValue) =>
-            this.emit(
-                new DeviceCommandEvent(
-                    new DeviceActiveTransition(
-                        device.deviceId,
-                        value === this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR,
-                    ),
-                ),
+      .getCharacteristic(this.CHARACTERISTICS.Active)
+      .updateValue(
+        (device as unknown as ActiveState)?.isActive
+          ? this.CHARACTERISTICS.Active.ACTIVE
+          : this.CHARACTERISTICS.Active.INACTIVE,
+      )
+      .onSet(async (value: CharacteristicValue) =>
+        this.emit(
+          new DeviceCommandEvent(
+            new DeviceActiveTransition(
+              device.deviceId,
+              value === this.CHARACTERISTICS.Active.ACTIVE,
             ),
-        );
+          ),
+        ),
+      );
+    service
+      .getCharacteristic(this.CHARACTERISTICS.TargetAirPurifierState)
+      .setProps({
+        minValue: 1,
+        maxValue: 1,
+        validValues: [1],
+      })
+      .updateValue(1);
+    service
+      .getCharacteristic(this.CHARACTERISTICS.CurrentAirPurifierState)
+      .updateValue(
+        (device as unknown as ActiveState)?.isActive
+          ? this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR
+          : this.CHARACTERISTICS.CurrentAirPurifierState.INACTIVE,
+      )
+      .onSet(async (value: CharacteristicValue) =>
+        this.emit(
+          new DeviceCommandEvent(
+            new DeviceActiveTransition(
+              device.deviceId,
+              value === this.CHARACTERISTICS.CurrentAirPurifierState.PURIFYING_AIR,
+            ),
+          ),
+        ),
+      );
     const fanSpeed = (device as unknown as FanSpeedState)?.fanSpeed ?? 0;
     service
-        .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
-        .setProps({
-          minValue: 0,
-          maxValue: 100,
-        })
-        .updateValue(
-            fanSpeed === 16
-                ? 25
-                : ((fanSpeed + 1) * 25))
-        .onSet(async (value: CharacteristicValue) =>
-            this.emit(
-                new DeviceCommandEvent(
-                    new DeviceFanSpeedTransition(
-                        device.deviceId,
-                        Math.max(Math.ceil((value as number ?? 0) / 25) - 1, 0) || 16,
-                    ),
-                ),
+      .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
+      .setProps({
+        minValue: 0,
+        maxValue: 100,
+      })
+      .updateValue(
+        fanSpeed === 16
+          ? 25
+          : ((fanSpeed + 1) * 25))
+      .onSet(async (value: CharacteristicValue) =>
+        this.emit(
+          new DeviceCommandEvent(
+            new DeviceFanSpeedTransition(
+              device.deviceId,
+              Math.max(Math.ceil((value as number ?? 0) / 25) - 1, 0) || 16,
             ),
-        );
+          ),
+        ),
+      );
   }
 }

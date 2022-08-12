@@ -5,8 +5,8 @@ import {GoveeDevice} from '../../../../devices/GoveeDevice';
 export class DeviceMistLevelTransition extends DeviceTransition<MistLevelState & GoveeDevice> {
 
   constructor(
-      deviceId: string,
-      public readonly mistLevel: number,
+    deviceId: string,
+    public readonly mistLevel: number,
   ) {
     super(deviceId);
   }

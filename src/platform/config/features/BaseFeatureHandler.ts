@@ -4,10 +4,10 @@ import {LoggingService} from '../../../logging';
 export abstract class BaseFeatureHandler {
 
   protected constructor(
-      protected readonly featureFlag: string,
-      protected readonly enabled: boolean,
-      protected readonly configService: PlatformConfigService,
-      protected readonly log: LoggingService,
+    protected readonly featureFlag: string,
+    protected readonly enabled: boolean,
+    protected readonly configService: PlatformConfigService,
+    protected readonly log: LoggingService,
   ) {
   }
 

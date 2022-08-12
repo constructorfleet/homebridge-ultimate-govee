@@ -61,12 +61,12 @@ describe('RGBMusicMode', () => {
       testMode.musicModeType = 5;
       testMode.sensitivity = 50;
       expect(testMode.rgbMusicChange()).toStrictEqual(
-          [
-            COMMAND_IDENTIFIER, 5, 19, testMode.musicModeType, testMode.sensitivity,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 18,
-          ],
+        [
+          COMMAND_IDENTIFIER, 5, 19, testMode.musicModeType, testMode.sensitivity,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 18,
+        ],
       );
     });
   });

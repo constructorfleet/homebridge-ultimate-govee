@@ -6,7 +6,7 @@ export interface OnOffState {
 }
 
 export function OnOff<StateType extends State>(
-    stateType: new (...args) => StateType,
+  stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements OnOffState {

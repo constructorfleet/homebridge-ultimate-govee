@@ -8,11 +8,11 @@ import {GoveeDeviceOverride} from '../../config/GoveePluginConfig';
 
 export class ServiceSubType<IdentifierType> {
   constructor(
-      public readonly subType: string,
-      public readonly identifier?: IdentifierType,
-      public readonly nameSuffix?: string,
-      public readonly primary?: boolean,
-      public readonly linkToPrimary?: boolean,
+    public readonly subType: string,
+    public readonly identifier?: IdentifierType,
+    public readonly nameSuffix?: string,
+    public readonly primary?: boolean,
+    public readonly linkToPrimary?: boolean,
   ) {
   }
 }
@@ -28,58 +28,58 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
   protected subTypes?: ServiceSubType<IdentifierType>[] = undefined;
 
   protected constructor(
-      eventEmitter: EventEmitter2,
-      protected readonly configService: PlatformConfigService,
-      protected readonly SERVICES: typeof Service,
-      protected readonly CHARACTERISTICS: typeof Characteristic,
-      protected readonly log: LoggingService,
+    eventEmitter: EventEmitter2,
+    protected readonly configService: PlatformConfigService,
+    protected readonly SERVICES: typeof Service,
+    protected readonly CHARACTERISTICS: typeof Characteristic,
+    protected readonly log: LoggingService,
   ) {
     super(eventEmitter);
   }
 
   public setup(
-      device: GoveeDevice,
-      deviceOverride: GoveeDeviceOverride,
+    device: GoveeDevice,
+    deviceOverride: GoveeDeviceOverride,
   ) {
     return;
   }
 
   public updateAccessory(
-      accessory: PlatformAccessory,
-      device: GoveeDevice,
+    accessory: PlatformAccessory,
+    device: GoveeDevice,
   ): PlatformAccessory {
     if (!this.supports(device)) {
       return accessory;
     }
     const deviceOverride =
-        this.configService.getDeviceConfiguration(device.deviceId);
+      this.configService.getDeviceConfiguration(device.deviceId);
     if (deviceOverride !== undefined) {
       this.setup(
-          device,
-          deviceOverride,
+        device,
+        deviceOverride,
       );
     }
     this.get(
-        accessory,
-        deviceOverride,
+      accessory,
+      deviceOverride,
     ).forEach(
-        (identifiedService: IdentifiedService<IdentifierType>) => {
-          const serviceOverride = this.processDeviceOverrides(
-              accessory,
-              identifiedService,
-              device,
-              deviceOverride,
-          );
-          if (!serviceOverride || !serviceOverride.service) {
-            return;
-          }
+      (identifiedService: IdentifiedService<IdentifierType>) => {
+        const serviceOverride = this.processDeviceOverrides(
+          accessory,
+          identifiedService,
+          device,
+          deviceOverride,
+        );
+        if (!serviceOverride || !serviceOverride.service) {
+          return;
+        }
 
-          this.updateServiceCharacteristics(
-              serviceOverride.service,
-              device,
-              identifiedService.identifier,
-          );
-        },
+        this.updateServiceCharacteristics(
+          serviceOverride.service,
+          device,
+          identifiedService.identifier,
+        );
+      },
     );
     return accessory;
   }
@@ -90,57 +90,57 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
   }
 
   protected shouldAddService(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      deviceOverride?: GoveeDeviceOverride,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      subType?: ServiceSubType<IdentifierType>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    deviceOverride?: GoveeDeviceOverride,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    subType?: ServiceSubType<IdentifierType>,
   ): boolean {
     return true;
   }
 
   protected processDeviceOverrides(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      accessory: PlatformAccessory,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      identifiedService: IdentifiedService<IdentifierType>,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      device: GoveeDevice,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      deviceOverride?: GoveeDeviceOverride,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    accessory: PlatformAccessory,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    identifiedService: IdentifiedService<IdentifierType>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    device: GoveeDevice,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType> | undefined {
     return identifiedService;
   }
 
   protected abstract updateServiceCharacteristics(
-      service: Service,
-      device: GoveeDevice,
-      serviceIdentifier?: IdentifierType,
+    service: Service,
+    device: GoveeDevice,
+    serviceIdentifier?: IdentifierType,
   );
 
   protected get(
-      accessory: PlatformAccessory,
-      deviceOverride?: GoveeDeviceOverride,
+    accessory: PlatformAccessory,
+    deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType>[] {
     if (!this.subTypes || this.subTypes.length === 0) {
       return this.getService(
-          accessory,
-          deviceOverride,
+        accessory,
+        deviceOverride,
       );
     }
     return this.subTypes.map(
-        (subType) => this.getSubTypeService(
-            accessory,
-            subType,
-            deviceOverride,
-        ),
+      (subType) => this.getSubTypeService(
+        accessory,
+        subType,
+        deviceOverride,
+      ),
     );
   }
 
   private setServicePrimary(
-      accessory: PlatformAccessory,
-      service?: Service,
-      primary?: boolean,
-      linkToPrimary?: boolean,
+    accessory: PlatformAccessory,
+    service?: Service,
+    primary?: boolean,
+    linkToPrimary?: boolean,
   ): Service | undefined {
     if (!service) {
       return undefined;
@@ -151,7 +151,7 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
 
     if (linkToPrimary) {
       accessory.services.find(
-          (service) => service.isPrimaryService,
+        (service) => service.isPrimaryService,
       )?.addLinkedService(service);
     }
 
@@ -159,40 +159,40 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
   }
 
   private getService(
-      accessory: PlatformAccessory,
-      deviceOverride?: GoveeDeviceOverride,
+    accessory: PlatformAccessory,
+    deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType>[] {
     return [{
       service: this.setServicePrimary(
+        accessory,
+        accessory.getService(
+          this.serviceType,
+        ) || this.tryAddService(
           accessory,
-          accessory.getService(
-              this.serviceType,
-          ) || this.tryAddService(
-              accessory,
-              deviceOverride,
-          ),
+          deviceOverride,
+        ),
       ),
     }];
   }
 
   private getSubTypeService(
-      accessory: PlatformAccessory,
-      subType: ServiceSubType<IdentifierType>,
-      deviceOverride?: GoveeDeviceOverride,
+    accessory: PlatformAccessory,
+    subType: ServiceSubType<IdentifierType>,
+    deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType> {
     return {
       service: this.setServicePrimary(
+        accessory,
+        accessory.getServiceById(
+          this.serviceType,
+          subType.subType,
+        ) || this.tryAddService(
           accessory,
-          accessory.getServiceById(
-              this.serviceType,
-              subType.subType,
-          ) || this.tryAddService(
-              accessory,
-              deviceOverride,
-              subType,
-          ),
-          subType.primary,
-          subType.linkToPrimary,
+          deviceOverride,
+          subType,
+        ),
+        subType.primary,
+        subType.linkToPrimary,
       ),
       subType: subType,
       identifier: subType.identifier,
@@ -200,24 +200,24 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
   }
 
   private tryAddService(
-      accessory: PlatformAccessory,
-      deviceOverride?: GoveeDeviceOverride,
-      subType?: ServiceSubType<IdentifierType>,
+    accessory: PlatformAccessory,
+    deviceOverride?: GoveeDeviceOverride,
+    subType?: ServiceSubType<IdentifierType>,
   ): Service | undefined {
     if (!this.shouldAddService(deviceOverride, subType)) {
       return undefined;
     }
     if (!subType) {
       return accessory.addService(
-          this.serviceType,
-          `${accessory.displayName}`,
+        this.serviceType,
+        `${accessory.displayName}`,
       );
     }
 
     return accessory.addService(
-        this.serviceType,
-        `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
-        subType.subType,
+      this.serviceType,
+      `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+      subType.subType,
     );
   }
 }

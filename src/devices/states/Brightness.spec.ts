@@ -71,12 +71,12 @@ describe('BrightnessState', () => {
     it('returns opcode array', () => {
       testState.brightness = 22;
       expect(testState.brightnessChange).toStrictEqual(
-          [
-            COMMAND_IDENTIFIER, 4, 22, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 33,
-          ],
+        [
+          COMMAND_IDENTIFIER, 4, 22, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 33,
+        ],
       );
     });
   });

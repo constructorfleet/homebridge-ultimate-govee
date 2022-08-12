@@ -58,12 +58,12 @@ describe('ControlLockState', () => {
     it('returns opcode array', () => {
       testState.areControlsLocked = true;
       expect(testState.controlLockChange).toStrictEqual(
-          [
-            COMMAND_IDENTIFIER, 10, 1, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 56,
-          ],
+        [
+          COMMAND_IDENTIFIER, 10, 1, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0,
+          0, 0, 0, 0, 56,
+        ],
       );
     });
   });

@@ -9,17 +9,17 @@ import {Connected} from '../states/Connected';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export class LightDevice extends Timer(
-    ColorTemperature(
-        Brightness(
-            Active(
-                Connected(
-                    OnOff(
-                        GoveeDevice,
-                    ),
-                ),
-            ),
+  ColorTemperature(
+    Brightness(
+      Active(
+        Connected(
+          OnOff(
+            GoveeDevice,
+          ),
         ),
+      ),
     ),
+  ),
 ) {
   constructor(args) {
     super(args);
@@ -28,7 +28,7 @@ export class LightDevice extends Timer(
 
 // @DeviceFactory.register()
 export class GoveeLight
-    extends LightDevice {
+  extends LightDevice {
 
   constructor(args) {
     super(args);

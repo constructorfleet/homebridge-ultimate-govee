@@ -14,20 +14,20 @@ import {promisify} from 'util';
 
 @Injectable()
 export class IoTClient
-    extends GoveeClient {
+  extends GoveeClient {
   private readonly awsIOTDevice: device;
   private connected = false;
   private lock = new Lock<void>();
   private readonly subscriptions: Set<string> = new Set<string>();
 
   constructor(
-      eventEmitter: EventEmitter2,
-      @Inject(IOT_KEY) keyPath: string,
-      @Inject(IOT_CERTIFICATE) certificatePath: string,
-      @Inject(IOT_CA_CERTIFICATE) caPath: string,
-      @Inject(GOVEE_CLIENT_ID) clientId: string,
-      @Inject(IOT_HOST) host: string,
-      private readonly log: LoggingService,
+    eventEmitter: EventEmitter2,
+    @Inject(IOT_KEY) keyPath: string,
+    @Inject(IOT_CERTIFICATE) certificatePath: string,
+    @Inject(IOT_CA_CERTIFICATE) caPath: string,
+    @Inject(GOVEE_CLIENT_ID) clientId: string,
+    @Inject(IOT_HOST) host: string,
+    private readonly log: LoggingService,
   ) {
     super(eventEmitter);
     this.awsIOTDevice = new device({
@@ -39,96 +39,96 @@ export class IoTClient
     });
 
     this.awsIOTDevice.on(
-        'connect',
-        async () => {
-          if (!this.connected) {
-            this.log.info(
-                'IoTClient',
-                'onConnect',
-                'Connection Connected',
-            );
-            this.connected = true;
-            await this.emitAsync(
-                new IoTConnectionStateEvent(ConnectionState.Connected),
-            );
-            await this.resubscribe();
-          }
-        },
-    );
-
-    this.awsIOTDevice.on(
-        'reconnect',
-        async () => {
+      'connect',
+      async () => {
+        if (!this.connected) {
           this.log.info(
-              'IoTClient',
-              'onReconnect',
-              'Connection Reconnected',
+            'IoTClient',
+            'onConnect',
+            'Connection Connected',
           );
-          if (!this.connected) {
-            this.connected = true;
-            await this.emitAsync(
-                new IoTConnectionStateEvent(ConnectionState.Connected),
-            );
-            await this.resubscribe();
-          }
-        },
-    );
-
-    this.awsIOTDevice.on(
-        'error',
-        (error: Error | string) => {
-          this.log.error(
-              'IoTClient',
-              'onError',
-              error,
-          );
-        },
-    );
-    this.awsIOTDevice.on(
-        'offline',
-        async () => {
-          this.log.info(
-              'IoTClient',
-              'onOffline',
-              'Connection Offline',
-          );
-          if (this.connected) {
-            this.connected = false;
-            await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
-          }
-        },
-    );
-
-    this.awsIOTDevice.on(
-        'close',
-        async () => {
-          this.log.info(
-              'IoTClient',
-              'onClose',
-              'Connection Closed',
-          );
-          if (this.connected) {
-            this.connected = false;
-            await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
-          }
-        },
-    );
-
-    this.awsIOTDevice.on(
-        'message',
-        async (topic: string, payload: string) => {
+          this.connected = true;
           await this.emitAsync(
-              new IotReceive(
-                  topic,
-                  payload.toString(),
-              ),
+            new IoTConnectionStateEvent(ConnectionState.Connected),
           );
-        },
+          await this.resubscribe();
+        }
+      },
+    );
+
+    this.awsIOTDevice.on(
+      'reconnect',
+      async () => {
+        this.log.info(
+          'IoTClient',
+          'onReconnect',
+          'Connection Reconnected',
+        );
+        if (!this.connected) {
+          this.connected = true;
+          await this.emitAsync(
+            new IoTConnectionStateEvent(ConnectionState.Connected),
+          );
+          await this.resubscribe();
+        }
+      },
+    );
+
+    this.awsIOTDevice.on(
+      'error',
+      (error: Error | string) => {
+        this.log.error(
+          'IoTClient',
+          'onError',
+          error,
+        );
+      },
+    );
+    this.awsIOTDevice.on(
+      'offline',
+      async () => {
+        this.log.info(
+          'IoTClient',
+          'onOffline',
+          'Connection Offline',
+        );
+        if (this.connected) {
+          this.connected = false;
+          await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
+        }
+      },
+    );
+
+    this.awsIOTDevice.on(
+      'close',
+      async () => {
+        this.log.info(
+          'IoTClient',
+          'onClose',
+          'Connection Closed',
+        );
+        if (this.connected) {
+          this.connected = false;
+          await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
+        }
+      },
+    );
+
+    this.awsIOTDevice.on(
+      'message',
+      async (topic: string, payload: string) => {
+        await this.emitAsync(
+          new IotReceive(
+            topic,
+            payload.toString(),
+          ),
+        );
+      },
     );
   }
 
   @OnEvent(
-      'IOT.Unsubscribe',
+    'IOT.Unsubscribe',
   )
   async unsubscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -140,7 +140,7 @@ export class IoTClient
       await promisify(this.awsIOTDevice.unsubscribe)(message.topic);
       this.subscriptions.delete(message.topic);
       await this.emitAsync(
-          new IoTUnsubscribedFromEvent(message.topic),
+        new IoTUnsubscribedFromEvent(message.topic),
       );
     } catch (error) {
       await this.emitAsync(new IoTErrorEvent(error as Error));
@@ -150,7 +150,7 @@ export class IoTClient
   }
 
   @OnEvent(
-      'IOT.Subscribe',
+    'IOT.Subscribe',
   )
   async subscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -162,8 +162,8 @@ export class IoTClient
       if (!this.subscriptions.has(message.topic)) {
         this.log.info('Subscribing', message.topic);
         await promisify(this.awsIOTDevice.subscribe)(
-            message.topic,
-            undefined,
+          message.topic,
+          undefined,
         );
         this.subscriptions.add(message.topic);
         await this.emitAsync(new IoTSubscribedToEvent(message.topic));
@@ -176,34 +176,34 @@ export class IoTClient
   }
 
   @OnEvent(
-      'IOT.Publish',
-      {
-        nextTick: true,
-      },
+    'IOT.Publish',
+    {
+      nextTick: true,
+    },
   )
   async publishTo(message: IoTEventData) {
     if (!message.topic) {
       this.log.info(
-          'IoTClient',
-          'publishTo',
-          'No topic to publish to',
+        'IoTClient',
+        'publishTo',
+        'No topic to publish to',
       );
       return;
     }
 
     await promisify(this.awsIOTDevice.publish)(
-        message.topic,
-        message.payload,
-        undefined,
+      message.topic,
+      message.payload,
+      undefined,
     );
   }
 
   private async resubscribe() {
     for (let i = 0; i < this.subscriptions.size; i++) {
       await this.emitAsync(
-          new IoTSubscribeToEvent(
-              this.subscriptions[i],
-          ),
+        new IoTSubscribeToEvent(
+          this.subscriptions[i],
+        ),
       );
     }
   }
