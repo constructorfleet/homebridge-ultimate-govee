@@ -9,9 +9,9 @@ import {REPORT_IDENTIFIER} from '../../../../util/const';
 export class DeviceColorSegmentTransition extends DeviceTransition<ModesState & GoveeDevice> {
 
   constructor(
-    deviceId: string,
-    public readonly segmentIndex: number,
-    public readonly color: ColorRGB,
+      deviceId: string,
+      public readonly segmentIndex: number,
+      public readonly color: ColorRGB,
   ) {
     super(deviceId);
   }
@@ -28,33 +28,33 @@ export class DeviceColorSegmentTransition extends DeviceTransition<ModesState & 
     this.commandCodes = [
       colorSegmentMode.colorSegmentsChange(this.color, this.segmentIndex),
       getCommandCodes(
-        REPORT_IDENTIFIER,
-        [5, 1],
+          REPORT_IDENTIFIER,
+          [5, 1],
       ),
       getCommandCodes(
-        REPORT_IDENTIFIER,
-        [165],
-        1,
+          REPORT_IDENTIFIER,
+          [165],
+          1,
       ),
       getCommandCodes(
-        REPORT_IDENTIFIER,
-        [165],
-        2,
+          REPORT_IDENTIFIER,
+          [165],
+          2,
       ),
       getCommandCodes(
-        REPORT_IDENTIFIER,
-        [165],
-        3,
+          REPORT_IDENTIFIER,
+          [165],
+          3,
       ),
       getCommandCodes(
-        REPORT_IDENTIFIER,
-        [165],
-        4,
+          REPORT_IDENTIFIER,
+          [165],
+          4,
       ),
       getCommandCodes(
-        REPORT_IDENTIFIER,
-        [165],
-        5,
+          REPORT_IDENTIFIER,
+          [165],
+          5,
       ),
     ];
     return this;
@@ -64,9 +64,9 @@ export class DeviceColorSegmentTransition extends DeviceTransition<ModesState & 
 export class DeviceBrightnessSegmentTransition extends DeviceTransition<ModesState & GoveeDevice> {
 
   constructor(
-    deviceId: string,
-    public readonly segmentIndex: number,
-    public readonly brightness: number,
+      deviceId: string,
+      public readonly segmentIndex: number,
+      public readonly brightness: number,
   ) {
     super(deviceId);
   }
@@ -83,8 +83,8 @@ export class DeviceBrightnessSegmentTransition extends DeviceTransition<ModesSta
     this.commandCodes = [
       colorSegmentMode.brightnessSegmentsChange(this.brightness, this.segmentIndex),
       getCommandCodes(
-        REPORT_IDENTIFIER,
-        [5, 1],
+          REPORT_IDENTIFIER,
+          [5, 1],
       ),
     ];
     return this;

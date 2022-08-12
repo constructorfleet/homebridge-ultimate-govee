@@ -26,16 +26,16 @@ export class JWTPayloadData {
   @Type(() => JWTPayloadDataAccount)
   @Expose({name: 'account'})
   @Transform(
-    (params) => plainToInstance(JWTPayloadDataAccount, JSON.parse(params.value)),
-    {
-      toClassOnly: true,
-    },
+      (params) => plainToInstance(JWTPayloadDataAccount, JSON.parse(params.value)),
+      {
+        toClassOnly: true,
+      },
   )
   @Transform(
-    (params) => JSON.stringify(instanceToPlain(params.value)),
-    {
-      toPlainOnly: true,
-    },
+      (params) => JSON.stringify(instanceToPlain(params.value)),
+      {
+        toPlainOnly: true,
+      },
   )
   account?: string;
 }

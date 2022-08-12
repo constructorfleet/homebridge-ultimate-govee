@@ -7,15 +7,15 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 @Features.add
 export class DisableDIYEffectsFeature extends BaseFeatureHandler {
   public constructor(
-    configService: PlatformConfigService,
-    private readonly eventEmitter: EventEmitter2,
-    log: LoggingService,
+      configService: PlatformConfigService,
+      private readonly eventEmitter: EventEmitter2,
+      log: LoggingService,
   ) {
     super(
-      'DisableDIYEffects',
-      true,
-      configService,
-      log,
+        'DisableDIYEffects',
+        true,
+        configService,
+        log,
     );
   }
 
@@ -25,26 +25,26 @@ export class DisableDIYEffectsFeature extends BaseFeatureHandler {
     const removeAllDIYListeners = () => {
       this.log.debug('Removing listeners for DIY Effects');
       this.eventEmitter.removeAllListeners(
-        'REST.REQUEST.DIYEffects',
+          'REST.REQUEST.DIYEffects',
       ).removeAllListeners(
-        'REST.RESPONSE.DIYEffects',
+          'REST.RESPONSE.DIYEffects',
       );
     };
 
     this.eventEmitter.prependListener(
-      'DEVICE.RECEIVED.Settings',
-      removeAllDIYListeners,
+        'DEVICE.RECEIVED.Settings',
+        removeAllDIYListeners,
     );
 
     await this.configService.setConfigurationEffects(
-      [],
+        [],
     );
   }
 
   async onFeatureDeactivated(): Promise<void> {
     this.log.info('Deactivating Feature', this.featureFlag);
     return await this.configService.setConfigurationEffects(
-      [],
+        [],
     );
   }
 }

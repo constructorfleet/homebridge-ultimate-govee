@@ -1,12 +1,6 @@
 import 'reflect-metadata';
-import {API} from 'homebridge';
 
-import {PLATFORM_NAME} from './settings';
-import {UltimateGoveePlatform} from './platform/UltimateGoveePlatform';
-
-/**
- * This method registers the platform with Homebridge
- */
-export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, UltimateGoveePlatform);
-};
+export {API} from 'homebridge';
+export * from './data';
+export {PLATFORM_NAME} from './settings';
+export {UltimateGoveePlatform} from './platform';

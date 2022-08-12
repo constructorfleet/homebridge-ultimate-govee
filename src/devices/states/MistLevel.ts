@@ -15,7 +15,7 @@ export interface MistLevelState {
 }
 
 export function MistLevel<StateType extends State>(
-  stateType: new (...args) => StateType,
+    stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements MistLevelState {
@@ -26,24 +26,24 @@ export function MistLevel<StateType extends State>(
       this.addDeviceStatusCodes(commandIdentifiers);
     }
 
+    public get mistLevelChange(): number[] {
+      return getCommandCodes(
+          COMMAND_IDENTIFIER,
+          commandIdentifiers,
+          this.mistLevel || 0,
+      );
+    }
+
     public override parse(deviceState: DeviceState): ThisType<this> {
       const commandValues = getCommandValues(
-        [REPORT_IDENTIFIER, ...commandIdentifiers],
-        deviceState.commands,
+          [REPORT_IDENTIFIER, ...commandIdentifiers],
+          deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.mistLevel = commandValues[0][0];
       }
 
       return super.parse(deviceState);
-    }
-
-    public get mistLevelChange(): number[] {
-      return getCommandCodes(
-        COMMAND_IDENTIFIER,
-        commandIdentifiers,
-        this.mistLevel || 0,
-      );
     }
   };
 }

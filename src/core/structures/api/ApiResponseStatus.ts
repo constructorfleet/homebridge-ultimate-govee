@@ -5,8 +5,8 @@ export interface ApiResponseStatus {
 
 export class ApiError extends Error {
   constructor(
-    message: string,
-    public readonly status: ApiResponseStatus,
+      message: string,
+      public readonly status: ApiResponseStatus,
   ) {
     super(message);
   }

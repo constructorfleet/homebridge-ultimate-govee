@@ -4,10 +4,10 @@ import {ModesState} from '../../../../devices/states/Modes';
 import {SceneModeState} from '../../../../devices/states/modes/Scene';
 
 export abstract class DeviceModeTransition
-  extends DeviceTransition<ModesState & GoveeDevice> {
+    extends DeviceTransition<ModesState & GoveeDevice> {
 
   protected constructor(
-    deviceId: string,
+      deviceId: string,
   ) {
     super(deviceId);
   }
@@ -21,8 +21,8 @@ export abstract class DeviceModeTransition
 export class DeviceSceneTransition extends DeviceModeTransition {
 
   constructor(
-    deviceId: string,
-    private readonly sceneId: number,
+      deviceId: string,
+      private readonly sceneId: number,
   ) {
     super(deviceId);
   }

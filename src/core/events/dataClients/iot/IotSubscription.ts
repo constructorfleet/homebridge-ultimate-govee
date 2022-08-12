@@ -1,34 +1,34 @@
 import {IoTEvent, IoTEventData} from './IoTEvent';
 
 export class IoTSubscribeToEvent
-  extends IoTEvent<IoTEventData> {
+    extends IoTEvent<IoTEventData> {
 
   constructor(
-    topic: string,
+      topic: string,
   ) {
     super(
-      'Subscribe',
-      new IoTEventData(
-        topic,
-        topic,
-      ),
+        'Subscribe',
+        new IoTEventData(
+            topic,
+            topic,
+        ),
     );
   }
 }
 
 export class IoTSubscribedToEvent
-  extends IoTEvent<IoTEventData> {
+    extends IoTEvent<IoTEventData> {
 
   constructor(
-    topic: string,
-    lastMessage?: string,
+      topic: string,
+      lastMessage?: string,
   ) {
     super(
-      'Subscribed',
-      new IoTEventData(
-        topic,
-        lastMessage || '',
-      ),
+        'Subscribed',
+        new IoTEventData(
+            topic,
+            lastMessage || '',
+        ),
     );
   }
 }

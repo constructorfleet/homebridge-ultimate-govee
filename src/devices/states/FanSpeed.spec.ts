@@ -58,12 +58,12 @@ describe('FanSpeedState', () => {
     it('returns opcode array', () => {
       testState.fanSpeed = 5;
       expect(testState.fanSpeedChange).toStrictEqual(
-        [
-          COMMAND_IDENTIFIER, 5, 5, 0, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 51,
-        ],
+          [
+            COMMAND_IDENTIFIER, 5, 5, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 51,
+          ],
       );
     });
   });

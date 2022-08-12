@@ -12,13 +12,6 @@ import {DevicePollRequest} from '../core/events/devices/DeviceRequests';
 
 export class GoveeDevice extends State {
 
-  constructor(
-    deviceConfig: DeviceConfig,
-  ) {
-    super();
-    this.updateConfig(deviceConfig);
-  }
-
   public deviceId!: string;
   public model!: string;
   public name!: string;
@@ -31,8 +24,15 @@ export class GoveeDevice extends State {
   public hardwareVersion?: string;
   public softwareVersion?: string;
 
+  constructor(
+      deviceConfig: DeviceConfig,
+  ) {
+    super();
+    this.updateConfig(deviceConfig);
+  }
+
   public updateConfig(
-    deviceConfig: DeviceConfig,
+      deviceConfig: DeviceConfig,
   ) {
     this.deviceId = deviceConfig.deviceId;
     this.model = deviceConfig.model;
@@ -48,9 +48,9 @@ export class GoveeDevice extends State {
   }
 
   public send<StateType extends State & GoveeDevice>(
-    transition: DeviceTransition<StateType>,
-    emitter: Emitter,
-    accountTopic?: string,
+      transition: DeviceTransition<StateType>,
+      emitter: Emitter,
+      accountTopic?: string,
   ) {
     const event = this.getIoTEvent(transition, accountTopic) || this.getBleEvent(transition);
     if (event) {
@@ -65,8 +65,8 @@ export class GoveeDevice extends State {
   }
 
   getIoTEvent<StateType extends State & GoveeDevice>(
-    transition: DeviceTransition<StateType>,
-    accountTopic?: string,
+      transition: DeviceTransition<StateType>,
+      accountTopic?: string,
   ): IoTPublishToEvent | undefined {
     if (!this.iotTopic) {
       return undefined;
@@ -78,11 +78,11 @@ export class GoveeDevice extends State {
       return undefined;
     }
     return new IoTPublishToEvent(
-      this.iotTopic,
-      JSON.stringify({
-        topic: this.iotTopic,
-        msg: commandMessage,
-      }),
+        this.iotTopic,
+        JSON.stringify({
+          topic: this.iotTopic,
+          msg: commandMessage,
+        }),
     );
   }
 
@@ -92,11 +92,11 @@ export class GoveeDevice extends State {
     }
 
     return new BLEPeripheralSendEvent(
-      new BLEPeripheralCommandSend(
-        this.bleAddress.toLowerCase(),
-        this.deviceId,
-        transition.opCodeCommand,
-      ),
+        new BLEPeripheralCommandSend(
+            this.bleAddress.toLowerCase(),
+            this.deviceId,
+            transition.opCodeCommand,
+        ),
     );
   }
 }

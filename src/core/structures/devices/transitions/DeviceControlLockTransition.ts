@@ -5,8 +5,8 @@ import {ControlLockState} from '../../../../devices/states/ControlLock';
 export class DeviceControlLockTransition extends DeviceTransition<ControlLockState & GoveeDevice> {
 
   constructor(
-    deviceId: string,
-    public readonly controlsLocked: boolean,
+      deviceId: string,
+      public readonly controlsLocked: boolean,
   ) {
     super(deviceId);
   }

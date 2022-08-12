@@ -2,19 +2,19 @@ import {RestEvent} from './RestEvent';
 import {GoveeDevice} from '../../../../devices/GoveeDevice';
 
 export abstract class RestRequestEvent<DataType>
-  extends RestEvent<DataType> {
+    extends RestEvent<DataType> {
 
   protected constructor(
-    eventName: string,
-    eventData: DataType,
+      eventName: string,
+      eventData: DataType,
   ) {
     super(`REQUEST.${eventName}`,
-      eventData);
+        eventData);
   }
 }
 
 export class RestRequestDevices
-  extends RestRequestEvent<void> {
+    extends RestRequestEvent<void> {
 
   constructor() {
     super('Devices');
@@ -22,7 +22,7 @@ export class RestRequestDevices
 }
 
 export class RestRequestDIYEffects
-  extends RestRequestEvent<void> {
+    extends RestRequestEvent<void> {
 
   constructor() {
     super('DIYEffects');
@@ -30,18 +30,18 @@ export class RestRequestDIYEffects
 }
 
 export class RestRequestDeviceScenes
-  extends RestRequestEvent<GoveeDevice> {
+    extends RestRequestEvent<GoveeDevice> {
 
   constructor(eventData: GoveeDevice) {
     super(
-      'DeviceScenes',
-      eventData,
+        'DeviceScenes',
+        eventData,
     );
   }
 }
 
 export class RestRequestDevice
-  extends RestRequestEvent<string | undefined> {
+    extends RestRequestEvent<string | undefined> {
 
   constructor(eventData: string | undefined) {
     super('Device', eventData);

@@ -14,28 +14,23 @@ class CommandData {
 }
 
 export class IoTDeviceMessage
-  implements IoTMessage {
-  constructor() {
-  }
-
+    implements IoTMessage {
   @Expose({name: 'cmd'})
   public command!: string;
-
   @Expose({name: 'cmdVersion'})
   public commandVersion!: number;
-
   @Expose({name: 'type'})
   public messageType!: number;
-
   @Expose({name: 'accountTopic'})
   public accountTopic?: string;
-
   @Expose({name: 'transaction'})
   public transaction!: string;
-
   @Expose({name: 'data'})
   @Type(() => CommandData)
   public commandData?: CommandData;
+
+  constructor() {
+  }
 }
 
 export class IotDeviceMessageEnvelope {

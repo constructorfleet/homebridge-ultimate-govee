@@ -58,12 +58,12 @@ describe('MistLevelState', () => {
     it('returns opcode array', () => {
       testState.mistLevel = 5;
       expect(testState.mistLevelChange).toStrictEqual(
-        [
-          COMMAND_IDENTIFIER, 5, 1, 5, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 50,
-        ],
+          [
+            COMMAND_IDENTIFIER, 5, 1, 5, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 50,
+          ],
       );
     });
   });

@@ -21,18 +21,18 @@ export class HumidifierService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
 
   constructor(
-    eventEmitter: EventEmitter2,
-    configService: PlatformConfigService,
-    @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
-    @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
-    log: LoggingService,
+      eventEmitter: EventEmitter2,
+      configService: PlatformConfigService,
+      @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
+      @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
+      log: LoggingService,
   ) {
     super(
-      eventEmitter,
-      configService,
-      SERVICES,
-      CHARACTERISTICS,
-      log,
+        eventEmitter,
+        configService,
+        SERVICES,
+        CHARACTERISTICS,
+        log,
     );
   }
 
@@ -41,88 +41,88 @@ export class HumidifierService extends AccessoryService<void> {
   }
 
   protected updateServiceCharacteristics(
-    service: Service,
-    device: GoveeDevice,
+      service: Service,
+      device: GoveeDevice,
   ) {
     service
-      .getCharacteristic(this.CHARACTERISTICS.TargetHumidifierDehumidifierState)
-      .setProps({
-        validValues: [this.CHARACTERISTICS.TargetHumidifierDehumidifierState.HUMIDIFIER],
-      })
-      .updateValue(this.CHARACTERISTICS.TargetHumidifierDehumidifierState.HUMIDIFIER);
+        .getCharacteristic(this.CHARACTERISTICS.TargetHumidifierDehumidifierState)
+        .setProps({
+          validValues: [this.CHARACTERISTICS.TargetHumidifierDehumidifierState.HUMIDIFIER],
+        })
+        .updateValue(this.CHARACTERISTICS.TargetHumidifierDehumidifierState.HUMIDIFIER);
     service
-      .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityDehumidifierThreshold)
-      .setProps({
-        validValues: [100],
-      })
-      .updateValue(100);
+        .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityDehumidifierThreshold)
+        .setProps({
+          validValues: [100],
+        })
+        .updateValue(100);
 
     service
-      .getCharacteristic(this.CHARACTERISTICS.WaterLevel)
-      .setProps({
-        validValues: [0, 100],
-      })
-      .updateValue(
-        ((device as unknown as StatusModeState).statusMode === 4)
-          ? 0
-          : 100);
+        .getCharacteristic(this.CHARACTERISTICS.WaterLevel)
+        .setProps({
+          validValues: [0, 100],
+        })
+        .updateValue(
+            ((device as unknown as StatusModeState).statusMode === 4)
+                ? 0
+                : 100);
     service
-      .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
-      .updateValue(
-        (device as unknown as ControlLockState).areControlsLocked
-          ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
-          : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED);
+        .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
+        .updateValue(
+            (device as unknown as ControlLockState).areControlsLocked
+                ? this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_ENABLED
+                : this.CHARACTERISTICS.LockPhysicalControls.CONTROL_LOCK_DISABLED);
     service
-      .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
-      .setProps({
-        validValues: [
-          this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
-          this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING,
-        ],
-      })
-      .updateValue(
-        (((device as unknown as ActiveState).isActive
-          && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
-          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
-          ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
-          : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
-      );
+        .getCharacteristic(this.CHARACTERISTICS.CurrentHumidifierDehumidifierState)
+        .setProps({
+          validValues: [
+            this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
+            this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING,
+          ],
+        })
+        .updateValue(
+            (((device as unknown as ActiveState).isActive
+                && ((device as unknown as MistLevelState)?.mistLevel ?? 0) > 0
+                && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4))
+                ? this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.HUMIDIFYING
+                : this.CHARACTERISTICS.CurrentHumidifierDehumidifierState.INACTIVE,
+        );
     service
-      .getCharacteristic(this.CHARACTERISTICS.Active)
-      .updateValue(
-        (((device as unknown as ActiveState).isActive ?? false)
-          && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
-          ? this.CHARACTERISTICS.Active.ACTIVE
-          : this.CHARACTERISTICS.Active.INACTIVE,
-      )
-      .onSet(
-        async (value: CharacteristicValue) =>
-          this.emit(
-            new DeviceCommandEvent(
-              new DeviceActiveTransition(
-                device.deviceId,
-                value === this.CHARACTERISTICS.Active.ACTIVE,
-              ),
-            ),
-          ),
-      );
+        .getCharacteristic(this.CHARACTERISTICS.Active)
+        .updateValue(
+            (((device as unknown as ActiveState).isActive ?? false)
+                && ((device as unknown as StatusModeState)?.statusMode ?? 0) !== 4)
+                ? this.CHARACTERISTICS.Active.ACTIVE
+                : this.CHARACTERISTICS.Active.INACTIVE,
+        )
+        .onSet(
+            async (value: CharacteristicValue) =>
+                this.emit(
+                    new DeviceCommandEvent(
+                        new DeviceActiveTransition(
+                            device.deviceId,
+                            value === this.CHARACTERISTICS.Active.ACTIVE,
+                        ),
+                    ),
+                ),
+        );
     service
-      .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityHumidifierThreshold)
-      .setProps({
-        minValue: 0,
-        maxValue: 100,
-      })
-      .updateValue(((device as unknown as MistLevelState).mistLevel ?? 0) / 8 * 100)
-      .onSet(
-        async (value: CharacteristicValue) =>
-          this.emit(
-            new DeviceCommandEvent(
-              new DeviceMistLevelTransition(
-                device.deviceId,
-                Math.ceil((value as number || 0) / 12.5),
-              ),
-            ),
-          ),
-      );
+        .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityHumidifierThreshold)
+        .setProps({
+          minValue: 0,
+          maxValue: 100,
+        })
+        .updateValue(((device as unknown as MistLevelState).mistLevel ?? 0) / 8 * 100)
+        .onSet(
+            async (value: CharacteristicValue) =>
+                this.emit(
+                    new DeviceCommandEvent(
+                        new DeviceMistLevelTransition(
+                            device.deviceId,
+                            Math.ceil((value as number || 0) / 12.5),
+                        ),
+                    ),
+                ),
+        );
   }
 }

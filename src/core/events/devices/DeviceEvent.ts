@@ -1,15 +1,15 @@
 import {Event} from '../Event';
 
 export abstract class DeviceEvent<EventDataType>
-  extends Event<EventDataType> {
+    extends Event<EventDataType> {
 
   protected constructor(
-    eventName: string,
-    eventData?: EventDataType,
+      eventName: string,
+      eventData?: EventDataType,
   ) {
     super(
-      `DEVICE.${eventName}`,
-      eventData,
+        `DEVICE.${eventName}`,
+        eventData,
     );
   }
 }

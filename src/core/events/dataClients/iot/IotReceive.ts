@@ -1,18 +1,18 @@
 import {IoTEvent, IoTEventData} from './IoTEvent';
 
 export class IotReceive
-  extends IoTEvent<IoTEventData> {
+    extends IoTEvent<IoTEventData> {
 
   constructor(
-    topic: string,
-    payload: string,
+      topic: string,
+      payload: string,
   ) {
     super(
-      'Received',
-      new IoTEventData(
-        topic,
-        payload,
-      ),
+        'Received',
+        new IoTEventData(
+            topic,
+            payload,
+        ),
     );
   }
 }

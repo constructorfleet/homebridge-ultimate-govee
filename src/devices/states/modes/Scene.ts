@@ -17,7 +17,7 @@ export interface SceneModeState extends ModesState {
 }
 
 export function SceneMode<StateType extends State>(
-  stateType: new (...args) => StateType,
+    stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements SceneModeState {
@@ -38,18 +38,18 @@ export function SceneMode<StateType extends State>(
       }
 
       const commandValues = getCommandValues(
-        [
-          REPORT_IDENTIFIER,
-          ...modeCommandIdentifiers,
-          this.sceneModeIdentifier,
-        ],
-        deviceState.commands,
+          [
+            REPORT_IDENTIFIER,
+            ...modeCommandIdentifiers,
+            this.sceneModeIdentifier,
+          ],
+          deviceState.commands,
       );
 
       if (commandValues && [1, 2].includes(commandValues.length || 0)) {
         const values = commandValues![0];
         const hex = Buffer.from(
-          [values[1] || 0, values[0]],
+            [values[1] || 0, values[0]],
         ).toString('hex');
         this.activeMode = this.sceneModeIdentifier;
 
@@ -61,19 +61,19 @@ export function SceneMode<StateType extends State>(
 
     public sceneIdChange(): number[] {
       const sceneIdHex =
-        hexStringToArray(
-          (this.activeSceneId || 0)
-            .toString(16)
-            .padStart(4, '0')
-            .replace(/(.{2})/g, '$1 '),
-        ).reverse();
+          hexStringToArray(
+              (this.activeSceneId || 0)
+                  .toString(16)
+                  .padStart(4, '0')
+                  .replace(/(.{2})/g, '$1 '),
+          ).reverse();
       return getCommandCodes(
-        COMMAND_IDENTIFIER,
-        [
-          ...modeCommandIdentifiers,
-          this.sceneModeIdentifier,
-        ],
-        ...sceneIdHex,
+          COMMAND_IDENTIFIER,
+          [
+            ...modeCommandIdentifiers,
+            this.sceneModeIdentifier,
+          ],
+          ...sceneIdHex,
       );
     }
   };

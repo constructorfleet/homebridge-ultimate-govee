@@ -1,20 +1,18 @@
-import {ColorRGB} from '../../../util/colorUtils';
 import {modeCommandIdentifiers, ModesState} from '../Modes';
 import {State} from '../State';
-import {DeviceState} from '../../../core/structures/devices/DeviceState';
-import {getCommandCodes, getCommandValues} from '../../../util/opCodeUtils';
-import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../../util/const';
+import {DeviceState} from '../../../core';
+import {ColorRGB, COMMAND_IDENTIFIER, getCommandCodes, getCommandValues, REPORT_IDENTIFIER} from '../../../util';
 
 export interface RGBICMusicModeConstructorArgs {
   rgbicMusicModeIdentifier?: number;
 }
 
-export enum ColorMode {
+export enum RGBICColorMode {
   AUTOMATIC = 0x00,
   SPECIFIED = 0x01,
 }
 
-export enum IntensityMode {
+export enum RGBICIntensityMode {
   DYNAMIC = 0x00,
   CALM = 0x01,
 }
@@ -23,8 +21,8 @@ export interface RGBICMusicModeState extends ModesState {
   rgbicMusicModeIdentifier?: number;
   musicModeType?: number;
   sensitivity?: number;
-  intensity?: IntensityMode;
-  colorMode?: ColorMode;
+  intensity?: RGBICIntensityMode;
+  colorMode?: RGBICColorMode;
   specifiedColor: ColorRGB;
 
   rgbicMusicChange(): number[];
@@ -32,7 +30,7 @@ export interface RGBICMusicModeState extends ModesState {
 
 
 export function RGBICMusicMode<StateType extends State>(
-  stateType: new (...args) => StateType,
+    stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements RGBICMusicModeState {
@@ -40,10 +38,10 @@ export function RGBICMusicMode<StateType extends State>(
     public rgbicMusicModeIdentifier!: number;
     public musicModeType?: number;
     public sensitivity?: number;
-    public intensity: IntensityMode = IntensityMode.DYNAMIC;
-    public colorMode: ColorMode = ColorMode.AUTOMATIC;
+    public intensity: RGBICIntensityMode = RGBICIntensityMode.DYNAMIC;
+    public colorMode: RGBICColorMode = RGBICColorMode.AUTOMATIC;
     public specifiedColor: ColorRGB =
-      new ColorRGB(0, 0, 0);
+        new ColorRGB(0, 0, 0);
 
     constructor(args) {
       super(args);
@@ -57,12 +55,12 @@ export function RGBICMusicMode<StateType extends State>(
       }
 
       const commandValues = getCommandValues(
-        [
-          REPORT_IDENTIFIER,
-          ...modeCommandIdentifiers,
-          this.rgbicMusicModeIdentifier,
-        ],
-        deviceState.commands,
+          [
+            REPORT_IDENTIFIER,
+            ...modeCommandIdentifiers,
+            this.rgbicMusicModeIdentifier,
+          ],
+          deviceState.commands,
       );
 
       if (!commandValues || (commandValues?.length || 0) === 0) {
@@ -81,18 +79,18 @@ export function RGBICMusicMode<StateType extends State>(
 
     rgbicMusicChange(): number[] {
       return getCommandCodes(
-        COMMAND_IDENTIFIER,
-        [
-          ...modeCommandIdentifiers,
-          this.rgbicMusicModeIdentifier,
-        ],
-        this.musicModeType || 0,
-        this.sensitivity || 0,
-        this.intensity,
-        this.colorMode,
-        this.specifiedColor.red,
-        this.specifiedColor.green,
-        this.specifiedColor.blue,
+          COMMAND_IDENTIFIER,
+          [
+            ...modeCommandIdentifiers,
+            this.rgbicMusicModeIdentifier,
+          ],
+          this.musicModeType || 0,
+          this.sensitivity || 0,
+          this.intensity,
+          this.colorMode,
+          this.specifiedColor.red,
+          this.specifiedColor.green,
+          this.specifiedColor.blue,
       );
     }
   };

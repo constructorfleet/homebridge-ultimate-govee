@@ -23,8 +23,8 @@ class TestMode extends RGBICMusicMode(State) {
 let testMode: RGBICMusicModeState & State;
 
 const assertColor: AssertChain<number | undefined> = (
-  actual?: number,
-  expected?: number,
+    actual?: number,
+    expected?: number,
 ): AssertChain<number | undefined> => {
   if (expected === undefined) {
     expect(actual).toBeUndefined();
@@ -35,19 +35,19 @@ const assertColor: AssertChain<number | undefined> = (
 };
 
 const assertColorRGB = (
-  red?: number,
-  green?: number,
-  blue?: number,
+    red?: number,
+    green?: number,
+    blue?: number,
 ) => {
   assertColor(
-    testMode.specifiedColor?.red,
-    red,
+      testMode.specifiedColor?.red,
+      red,
   )(
-    testMode.specifiedColor?.green,
-    green,
+      testMode.specifiedColor?.green,
+      green,
   )(
-    testMode.specifiedColor?.blue,
-    blue,
+      testMode.specifiedColor?.blue,
+      blue,
   );
 };
 
@@ -105,13 +105,13 @@ describe('RGBICMusicMode', () => {
       testMode.specifiedColor.green = 100;
       testMode.specifiedColor.blue = 255;
       expect(testMode.rgbicMusicChange()).toStrictEqual(
-        [
-          COMMAND_IDENTIFIER, 5, 19, testMode.musicModeType, testMode.sensitivity,
-          testMode.intensity, testMode.colorMode, testMode.specifiedColor.red,
-          testMode.specifiedColor.green, testMode.specifiedColor.blue,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 186,
-        ],
+          [
+            COMMAND_IDENTIFIER, 5, 19, testMode.musicModeType, testMode.sensitivity,
+            testMode.intensity, testMode.colorMode, testMode.specifiedColor.red,
+            testMode.specifiedColor.green, testMode.specifiedColor.blue,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 186,
+          ],
       );
     });
   });

@@ -3,18 +3,18 @@ export interface AuthenticationCredentials {
 }
 
 export interface BasicCredentials
-  extends AuthenticationCredentials {
+    extends AuthenticationCredentials {
   readonly username: string;
   readonly password: string;
 }
 
 export interface ClientIdBasicCredentials
-  extends BasicCredentials {
+    extends BasicCredentials {
   readonly clientId: string;
 }
 
 export interface OAuthCredentials
-  extends AuthenticationCredentials {
+    extends AuthenticationCredentials {
   readonly clientId: string;
   readonly clientSecret: string;
 }

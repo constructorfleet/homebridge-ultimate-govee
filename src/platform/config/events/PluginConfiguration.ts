@@ -7,15 +7,15 @@ export interface PlatformConfigBeforeAfter {
 }
 
 export abstract class PlatformConfigurationEvent<EventDataType>
-  extends PlatformEvent<EventDataType> {
+    extends PlatformEvent<EventDataType> {
 
   protected constructor(
-    eventName: string,
-    eventData?: EventDataType,
+      eventName: string,
+      eventData?: EventDataType,
   ) {
     super(
-      `CONFIG.${eventName}`,
-      eventData,
+        `CONFIG.${eventName}`,
+        eventData,
     );
   }
 }
@@ -23,7 +23,7 @@ export abstract class PlatformConfigurationEvent<EventDataType>
 export class PlatformConfigurationReloaded extends PlatformConfigurationEvent<PlatformConfigBeforeAfter> {
 
   constructor(
-    eventData: PlatformConfigBeforeAfter,
+      eventData: PlatformConfigBeforeAfter,
   ) {
     super('Reloaded', eventData);
   }

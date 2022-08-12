@@ -5,8 +5,8 @@ import {BrightnessState} from '../../../../devices/states/Brightness';
 export class DeviceBrightnessTransition extends DeviceTransition<BrightnessState & GoveeDevice> {
 
   constructor(
-    deviceId: string,
-    public readonly brightness: number,
+      deviceId: string,
+      public readonly brightness: number,
   ) {
     super(deviceId);
   }

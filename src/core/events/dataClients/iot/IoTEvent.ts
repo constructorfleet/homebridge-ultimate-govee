@@ -1,43 +1,48 @@
-import {ConnectionState, DataClientConnectionStateEvent, DataClientErrorEvent, DataClientEvent} from '../DataClientEvent';
+import {
+  ConnectionState,
+  DataClientConnectionStateEvent,
+  DataClientErrorEvent,
+  DataClientEvent
+} from '../DataClientEvent';
 
 export class IoTEventData {
   constructor(
-    public readonly topic: string,
-    public readonly payload: string,
+      public readonly topic: string,
+      public readonly payload: string,
   ) {
   }
 }
 
 export class IoTConnectionStateEvent
-  extends DataClientConnectionStateEvent {
+    extends DataClientConnectionStateEvent {
 
   constructor(
-    eventData: ConnectionState,
+      eventData: ConnectionState,
   ) {
     super('IOT', eventData);
   }
 }
 
 export class IoTErrorEvent
-  extends DataClientErrorEvent {
+    extends DataClientErrorEvent {
 
   constructor(
-    eventData: (Error | string),
+      eventData: (Error | string),
   ) {
     super('IOT', eventData);
   }
 }
 
 export abstract class IoTEvent<EventDataType extends IoTEventData>
-  extends DataClientEvent<EventDataType> {
+    extends DataClientEvent<EventDataType> {
 
   protected constructor(
-    eventName: string,
-    eventData?: EventDataType,
+      eventName: string,
+      eventData?: EventDataType,
   ) {
     super(
-      `IOT.${eventName}`,
-      eventData,
+        `IOT.${eventName}`,
+        eventData,
     );
   }
 }

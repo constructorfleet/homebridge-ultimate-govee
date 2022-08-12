@@ -10,8 +10,8 @@ export declare type ServiceCreator<IdentifierType> = (state: GoveeDevice) => Pro
 
 export class StateAccessory<StateType extends typeof State> {
   constructor(
-    public state: StateType,
-    public ctor: Constructor<AccessoryService<unknown>>,
+      public state: StateType,
+      public ctor: Constructor<AccessoryService<unknown>>,
   ) {
   }
 }
@@ -21,7 +21,7 @@ export class ServiceRegistry {
   private static readonly services: StateAccessory<typeof State>[] = [];
 
   private static readonly deviceServices: Map<GoveeDevice, AccessoryService<unknown>[]> =
-    new Map<GoveeDevice, AccessoryService<unknown>[]>();
+      new Map<GoveeDevice, AccessoryService<unknown>[]>();
 
   private static readonly serviceLock: Lock<void> = new Lock<void>();
 
@@ -29,46 +29,46 @@ export class ServiceRegistry {
     return {
       provide: AccessoryService,
       useFactory: async (moduleRef: ModuleRef): Promise<ServiceCreator<unknown>> =>
-        async (device: GoveeDevice): Promise<AccessoryService<unknown>[]> => {
-          let deviceServices = this.deviceServices.get(device);
-          if (deviceServices !== undefined) {
-            return deviceServices;
-          }
-          const ctors = this.services
-            .filter(
-              (state) => {
-                return device instanceof state.state;
-              },
-            )
-            .map((state) => {
-              return state.ctor;
-            });
-          if (!ctors || ctors.length === 0) {
-            return [];
-          }
-          deviceServices = await Promise.all(
-            ctors.filter(
-              (ctor) => ctor !== undefined,
-            ).map(
-              (ctor) => moduleRef.create(ctor as Constructor<AccessoryService<unknown>>),
-            ),
-          );
-          this.deviceServices.set(device, deviceServices);
+          async (device: GoveeDevice): Promise<AccessoryService<unknown>[]> => {
+            let deviceServices = this.deviceServices.get(device);
+            if (deviceServices !== undefined) {
+              return deviceServices;
+            }
+            const ctors = this.services
+                .filter(
+                    (state) => {
+                      return device instanceof state.state;
+                    },
+                )
+                .map((state) => {
+                  return state.ctor;
+                });
+            if (!ctors || ctors.length === 0) {
+              return [];
+            }
+            deviceServices = await Promise.all(
+                ctors.filter(
+                    (ctor) => ctor !== undefined,
+                ).map(
+                    (ctor) => moduleRef.create(ctor as Constructor<AccessoryService<unknown>>),
+                ),
+            );
+            this.deviceServices.set(device, deviceServices);
 
-          return deviceServices;
-        },
+            return deviceServices;
+          },
       inject: [ModuleRef],
     };
   }
 
   static register<IdentifierType, T extends Constructor<AccessoryService<IdentifierType>>>(
-    ...states: (typeof State)[]
+      ...states: (typeof State)[]
   ): (ctor: T) => void {
     return (ctor: T) => {
       for (let i = 0; i < states.length; i++) {
         const state = states[i];
         ServiceRegistry.services.push(
-          new StateAccessory(state, ctor),
+            new StateAccessory(state, ctor),
         );
       }
 

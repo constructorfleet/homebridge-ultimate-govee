@@ -2,7 +2,7 @@ import {
   AppDeviceListResponse,
   AppDeviceResponse,
   AppDeviceSettingsResponse,
-} from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
+} from '../../core/structures/api/responses';
 import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
 import {Injectable} from '@nestjs/common';
 import {Emitter} from '../../util/types';
@@ -25,22 +25,22 @@ import {DeviceEffectReceived} from '../../core/events/effects/DeviceEffects';
 @Injectable()
 export class RestEventProcessor extends Emitter {
   constructor(
-    eventEmitter: EventEmitter2,
-    private readonly log: LoggingService,
+      eventEmitter: EventEmitter2,
+      private readonly log: LoggingService,
   ) {
     super(eventEmitter);
   }
 
   @OnEvent(
-    'REST.AUTHENTICATION.Failure',
+      'REST.AUTHENTICATION.Failure',
   )
   async onAuthenticationFailure(response: ApiResponseStatus) {
     this.log.error('Unexpected error authenticating with API', response.message);
     if (response.statusCode >= 500) {
       this.log.error('Retrying authentication in 1 minute due to server-side error.');
       setTimeout(
-        () => this.emit(new RestAuthenticateEvent()),
-        60 * 1000,
+          () => this.emit(new RestAuthenticateEvent()),
+          60 * 1000,
       );
     } else if (response.statusCode >= 400) {
       this.log.error('Please verify your API credentials and restart the plugin.');
@@ -48,88 +48,88 @@ export class RestEventProcessor extends Emitter {
   }
 
   @OnEvent(
-    'REST.RESPONSE.DIYEffects',
+      'REST.RESPONSE.DIYEffects',
   )
   async onDIYEffectListReceived(
-    payload: DIYListResponse,
+      payload: DIYListResponse,
   ) {
     const effects = payload.data.diys
-      .filter(
-        (group: DIYGroup) => group.diys !== undefined && Symbol.iterator in Object(group),
-      )
-      .reduce(
-        (effects: DIYEffect[], group: DIYGroup) => effects
-          .concat(
-            ...group.diys,
-          ),
-        [] as DIYEffect[],
-      );
+        .filter(
+            (group: DIYGroup) => group.diys !== undefined && Symbol.iterator in Object(group),
+        )
+        .reduce(
+            (effects: DIYEffect[], group: DIYGroup) => effects
+                .concat(
+                    ...group.diys,
+                ),
+            [] as DIYEffect[],
+        );
 
     await this.emitAsync(
-      new DIYEffectReceived(effects),
+        new DIYEffectReceived(effects),
     );
   }
 
   @OnEvent(
-    'REST.RESPONSE.DeviceScenes',
+      'REST.RESPONSE.DeviceScenes',
   )
   async onDeviceScenesReceived(
-    payload: ResponseWithDevice<DeviceSceneListResponse>,
+      payload: ResponseWithDevice<DeviceSceneListResponse>,
   ) {
     const effects = payload.response.data.categories
-      .filter(
-        (category: DeviceSceneCategory) => category.scenes !== undefined && Symbol.iterator in Object(category),
-      )
-      .reduce(
-        (effects: CategoryScene[], category: DeviceSceneCategory) => effects
-          .concat(
-            ...category.scenes
-              .filter(
-                (scene: CategoryScene) => scene !== undefined,
-              )
-              .map(
-                (scene: CategoryScene) => {
-                  scene.deviceId = payload.device.deviceId;
-                  return scene;
-                },
-              ),
-          ),
-        [] as CategoryScene[],
-      );
+        .filter(
+            (category: DeviceSceneCategory) => category.scenes !== undefined && Symbol.iterator in Object(category),
+        )
+        .reduce(
+            (effects: CategoryScene[], category: DeviceSceneCategory) => effects
+                .concat(
+                    ...category.scenes
+                        .filter(
+                            (scene: CategoryScene) => scene !== undefined,
+                        )
+                        .map(
+                            (scene: CategoryScene) => {
+                              scene.deviceId = payload.device.deviceId;
+                              return scene;
+                            },
+                        ),
+                ),
+            [] as CategoryScene[],
+        );
 
     await this.emitAsync(
-      new DeviceEffectReceived(effects),
+        new DeviceEffectReceived(effects),
     );
 
   }
 
   @OnEvent(
-    'REST.RESPONSE.DeviceList',
+      'REST.RESPONSE.DeviceList',
   )
   async onDeviceListReceived(payload: AppDeviceListResponse) {
     const deviceConfigs = payload.devices
-      .map(
-        (device) =>
-          toDeviceConfig(
-            plainToInstance(
-              AppDeviceSettingsResponse,
-              JSON.parse(device.deviceExt.deviceSettings),
-            ) as AppDeviceSettingsResponse,
-            device,
-          ),
-      );
+        .map(
+            (device) =>
+                toRestDeviceConfig(
+                    plainToInstance(
+                        AppDeviceSettingsResponse,
+                        JSON.parse(device.deviceExt.deviceSettings),
+                    ) as AppDeviceSettingsResponse,
+                    device,
+                ),
+        );
 
     for (let i = 0; i < deviceConfigs.length; i++) {
       await this.emitAsync(
-        new DeviceSettingsReceived(deviceConfigs[i]),
+          new DeviceSettingsReceived(deviceConfigs[i]),
       );
     }
   }
 }
 
-export function toDeviceConfig(
-  settings: AppDeviceSettingsResponse,
-  device: AppDeviceResponse,
+export function toRestDeviceConfig(
+    settings: AppDeviceSettingsResponse,
+    device: AppDeviceResponse,
 ): DeviceConfig {
   return {
     deviceId: settings.deviceId,

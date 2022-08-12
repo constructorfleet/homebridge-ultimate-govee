@@ -8,12 +8,12 @@ describe('opCodeUtils', () => {
     it('returns the XOR as the last element', () => {
       const expected = 0 ^ 10 ^ 5 ^ 2;
       expect(getCommandCodes(10, [5], 2)).toStrictEqual(
-        [
-          10, 5, 2, 0, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, expected,
-        ],
+          [
+            10, 5, 2, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, expected,
+          ],
       );
     });
   });
@@ -27,8 +27,8 @@ describe('opCodeUtils', () => {
         [5, 2, 10, 25],
       ];
       expect(getCommandValues(
-        identifier,
-        commands,
+          identifier,
+          commands,
       )).toStrictEqual([[10, 25]]);
     });
   });

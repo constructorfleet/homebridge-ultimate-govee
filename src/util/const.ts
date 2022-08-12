@@ -1,6 +1,7 @@
 export const GOVEE_CLIENT_ID = 'Goveee_Client_Id';
 
 export const GOVEE_CONFIGURATION = 'Govee_Configuration';
+export const GOVEE_GRAPHQL_CONFIGURATION = 'Govee_GraphQL_Configuration';
 export const PERSIST_CONFIGURATION = 'Persist_Configuration';
 
 export const ASSET_PATH = 'Asset_Path';
@@ -23,3 +24,7 @@ export const COMMAND_IDENTIFIER = 0x33;
 export const REPORT_IDENTIFIER = 0xaa;
 
 export const SEGMENT_COUNT = 15;
+
+export const CONF_USERNAME = 'username';
+export const CONF_PASSWORD = 'password';
+export const CONF_CLIENT = 'client';

@@ -1,6 +1,21 @@
-import {API, Characteristic, Logger, PlatformAccessory, Service} from 'homebridge';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import {
+  AccessoryManager,
+  EffectService,
+  HumidifierService,
+  InformationService,
+  PurifierService,
+  RGBLightService,
+  SegmentedLightService,
+  ServiceRegistry,
+  WhiteLightService,
+} from './accessories';
+import {API, Characteristic, PlatformAccessory, PlatformName, PluginIdentifier, Service} from 'homebridge';
 import {DynamicModule, Module} from '@nestjs/common';
-import {GoveePluginModule} from '../core/GoveePluginModule';
+import {BinaryLike} from 'crypto';
+import {DeviceSubEffectsFeature} from './config/features/DeviceSubEffects';
+import {DisableDIYEffectsFeature} from './config/features/DisableDIYEffectsFeature';
+import {GoveePluginModule} from '../core';
 import {
   HOMEBRIDGE_API,
   PLATFORM_CHARACTERISTICS,
@@ -8,21 +23,10 @@ import {
   PLATFORM_CONFIG_FILE,
   PLATFORM_SERVICES,
   PLATFORM_UUID_GENERATOR,
-} from '../util/const';
-import {AccessoryManager} from './accessories/AccessoryManager';
-import {BinaryLike} from 'hap-nodejs/dist/lib/util/uuid';
-import {PlatformName, PluginIdentifier} from 'homebridge/lib/api';
+} from '../util';
+import {Features, PlatformConfigService} from './config';
 import {PlatformService} from './PlatformService';
-import {PlatformConfigService} from './config/PlatformConfigService';
-import {ServiceRegistry} from './accessories/ServiceRegistry';
-import {HumidifierService} from './accessories/services/HumidifierService';
-import {InformationService} from './accessories/services/InformationService';
-import {PurifierService} from './accessories/services/PurifierService';
-import {RGBLightService, SegmentedLightService, WhiteLightService} from './accessories/services/LightService';
-import {EffectService} from './accessories/services/EffectService';
-import {DeviceSubEffectsFeature} from './config/features/DeviceSubEffects';
-import {Features} from './config/Features';
-import {DisableDIYEffectsFeature} from './config/features/DisableDIYEffectsFeature';
+import {Logger} from '../logging';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ACCESSORY_SERVICES = [
@@ -41,12 +45,12 @@ const FEATURE_FLAG_HANDLERS = [
   DisableDIYEffectsFeature,
 ];
 
-export interface GoveeCredentials {
+interface GoveeCredentials {
   username: string;
   password: string;
 }
 
-export interface GoveeConnections {
+interface GoveeConnections {
   enableIoT: boolean;
   enableBLE: boolean;
   enableAPI: boolean;
@@ -62,7 +66,11 @@ export interface PlatformModuleConfig {
   configPath: string;
   generateUUID: (data: BinaryLike) => string;
   accessoryFactory: typeof PlatformAccessory;
-  registerAccessory: (pluginIdentifier: PluginIdentifier, platformName: PlatformName, accessories: PlatformAccessory[]) => void;
+  registerAccessory: (
+      pluginIdentifier: PluginIdentifier,
+      platformName: PlatformName,
+      accessories: PlatformAccessory[]
+  ) => void;
   updateAccessory: (accessories: PlatformAccessory[]) => void;
   credentials: GoveeCredentials;
   connections: GoveeConnections;
@@ -75,17 +83,17 @@ export class PlatformModule {
       module: PlatformModule,
       imports: [
         GoveePluginModule.register({
-          username: config.credentials.username,
-          password: config.credentials.password,
-          enableBLE: config.connections.enableBLE,
-          enableIoT: config.connections.enableIoT,
-          enableAPI: config.connections.enableAPI,
-        },
-        {
-          storagePath: config.storagePath,
-        },
-        config.rootPath,
-        config.logger,
+              username: config.credentials.username,
+              password: config.credentials.password,
+              enableBLE: config.connections.enableBLE,
+              enableIoT: config.connections.enableIoT,
+              enableAPI: config.connections.enableAPI,
+            },
+            {
+              storagePath: config.storagePath,
+            },
+            config.rootPath,
+            config.logger,
         ),
       ],
       providers: [

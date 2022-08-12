@@ -1,18 +1,18 @@
 import {IoTEvent, IoTEventData} from './IoTEvent';
 
 export class IoTPublishToEvent
-  extends IoTEvent<IoTEventData> {
+    extends IoTEvent<IoTEventData> {
 
   constructor(
-    topic: string,
-    payload: string,
+      topic: string,
+      payload: string,
   ) {
     super(
-      'Publish',
-      new IoTEventData(
-        topic,
-        payload,
-      ),
+        'Publish',
+        new IoTEventData(
+            topic,
+            payload,
+        ),
     );
   }
 }

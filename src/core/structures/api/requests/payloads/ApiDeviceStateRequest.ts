@@ -1,8 +1,8 @@
 import {BaseRequest} from './BaseRequest';
 
 export function apiDeviceStateRequest(
-  device: string,
-  model: string,
+    device: string,
+    model: string,
 ): ApiDeviceStateRequest {
   const request = new ApiDeviceStateRequest();
   request.device = device;
@@ -12,12 +12,11 @@ export function apiDeviceStateRequest(
 }
 
 export class ApiDeviceStateRequest
-  extends BaseRequest {
+    extends BaseRequest {
+  public device!: string;
+  public model!: string;
+
   constructor() {
     super();
   }
-
-  public device!: string;
-
-  public model!: string;
 }

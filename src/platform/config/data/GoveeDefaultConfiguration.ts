@@ -1,4 +1,4 @@
-export interface GoveeConfiguration {
+export interface GoveeDefaultConfiguration {
   username: string;
   password: string;
   enableIoT: boolean;

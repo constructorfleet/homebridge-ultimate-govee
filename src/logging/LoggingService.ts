@@ -5,7 +5,7 @@ import {Logger} from './Logger';
 @Injectable()
 export class LoggingService {
   constructor(
-    @Inject(LOGGER) private readonly logger: Logger,
+      @Inject(LOGGER) private readonly logger: Logger,
   ) {
   }
 

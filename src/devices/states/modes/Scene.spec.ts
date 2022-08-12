@@ -63,12 +63,12 @@ describe('SceneMode', () => {
       testMode.activeMode = testMode.sceneModeIdentifier;
       testMode.activeSceneId = 22;
       expect(testMode.sceneIdChange()).toStrictEqual(
-        [
-          COMMAND_IDENTIFIER, 5, 4, 22, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0,
-          0, 0, 0, 0, 36,
-        ],
+          [
+            COMMAND_IDENTIFIER, 5, 4, 22, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 36,
+          ],
       );
     });
   });

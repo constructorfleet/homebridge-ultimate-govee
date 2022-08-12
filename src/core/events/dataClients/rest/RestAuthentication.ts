@@ -3,21 +3,21 @@ import {AuthenticationData} from '../../../structures/AuthenticationData';
 import {ApiResponseStatus} from '../../../structures/api/ApiResponseStatus';
 
 abstract class RestAuthenticationEvent<EventData>
-  extends RestEvent<EventData> {
+    extends RestEvent<EventData> {
 
   protected constructor(
-    eventName: string,
-    eventData: EventData,
+      eventName: string,
+      eventData: EventData,
   ) {
     super(
-      `AUTHENTICATION.${eventName}`,
-      eventData,
+        `AUTHENTICATION.${eventName}`,
+        eventData,
     );
   }
 }
 
 export class RestAuthenticateEvent
-  extends RestAuthenticationEvent<unknown> {
+    extends RestAuthenticationEvent<unknown> {
 
   constructor() {
     super('Authenticate', {});
@@ -25,27 +25,27 @@ export class RestAuthenticateEvent
 }
 
 export class RestAuthenticationFailureEvent
-  extends RestAuthenticationEvent<ApiResponseStatus> {
+    extends RestAuthenticationEvent<ApiResponseStatus> {
 
   constructor(
-    eventData: ApiResponseStatus,
+      eventData: ApiResponseStatus,
   ) {
     super(
-      'Failure',
-      eventData,
+        'Failure',
+        eventData,
     );
   }
 }
 
 export class RestAuthenticatedEvent<AuthType extends AuthenticationData>
-  extends RestAuthenticationEvent<AuthType> {
+    extends RestAuthenticationEvent<AuthType> {
 
   constructor(
-    eventData: AuthType,
+      eventData: AuthType,
   ) {
     super(
-      'Authenticated',
-      eventData,
+        'Authenticated',
+        eventData,
     );
   }
 }

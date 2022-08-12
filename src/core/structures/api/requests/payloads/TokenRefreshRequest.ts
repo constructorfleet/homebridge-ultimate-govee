@@ -1,7 +1,7 @@
 import {BaseRequest} from './BaseRequest';
 
 export function tokenRefreshRequest(
-  refreshToken: string,
+    refreshToken: string,
 ): TokenRefreshRequest {
   const request = new TokenRefreshRequest();
   request.refreshToken = refreshToken;
@@ -10,10 +10,10 @@ export function tokenRefreshRequest(
 }
 
 export class TokenRefreshRequest
-  extends BaseRequest {
+    extends BaseRequest {
+  public refreshToken!: string;
+
   constructor() {
     super();
   }
-
-  public refreshToken!: string;
 }

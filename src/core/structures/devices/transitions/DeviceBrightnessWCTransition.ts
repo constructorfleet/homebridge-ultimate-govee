@@ -8,8 +8,8 @@ import {REPORT_IDENTIFIER} from '../../../../util/const';
 export class DeviceBrightnessWCTransition extends DeviceTransition<ModesState & GoveeDevice> {
 
   constructor(
-    deviceId: string,
-    public readonly brightness: number,
+      deviceId: string,
+      public readonly brightness: number,
   ) {
     super(deviceId);
   }
@@ -21,14 +21,14 @@ export class DeviceBrightnessWCTransition extends DeviceTransition<ModesState & 
     }
 
     colorSegmentMode.colorSegments.forEach(
-      (segment) => segment.brightness = this.brightness,
+        (segment) => segment.brightness = this.brightness,
     );
 
     this.commandCodes = [
       colorSegmentMode.brightnessSegmentsChange(this.brightness),
       getCommandCodes(
-        REPORT_IDENTIFIER,
-        [5, 1],
+          REPORT_IDENTIFIER,
+          [5, 1],
       ),
     ];
 

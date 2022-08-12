@@ -13,31 +13,31 @@ export class InformationService extends AccessoryService<void> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AccessoryInformation;
 
   constructor(
-    eventEmitter: EventEmitter2,
-    configService: PlatformConfigService,
-    @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
-    @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
-    log: LoggingService,
+      eventEmitter: EventEmitter2,
+      configService: PlatformConfigService,
+      @Inject(PLATFORM_SERVICES) SERVICES: typeof Service,
+      @Inject(PLATFORM_CHARACTERISTICS) CHARACTERISTICS: typeof Characteristic,
+      log: LoggingService,
   ) {
     super(
-      eventEmitter,
-      configService,
-      SERVICES,
-      CHARACTERISTICS,
-      log,
+        eventEmitter,
+        configService,
+        SERVICES,
+        CHARACTERISTICS,
+        log,
     );
   }
 
   protected updateServiceCharacteristics(
-    service: Service,
-    device: GoveeDevice,
+      service: Service,
+      device: GoveeDevice,
   ) {
     const deviceConfig = this.configService.getDeviceConfiguration(device.deviceId);
     service.updateCharacteristic(this.CHARACTERISTICS.Manufacturer, 'Govee')
-      .updateCharacteristic(this.CHARACTERISTICS.Name, device.name)
-      .updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, device.name)
-      .updateCharacteristic(this.CHARACTERISTICS.Model, device.model)
-      .updateCharacteristic(this.CHARACTERISTICS.SerialNumber, device.deviceId);
+        .updateCharacteristic(this.CHARACTERISTICS.Name, device.name)
+        .updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, device.name)
+        .updateCharacteristic(this.CHARACTERISTICS.Model, device.model)
+        .updateCharacteristic(this.CHARACTERISTICS.SerialNumber, device.deviceId);
     if (device.hardwareVersion) {
       service.updateCharacteristic(this.CHARACTERISTICS.FirmwareRevision, device.hardwareVersion);
     }

@@ -64,7 +64,7 @@ interface IoTMessage {
 }
 
 export class IoTAccountMessage
-  implements IoTMessage {
+    implements IoTMessage {
   @Expose({name: 'proType'})
   public proType!: number;
 

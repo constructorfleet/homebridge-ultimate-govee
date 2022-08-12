@@ -1,5 +1,7 @@
+import {ConnectionConfig} from './ConnectionConfig';
+
 export interface BLEConfig
-  extends ConnectionConfig {
+    extends ConnectionConfig {
   bleName?: string;
 
   bleAddress?: string;
@@ -7,6 +9,6 @@ export interface BLEConfig
 
 export const supportsBLE = (arg): BLEConfig | undefined => {
   return Reflect.has(arg, 'bleAddress') && arg.bleAddress
-    ? arg as BLEConfig
-    : undefined;
+      ? arg as BLEConfig
+      : undefined;
 };

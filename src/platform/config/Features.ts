@@ -1,7 +1,8 @@
-import {BaseFeatureHandler} from './features/BaseFeatureHandler';
 import {Constructor} from '@nestjs/common/utils/merge-with-values.util';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
 import {ModuleRef} from '@nestjs/core';
+import {BaseFeatureHandler} from "./features/BaseFeatureHandler";
+
 
 export class Features {
   // @ts-ignore
@@ -11,14 +12,14 @@ export class Features {
     return {
       provide: Features,
       useFactory: async (moduleRef: ModuleRef): Promise<() => Promise<BaseFeatureHandler[]>> =>
-        async (): Promise<BaseFeatureHandler[]> => {
-          console.log('Getting handlers');
-          return await Promise.all(
-            Features.handlerConstructors.map(
-              (ctor: Constructor<BaseFeatureHandler>) => moduleRef.create(ctor),
-            ),
-          );
-        },
+          async (): Promise<BaseFeatureHandler[]> => {
+            console.log('Getting handlers');
+            return await Promise.all(
+                Features.handlerConstructors.map(
+                    (ctor: Constructor<BaseFeatureHandler>) => moduleRef.create(ctor),
+                ),
+            );
+          },
       inject: [ModuleRef],
     };
   }

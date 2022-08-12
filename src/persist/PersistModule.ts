@@ -1,7 +1,7 @@
-import {DynamicModule, Module} from '@nestjs/common';
 import {PERSIST_CONFIGURATION} from '../util/const';
 import {PersistConfiguration} from './PersistConfiguration';
 import {PersistService} from './PersistService';
+import {DynamicModule, Module} from "@nestjs/common";
 
 @Module({})
 export class PersistModule {

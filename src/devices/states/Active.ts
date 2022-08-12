@@ -14,19 +14,27 @@ export interface ActiveState {
 }
 
 export function Active<StateType extends State>(
-  stateType: new (...args) => StateType,
+    stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements ActiveState {
     isActive?: boolean;
 
+    public constructor(...args) {
+      super(...args);
+      this.addDeviceStatusCodes(commandIdentifiers);
+    }
+
     public set active(value: boolean) {
       this.isActive = value;
     }
 
-    public constructor(...args) {
-      super(...args);
-      this.addDeviceStatusCodes(commandIdentifiers);
+    public get activeStateChange(): number[] {
+      return getCommandCodes(
+          COMMAND_IDENTIFIER,
+          commandIdentifiers,
+          this.isActive ? 1 : 0,
+      );
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
@@ -35,22 +43,14 @@ export function Active<StateType extends State>(
         return super.parse(deviceState);
       }
       const commandValues = getCommandValues(
-        [REPORT_IDENTIFIER, ...commandIdentifiers],
-        deviceState.commands,
+          [REPORT_IDENTIFIER, ...commandIdentifiers],
+          deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.isActive = commandValues[0][0] === 1;
       }
 
       return super.parse(deviceState);
-    }
-
-    public get activeStateChange(): number[] {
-      return getCommandCodes(
-        COMMAND_IDENTIFIER,
-        commandIdentifiers,
-        this.isActive ? 1 : 0,
-      );
     }
   };
 }

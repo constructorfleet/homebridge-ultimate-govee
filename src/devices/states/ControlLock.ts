@@ -14,7 +14,7 @@ export interface ControlLockState {
 }
 
 export function ControlLock<StateType extends State>(
-  stateType: new (...args) => StateType,
+    stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements ControlLockState {
@@ -25,24 +25,24 @@ export function ControlLock<StateType extends State>(
       this.addDeviceStatusCodes(commandIdentifiers);
     }
 
+    public get controlLockChange(): number[] {
+      return getCommandCodes(
+          COMMAND_IDENTIFIER,
+          commandIdentifiers,
+          this.areControlsLocked ? 1 : 0,
+      );
+    }
+
     public override parse(deviceState: DeviceState): ThisType<this> {
       const commandValues = getCommandValues(
-        [REPORT_IDENTIFIER, ...commandIdentifiers],
-        deviceState.commands,
+          [REPORT_IDENTIFIER, ...commandIdentifiers],
+          deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.areControlsLocked = commandValues[0][0] === 1;
       }
 
       return super.parse(deviceState);
-    }
-
-    public get controlLockChange(): number[] {
-      return getCommandCodes(
-        COMMAND_IDENTIFIER,
-        commandIdentifiers,
-        this.areControlsLocked ? 1 : 0,
-      );
     }
   };
 }

@@ -5,14 +5,14 @@ import {LightDevice} from './GoveeLight';
 
 
 @DeviceFactory.register(
-  'H605B',
+    'H605B',
 )
 export class GoveeRGBICLight
-  extends RGBICMusicMode(
-    ColorSegmentsMode(
-      LightDevice,
-    ),
-  ) {
+    extends RGBICMusicMode(
+        ColorSegmentsMode(
+            LightDevice,
+        ),
+    ) {
 
   constructor(args) {
     super(args);

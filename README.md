@@ -160,3 +160,7 @@ Once available, each device will display:
 
 RGBIC lights will also offer the ability to hide the segment lights from HomeKit, leaving the primary control:  
 `hideSegments` - Setting to `true` will remove all 15 segments from HomeKit.  
+
+## GraphQL HomeBridge API
+
+Add the following to the 

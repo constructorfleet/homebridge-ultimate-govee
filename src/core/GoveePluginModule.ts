@@ -1,31 +1,28 @@
 import {DynamicModule, Module} from '@nestjs/common';
 import {EventEmitterModule} from '@nestjs/event-emitter';
-import {DeviceManager} from '../devices/DeviceManager';
-import {RestClient} from '../data/clients/RestClient';
-import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../util/const';
+import {
+  DeviceFactory,
+  DeviceManager,
+  GoveeAirPurifier,
+  GoveeHumidifier,
+  GoveeLight,
+  GoveeRGBICLight,
+  GoveeRGBLight
+} from '../devices';
+import {BLEClient, IoTClient, RestClient} from '../data';
+import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../util';
 import path from 'path';
 
-import {ConfigurationModule} from '../config/ConfigurationModule';
-import {GoveeConfiguration} from '../config/GoveeConfiguration';
-import {PersistConfiguration} from '../persist/PersistConfiguration';
-import {PersistModule} from '../persist/PersistModule';
-import {LoggingModule} from '../logging/LoggingModule';
-import {Logger} from '../logging/Logger';
-import {BLEClient} from '../data/clients/BLEClient';
-import {IoTClient} from '../data/clients/IoTClient';
+import {ConfigurationModule} from '../config';
+import {PersistConfiguration, PersistModule} from '../persist';
+import {Logger, LoggingModule} from '../logging';
 import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
-import {BLEEventProcessor} from '../interactors/data/BLEEventProcessor';
-import {IoTEventProcessor} from '../interactors/data/IoTEventProcessor';
-import {RestEventProcessor} from '../interactors/data/RestEventProcessor';
+import {BLEEventProcessor, IoTEventProcessor, RestEventProcessor} from '../interactors';
 import {Md5} from 'ts-md5';
 import {v4 as uuidv4} from 'uuid';
-import {DeviceFactory} from '../devices/DeviceFactory';
-import {GoveeRGBICLight} from '../devices/implementations/GoveeRGBICLight';
-import {GoveeRGBLight} from '../devices/implementations/GoveeRGBLight';
-import {GoveeLight} from '../devices/implementations/GoveeLight';
-import {GoveeAirPurifier} from '../devices/implementations/GoveeAirPurifier';
-import {GoveeHumidifier} from '../devices/implementations/GoveeHumidifier';
-import {EffectsManager} from '../effects/EffectsManager';
+import {EffectsManager} from '../effects';
+import {GoveeDefaultConfiguration} from '../platform';
+
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const GOVEE_DEVICE_TYPES = [
@@ -38,11 +35,14 @@ const GOVEE_DEVICE_TYPES = [
 
 @Module({})
 export class GoveePluginModule {
+  constructor() {
+  }
+
   public static register(
-    config: GoveeConfiguration,
-    persistConfig: PersistConfiguration,
-    rootPath: string,
-    logger: Logger,
+      config: GoveeDefaultConfiguration,
+      persistConfig: PersistConfiguration,
+      rootPath: string,
+      logger: Logger,
   ): DynamicModule {
     const connectionProviders: Provider[] = [];
     if (config.enableBLE) {
@@ -100,8 +100,8 @@ export class GoveePluginModule {
         {
           provide: GOVEE_CLIENT_ID,
           useValue: Md5.hashStr(
-            Buffer.from(uuidv4() + (new Date().getMilliseconds()).toString()).toString('utf8'),
-            false,
+              Buffer.from(uuidv4() + (new Date().getMilliseconds()).toString()).toString('utf8'),
+              false,
           ),
         },
         ...DeviceFactory.getProviders(),
@@ -125,8 +125,5 @@ export class GoveePluginModule {
         LoggingModule,
       ],
     };
-  }
-
-  constructor() {
   }
 }

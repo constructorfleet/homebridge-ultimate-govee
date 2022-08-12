@@ -14,7 +14,7 @@ export interface BrightnessState {
 }
 
 export function Brightness<StateType extends State>(
-  stateType: new (...args) => StateType,
+    stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements BrightnessState {
@@ -25,27 +25,27 @@ export function Brightness<StateType extends State>(
       this.addDeviceStatusCodes(commandIdentifiers);
     }
 
+    public get brightnessChange(): number[] {
+      return getCommandCodes(
+          COMMAND_IDENTIFIER,
+          commandIdentifiers,
+          this.brightness || 0,
+      );
+    }
+
     public override parse(deviceState: DeviceState): ThisType<this> {
       if (deviceState.brightness !== undefined) {
         this.brightness = deviceState.brightness;
       }
       const commandValues = getCommandValues(
-        [REPORT_IDENTIFIER, ...commandIdentifiers],
-        deviceState.commands,
+          [REPORT_IDENTIFIER, ...commandIdentifiers],
+          deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.brightness = commandValues[0][0];
       }
 
       return super.parse(deviceState);
-    }
-
-    public get brightnessChange(): number[] {
-      return getCommandCodes(
-        COMMAND_IDENTIFIER,
-        commandIdentifiers,
-        this.brightness || 0,
-      );
     }
   };
 }

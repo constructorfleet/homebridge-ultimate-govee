@@ -14,7 +14,7 @@ export interface FanSpeedState {
 }
 
 export function FanSpeed<StateType extends State>(
-  stateType: new (...args) => StateType,
+    stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements FanSpeedState {
@@ -25,24 +25,24 @@ export function FanSpeed<StateType extends State>(
       this.addDeviceStatusCodes(commandIdentifiers);
     }
 
+    public get fanSpeedChange(): number[] {
+      return getCommandCodes(
+          COMMAND_IDENTIFIER,
+          commandIdentifiers,
+          this.fanSpeed || 16,
+      );
+    }
+
     public override parse(deviceState: DeviceState): ThisType<this> {
       const commandValues = getCommandValues(
-        [REPORT_IDENTIFIER, ...commandIdentifiers],
-        deviceState.commands,
+          [REPORT_IDENTIFIER, ...commandIdentifiers],
+          deviceState.commands,
       );
       if (commandValues?.length === 1) {
         this.fanSpeed = commandValues[0][0];
       }
 
       return super.parse(deviceState);
-    }
-
-    public get fanSpeedChange(): number[] {
-      return getCommandCodes(
-        COMMAND_IDENTIFIER,
-        commandIdentifiers,
-        this.fanSpeed || 16,
-      );
     }
   };
 }

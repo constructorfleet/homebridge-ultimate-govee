@@ -5,8 +5,8 @@ import {GoveeDevice} from '../../../../devices/GoveeDevice';
 export class DeviceFanSpeedTransition extends DeviceTransition<FanSpeedState & GoveeDevice> {
 
   constructor(
-    deviceId: string,
-    public readonly fanSpeed: number,
+      deviceId: string,
+      public readonly fanSpeed: number,
   ) {
     super(deviceId);
   }

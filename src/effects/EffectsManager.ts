@@ -12,89 +12,89 @@ import {Injectable} from '@nestjs/common';
 @Injectable()
 export class EffectsManager extends Emitter {
   private readonly diyEffects: Map<number, DIYLightEffect> =
-    new Map<number, DIYLightEffect>();
+      new Map<number, DIYLightEffect>();
 
   private readonly deviceEffects: Map<number, DeviceLightEffect> =
-    new Map<number, DeviceLightEffect>();
+      new Map<number, DeviceLightEffect>();
 
   constructor(
-    eventEmitter: EventEmitter2,
-    private readonly log: LoggingService,
+      eventEmitter: EventEmitter2,
+      private readonly log: LoggingService,
   ) {
     super(eventEmitter);
   }
 
   @OnEvent(
-    'EFFECT.DIY.Received',
+      'EFFECT.DIY.Received',
   )
   async onDIYEffectReceived(effects: DIYEffect[]) {
     const lightEffects =
-      effects.map(
-        (effect) =>
-          new DIYLightEffect(
-            effect.diyCode,
-            effect.diyName,
-          ),
-      );
+        effects.map(
+            (effect) =>
+                new DIYLightEffect(
+                    effect.diyCode,
+                    effect.diyName,
+                ),
+        );
 
     const newEffects = lightEffects.filter(
-      (effect: DIYLightEffect) => !this.diyEffects.has(effect.id),
+        (effect: DIYLightEffect) => !this.diyEffects.has(effect.id),
     ).map(
-      (effect: DIYLightEffect) => {
-        this.diyEffects.set(effect.id, effect);
-        return effect;
-      },
+        (effect: DIYLightEffect) => {
+          this.diyEffects.set(effect.id, effect);
+          return effect;
+        },
     );
     await this.emitAsync(
-      new DIYEffectDiscovered(newEffects),
+        new DIYEffectDiscovered(newEffects),
     );
   }
 
   @OnEvent(
-    'EFFECT.DEVICE.Configured',
+      'EFFECT.DEVICE.Configured',
   )
   async onDeviceEffectConfigured(effects: DeviceLightEffect[]) {
     effects.forEach(
-      (lightEffect) => this.deviceEffects.set(
-        lightEffect.id,
-        lightEffect,
-      ),
+        (lightEffect) => this.deviceEffects.set(
+            lightEffect.id,
+            lightEffect,
+        ),
     );
   }
 
   @OnEvent(
-    'EFFECT.DEVICE.Received',
+      'EFFECT.DEVICE.Received',
   )
   async onDeviceEffectReceived(effects: CategoryScene[]) {
     const lightEffects =
-      effects
-        .reduce(
-          (scenes: DeviceLightEffect[], effect: CategoryScene) => {
-            scenes = scenes.concat(
-              ...effect.lightEffects.map(
-                (lightEffect: SceneLightEffect) => {
-                  const deviceLightEffect = new DeviceLightEffect(
-                    lightEffect.sceneCode,
-                    `${effect.sceneName} ${lightEffect.scenceName}`.trim(),
-                    effect.scenesHint,
-                    effect.deviceId,
+        effects
+            .reduce(
+                (scenes: DeviceLightEffect[], effect: CategoryScene) => {
+                  scenes = scenes.concat(
+                      ...effect.lightEffects.map(
+                          (lightEffect: SceneLightEffect) => {
+                            const deviceLightEffect = new DeviceLightEffect(
+                                lightEffect.sceneCode,
+                                `${effect.sceneName} ${lightEffect.scenceName}`.trim(),
+                                effect.scenesHint,
+                                effect.deviceId,
+                            );
+                            this.deviceEffects.set(
+                                deviceLightEffect.id,
+                                deviceLightEffect,
+                            );
+                            return deviceLightEffect;
+                          },
+                      ),
                   );
-                  this.deviceEffects.set(
-                    deviceLightEffect.id,
-                    deviceLightEffect,
-                  );
-                  return deviceLightEffect;
+
+                  return scenes;
                 },
-              ),
+                [] as DeviceLightEffect[],
             );
 
-            return scenes;
-          },
-          [] as DeviceLightEffect[],
-        );
-
     await this.emitAsync(
-      new DeviceEffectDiscovered(lightEffects),
+        new DeviceEffectDiscovered(lightEffects),
     );
   }
 }
