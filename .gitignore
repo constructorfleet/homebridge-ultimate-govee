@@ -128,4 +128,4 @@ test.ts
 .vscode/
 
 assets/testiot.key.pem
-src/python.version
+src/.python.version
