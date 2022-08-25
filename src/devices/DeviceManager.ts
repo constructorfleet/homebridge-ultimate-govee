@@ -83,7 +83,7 @@ export class DeviceManager extends Emitter {
       this.log.info(
         'DeviceManager',
         'onDeviceState',
-        'Unknown Device',
+        'Unknown device',
         deviceState.deviceId,
       );
       return;
@@ -106,7 +106,7 @@ export class DeviceManager extends Emitter {
       this.log.info(
         'DeviceManager',
         'onDeviceCommand',
-        'Unknown Device',
+        'Unknown device',
         deviceTransition.deviceId,
       );
       return;

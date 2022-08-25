@@ -34,6 +34,7 @@
     "govee"
   ],
   "dependencies": {
+    "@grapheng/units": "0.0.5",
     "@graphql-mesh/cli": "^0.75.8",
     "@nestjs/common": "^8.4.2",
     "@nestjs/config": "^2.0.0",
@@ -52,7 +53,7 @@
     "deep-diff-pizza": "^1.0.1",
     "es6-shim": "^0.35.6",
     "graphql": "^16.5.0",
-    "graphql-scalars": "^1.16.1",
+    "graphql-scalars": "^1.18.0",
     "is-base64": "^1.1.0",
     "jmespath": "^0.16.0",
     "joi": "^17.6.0",

@@ -9,7 +9,7 @@ import {NodeId} from '../scalars';
     isAbstract: true,
   },
 )
-export class Node {
+export abstract class Node {
   @Field(
     () => NodeId,
     {

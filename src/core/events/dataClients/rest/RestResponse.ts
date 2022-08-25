@@ -67,6 +67,6 @@ export class RestDeviceScenesResponse
 //   extends RestResponseEvent<string | undefined> {
 //
 //   constructor(eventData: string | undefined) {
-//     super('Device', eventData);
+//     super('device', eventData);
 //   }
 // }

@@ -19,27 +19,35 @@ export const ConstrainedString = (
   const digitsRegex = RegExp(`^(?=.*?(?:\\d.*){${minDigits},})$`);
   const lengthRegex = RegExp(`^(?:.{${minLength},${maxLength}})$`);
   const validate = (value: string) => {
-    if (!allowedSymbolsRegex.test(value)) {
+    if (allowedSymbols && !allowedSymbolsRegex.test(value)) {
       throw new GraphQLError(
         `[${name}] Value must contain at least ${minSymbols} of ${allowedSymbols}`,
       );
     }
-    if (!digitsRegex.test(value)) {
+    if (digitsRegex && !digitsRegex.test(value)) {
       throw new GraphQLError(
         `[${name}] Value must contain at least ${minDigits} numbers`,
       );
     }
-    if (!lengthRegex.test(value)) {
+    if (lengthRegex && !lengthRegex.test(value)) {
       throw new GraphQLError(
         `[${name}] Value must be between ${minLength} and ${maxLength} characters`,
       );
     }
   };
 
-  const lengthDescription = `is between ${constraints.minLength} and ${constraints.maxLength} characters`;
-  const numberDescription = `contains at least ${constraints.minDigits} numbers`;
-  const symbolDescription = `contains at least ${constraints.minSymbols} symbols`;
-  const allowedSymbolDescription = `consists of only alpha-number characters or ${constraints.allowedSymbols}`;
+  const lengthDescription =
+      (constraints.minLength || constraints.maxLength)
+      && `is between ${constraints.minLength} and ${constraints.maxLength} characters`;
+  const numberDescription =
+      constraints.minDigits &&
+      `contains at least ${constraints.minDigits} numbers`;
+  const symbolDescription =
+      constraints.minSymbols &&
+      `contains at least ${constraints.minSymbols} symbols`;
+  const allowedSymbolDescription =
+      constraints.allowedSymbols &&
+      `consists of only alpha-number characters or ${constraints.allowedSymbols}`;
 
   return new GraphQLScalarType(
     {
