@@ -1,16 +1,15 @@
-import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
+import {Field, ObjectType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
 import {Brightness} from '../../scalars';
 
-@InterfaceType(
+@ObjectType(
   'BrightnessState',
   {
     description: 'The brightness state for a device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class BrightnessState implements State {
+export class BrightnessState implements State {
     @Field(
       () => Brightness,
       {
@@ -19,4 +18,8 @@ export abstract class BrightnessState implements State {
       },
     )
     brightness!: number;
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

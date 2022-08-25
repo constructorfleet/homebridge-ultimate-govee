@@ -1,16 +1,15 @@
-import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
+import {Field, ObjectType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
 import {Duration} from '../../scalars/Duration';
 
-@InterfaceType(
+@ObjectType(
   'TimerState',
   {
     description: 'The timer state for a device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class TimerState implements State {
+export class TimerState implements State {
     @Field(
       {
         name: 'isTimerOn',
@@ -27,4 +26,8 @@ export abstract class TimerState implements State {
       },
     )
     timerDuration!: number;
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

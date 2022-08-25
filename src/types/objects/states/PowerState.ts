@@ -1,15 +1,14 @@
-import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
+import {Field, ObjectType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
 
-@InterfaceType(
+@ObjectType(
   'PowerState',
   {
     description: 'The power state for a device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class PowerState implements State {
+export class PowerState implements State {
     @Field(
       {
         name: 'isOn',
@@ -17,4 +16,8 @@ export abstract class PowerState implements State {
       },
     )
     isOn!: boolean;
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

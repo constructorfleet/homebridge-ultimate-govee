@@ -1,16 +1,15 @@
-import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
-import {RGBColor} from "../../objects";
+import {Field, ObjectType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
+import {RGBColor} from '../index';
 
-@InterfaceType(
+@ObjectType(
   'SolidColorState',
   {
     description: 'The current solid color state for a device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class SolidColorState implements State {
+export class SolidColorState implements State {
     @Field(
       () => RGBColor,
       {
@@ -19,4 +18,8 @@ export abstract class SolidColorState implements State {
       },
     )
     solidColor!: RGBColor;
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

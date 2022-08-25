@@ -1,16 +1,15 @@
-import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
+import {Field, ObjectType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
 import {MistLevel} from '../../scalars';
 
-@InterfaceType(
+@ObjectType(
   'MistLevelState',
   {
     description: 'The current mist level state for a device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class MistLevelState implements State {
+export class MistLevelState implements State {
     @Field(
       () => MistLevel,
       {
@@ -19,4 +18,8 @@ export abstract class MistLevelState implements State {
       },
     )
     mistLevel!: number;
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

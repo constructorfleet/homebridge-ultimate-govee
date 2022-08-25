@@ -1,17 +1,16 @@
-import {State} from './State';
-import {Field, InterfaceType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
+import {Field, ObjectType} from '@nestjs/graphql';
 import {ProgramId} from '../../scalars';
-import {MistLevelProgram} from '../../objects/MistLevelProgram';
+import {MistLevelProgram} from '../MistLevelProgram';
 
-@InterfaceType(
+@ObjectType(
   'ProgrammableMistLevelState',
   {
     description: 'The mist level programs for this device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class ProgrammableMistLevelState implements State {
+export class ProgrammableMistLevelState implements State {
     @Field(
       () => ProgramId,
       {
@@ -30,4 +29,8 @@ export abstract class ProgrammableMistLevelState implements State {
       },
     )
     mistLevelPrograms!: [MistLevelProgram];
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

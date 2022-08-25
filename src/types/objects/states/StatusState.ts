@@ -1,5 +1,5 @@
 import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
+import {State} from '../../interfaces';
 import {Status} from '../../scalars';
 
 @InterfaceType(
@@ -28,4 +28,8 @@ export abstract class StatusState implements State {
       },
     )
     subStatusCode!: number;
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

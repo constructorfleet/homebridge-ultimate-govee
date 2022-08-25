@@ -1,17 +1,16 @@
-import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
+import {Field, ObjectType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
 import {ModeId} from '../../scalars';
-import {DeviceMode} from './modes';
+import {DeviceMode} from '../../interfaces';
 
-@InterfaceType(
+@ObjectType(
   'ModeState',
   {
     description: 'The mode state for a device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class ModeState implements State {
+export class ModeState implements State {
     @Field(
       () => ModeId,
       {
@@ -29,4 +28,8 @@ export abstract class ModeState implements State {
       },
     )
     modes!: [DeviceMode];
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

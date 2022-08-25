@@ -10,30 +10,30 @@ import {NodeId} from '../scalars';
   },
 )
 export abstract class Node {
-  @Field(
-    () => NodeId,
-    {
-      name: 'id',
-      description: 'The identifier of the node',
-    },
-  )
-  id!: string;
+    @Field(
+      () => NodeId,
+      {
+        name: 'id',
+        description: 'The identifier of the node',
+      },
+    )
+    id!: string;
 
-  @Field(
-    () => DateTime,
-    {
-      name: 'createdAt',
-      description: 'When the node was created',
-    },
-  )
-  createdAt!: Date;
+    @Field(
+      () => DateTime,
+      {
+        name: 'createdAt',
+        description: 'When the node was created',
+      },
+    )
+    createdAt!: Date;
 
-  @Field(
-    () => DateTime,
-    {
-      name: 'updatedAt',
-      description: 'When the node was last updated',
-    },
-  )
-  updatedAt!: Date;
+    @Field(
+      () => DateTime,
+      {
+        name: 'updatedAt',
+        description: 'When the node was last updated',
+      },
+    )
+    updatedAt!: Date;
 }

@@ -10,15 +10,19 @@ import {SceneId} from '../../scalars';
   },
 )
 export class SceneMode implements DeviceMode {
-    @Field(
-      () => SceneId,
-      {
-        name: 'sceneId',
-        description: 'The identifier of the active scene',
-      },
-    )
-    sceneId!: number;
+  @Field(
+    () => SceneId,
+    {
+      name: 'sceneId',
+      description: 'The identifier of the active scene',
+    },
+  )
+  sceneId!: number;
 
-    id!: number;
+  createdAt!: Date;
+  id!: string;
+  modeId!: number;
+  updatedAt!: Date;
+
 
 }

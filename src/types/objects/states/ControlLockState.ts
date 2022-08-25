@@ -1,15 +1,14 @@
-import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
+import {Field, ObjectType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
 
-@InterfaceType(
+@ObjectType(
   'ControlLockState',
   {
     description: 'The control lock state for a device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class ControlLockState implements State {
+export class ControlLockState implements State {
     @Field(
       {
         name: 'areControlsLocked',
@@ -17,4 +16,8 @@ export abstract class ControlLockState implements State {
       },
     )
     areControlsLocked!: boolean;
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

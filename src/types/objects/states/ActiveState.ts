@@ -1,15 +1,14 @@
-import {Field, InterfaceType} from '@nestjs/graphql';
-import {State} from './State';
+import {Field, ObjectType} from '@nestjs/graphql';
+import {State} from '../../interfaces';
 
-@InterfaceType(
+@ObjectType(
   'ActiveState',
   {
     description: 'The active state for a device',
     implements: () => [State],
-    isAbstract: true,
   },
 )
-export abstract class ActiveState implements State {
+export class ActiveState implements State {
     @Field(
       {
         name: 'isActive',
@@ -17,4 +16,8 @@ export abstract class ActiveState implements State {
       },
     )
     isActive!: boolean;
+
+    createdAt!: Date;
+    id!: string;
+    updatedAt!: Date;
 }

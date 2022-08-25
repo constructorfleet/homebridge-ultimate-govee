@@ -10,14 +10,17 @@ import {RGBColor} from '../RGBColor';
   },
 )
 export class ColorMode implements DeviceMode {
-    @Field(
-      () => RGBColor,
-      {
-        name: 'color',
-        description: 'Active RGB color for this device mode',
-      },
-    )
-    color!: RGBColor;
+  @Field(
+    () => RGBColor,
+    {
+      name: 'color',
+      description: 'Active RGB color for this device mode',
+    },
+  )
+  color!: RGBColor;
 
-    id!: number;
+  createdAt!: Date;
+  id!: string;
+  modeId!: number;
+  updatedAt!: Date;
 }
