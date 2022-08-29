@@ -12,7 +12,6 @@ export class Features {
       provide: Features,
       useFactory: async (moduleRef: ModuleRef): Promise<() => Promise<BaseFeatureHandler[]>> =>
         async (): Promise<BaseFeatureHandler[]> => {
-          console.log('Getting handlers');
           return await Promise.all(
             Features.handlerConstructors.map(
               (ctor: Constructor<BaseFeatureHandler>) => moduleRef.create(ctor),
