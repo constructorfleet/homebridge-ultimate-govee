@@ -8,13 +8,12 @@ import {ColorMode} from '../states/modes/Color';
 
 @DeviceFactory.register(
   'H611A',
-  'H6062',
-  'H6061',
 )
 export class GoveeRGBICLight
   extends SceneMode(
     RGBICMusicMode(
       ColorSegmentsMode(
+        false,
         ColorMode(
           LightDevice,
         ),
@@ -23,6 +22,17 @@ export class GoveeRGBICLight
   ) {
 
   constructor(args) {
+    super(args);
+  }
+}
+
+@DeviceFactory.register(
+  'H6061',
+  'H6062',
+)
+export class GoveeVariableRGBICLight extends GoveeRGBICLight {
+  constructor(args) {
+    args.isVariable = true;
     super(args);
   }
 }

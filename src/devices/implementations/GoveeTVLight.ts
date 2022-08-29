@@ -10,6 +10,7 @@ import {LightDevice} from './GoveeLight';
 export class GoveeRGBICLight
   extends RGBICMusicMode(
     ColorSegmentsMode(
+      false,
       LightDevice,
     ),
   ) {
