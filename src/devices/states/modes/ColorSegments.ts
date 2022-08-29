@@ -9,6 +9,11 @@ const reportIdentifiers = [
   165,
 ];
 
+const reportSegmentIdentifiers = [
+  65,
+  0,
+];
+
 export interface ColorSegmentsModeConstructorArgs {
   colorSegmentsModeIdentifier?: number;
   colorSegmentCount?: number;
@@ -45,11 +50,11 @@ export function ColorSegmentsMode<StateType extends State>(
   return class extends stateType implements ColorSegmentsModeState {
     public activeMode?: number;
     public modes!: number[];
-    public colorSegmentCount: number;
     public colorSegmentModeIdentifier!: number;
+    public colorSegmentCount = 1;
     public colorSegments: ColorSegment[] =
       Array.from(
-        new Array(SEGMENT_COUNT),
+        new Array(1),
         () => {
           return new ColorSegment(
             new ColorRGB(0, 0, 0),
@@ -62,7 +67,43 @@ export function ColorSegmentsMode<StateType extends State>(
       super(args);
       this.addDeviceStatusCodes(modeCommandIdentifiers);
       this.colorSegmentModeIdentifier = args.colorSegmentsModeIdentifier ?? 21;
-      this.colorSegmentCount = args.colorSegmentCount ?? SEGMENT_COUNT;
+    }
+
+    public parseSegmentCount(deviceState: DeviceState): ThisType<this> {
+      const commandValues = getCommandValues(
+        [
+          REPORT_IDENTIFIER,
+          ...reportSegmentIdentifiers,
+        ],
+        deviceState.commands,
+      );
+
+      if (!commandValues || (commandValues?.length || 0) === 0 || (commandValues[0].length !== 2)) {
+        return this;
+      }
+
+      const segmentCount = commandValues[0][1];
+      if (this.colorSegments.length === segmentCount) {
+        return this;
+      }
+      if (this.colorSegments.length > segmentCount) {
+        this.colorSegments = this.colorSegments.splice(this.colorSegments.length - 1);
+      } else if (this.colorSegments.length < segmentCount) {
+        this.colorSegments =
+          this.colorSegments.concat(
+            Array.from(
+              new Array(segmentCount - this.colorSegments.length),
+              () => {
+                return new ColorSegment(
+                  new ColorRGB(0, 0, 0),
+                  0,
+                );
+              },
+            ),
+          );
+      }
+      this.colorSegmentCount = this.colorSegments.length;
+      return this;
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
@@ -83,6 +124,9 @@ export function ColorSegmentsMode<StateType extends State>(
 
         return super.parse(deviceState);
       }
+
+      this.parseSegmentCount(deviceState);
+
       const commandValues = getCommandValues(
         [
           REPORT_IDENTIFIER,

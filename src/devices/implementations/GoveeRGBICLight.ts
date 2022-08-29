@@ -8,6 +8,8 @@ import {ColorMode} from '../states/modes/Color';
 
 @DeviceFactory.register(
   'H611A',
+  'H6062',
+  'H6061',
 )
 export class GoveeRGBICLight
   extends SceneMode(
