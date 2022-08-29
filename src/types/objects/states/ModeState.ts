@@ -27,7 +27,7 @@ export class ModeState implements State {
         description: 'List of possible device modes',
       },
     )
-    modes!: [DeviceMode];
+    modes!: DeviceMode[];
 
     createdAt!: Date;
     id!: string;

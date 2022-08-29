@@ -1,5 +1,5 @@
-import {ObjectType} from '@nestjs/graphql';
-import {Device} from '../interfaces';
+import {Field, ObjectType} from '@nestjs/graphql';
+import {Device, State} from '../interfaces';
 
 @ObjectType(
   'GoveeDevice',
@@ -9,6 +9,15 @@ import {Device} from '../interfaces';
   },
 )
 export class GoveeDevice implements Device {
+    @Field(
+      () => [State],
+      {
+        name: 'states',
+        description: 'States associated with this device',
+      },
+    )
+    states!: State[];
+
     bleAddress?: string;
     createdAt!: Date;
     deviceId!: string;
