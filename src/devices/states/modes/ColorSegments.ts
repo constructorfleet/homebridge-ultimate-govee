@@ -11,7 +11,6 @@ const reportIdentifiers = [
 
 const reportSegmentIdentifiers = [
   65,
-  0,
 ];
 
 export interface ColorSegmentsModeConstructorArgs {
@@ -52,16 +51,7 @@ export function ColorSegmentsMode<StateType extends State>(
     public modes!: number[];
     public colorSegmentModeIdentifier!: number;
     public colorSegmentCount = 1;
-    public colorSegments: ColorSegment[] =
-      Array.from(
-        new Array(1),
-        () => {
-          return new ColorSegment(
-            new ColorRGB(0, 0, 0),
-            0,
-          );
-        },
-      );
+    public colorSegments: ColorSegment[] = [];
 
     public constructor(args) {
       super(args);
@@ -78,16 +68,18 @@ export function ColorSegmentsMode<StateType extends State>(
         deviceState.commands,
       );
 
-      if (!commandValues || (commandValues?.length || 0) === 0 || (commandValues[0].length !== 2)) {
+      if (!commandValues || (commandValues?.length || 0) === 0) {
         return this;
       }
 
-      const segmentCount = commandValues[0][1];
+      console.log(commandValues);
+      const segmentCount = commandValues[0][2];
+      console.log(segmentCount);
       if (this.colorSegments.length === segmentCount) {
         return this;
       }
       if (this.colorSegments.length > segmentCount) {
-        this.colorSegments = this.colorSegments.splice(this.colorSegments.length - 1);
+        this.colorSegments = this.colorSegments.splice(0, segmentCount);
       } else if (this.colorSegments.length < segmentCount) {
         this.colorSegments =
           this.colorSegments.concat(
