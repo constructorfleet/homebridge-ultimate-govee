@@ -61,7 +61,7 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
 
   public setup(
     device: GoveeDevice,
-    deviceOverride: GoveeDeviceOverride,
+    deviceOverride?: GoveeDeviceOverride,
   ) {
     return;
   }
@@ -75,12 +75,12 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     }
     const deviceOverride =
       this.configService.getDeviceConfiguration(device.deviceId);
-    if (deviceOverride !== undefined) {
-      this.setup(
-        device,
-        deviceOverride,
-      );
-    }
+    // if (deviceOverride !== undefined) {
+    this.setup(
+      device,
+      deviceOverride,
+    );
+    // }
     this.get(
       accessory,
       deviceOverride,

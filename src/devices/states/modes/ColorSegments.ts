@@ -9,9 +9,19 @@ const reportIdentifiers = [
   165,
 ];
 
+const reportSegmentIdentifiers = [
+  17,
+];
+
+const reportVariableSegmentIdentifiers = [
+  65,
+];
+
 export interface ColorSegmentsModeConstructorArgs {
   colorSegmentsModeIdentifier?: number;
   colorSegmentCount?: number;
+  reportSegmentIdentifier?: number;
+  isVariable?: boolean;
 }
 
 export class ColorSegment {
@@ -26,6 +36,8 @@ export interface ColorSegmentsModeState extends ModesState {
   colorSegmentCount: number;
   colorSegments: ColorSegment[];
   colorSegmentModeIdentifier?: number;
+  reportSegmentIdentifier?: number[];
+  isVariable?: boolean;
 
   colorSegmentsChange(
     color: ColorRGB,
@@ -39,30 +51,64 @@ export interface ColorSegmentsModeState extends ModesState {
 }
 
 export function ColorSegmentsMode<StateType extends State>(
+  isVariable: boolean,
   stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements ColorSegmentsModeState {
     public activeMode?: number;
     public modes!: number[];
-    public colorSegmentCount: number;
     public colorSegmentModeIdentifier!: number;
-    public colorSegments: ColorSegment[] =
-      Array.from(
-        new Array(SEGMENT_COUNT),
-        () => {
-          return new ColorSegment(
-            new ColorRGB(0, 0, 0),
-            0,
-          );
-        },
-      );
+    public colorSegmentCount = 1;
+    public colorSegments: ColorSegment[] = [];
+    public reportSegmentIdentifier!: number[];
+    public isVariable!: boolean;
 
     public constructor(args) {
       super(args);
       this.addDeviceStatusCodes(modeCommandIdentifiers);
       this.colorSegmentModeIdentifier = args.colorSegmentsModeIdentifier ?? 21;
-      this.colorSegmentCount = args.colorSegmentCount ?? SEGMENT_COUNT;
+      this.reportSegmentIdentifier = args.isVariable === true
+        ? reportVariableSegmentIdentifiers
+        : reportSegmentIdentifiers;
+      this.isVariable = args.isVariable === true;
+    }
+
+    public parseSegmentCount(deviceState: DeviceState): ThisType<this> {
+      console.log(deviceState.commands);
+      const commandValues = getCommandValues(
+        [
+          REPORT_IDENTIFIER,
+          ...this.reportSegmentIdentifier,
+        ],
+        deviceState.commands,
+      );
+
+      if (!commandValues || (commandValues?.length || 0) === 0) {
+        return this;
+      }
+
+      this.colorSegmentCount = commandValues[0][2];
+      if (this.colorSegments.length === this.colorSegmentCount) {
+        return this;
+      }
+      if (this.colorSegments.length > this.colorSegmentCount) {
+        this.colorSegments = this.colorSegments.splice(this.colorSegmentCount);
+      } else if (this.colorSegments.length < this.colorSegmentCount!) {
+        this.colorSegments =
+          this.colorSegments.concat(
+            Array.from(
+              new Array(this.colorSegmentCount - this.colorSegments.length),
+              () => {
+                return new ColorSegment(
+                  new ColorRGB(0, 0, 0),
+                  0,
+                );
+              },
+            ),
+          );
+      }
+      return this;
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
@@ -83,6 +129,9 @@ export function ColorSegmentsMode<StateType extends State>(
 
         return super.parse(deviceState);
       }
+
+      this.parseSegmentCount(deviceState);
+
       const commandValues = getCommandValues(
         [
           REPORT_IDENTIFIER,
@@ -95,11 +144,20 @@ export function ColorSegmentsMode<StateType extends State>(
         return super.parse(deviceState);
       }
 
+      const segmentPerCommand = this.isVariable ? 4 : 3;
       this.activeMode = this.colorSegmentModeIdentifier;
       commandValues?.forEach(
         (cmdValues) => {
-          const startIndex = (cmdValues[0] - 1) * 3;
-          for (let i = 0; i < 3; i++) {
+          console.log(cmdValues);
+          const startIndex = (cmdValues[0] - 1) * segmentPerCommand;
+          for (let i = 0; i < segmentPerCommand; i++) {
+            if (!this.colorSegments[startIndex + i]) {
+              break;
+            }
+            console.log("Index", startIndex + i);
+            console.log(cmdValues[i * 4 + 2],
+              cmdValues[i * 4 + 3],
+              cmdValues[i * 4 + 4]);
             const brightness = cmdValues[i * 4 + 1];
             const color = new ColorRGB(
               cmdValues[i * 4 + 2],

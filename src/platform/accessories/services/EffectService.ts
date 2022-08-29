@@ -91,7 +91,6 @@ export class EffectService extends AccessoryService<number> {
       ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
     const sceneModeState: SceneModeState = device as unknown as SceneModeState;
     if (!sceneModeState) {
-      console.log('EffectService', 'updateServiceCharacteristics', 'Not SceneMode');
       return;
     }
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
@@ -102,7 +101,6 @@ export class EffectService extends AccessoryService<number> {
     service.getCharacteristic(this.CHARACTERISTICS.On)
       .updateValue(isModeActive && isSceneActive)
       .onSet(async (value: CharacteristicValue) => {
-        console.log('Effect Transition');
         await this.emitAsync(
           new DeviceCommandEvent(
             new DeviceSceneTransition(

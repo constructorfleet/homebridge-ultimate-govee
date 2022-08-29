@@ -15,7 +15,7 @@ import {GoveeRGBLight} from '../../../devices/implementations/GoveeRGBLight';
 import {ServiceRegistry} from '../ServiceRegistry';
 import {DeviceBrightnessTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
 import {SolidColorState} from '../../../devices/states/SolidColor';
-import {GoveeRGBICLight} from '../../../devices/implementations/GoveeRGBICLight';
+import {GoveeRGBICLight, GoveeVariableRGBICLight} from '../../../devices/implementations/GoveeRGBICLight';
 import {ColorSegmentsModeState} from '../../../devices/states/modes/ColorSegments';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 import {GoveeDeviceOverride, GoveeRGBICLightOverride} from '../../config/GoveePluginConfig';
@@ -361,9 +361,19 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
 }
 
 
-@ServiceRegistry.register(GoveeRGBICLight)
+@ServiceRegistry.register(
+  GoveeRGBICLight,
+  GoveeVariableRGBICLight,
+)
 export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, number> {
-  protected subTypes?: ServiceSubType<number>[];
+  protected subTypes?: ServiceSubType<number>[] =
+    Array.of(new ServiceSubType(
+      'All Segments',
+      -1,
+      'All Segments',
+      true,
+    ),
+    );
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -383,19 +393,85 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
 
   public override setup(
     device: GoveeDevice,
-    deviceOverride: GoveeDeviceOverride,
+    deviceOverride?: GoveeDeviceOverride,
   ) {
+    const count = (device as unknown as ColorSegmentsModeState).colorSegmentCount + 1;
     if (this.subTypes !== undefined) {
+      if (this.subTypes.length === count) {
+        return;
+      } else if (this.subTypes.length > count) {
+        this.removeSegments(
+          device,
+          deviceOverride,
+        );
+      } else if (this.subTypes.length < count) {
+        this.addSegments(
+          device,
+          deviceOverride,
+        );
+      }
+    } else {
+      this.initialSetup(
+        device,
+        deviceOverride,
+      );
+    }
+  }
+
+  private removeSegments(
+    device: GoveeDevice,
+    deviceOverride?: GoveeDeviceOverride,
+  ) {
+    if (this.subTypes === undefined) {
+      this.initialSetup(
+        device,
+        deviceOverride,
+      );
       return;
     }
-    this.subTypes = Array.of(
-      new ServiceSubType(
-        'All Segments',
-        -1,
-        'All Segments',
-        true,
-      ),
-    ).concat(
+    const count = (device as unknown as ColorSegmentsModeState).colorSegmentCount + 1;
+    this.subTypes = this.subTypes.slice(count);
+  }
+
+  private addSegments(
+    device: GoveeDevice,
+    deviceOverride?: GoveeDeviceOverride,
+  ) {
+    if (this.subTypes!.length === 1) {
+      this.initialSetup(
+        device,
+        deviceOverride,
+      );
+      return;
+    }
+    const count = (device as unknown as ColorSegmentsModeState).colorSegmentCount - this.subTypes!.length;
+    this.log.info(`Adding ${count}`);
+    this.subTypes =
+      this.subTypes!
+        .concat(
+          ...Array.from(
+            new Array(
+              count,
+            ),
+            (value, index: number) => {
+              const name = `Segment ${index + this.subTypes!.length + 1}`;
+              return new ServiceSubType(
+                name,
+                index + this.subTypes!.length,
+                name,
+                undefined,
+                true,
+              );
+            },
+          ),
+        );
+  }
+
+  private initialSetup(
+    device: GoveeDevice,
+    deviceOverride?: GoveeDeviceOverride,
+  ) {
+    this.subTypes = this.subTypes!.concat(
       ...Array.from(
         new Array(
           (device as unknown as ColorSegmentsModeState).colorSegmentCount,
@@ -434,6 +510,10 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     if (!colorSegmentMode) {
       return undefined;
     }
+    if (!colorSegmentMode.colorSegments[identifier]) {
+      return undefined;
+    }
+
     return colorSegmentMode.colorSegments[identifier].brightness;
   }
 
@@ -451,6 +531,10 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
 
     const colorSegmentMode = device as ColorSegmentsModeState;
     if (!colorSegmentMode) {
+      return undefined;
+    }
+
+    if (!colorSegmentMode.colorSegments[identifier]) {
       return undefined;
     }
 
@@ -525,7 +609,6 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     color: ColorRGB,
     identifier: number,
   ): DeviceTransition<GoveeRGBICLight> {
-    console.log('getSegmentColorTransition', identifier);
     if (identifier < 0) {
       return new DeviceColorWCTransition(
         device.deviceId,
