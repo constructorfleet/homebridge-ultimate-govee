@@ -430,7 +430,7 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
       return;
     }
     const count = (device as unknown as ColorSegmentsModeState).colorSegmentCount + 1;
-    this.subTypes = this.subTypes.slice(0, count);
+    this.subTypes = this.subTypes.slice(count);
   }
 
   private addSegments(

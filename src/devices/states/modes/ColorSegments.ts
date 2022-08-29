@@ -88,17 +88,17 @@ export function ColorSegmentsMode<StateType extends State>(
         return this;
       }
 
-      const segmentCount = commandValues[0][2];
-      if (this.colorSegments.length === segmentCount) {
+      this.colorSegmentCount = commandValues[0][2];
+      if (this.colorSegments.length === this.colorSegmentCount) {
         return this;
       }
-      if (this.colorSegments.length > segmentCount) {
-        this.colorSegments = this.colorSegments.splice(0, segmentCount);
-      } else if (this.colorSegments.length < segmentCount) {
+      if (this.colorSegments.length > this.colorSegmentCount) {
+        this.colorSegments = this.colorSegments.splice(this.colorSegmentCount);
+      } else if (this.colorSegments.length < this.colorSegmentCount!) {
         this.colorSegments =
           this.colorSegments.concat(
             Array.from(
-              new Array(segmentCount - this.colorSegments.length),
+              new Array(this.colorSegmentCount - this.colorSegments.length),
               () => {
                 return new ColorSegment(
                   new ColorRGB(0, 0, 0),
@@ -108,7 +108,6 @@ export function ColorSegmentsMode<StateType extends State>(
             ),
           );
       }
-      this.colorSegmentCount = this.colorSegments.length;
       return this;
     }
 
