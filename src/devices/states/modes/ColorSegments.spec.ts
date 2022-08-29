@@ -6,7 +6,7 @@ import {ColorRGB} from '../../../util/colorUtils';
 
 type AssertChain<ArgumentType> = (actual: ArgumentType, expected: ArgumentType) => AssertChain<ArgumentType>;
 
-class TestMode extends ColorSegmentsMode(State) {
+class TestMode extends ColorSegmentsMode(false, State) {
   constructor() {
     super({
       colorSegmentsModeIdentifier: 21,
@@ -79,23 +79,22 @@ describe('ColorSegmentsMode', () => {
 
   describe('parse', () => {
     it('processes DeviceState.mode', () => {
-      expect(testMode.colorSegments).toHaveLength(15);
-      assertColorSegments();
+      expect(testMode.colorSegments).toHaveLength(0);
       expect(testMode.activeMode).toBeUndefined();
       testMode.parse({
         deviceId: 'testDevice',
         command: 'status',
         mode: 10,
       });
-      assertColorSegments();
+      expect(testMode.colorSegments).toHaveLength(0);
       expect(testMode.activeMode).toBe(10);
     });
     it('processes DeviceState.commands 1 segment', () => {
-      expect(testMode.colorSegments).toHaveLength(15);
-      assertColorSegments();
+      expect(testMode.colorSegments).toHaveLength(0);
       testMode.parse({
         deviceId: 'device',
         commands: [
+          [REPORT_IDENTIFIER, 17, 0, 15, 15, 0, 0, 0 , 0, 0, 0, 0, 0, 0],
           [REPORT_IDENTIFIER, 165, 1, 75, 50, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         ],
       });
@@ -109,11 +108,11 @@ describe('ColorSegmentsMode', () => {
     });
 
     it('processes DeviceState.commands 2 segment', () => {
-      expect(testMode.colorSegments).toHaveLength(15);
-      assertColorSegments();
+      expect(testMode.colorSegments).toHaveLength(0);
       testMode.parse({
         deviceId: 'device',
         commands: [
+          [REPORT_IDENTIFIER, 17, 0, 15, 15, 0, 0, 0 , 0, 0, 0, 0, 0, 0],
           [REPORT_IDENTIFIER, 165, 1, 75, 50, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0],
           [REPORT_IDENTIFIER, 165, 2, 0, 0, 0, 0, 75, 50, 255, 0, 0, 0, 0, 0],
         ],
@@ -145,8 +144,7 @@ describe('ColorSegmentsMode', () => {
     });
 
     it('ignores non-applicable DeviceState', () => {
-      expect(testMode.colorSegments).toHaveLength(15);
-      assertColorSegments();
+      expect(testMode.colorSegments).toHaveLength(0);
       testMode.parse({
         deviceId: 'device',
         brightness: 100,
@@ -154,8 +152,7 @@ describe('ColorSegmentsMode', () => {
           [REPORT_IDENTIFIER, 1, 2],
         ],
       });
-      expect(testMode.colorSegments).toHaveLength(15);
-      assertColorSegments();
+      expect(testMode.colorSegments).toHaveLength(0);
     });
   });
 });
