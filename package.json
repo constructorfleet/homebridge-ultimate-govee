@@ -8,7 +8,7 @@
   },
   "version": "2.57.0",
   "type": "commonjs",
-  "description": "The ultimate Govee HomeBridge plugin.",
+  "description": "The Ultimate Govee HomeBridge plugin.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -43,7 +43,7 @@
     "async-await-mutex-lock": "^1.0.9",
     "async-lock": "^1.3.0",
     "aws-iot-device-sdk": "^2.2.11",
-    "axios": "^0.26.1",
+    "axios": "^0.27.2",
     "base64-arraybuffer": "^1.0.1",
     "class-transformer": "^0.5.1",
     "deep-diff-pizza": "^1.0.1",
