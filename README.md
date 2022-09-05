@@ -21,9 +21,9 @@ A Homebridge plugin to provide comprehensive and intuitive control of Govee devi
         - Control Device Power
         - Control Device Mist Output Level
         - Reports When Device Water Level is Empty
-    - RGBIC Lights
+    - RGBIC Lights (H611A, H6061, H6062)
         - Control the entire light's brightness and color
-        - Control each of the 15 segments' color and relative brightness individually
+        - Control each of the segments' color and relative brightness individually
         - Toggle specific scenes/effects
 - Required Information
     - Govee Account Credentials (Username, Password)
