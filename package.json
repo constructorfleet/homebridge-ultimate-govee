@@ -35,7 +35,7 @@
   ],
   "dependencies": {
     "@nestjs/common": "^8.4.2",
-    "@nestjs/config": "^2.0.0",
+    "@nestjs/config": "^2.3.0",
     "@nestjs/core": "^8.4.2",
     "@nestjs/event-emitter": "^1.0.0",
     "@types/aws-iot-device-sdk": "^2.2.4",
