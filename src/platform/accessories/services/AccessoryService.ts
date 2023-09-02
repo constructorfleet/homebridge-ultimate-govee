@@ -75,12 +75,12 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     }
     const deviceOverride =
       this.configService.getDeviceConfiguration(device.deviceId);
-    // if (deviceOverride !== undefined) {
-    this.setup(
-      device,
-      deviceOverride,
-    );
-    // }
+    if (deviceOverride !== undefined) {
+      this.setup(
+        device,
+        deviceOverride,
+      );
+    }
     this.get(
       accessory,
       deviceOverride,
@@ -214,12 +214,16 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
         this.serviceType.UUID,
       );
     }
-
-    return accessory.addService(
-      this.serviceType,
-      `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
-      this.serviceType.UUID,
-      subType.subType,
-    );
+    try {
+      return accessory.addService(
+        this.serviceType,
+        `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+        this.serviceType.UUID,
+        subType.subType,
+      );
+    } catch (ex) {
+      this.log.error(`${accessory.displayName} ${subType.nameSuffix || subType.subType}`);
+      return undefined;
+    }
   }
 }

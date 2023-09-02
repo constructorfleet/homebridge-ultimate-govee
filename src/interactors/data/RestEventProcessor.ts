@@ -3,24 +3,25 @@ import {
   AppDeviceResponse,
   AppDeviceSettingsResponse,
 } from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
-import {DeviceConfig} from '../../core/structures/devices/DeviceConfig';
-import {Injectable} from '@nestjs/common';
-import {Emitter} from '../../util/types';
-import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {plainToInstance} from 'class-transformer';
-import {DeviceSettingsReceived} from '../../core/events/devices/DeviceReceived';
-import {ApiResponseStatus} from '../../core/structures/api/ApiResponseStatus';
-import {LoggingService} from '../../logging/LoggingService';
-import {RestAuthenticateEvent} from '../../core/events/dataClients/rest/RestAuthentication';
-import {DIYEffect, DIYGroup, DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
+import { DeviceConfig } from '../../core/structures/devices/DeviceConfig';
+import { Injectable } from '@nestjs/common';
+import { Emitter } from '../../util/types';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { plainToInstance } from 'class-transformer';
+import { DeviceSettingsReceived } from '../../core/events/devices/DeviceReceived';
+import { ApiResponseStatus } from '../../core/structures/api/ApiResponseStatus';
+import { LoggingService } from '../../logging/LoggingService';
+import { RestAuthenticateEvent } from '../../core/events/dataClients/rest/RestAuthentication';
+import { DIYEffect, DIYGroup, DIYListResponse } from '../../core/structures/api/responses/payloads/DIYListResponse';
 import {
   CategoryScene,
   DeviceSceneCategory,
   DeviceSceneListResponse,
 } from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
-import {ResponseWithDevice} from '../../core/events/dataClients/rest/RestResponse';
-import {DIYEffectReceived} from '../../core/events/effects/DIYEffects';
-import {DeviceEffectReceived} from '../../core/events/effects/DeviceEffects';
+import { ResponseWithDevice } from '../../core/events/dataClients/rest/RestResponse';
+import { DIYEffectReceived } from '../../core/events/effects/DIYEffects';
+import { DeviceEffectReceived } from '../../core/events/effects/DeviceEffects';
+import console from 'console';
 
 @Injectable()
 export class RestEventProcessor extends Emitter {
@@ -32,7 +33,9 @@ export class RestEventProcessor extends Emitter {
   }
 
   @OnEvent(
-    'REST.AUTHENTICATION.Failure',
+    'REST.AUTHENTICATION.Failure', {
+    nextTick: true,
+    },
   )
   async onAuthenticationFailure(response: ApiResponseStatus) {
     this.log.error('Unexpected error authenticating with API', response.message);
@@ -48,7 +51,9 @@ export class RestEventProcessor extends Emitter {
   }
 
   @OnEvent(
-    'REST.RESPONSE.DIYEffects',
+    'REST.RESPONSE.DIYEffects', {
+    nextTick: true,
+    },
   )
   async onDIYEffectListReceived(
     payload: DIYListResponse,
@@ -71,7 +76,9 @@ export class RestEventProcessor extends Emitter {
   }
 
   @OnEvent(
-    'REST.RESPONSE.DeviceScenes',
+    'REST.RESPONSE.DeviceScenes', {
+    nextTick: true,
+    },
   )
   async onDeviceScenesReceived(
     payload: ResponseWithDevice<DeviceSceneListResponse>,
@@ -104,7 +111,9 @@ export class RestEventProcessor extends Emitter {
   }
 
   @OnEvent(
-    'REST.RESPONSE.DeviceList',
+    'REST.RESPONSE.DeviceList', {
+    nextTick: true,
+    },
   )
   async onDeviceListReceived(payload: AppDeviceListResponse) {
     const deviceConfigs = payload.devices
