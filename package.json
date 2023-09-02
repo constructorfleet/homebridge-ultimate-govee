@@ -18,7 +18,7 @@
     "url": "https://github.com/constructorfleet/homebridge-ultimate-govee/issues"
   },
   "engines": {
-    "node": ">=10.24.1",
+    "node": ">=18.16.1",
     "homebridge": ">=1.5.0"
   },
   "main": "dist/index.js",
