@@ -261,6 +261,10 @@ export class RestClient
           authData.token || '',
         ),
       ).post();
+      this.log.info(
+        'RestClient',
+        res.data,
+      );
       await this.emitAsync(
         new RestResponseDeviceList(res.data),
       );
