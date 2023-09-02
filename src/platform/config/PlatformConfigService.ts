@@ -1,7 +1,7 @@
-import {Inject, Injectable} from '@nestjs/common';
-import {PLATFORM_CONFIG_FILE} from '../../util/const';
+import { Inject, Injectable } from '@nestjs/common';
+import { PLATFORM_CONFIG_FILE } from '../../util/const';
 import fs from 'fs';
-import {PLATFORM_NAME} from '../../settings';
+import { PLATFORM_NAME } from '../../settings';
 import {
   GoveeDeviceOverride,
   GoveeDeviceOverrides,
@@ -9,15 +9,16 @@ import {
   GoveePluginConfig,
   GoveeRGBICLightOverride,
 } from './GoveePluginConfig';
-import {GoveeDevice} from '../../devices/GoveeDevice';
-import {GoveeHumidifier} from '../../devices/implementations/GoveeHumidifier';
-import {GoveeAirPurifier} from '../../devices/implementations/GoveeAirPurifier';
-import {GoveeLight, LightDevice} from '../../devices/implementations/GoveeLight';
-import {GoveeRGBICLight} from '../../devices/implementations/GoveeRGBICLight';
-import {DeviceLightEffect} from '../../effects/implementations/DeviceLightEffect';
-import {DIYLightEffect} from '../../effects/implementations/DIYLightEffect';
-import {Lock} from 'async-await-mutex-lock';
-import {LoggingService} from '../../logging/LoggingService';
+import { GoveeDevice } from '../../devices/GoveeDevice';
+import { GoveeHumidifier } from '../../devices/implementations/GoveeHumidifier';
+import { GoveeAirPurifier } from '../../devices/implementations/GoveeAirPurifier';
+import { GoveeLight, LightDevice } from '../../devices/implementations/GoveeLight';
+import { GoveeRGBICLight } from '../../devices/implementations/GoveeRGBICLight';
+import { DeviceLightEffect } from '../../effects/implementations/DeviceLightEffect';
+import { DIYLightEffect } from '../../effects/implementations/DIYLightEffect';
+import { Lock } from 'async-await-mutex-lock';
+import { LoggingService } from '../../logging/LoggingService';
+import { GoveeRGBLight } from '../../devices/implementations/GoveeRGBLight';
 
 @Injectable()
 export class PlatformConfigService {
@@ -66,7 +67,7 @@ export class PlatformConfigService {
   private async reloadConfig() {
     await this.writeLock.acquire();
     try {
-      const data = fs.readFileSync(this.configFilePath, {encoding: 'utf8'});
+      const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
       const config = JSON.parse(data);
       if (!config.platforms) {
         return;
@@ -121,7 +122,7 @@ export class PlatformConfigService {
       fs.writeFileSync(
         this.configFilePath,
         JSON.stringify(configFile, null, 2),
-        {encoding: 'utf8'},
+        { encoding: 'utf8' },
       );
     } finally {
       this.writeLock.release();
@@ -147,7 +148,7 @@ export class PlatformConfigService {
       fs.writeFileSync(
         this.configFilePath,
         JSON.stringify(configFile, null, 2),
-        {encoding: 'utf8'},
+        { encoding: 'utf8' },
       );
     } finally {
       this.writeLock.release();
@@ -172,7 +173,7 @@ export class PlatformConfigService {
       fs.writeFileSync(
         this.configFilePath,
         JSON.stringify(configFile, null, 2),
-        {encoding: 'utf8'},
+        { encoding: 'utf8' },
       );
     } finally {
       this.writeLock.release();
@@ -197,7 +198,7 @@ export class PlatformConfigService {
       fs.writeFileSync(
         this.configFilePath,
         JSON.stringify(configFile, null, 2),
-        {encoding: 'utf8'},
+        { encoding: 'utf8' },
       );
     } finally {
       this.writeLock.release();
@@ -219,7 +220,7 @@ export class PlatformConfigService {
       fs.writeFileSync(
         this.configFilePath,
         JSON.stringify(configFile, null, 2),
-        {encoding: 'utf8'},
+        { encoding: 'utf8' },
       );
     } finally {
       this.writeLock.release();
@@ -227,7 +228,7 @@ export class PlatformConfigService {
   }
 
   private configurationFile(updatedPluginConfig?: GoveePluginConfig): unknown {
-    const data = fs.readFileSync(this.configFilePath, {encoding: 'utf8'});
+    const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
     const config = JSON.parse(data);
     if (!config.platforms) {
       config.platforms = [
@@ -301,7 +302,10 @@ export class PlatformConfigService {
     const newLights: GoveeDeviceOverride[] =
       devices.filter(
         (device) =>
-          !deviceMap.has(device.deviceId) && (device instanceof LightDevice),
+          !deviceMap.has(device.deviceId) && (
+            device instanceof LightDevice
+            || device instanceof GoveeRGBICLight
+            || device instanceof GoveeRGBLight),
       ).map((device) =>
         device instanceof GoveeRGBICLight
           ? new GoveeRGBICLightOverride(device as GoveeRGBICLight)

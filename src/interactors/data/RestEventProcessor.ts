@@ -78,7 +78,7 @@ export class RestEventProcessor extends Emitter {
   ) {
     const effects = payload.response.data.categories
       .filter(
-        (category: DeviceSceneCategory) => category.scenes !== undefined && Symbol.iterator in Object(category),
+        (category: DeviceSceneCategory) => category.scenes !== undefined && Symbol.iterator in Object(category.scenes),
       )
       .reduce(
         (effects: CategoryScene[], category: DeviceSceneCategory) => effects
