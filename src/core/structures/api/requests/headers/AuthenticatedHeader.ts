@@ -10,7 +10,7 @@ export function AuthenticatedHeader(
     appVersion,
   );
   headers['Authorization'] = `Bearer ${bearerToken}`;
-  headers['Appversion'] = '3.7.0';
+  headers['AppVersion'] = appVersion;
 
   return headers;
 }

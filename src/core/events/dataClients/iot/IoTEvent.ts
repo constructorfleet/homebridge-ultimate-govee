@@ -1,3 +1,4 @@
+import { pfxToBundle } from '../../../../util/p12Utils';
 import {ConnectionState, DataClientConnectionStateEvent, DataClientErrorEvent, DataClientEvent} from '../DataClientEvent';
 
 export class IoTEventData {
@@ -5,6 +6,40 @@ export class IoTEventData {
     public readonly topic: string,
     public readonly payload: string,
   ) {
+  }
+}
+
+export class IoTInitializeClientData {
+  static async build(
+    endpoint: string,
+    accountId: string,
+    goveePfxFile: string,
+    p12Password: string,
+  ): Promise<IoTInitializeClientData> {
+    const bundle = await pfxToBundle(goveePfxFile, p12Password);
+    return new IoTInitializeClientData(
+      bundle.certificate,
+      bundle.privateKey,
+      endpoint,
+      accountId,
+    );
+  }
+
+  constructor(
+    public readonly certificate: Buffer,
+    public readonly privateKey: Buffer,
+    public readonly endpoint: string,
+    public readonly accountId: string,
+  ) {}
+}
+
+export class IoTInitializeClientEvent
+  extends DataClientEvent<IoTInitializeClientData> {
+
+  constructor(
+    eventData: IoTInitializeClientData,
+  ) {
+    super('IOT.Initialize', eventData);
   }
 }
 

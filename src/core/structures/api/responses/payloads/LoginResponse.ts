@@ -26,7 +26,7 @@ export class ClientInfo {
 
   public clientName!: string;
 
-  public accountId!: number;
+  public accountId!: string;
 
   public pushToken!: string;
 

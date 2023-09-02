@@ -8,7 +8,7 @@ import {DeviceFactory} from '../DeviceFactory';
 
 @DeviceFactory.register(
   'H7141',
-  'H7141',
+  'H7142',
 )
 export class GoveeHumidifier
   extends ProgrammableMistLevel(

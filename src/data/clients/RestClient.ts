@@ -1,33 +1,38 @@
-import {request} from '../request';
-import {BaseHeaders} from '../../core/structures/api/requests/headers/BaseHeaders';
-import {loginRequest, LoginRequest} from '../../core/structures/api/requests/payloads/LoginRequest';
-import {LoginResponse} from '../../core/structures/api/responses/payloads/LoginResponse';
-import {GoveeClient} from './GoveeClient';
-import {Inject, Injectable} from '@nestjs/common';
-import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {OAuthData} from '../../core/structures/AuthenticationData';
-import {RestAuthenticatedEvent, RestAuthenticationFailureEvent} from '../../core/events/dataClients/rest/RestAuthentication';
-import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
-import {RestRequestDevices} from '../../core/events/dataClients/rest/RestRequest';
-import {ConfigurationService} from '../../config/ConfigurationService';
-import {PersistService} from '../../persist/PersistService';
-import {LoggingService} from '../../logging/LoggingService';
-import {ApiError} from '../../core/structures/api/ApiResponseStatus';
+import { request } from '../request';
+import { BaseHeaders } from '../../core/structures/api/requests/headers/BaseHeaders';
+import { loginRequest, LoginRequest } from '../../core/structures/api/requests/payloads/LoginRequest';
+import { LoginResponse } from '../../core/structures/api/responses/payloads/LoginResponse';
+import { GoveeClient } from './GoveeClient';
+import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { OAuthData } from '../../core/structures/AuthenticationData';
+import { RestAuthenticatedEvent, RestAuthenticationFailureEvent } from '../../core/events/dataClients/rest/RestAuthentication';
+import { IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
+import { RestRequestDevices } from '../../core/events/dataClients/rest/RestRequest';
+import { ConfigurationService } from '../../config/ConfigurationService';
+import { PersistService } from '../../persist/PersistService';
+import { LoggingService } from '../../logging/LoggingService';
+import { ApiError } from '../../core/structures/api/ApiResponseStatus';
 import jwtDecode from 'jwt-decode';
-import {JWTPayload} from '../../core/structures/api/JsonWebToken';
-import {BaseRequest} from '../../core/structures/api/requests/payloads/BaseRequest';
-import {AppDeviceListResponse} from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
-import {AuthenticatedHeader} from '../../core/structures/api/requests/headers/AuthenticatedHeader';
-import {RestDeviceScenesResponse, RestDIYEffectResponse, RestResponseDeviceList} from '../../core/events/dataClients/rest/RestResponse';
-import {GOVEE_CLIENT_ID} from '../../util/const';
-import {DIYListResponse} from '../../core/structures/api/responses/payloads/DIYListResponse';
-import {GoveeDevice} from '../../devices/GoveeDevice';
-import {DeviceSceneRequest, deviceSceneRequest} from '../../core/structures/api/requests/payloads/DeviceSceneRequest';
-import {DeviceSceneListResponse} from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
+import { JWTPayload } from '../../core/structures/api/JsonWebToken';
+import { BaseRequest } from '../../core/structures/api/requests/payloads/BaseRequest';
+import { AppDeviceListResponse } from '../../core/structures/api/responses/payloads/AppDeviceListResponse';
+import { AuthenticatedHeader } from '../../core/structures/api/requests/headers/AuthenticatedHeader';
+import { RestDeviceScenesResponse, RestDIYEffectResponse, RestResponseDeviceList } from '../../core/events/dataClients/rest/RestResponse';
+import { GOVEE_CLIENT_ID } from '../../util/const';
+import { DIYListResponse } from '../../core/structures/api/responses/payloads/DIYListResponse';
+import { GoveeDevice } from '../../devices/GoveeDevice';
+import { DeviceSceneRequest, deviceSceneRequest } from '../../core/structures/api/requests/payloads/DeviceSceneRequest';
+import { DeviceSceneListResponse } from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
+import { IoTData, IoTKeyResponse } from '../../core/structures/api/responses/payloads/IoTKeyResponse';
+import { IoTInitializeClientData, IoTInitializeClientEvent } from '../../core/events/dataClients/iot/IoTEvent';
+import { existsSync } from 'fs';
+import { IotClientData } from '../../core/structures/IoTClientData';
 
-const GOVEE_APP_VERSION = '3.7.0';
+const GOVEE_APP_VERSION = '5.6.01';
 const BASE_GOVEE_APP_URL = 'https://app2.govee.com';
 const BASE_GOVEE_APP_ACCOUNT_URL = `${BASE_GOVEE_APP_URL}/account/rest/account/v1`;
+const BASE_GOVEE_APP_IOT_URL = `${BASE_GOVEE_APP_URL}/app/v1/account/iot`;
 const BASE_GOVEE_APP_DEVICE_URL = `${BASE_GOVEE_APP_URL}/device/rest/devices/v1`;
 const BASE_GOVEE_APP_SKU_URL = `${BASE_GOVEE_APP_URL}/appsku/v1`;
 
@@ -53,13 +58,11 @@ export class RestClient
     'REST.AUTHENTICATION.Authenticate',
   )
   async login(requestDevices = false): Promise<OAuthData | undefined> {
-    if (this.isTokenValid(this.persist.oauthData?.token)) {
+    if (this.isTokenValid(this.persist.oauthData?.token) && this.persist.oauthData?.accountId !== undefined) {
       const oauthData = this.persist.oauthData!;
       this.persist.oauthData = oauthData;
 
-      await this.emitAsync(
-        new IoTSubscribeToEvent(oauthData.accountIoTTopic || ''),
-      );
+      await this.getIoTData(oauthData);
       await this.emitAsync(new RestAuthenticatedEvent(oauthData));
       if (requestDevices) {
         this.emit(new RestRequestDevices());
@@ -73,12 +76,8 @@ export class RestClient
         'logging in',
       );
       const authData = await this.authenticate();
+      await this.getIoTData(authData);
 
-      if (authData?.accountIoTTopic) {
-        await this.emitAsync(
-          new IoTSubscribeToEvent(authData.accountIoTTopic),
-        );
-      }
       if (requestDevices) {
         await this.emitAsync(new RestAuthenticatedEvent(authData));
         await this.emit(new RestRequestDevices());
@@ -123,6 +122,7 @@ export class RestClient
     }
 
     const oauthData: OAuthData = {
+      accountId: client.accountId,
       token: client.token,
       accountIoTTopic: client.topic,
       refreshToken: client.refreshToken,
@@ -130,7 +130,46 @@ export class RestClient
     };
 
     this.persist.oauthData = oauthData;
+
     return oauthData;
+  }
+
+  private async getIoTData(oauthData: OAuthData): Promise<IotClientData> {
+    const validIotData = this.persist.iotClientData && this.persist.iotClientData.accountId && this.persist.iotClientData.endpoint;
+    if (!validIotData || this.persist.iotClientData?.clientId !== this.clientId || !existsSync(this.persist.goveePfxPath)) {
+      this.log.info('Retrieving IoT data...');
+      const res = await request<BaseRequest, IoTKeyResponse>(
+        `${BASE_GOVEE_APP_IOT_URL}/key`,
+        AuthenticatedHeader(
+          this.clientId,
+          GOVEE_APP_VERSION,
+          oauthData.token,
+        ),
+      ).get();
+      this.persist.iotClientData = {
+        p12: res.data.data.p12,
+        p12Password: res.data.data.p12Pass,
+        accountId: oauthData.accountId!,
+        clientId: this.clientId,
+        endpoint: res.data.data.endpoint,
+      };
+      await this.persist.setGoveePfxData(res.data.data.p12);
+    }
+    const iotData = this.persist.iotClientData;
+    await this.emitAsync(new IoTInitializeClientEvent(
+      await IoTInitializeClientData.build(
+        iotData.endpoint,
+        iotData.accountId,
+        this.persist.goveePfxPath,
+        iotData.p12Password,
+      ),
+    ));
+
+    await this.emitAsync(
+      new IoTSubscribeToEvent(oauthData.accountIoTTopic || ''),
+    );
+
+    return this.persist.iotClientData;
   }
 
   // private async refreshToken(): Promise<OAuthData> {

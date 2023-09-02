@@ -1,4 +1,5 @@
 export interface AuthenticationData {
+  readonly accountId?: string;
   readonly accountIoTTopic?: string;
   readonly clientId: string;
 }
