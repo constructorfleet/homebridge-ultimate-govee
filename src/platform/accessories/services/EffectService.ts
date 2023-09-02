@@ -1,25 +1,25 @@
-import {AccessoryService, IdentifiedService, ServiceSubType} from './AccessoryService';
-import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
-import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {GoveeDeviceOverride, GoveeLightOverride} from '../../config/GoveePluginConfig';
-import {SceneModeState} from '../../../devices/states/modes/Scene';
-import {DeviceLightEffect} from '../../../effects/implementations/DeviceLightEffect';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {PlatformConfigService} from '../../config/PlatformConfigService';
-import {Inject} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
-import {LoggingService} from '../../../logging/LoggingService';
-import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
-import {DeviceSceneTransition} from '../../../core/structures/devices/transitions/DeviceModeTransition';
-import {ServiceRegistry} from '../ServiceRegistry';
-import {LightDevice} from '../../../devices/implementations/GoveeLight';
+import { AccessoryService, IdentifiedService, ServiceSubType } from './AccessoryService';
+import { Characteristic, CharacteristicValue, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { GoveeDevice } from '../../../devices/GoveeDevice';
+import { GoveeDeviceOverride, GoveeLightOverride } from '../../config/GoveePluginConfig';
+import { SceneModeState } from '../../../devices/states/modes/Scene';
+import { DeviceLightEffect } from '../../../effects/implementations/DeviceLightEffect';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformConfigService } from '../../config/PlatformConfigService';
+import { Inject } from '@nestjs/common';
+import { PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES } from '../../../util/const';
+import { LoggingService } from '../../../logging/LoggingService';
+import { DeviceCommandEvent } from '../../../core/events/devices/DeviceCommand';
+import { DeviceSceneTransition } from '../../../core/structures/devices/transitions/DeviceModeTransition';
+import { ServiceRegistry } from '../ServiceRegistry';
+import { LightDevice } from '../../../devices/implementations/GoveeLight';
 
 
 @ServiceRegistry.register(
   LightDevice,
 )
 export class EffectService extends AccessoryService<number> {
-  protected readonly serviceType = this.SERVICES.Switch;
+  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Switch;
   protected subTypes?: ServiceSubType<number>[];
 
   constructor(
