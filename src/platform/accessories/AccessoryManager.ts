@@ -1,7 +1,7 @@
 import {Inject, Injectable} from '@nestjs/common';
 import {Emitter} from '../../util/types';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {API, PlatformAccessory} from 'homebridge';
+import {API, PlatformAccessory, Service} from 'homebridge';
 import {GoveeDevice} from '../../devices/GoveeDevice';
 import {HOMEBRIDGE_API} from '../../util/const';
 import {PLATFORM_NAME, PLUGIN_NAME} from '../../settings';
@@ -19,7 +19,7 @@ export class AccessoryManager extends Emitter {
 
   constructor(
     eventEmitter: EventEmitter2,
-    @Inject(AccessoryService) private readonly serviceCreator: ServiceCreator<unknown>,
+    @Inject(AccessoryService) private readonly serviceCreator: ServiceCreator<unknown, typeof Service>,
     private readonly platformConfigService: PlatformConfigService,
     private readonly log: LoggingService,
     @Inject(HOMEBRIDGE_API) private readonly api: API,

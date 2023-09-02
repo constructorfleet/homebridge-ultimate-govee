@@ -1,36 +1,37 @@
-import {AccessoryService, IdentifiedService, ServiceSubType} from './AccessoryService';
-import {Inject} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
-import {Characteristic, CharacteristicValue, PlatformAccessory, Service, WithUUID} from 'homebridge';
-import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
-import {LoggingService} from '../../../logging/LoggingService';
-import {OnOffState} from '../../../devices/states/OnOff';
-import {ColorRGB, hsvToRGB, kelvinToRGB, rgbToHSV, rgbToKelvin} from '../../../util/colorUtils';
-import {DeviceColorTemperatureTransition} from '../../../core/structures/devices/transitions/DeviceColorTemperatureTransition';
-import {GoveeLight, LightDevice} from '../../../devices/implementations/GoveeLight';
-import {DeviceTransition} from '../../../core/structures/devices/DeviceTransition';
-import {GoveeRGBLight} from '../../../devices/implementations/GoveeRGBLight';
-import {ServiceRegistry} from '../ServiceRegistry';
-import {DeviceBrightnessTransition} from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
-import {SolidColorState} from '../../../devices/states/SolidColor';
-import {GoveeRGBICLight, GoveeVariableRGBICLight} from '../../../devices/implementations/GoveeRGBICLight';
-import {ColorSegmentsModeState} from '../../../devices/states/modes/ColorSegments';
-import {PlatformConfigService} from '../../config/PlatformConfigService';
-import {GoveeDeviceOverride, GoveeRGBICLightOverride} from '../../config/GoveePluginConfig';
-import {DeviceOnOffTransition} from '../../../core/structures/devices/transitions/DeviceOnOffTransition';
-import {DeviceColorTransition} from '../../../core/structures/devices/transitions/DeviceColorTransition';
+import { AccessoryService, IdentifiedService, ServiceSubType } from './AccessoryService';
+import { Inject } from '@nestjs/common';
+import { PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES } from '../../../util/const';
+import { Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID } from 'homebridge';
+import { GoveeDevice } from '../../../devices/GoveeDevice';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DeviceCommandEvent } from '../../../core/events/devices/DeviceCommand';
+import { LoggingService } from '../../../logging/LoggingService';
+import { OnOffState } from '../../../devices/states/OnOff';
+import { ColorRGB, hsvToRGB, kelvinToRGB, rgbToHSV, rgbToKelvin } from '../../../util/colorUtils';
+import { DeviceColorTemperatureTransition } from '../../../core/structures/devices/transitions/DeviceColorTemperatureTransition';
+import { GoveeLight, LightDevice } from '../../../devices/implementations/GoveeLight';
+import { DeviceTransition } from '../../../core/structures/devices/DeviceTransition';
+import { GoveeRGBLight } from '../../../devices/implementations/GoveeRGBLight';
+import { ServiceRegistry } from '../ServiceRegistry';
+import { DeviceBrightnessTransition } from '../../../core/structures/devices/transitions/DeviceBrightnessTransition';
+import { SolidColorState } from '../../../devices/states/SolidColor';
+import { GoveeRGBICLight, GoveeVariableRGBICLight } from '../../../devices/implementations/GoveeRGBICLight';
+import { ColorSegmentsModeState } from '../../../devices/states/modes/ColorSegments';
+import { PlatformConfigService } from '../../config/PlatformConfigService';
+import { GoveeDeviceOverride, GoveeRGBICLightOverride } from '../../config/GoveePluginConfig';
+import { DeviceOnOffTransition } from '../../../core/structures/devices/transitions/DeviceOnOffTransition';
+import { DeviceColorTransition } from '../../../core/structures/devices/transitions/DeviceColorTransition';
 import {
   DeviceBrightnessSegmentTransition,
   DeviceColorSegmentTransition,
 } from '../../../core/structures/devices/transitions/DeviceColorSegmentTransition';
-import {DeviceColorWCTransition} from '../../../core/structures/devices/transitions/DeviceColorWCTransition';
-import {ColorModeState} from '../../../devices/states/modes/Color';
-import {BrightnessState} from '../../../devices/states/Brightness';
+import { DeviceColorWCTransition } from '../../../core/structures/devices/transitions/DeviceColorWCTransition';
+import { ColorModeState } from '../../../devices/states/modes/Color';
+import { BrightnessState } from '../../../devices/states/Brightness';
 
-abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> extends AccessoryService<IdentifierType> {
-  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Lightbulb;
+abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType extends number | void> 
+  extends AccessoryService<IdentifierType, typeof Service.Lightbulb> {
+  protected readonly serviceType: WithUUID<typeof Service.Lightbulb> = this.SERVICES.Lightbulb;
 
   protected constructor(
     eventEmitter: EventEmitter2,
@@ -59,12 +60,12 @@ abstract class BaseLightService<LightType extends GoveeDevice, IdentifierType> e
         serviceIdentifier,
       );
     const isOn: boolean =
-      (serviceIdentifier ?? -1) < 0
+      (serviceIdentifier as number ?? -1) < 0
         ? (device as unknown as OnOffState).isOn ?? false
         : (
           this.getBrightness(
-          device as LightType,
-          serviceIdentifier,
+            device as LightType,
+            serviceIdentifier,
           ) ?? 0) > 0;
     service
       .getCharacteristic(this.CHARACTERISTICS.On)
@@ -210,6 +211,15 @@ export class WhiteLightService extends BaseLightService<LightDevice, void> {
     );
   }
 
+  protected override addServiceTo(
+    accessory: PlatformAccessory<UnknownContext>,
+  ): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      accessory.displayName,
+    );
+  }
+
   protected supports(device: GoveeDevice): boolean {
     return device instanceof GoveeLight
       && !(device instanceof GoveeRGBLight)
@@ -287,6 +297,15 @@ export class RGBLightService extends BaseLightService<GoveeRGBLight, void> {
       SERVICES,
       CHARACTERISTICS,
       log,
+    );
+  }
+
+  protected override addServiceTo(
+    accessory: PlatformAccessory<UnknownContext>,
+  ): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      accessory.displayName,
     );
   }
 
@@ -388,6 +407,26 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
       SERVICES,
       CHARACTERISTICS,
       log,
+    );
+  }
+
+  protected override addServiceTo(
+    accessory: PlatformAccessory<UnknownContext>,
+  ): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      accessory.displayName,
+    );
+  }
+
+  protected override addSubserviceTo(
+    accessory: PlatformAccessory<UnknownContext>,
+    subType: ServiceSubType<number>,
+  ): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+      subType.subType,
     );
   }
 

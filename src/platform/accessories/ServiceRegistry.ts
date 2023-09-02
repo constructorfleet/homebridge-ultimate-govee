@@ -1,17 +1,19 @@
-import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
-import {Constructor} from '@nestjs/common/utils/merge-with-values.util';
-import {AccessoryService} from './services/AccessoryService';
-import {ModuleRef} from '@nestjs/core';
-import {GoveeDevice} from '../../devices/GoveeDevice';
-import {State} from '../../devices/states/State';
-import {Lock} from 'async-await-mutex-lock';
+import { Provider } from '@nestjs/common/interfaces/modules/provider.interface';
+import { Constructor } from '@nestjs/common/utils/merge-with-values.util';
+import { AccessoryService } from './services/AccessoryService';
+import { ModuleRef } from '@nestjs/core';
+import { GoveeDevice } from '../../devices/GoveeDevice';
+import { State } from '../../devices/states/State';
+import { Lock } from 'async-await-mutex-lock';
+import { Service } from 'homebridge';
 
-export declare type ServiceCreator<IdentifierType> = (state: GoveeDevice) => Promise<AccessoryService<IdentifierType>[]>;
+export declare type ServiceCreator<IdentifierType, ServiceType extends typeof Service> =
+  (state: GoveeDevice) => Promise<AccessoryService<IdentifierType, ServiceType>[]>;
 
 export class StateAccessory<StateType extends typeof State> {
   constructor(
     public state: StateType,
-    public ctor: Constructor<AccessoryService<unknown>>,
+    public ctor: Constructor<AccessoryService<unknown, typeof Service>>,
   ) {
   }
 }
@@ -20,16 +22,16 @@ export class ServiceRegistry {
   // @ts-ignore
   private static readonly services: StateAccessory<typeof State>[] = [];
 
-  private static readonly deviceServices: Map<GoveeDevice, AccessoryService<unknown>[]> =
-    new Map<GoveeDevice, AccessoryService<unknown>[]>();
+  private static readonly deviceServices: Map<GoveeDevice, AccessoryService<unknown, typeof Service>[]> =
+    new Map<GoveeDevice, AccessoryService<unknown, typeof Service>[]>();
 
   private static readonly serviceLock: Lock<void> = new Lock<void>();
 
   static getServices(): Provider {
     return {
       provide: AccessoryService,
-      useFactory: async (moduleRef: ModuleRef): Promise<ServiceCreator<unknown>> =>
-        async (device: GoveeDevice): Promise<AccessoryService<unknown>[]> => {
+      useFactory: async (moduleRef: ModuleRef): Promise<ServiceCreator<unknown, typeof Service>> =>
+        async (device: GoveeDevice): Promise<AccessoryService<unknown, typeof Service>[]> => {
           let deviceServices = this.deviceServices.get(device);
           if (deviceServices !== undefined) {
             return deviceServices;
@@ -50,7 +52,7 @@ export class ServiceRegistry {
             ctors.filter(
               (ctor) => ctor !== undefined,
             ).map(
-              (ctor) => moduleRef.create(ctor as Constructor<AccessoryService<unknown>>),
+              (ctor) => moduleRef.create(ctor as Constructor<AccessoryService<unknown, typeof Service>>),
             ),
           );
           this.deviceServices.set(device, deviceServices);
@@ -61,7 +63,7 @@ export class ServiceRegistry {
     };
   }
 
-  static register<IdentifierType, T extends Constructor<AccessoryService<IdentifierType>>>(
+  static register<IdentifierType, ServiceType extends typeof Service, T extends Constructor<AccessoryService<IdentifierType, ServiceType>>>(
     ...states: (typeof State)[]
   ): (ctor: T) => void {
     return (ctor: T) => {

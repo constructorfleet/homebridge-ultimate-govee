@@ -23,7 +23,7 @@ export interface IdentifiedService<IdentifierType> {
   subType?: ServiceSubType<IdentifierType>;
 }
 
-export abstract class AccessoryService<IdentifierType> extends Emitter {
+export abstract class AccessoryService<IdentifierType, ServiceType extends typeof Service> extends Emitter {
   private setServicePrimary(
     accessory: PlatformAccessory,
     service?: Service,
@@ -46,7 +46,7 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     return service;
   }
 
-  protected abstract readonly serviceType: WithUUID<typeof Service>;
+  protected abstract readonly serviceType: WithUUID<ServiceType>;
   protected subTypes?: ServiceSubType<IdentifierType>[] = undefined;
 
   protected constructor(
@@ -207,23 +207,41 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
     if (!this.shouldAddService(deviceOverride, subType)) {
       return undefined;
     }
-    if (!subType) {
-      return accessory.addService(
-        this.serviceType,
-        `${accessory.displayName}`,
-        this.serviceType.UUID,
-      );
+    if (!subType || !subType?.subType) {
+      return this.addServiceTo(accessory);
+      // return accessory.addService(
+      //   this.serviceType,
+      //   `${accessory.displayName}`,
+      //   this.serviceType.UUID,
+      //   undefined,
+      // );
     }
     try {
-      return accessory.addService(
-        this.serviceType,
-        `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
-        this.serviceType.UUID,
-        subType.subType,
-      );
+      return this.addSubserviceTo(accessory, subType);
+      // return accessory.addService(
+      //   this.serviceType,
+      //   `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+      //   this.serviceType.UUID,
+      //   subType.subType,
+      // );
     } catch (ex) {
-      this.log.error(`${accessory.displayName} ${subType.nameSuffix || subType.subType}`);
+      this.log.error(
+        'AccessoryService',
+        'tryAddService',
+        `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+        ex);
       return undefined;
     }
+  }
+
+  protected abstract addServiceTo(
+    accessory: PlatformAccessory
+  ): Service | undefined;
+
+  protected addSubserviceTo(
+    accessory: PlatformAccessory,
+    subType?: ServiceSubType<IdentifierType>,
+  ): Service | undefined {
+    return undefined;
   }
 }

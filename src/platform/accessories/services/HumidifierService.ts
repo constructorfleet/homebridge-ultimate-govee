@@ -1,7 +1,7 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
-import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
+import {Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {ActiveState} from '../../../devices/states/Active';
 import {MistLevelState} from '../../../devices/states/MistLevel';
@@ -17,8 +17,8 @@ import {PlatformConfigService} from '../../config/PlatformConfigService';
 import {ServiceRegistry} from '../ServiceRegistry';
 
 @ServiceRegistry.register(GoveeHumidifier)
-export class HumidifierService extends AccessoryService<void> {
-  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.HumidifierDehumidifier;
+export class HumidifierService extends AccessoryService<void, typeof Service.HumidifierDehumidifier> {
+  protected readonly serviceType: WithUUID<typeof Service.HumidifierDehumidifier> = this.SERVICES.HumidifierDehumidifier;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -38,6 +38,15 @@ export class HumidifierService extends AccessoryService<void> {
 
   protected supports(device: GoveeDevice): boolean {
     return device instanceof GoveeHumidifier;
+  }
+
+  protected override addServiceTo(
+    accessory: PlatformAccessory<UnknownContext>,
+  ): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      accessory.displayName,
+    );
   }
 
   protected updateServiceCharacteristics(
