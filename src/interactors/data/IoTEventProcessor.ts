@@ -87,7 +87,7 @@ export class IoTEventProcessor extends Emitter {
             cmd: 'status',
             cmdVersion: 0,
             transaction: `u_${Date.now()}`,
-            type: 0,
+            type: 1,
           },
         }),
       ),
