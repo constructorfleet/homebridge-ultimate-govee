@@ -68,6 +68,10 @@ export class RestClient
     }
 
     try {
+      this.log.info(
+        'RestClient',
+        'logging in',
+      );
       const authData = await this.authenticate();
 
       if (authData?.accountIoTTopic) {
