@@ -1,31 +1,28 @@
-import {DynamicModule, Module} from '@nestjs/common';
-import {EventEmitterModule} from '@nestjs/event-emitter';
-import {DeviceManager} from '../devices/DeviceManager';
-import {RestClient} from '../data/clients/RestClient';
-import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../util/const';
+import { DynamicModule, Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { DeviceManager } from '../devices/DeviceManager';
+import { GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY } from '../util/const';
 import path from 'path';
 
-import {ConfigurationModule} from '../config/ConfigurationModule';
-import {GoveeConfiguration} from '../config/GoveeConfiguration';
-import {PersistConfiguration} from '../persist/PersistConfiguration';
-import {PersistModule} from '../persist/PersistModule';
-import {LoggingModule} from '../logging/LoggingModule';
-import {Logger} from '../logging/Logger';
-import {BLEClient} from '../data/clients/BLEClient';
-import {IoTClient} from '../data/clients/IoTClient';
-import {Provider} from '@nestjs/common/interfaces/modules/provider.interface';
-import {BLEEventProcessor} from '../interactors/data/BLEEventProcessor';
-import {IoTEventProcessor} from '../interactors/data/IoTEventProcessor';
-import {RestEventProcessor} from '../interactors/data/RestEventProcessor';
-import {Md5} from 'ts-md5';
-import {v4 as uuidv4} from 'uuid';
-import {DeviceFactory} from '../devices/DeviceFactory';
-import {GoveeRGBICLight} from '../devices/implementations/GoveeRGBICLight';
-import {GoveeRGBLight} from '../devices/implementations/GoveeRGBLight';
-import {GoveeLight} from '../devices/implementations/GoveeLight';
-import {GoveeAirPurifier} from '../devices/implementations/GoveeAirPurifier';
-import {GoveeHumidifier} from '../devices/implementations/GoveeHumidifier';
-import {EffectsManager} from '../effects/EffectsManager';
+import { ConfigurationModule } from '../config/ConfigurationModule';
+import { GoveeConfiguration } from '../config/GoveeConfiguration';
+import { PersistConfiguration } from '../persist/PersistConfiguration';
+import { PersistModule } from '../persist/PersistModule';
+import { LoggingModule } from '../logging/LoggingModule';
+import { Logger } from '../logging/Logger';
+import { Provider } from '@nestjs/common/interfaces/modules/provider.interface';
+import { BLEEventProcessor } from '../interactors/data/BLEEventProcessor';
+import { IoTEventProcessor } from '../interactors/data/IoTEventProcessor';
+import { RestEventProcessor } from '../interactors/data/RestEventProcessor';
+import { Md5 } from 'ts-md5';
+import { v4 as uuidv4 } from 'uuid';
+import { DeviceFactory } from '../devices/DeviceFactory';
+import { GoveeRGBICLight } from '../devices/implementations/GoveeRGBICLight';
+import { GoveeRGBLight } from '../devices/implementations/GoveeRGBLight';
+import { GoveeLight } from '../devices/implementations/GoveeLight';
+import { GoveeAirPurifier } from '../devices/implementations/GoveeAirPurifier';
+import { GoveeHumidifier } from '../devices/implementations/GoveeHumidifier';
+import { EffectsManager } from '../effects/EffectsManager';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const GOVEE_DEVICE_TYPES = [
@@ -38,23 +35,32 @@ const GOVEE_DEVICE_TYPES = [
 
 @Module({})
 export class GoveePluginModule {
-  public static register(
+  public static async register(
     config: GoveeConfiguration,
     persistConfig: PersistConfiguration,
     rootPath: string,
     logger: Logger,
-  ): DynamicModule {
+  ): Promise<DynamicModule> {
     const connectionProviders: Provider[] = [];
     if (config.enableBLE) {
-      connectionProviders.push(BLEClient);
+      connectionProviders.push(
+        await import('../data/clients/BLEClient').then(
+          (mod) => mod.BLEClient,
+        ));
       connectionProviders.push(BLEEventProcessor);
     }
     if (config.enableIoT) {
-      connectionProviders.push(IoTClient);
+      connectionProviders.push(
+        await import('../data/clients/IoTClient').then(
+          (mod) => mod.IoTClient,
+        ));
       connectionProviders.push(IoTEventProcessor);
     }
     if (config.enableAPI) {
-      connectionProviders.push(RestClient);
+      connectionProviders.push(
+        await import('../data/clients/RestClient').then(
+          (mod) => mod.RestClient,
+        ));
       connectionProviders.push(RestEventProcessor);
     }
     return {

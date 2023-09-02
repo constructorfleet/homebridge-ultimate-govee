@@ -211,12 +211,14 @@ export abstract class AccessoryService<IdentifierType> extends Emitter {
       return accessory.addService(
         this.serviceType,
         `${accessory.displayName}`,
+        this.serviceType.UUID,
       );
     }
 
     return accessory.addService(
       this.serviceType,
       `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+      this.serviceType.UUID,
       subType.subType,
     );
   }
