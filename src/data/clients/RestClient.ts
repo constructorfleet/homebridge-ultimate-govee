@@ -246,6 +246,10 @@ export class RestClient
     try {
       const authData = await this.login(false);
       if (!authData) {
+        this.log.info(
+          'RestClient',
+          'Invalid Auth Data',
+        );
         return;
       }
 
