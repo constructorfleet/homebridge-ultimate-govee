@@ -12,15 +12,13 @@ import { LoggingService } from '../../../logging/LoggingService';
 import { DeviceCommandEvent } from '../../../core/events/devices/DeviceCommand';
 import { DeviceSceneTransition } from '../../../core/structures/devices/transitions/DeviceModeTransition';
 import { ServiceRegistry } from '../ServiceRegistry';
-import { LightDevice } from '../../../devices/implementations/GoveeLight';
 import { GoveeRGBICLight } from '../../../devices/implementations/GoveeRGBICLight';
 import { GoveeRGBLight } from '../../../devices/implementations/GoveeRGBLight';
 
 
 @ServiceRegistry.register(
-  LightDevice,
-  GoveeRGBLight,
-  GoveeRGBICLight
+  GoveeRGBICLight,
+  GoveeRGBLight
 )
 export class EffectService extends AccessoryService<number> {
   protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Switch;
@@ -118,7 +116,7 @@ export class EffectService extends AccessoryService<number> {
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return !(!Reflect.has(device, 'activeMode') && !Reflect.has(device, 'activeSceneId'));
+    return true;
   }
 
   protected shouldAddService(
