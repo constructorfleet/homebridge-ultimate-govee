@@ -1,7 +1,7 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
-import {Characteristic, Service, WithUUID} from 'homebridge';
+import {Characteristic, PlatformAccessory, Service, UnknownContext, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {LoggingService} from '../../../logging/LoggingService';
@@ -9,8 +9,8 @@ import {ServiceRegistry} from '../ServiceRegistry';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 
 @ServiceRegistry.register(GoveeDevice)
-export class InformationService extends AccessoryService<void> {
-  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AccessoryInformation;
+export class InformationService extends AccessoryService<void, typeof Service.AccessoryInformation> {
+  protected readonly serviceType: WithUUID<typeof Service.AccessoryInformation> = this.SERVICES.AccessoryInformation;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -25,6 +25,15 @@ export class InformationService extends AccessoryService<void> {
       SERVICES,
       CHARACTERISTICS,
       log,
+    );
+  }
+
+  protected override addServiceTo(
+    accessory: PlatformAccessory<UnknownContext>,
+  ): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      accessory.displayName,
     );
   }
 

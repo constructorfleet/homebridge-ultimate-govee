@@ -1,5 +1,5 @@
 import { AccessoryService, IdentifiedService, ServiceSubType } from './AccessoryService';
-import { Characteristic, CharacteristicValue, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID } from 'homebridge';
 import { GoveeDevice } from '../../../devices/GoveeDevice';
 import { GoveeDeviceOverride, GoveeLightOverride } from '../../config/GoveePluginConfig';
 import { SceneModeState } from '../../../devices/states/modes/Scene';
@@ -20,8 +20,8 @@ import { GoveeRGBLight } from '../../../devices/implementations/GoveeRGBLight';
   GoveeRGBICLight,
   GoveeRGBLight
 )
-export class EffectService extends AccessoryService<number> {
-  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.Switch;
+export class EffectService extends AccessoryService<number, typeof Service.Switch> {
+  protected readonly serviceType: WithUUID<typeof Service.Switch> = this.SERVICES.Switch;
   protected subTypes?: ServiceSubType<number>[];
 
   constructor(
@@ -37,6 +37,23 @@ export class EffectService extends AccessoryService<number> {
       SERVICES,
       CHARACTERISTICS,
       log,
+    );
+  }
+
+  protected override addServiceTo(accessory: PlatformAccessory<UnknownContext>): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      accessory.displayName,
+    );
+  }
+
+  protected override addSubserviceTo(accessory: PlatformAccessory<UnknownContext>,
+    subType: ServiceSubType<number>,
+  ): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+      subType.subType,
     );
   }
 

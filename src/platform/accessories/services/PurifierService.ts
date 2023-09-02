@@ -1,7 +1,7 @@
 import {AccessoryService} from './AccessoryService';
 import {Inject} from '@nestjs/common';
 import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
-import {Characteristic, CharacteristicValue, Service, WithUUID} from 'homebridge';
+import {Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID} from 'homebridge';
 import {GoveeDevice} from '../../../devices/GoveeDevice';
 import {ActiveState} from '../../../devices/states/Active';
 import {FanSpeedState} from '../../../devices/states/FanSpeed';
@@ -17,8 +17,8 @@ import {PlatformConfigService} from '../../config/PlatformConfigService';
 import {ServiceRegistry} from '../ServiceRegistry';
 
 @ServiceRegistry.register(GoveeAirPurifier)
-export class PurifierService extends AccessoryService<void> {
-  protected readonly serviceType: WithUUID<typeof Service> = this.SERVICES.AirPurifier;
+export class PurifierService extends AccessoryService<void, typeof Service.AirPurifier> {
+  protected readonly serviceType: WithUUID<typeof Service.AirPurifier> = this.SERVICES.AirPurifier;
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -33,6 +33,15 @@ export class PurifierService extends AccessoryService<void> {
       SERVICES,
       CHARACTERISTICS,
       log,
+    );
+  }
+
+  protected override addServiceTo(
+    accessory: PlatformAccessory<UnknownContext>,
+  ): Service | undefined {
+    return accessory.addService(
+      this.serviceType,
+      accessory.displayName,
     );
   }
 
