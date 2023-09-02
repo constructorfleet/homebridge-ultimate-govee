@@ -1,0 +1,16 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+{
+	"name": "Homebridge",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:18-bullseye",
+	"features": {},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"christian-kohler.npm-intellisense"
+			]
+		}
+	},
+	"workspaceFolder": "/workspace"
+}

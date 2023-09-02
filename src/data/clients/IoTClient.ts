@@ -1,16 +1,16 @@
-import {device} from 'aws-iot-device-sdk';
-import {GoveeClient} from './GoveeClient';
-import {GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY} from '../../util/const';
-import {Inject, Injectable} from '@nestjs/common';
-import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {IoTConnectionStateEvent, IoTErrorEvent, IoTEventData} from '../../core/events/dataClients/iot/IoTEvent';
-import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
-import {IotReceive} from '../../core/events/dataClients/iot/IotReceive';
-import {IoTSubscribedToEvent, IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
-import {IoTUnsubscribedFromEvent} from '../../core/events/dataClients/iot/IotRemoveSubscription';
-import {LoggingService} from '../../logging/LoggingService';
-import {Lock} from 'async-await-mutex-lock';
-import {promisify} from 'util';
+import { device } from 'aws-iot-device-sdk';
+import { GoveeClient } from './GoveeClient';
+import { GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY } from '../../util/const';
+import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { IoTConnectionStateEvent, IoTErrorEvent, IoTEventData } from '../../core/events/dataClients/iot/IoTEvent';
+import { ConnectionState } from '../../core/events/dataClients/DataClientEvent';
+import { IotReceive } from '../../core/events/dataClients/iot/IotReceive';
+import { IoTSubscribedToEvent, IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
+import { IoTUnsubscribedFromEvent } from '../../core/events/dataClients/iot/IotRemoveSubscription';
+import { LoggingService } from '../../logging/LoggingService';
+import { Lock } from 'async-await-mutex-lock';
+import { promisify } from 'util';
 
 @Injectable()
 export class IoTClient
@@ -151,6 +151,10 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Subscribe',
+    {
+      nextTick: true,
+      async: true
+    }
   )
   async subscribe(message: IoTEventData) {
     if (!message.topic) {

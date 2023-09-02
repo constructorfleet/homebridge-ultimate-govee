@@ -68,6 +68,10 @@ export class RestClient
     }
 
     try {
+      this.log.info(
+        'RestClient',
+        'logging in',
+      );
       const authData = await this.authenticate();
 
       if (authData?.accountIoTTopic) {
@@ -246,6 +250,10 @@ export class RestClient
     try {
       const authData = await this.login(false);
       if (!authData) {
+        this.log.info(
+          'RestClient',
+          'Invalid Auth Data',
+        );
         return;
       }
 
@@ -257,6 +265,10 @@ export class RestClient
           authData.token || '',
         ),
       ).post();
+      this.log.info(
+        'RestClient',
+        res.data,
+      );
       await this.emitAsync(
         new RestResponseDeviceList(res.data),
       );
