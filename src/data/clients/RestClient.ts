@@ -58,7 +58,9 @@ export class RestClient
     'REST.AUTHENTICATION.Authenticate',
   )
   async login(requestDevices = false): Promise<OAuthData | undefined> {
-    if (this.isTokenValid(this.persist.oauthData?.token) && this.persist.oauthData?.accountId !== undefined) {
+    const oauthData = this.persist.oauthData;
+    const isOAuthEmpty = oauthData === undefined || Object.keys(oauthData).length === 0;
+    if (!isOAuthEmpty && this.isTokenValid(oauthData.token) && oauthData.accountId !== undefined) {
       const oauthData = this.persist.oauthData!;
       this.persist.oauthData = oauthData;
 
@@ -99,10 +101,7 @@ export class RestClient
     this.log.info('Authenticating');
     const res = await request<LoginRequest, LoginResponse>(
       `${BASE_GOVEE_APP_ACCOUNT_URL}/login`,
-      BaseHeaders(
-        this.clientId,
-        GOVEE_APP_VERSION,
-      ),
+      {},
       loginRequest(
         this.config.username,
         this.config.password,
