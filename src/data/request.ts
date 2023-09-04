@@ -28,6 +28,7 @@ class Request<PayloadType extends BaseRequest,
   }
 
   async get(): Promise<AxiosResponse<ResponseType>> {
+    delete this.headers['Content-Type'];
     const res = await axios.get(
       this.url,
       {
