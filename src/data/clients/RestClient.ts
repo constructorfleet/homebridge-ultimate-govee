@@ -267,6 +267,7 @@ export class RestClient
           this.clientId,
           GOVEE_APP_VERSION,
           authData.token || '',
+          0,
         ),
       ).get();
       await this.emitAsync(
