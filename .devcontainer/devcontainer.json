@@ -1,18 +1,36 @@
 {
 	"name": "Homebridge",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "homebridge",
-	"features": {},
+	"build":{
+		"dockerfile": "Dockerfile"
+	},
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"remoteEnv": {
+		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+	},
+	"mounts": [
+		"source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
+		"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
+	],
 	"forwardPorts": [
 		51826,
 		8581
 	],
+	"features": {
+		"ghcr.io/devcontainers-contrib/features/shfmt:1": {},
+		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+			"plugins": "ssh-agent npm",
+			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
+			"username": "vscode"
+		},
+		"ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
+		"ghcr.io/marcozac/devcontainer-features/shellcheck:1": {}
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
+				"mkhl.shfmt",
 				"dbaeumer.vscode-eslint"
 			]
 		}
-	},
-	"workspaceFolder": "/workspace"
+	}
 }
