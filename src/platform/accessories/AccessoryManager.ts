@@ -94,6 +94,7 @@ export class AccessoryManager extends Emitter {
         deviceUUID,
       );
     accessory.context.config = deviceConfig;
+    device.name = deviceConfig?.displayName || device.name;
 
     if (!this.accessories.has(deviceUUID)) {
       this.accessories.set(

@@ -27,6 +27,7 @@ export function MistLevel<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
+      console.dir({name: this['name'], commands: deviceState.commands});
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
