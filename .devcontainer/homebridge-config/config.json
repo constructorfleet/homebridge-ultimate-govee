@@ -17,7 +17,11 @@
             "theme": "auto",
             "tempUnits": "f",
             "lang": "en",
-            "platform": "config"
+            "platform": "config",
+            "log": {
+                "method": "file",
+                "path": "/home/node/.homebridge/homebridge.log"
+            }
         }
     ]
 }

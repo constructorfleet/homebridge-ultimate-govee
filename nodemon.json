@@ -4,7 +4,7 @@
   ],
   "ext": "ts",
   "ignore": [],
-  "exec": "tsc && ./node_modules/homebridge/bin/homebridge -I -D",
+  "exec": "tsc && ./node_modules/homebridge/bin/homebridge -I -D > /home/node/.homebridge/homebridge.log",
   "signal": "SIGTERM",
   "env": {
     "NODE_OPTIONS": "--trace-warnings"
