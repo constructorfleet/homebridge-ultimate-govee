@@ -59,7 +59,7 @@ export function ColorSegmentsMode<StateType extends State>(
     public activeMode?: number;
     public modes!: number[];
     public colorSegmentModeIdentifier!: number;
-    public colorSegmentCount = 1;
+    public colorSegmentCount = 0;
     public colorSegments: ColorSegment[] = [];
     public reportSegmentIdentifier!: number[];
     public isVariable!: boolean;
@@ -75,7 +75,6 @@ export function ColorSegmentsMode<StateType extends State>(
     }
 
     public parseSegmentCount(deviceState: DeviceState): ThisType<this> {
-      console.log(deviceState.commands);
       const commandValues = getCommandValues(
         [
           REPORT_IDENTIFIER,
@@ -148,16 +147,11 @@ export function ColorSegmentsMode<StateType extends State>(
       this.activeMode = this.colorSegmentModeIdentifier;
       commandValues?.forEach(
         (cmdValues) => {
-          console.log(cmdValues);
           const startIndex = (cmdValues[0] - 1) * segmentPerCommand;
           for (let i = 0; i < segmentPerCommand; i++) {
             if (!this.colorSegments[startIndex + i]) {
               break;
             }
-            console.log("Index", startIndex + i);
-            console.log(cmdValues[i * 4 + 2],
-              cmdValues[i * 4 + 3],
-              cmdValues[i * 4 + 4]);
             const brightness = cmdValues[i * 4 + 1];
             const color = new ColorRGB(
               cmdValues[i * 4 + 2],

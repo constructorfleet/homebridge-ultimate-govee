@@ -476,7 +476,7 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     device: GoveeDevice,
     deviceOverride?: GoveeDeviceOverride,
   ) {
-    if (this.subTypes!.length === 1) {
+    if (this.subTypes!.length <= 1) {
       this.initialSetup(
         device,
         deviceOverride,
