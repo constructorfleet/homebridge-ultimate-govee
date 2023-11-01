@@ -1,9 +1,9 @@
-import {State} from './State';
-import {DeviceState} from '../../core/structures/devices/DeviceState';
-import {FanSpeedState} from './FanSpeed';
-import {StatusModeState} from './StatusMode';
-import {getCommandValues} from '../../util/opCodeUtils';
-import {REPORT_IDENTIFIER} from '../../util/const';
+import { State } from './State';
+import { DeviceState } from '../../core/structures/devices/DeviceState';
+import { StatusModeState } from './StatusMode';
+import { getCommandValues } from '../../util/opCodeUtils';
+import { REPORT_IDENTIFIER } from '../../util/const';
+import { SimpleFanSpeedState } from './SimpleFanSpeed';
 
 const commandIdentifiers = [
   5,
@@ -21,7 +21,7 @@ export interface ProgrammableFanSpeedState {
   fanPrograms: Map<number, FanSpeedProgram>;
 }
 
-export function ProgrammableFanSpeed<StateType extends State & FanSpeedState & StatusModeState>(
+export function ProgrammableFanSpeed<StateType extends State & SimpleFanSpeedState & StatusModeState>(
   stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
@@ -51,7 +51,7 @@ export function ProgrammableFanSpeed<StateType extends State & FanSpeedState & S
           this.fanPrograms.set(i, program);
         }
         if (this.fanProgramId !== undefined) {
-          this.fanSpeed = this.fanPrograms.get(this.fanProgramId)?.fanSpeed;
+          this.simpleFanSpeed = this.fanPrograms.get(this.fanProgramId)?.fanSpeed;
         }
       }
 

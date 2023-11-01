@@ -1,15 +1,15 @@
 import { State } from './State';
 import { REPORT_IDENTIFIER } from '../../util/const';
 import { ProgrammableFanSpeed, ProgrammableFanSpeedState } from './ProgrammableFanSpeed';
-import { FanSpeed, FanSpeedState } from './FanSpeed';
+import { SimpleFanSpeed, SimpleFanSpeedState } from './SimpleFanSpeed';
 
-class TestState extends ProgrammableFanSpeed(FanSpeed(State)) {
+class TestState extends ProgrammableFanSpeed(SimpleFanSpeed(State)) {
   constructor(...args) {
     super(...args);
   }
 }
 
-let testState: ProgrammableFanSpeedState & FanSpeedState & State;
+let testState: ProgrammableFanSpeedState & SimpleFanSpeedState & State;
 
 describe('ProgrammableFanSpeedState', () => {
   beforeEach(() => {
@@ -20,13 +20,13 @@ describe('ProgrammableFanSpeedState', () => {
     it('adds command identifier', () => {
       expect(testState.deviceStatusCodes.size).toBe(2);
 
-      expect(Array.from(testState.deviceStatusCodes)).toStrictEqual([[5], [5, 2]]);
+      expect(Array.from(testState.deviceStatusCodes)).toStrictEqual([[5, 1], [5, 2]]);
     });
   });
 
   describe('parse', () => {
     it('processes DeviceState.commands', () => {
-      expect(testState.fanSpeed).toBeUndefined();
+      expect(testState.simpleFanSpeed).toBeUndefined();
       expect(testState.fanProgramId).toBeUndefined();
       expect(testState.fanPrograms.size).toBe(0);
       testState.parse({
@@ -38,7 +38,7 @@ describe('ProgrammableFanSpeedState', () => {
             1, 255, 255, 255, 255, 173],
         ],
       });
-      expect(testState.fanSpeed).toBe(3);
+      expect(testState.simpleFanSpeed).toBe(3);
       expect(testState.fanProgramId).toBe(0);
       expect(testState.fanPrograms.size).toBe(3);
 
@@ -57,7 +57,7 @@ describe('ProgrammableFanSpeedState', () => {
     });
 
     it('ignores non-applicable DeviceState', () => {
-      expect(testState.fanSpeed).toBeUndefined();
+      expect(testState.simpleFanSpeed).toBeUndefined();
       expect(testState.fanProgramId).toBeUndefined();
       expect(testState.fanPrograms.size).toBe(0);
       testState.parse({
@@ -67,7 +67,7 @@ describe('ProgrammableFanSpeedState', () => {
           [REPORT_IDENTIFIER, 1, 2],
         ],
       });
-      expect(testState.fanSpeed).toBeUndefined();
+      expect(testState.simpleFanSpeed).toBeUndefined();
       expect(testState.fanProgramId).toBeUndefined();
       expect(testState.fanPrograms.size).toBe(0);
     });

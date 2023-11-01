@@ -10,6 +10,8 @@ const commandIdentifiers = [
 export interface FanSpeedState {
   fanSpeed?: number;
 
+  asPercentage(fanSpeed?: number): number;
+  fromPercentage(percent: number): number;
   get fanSpeedChange(): number[];
 }
 
@@ -23,6 +25,17 @@ export function FanSpeed<StateType extends State>(
     public constructor(...args) {
       super(...args);
       this.addDeviceStatusCodes(commandIdentifiers);
+    }
+
+    public asPercentage(fanSpeed?: number): number {
+      fanSpeed = fanSpeed ?? this.fanSpeed ?? 0;
+      return fanSpeed === 16
+        ? 25
+        : ((fanSpeed + 1) * 25);
+    }
+
+    public fromPercentage(percent: number): number {
+      return Math.max(Math.ceil(percent / 25) - 1, 0) || 16;
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
