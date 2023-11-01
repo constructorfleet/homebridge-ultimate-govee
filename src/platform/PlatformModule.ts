@@ -23,6 +23,7 @@ import {EffectService} from './accessories/services/EffectService';
 import {DeviceSubEffectsFeature} from './config/features/DeviceSubEffects';
 import {Features} from './config/Features';
 import {DisableDIYEffectsFeature} from './config/features/DisableDIYEffectsFeature';
+import { FilterService } from './accessories/services/FilterService';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ACCESSORY_SERVICES = [
@@ -33,6 +34,7 @@ const ACCESSORY_SERVICES = [
   RGBLightService,
   SegmentedLightService,
   EffectService,
+  FilterService,
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

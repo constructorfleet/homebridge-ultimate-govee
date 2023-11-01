@@ -1,5 +1,4 @@
 import { request } from '../request';
-import { BaseHeaders } from '../../core/structures/api/requests/headers/BaseHeaders';
 import { loginRequest, LoginRequest } from '../../core/structures/api/requests/payloads/LoginRequest';
 import { LoginResponse } from '../../core/structures/api/responses/payloads/LoginResponse';
 import { GoveeClient } from './GoveeClient';
@@ -24,7 +23,7 @@ import { DIYListResponse } from '../../core/structures/api/responses/payloads/DI
 import { GoveeDevice } from '../../devices/GoveeDevice';
 import { DeviceSceneRequest, deviceSceneRequest } from '../../core/structures/api/requests/payloads/DeviceSceneRequest';
 import { DeviceSceneListResponse } from '../../core/structures/api/responses/payloads/DeviceSceneListResponse';
-import { IoTData, IoTKeyResponse } from '../../core/structures/api/responses/payloads/IoTKeyResponse';
+import { IoTKeyResponse } from '../../core/structures/api/responses/payloads/IoTKeyResponse';
 import { IoTInitializeClientData, IoTInitializeClientEvent } from '../../core/events/dataClients/iot/IoTEvent';
 import { existsSync } from 'fs';
 import { IotClientData } from '../../core/structures/IoTClientData';
@@ -304,6 +303,7 @@ export class RestClient
           authData.token || '',
         ),
       ).post();
+
       await this.emitAsync(
         new RestResponseDeviceList(res.data),
       );

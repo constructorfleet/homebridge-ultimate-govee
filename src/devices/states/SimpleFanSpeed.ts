@@ -37,7 +37,6 @@ export function SimpleFanSpeed<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
-      console.dir(deviceState, {depth: 5});
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,

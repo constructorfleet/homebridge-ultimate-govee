@@ -8,6 +8,7 @@ import { DeviceFactory } from '../DeviceFactory';
 import { ProgrammableFanSpeed } from '../states/ProgrammableFanSpeed';
 import { StatusMode } from '../states/StatusMode';
 import { SimpleFanSpeed } from '../states/SimpleFanSpeed';
+import { FilterMaintenance } from '../states/FilterMaintenance';
 
 @DeviceFactory.register(
   'H7121',
@@ -16,10 +17,12 @@ import { SimpleFanSpeed } from '../states/SimpleFanSpeed';
 export class GoveeAirPurifier
   extends ControlLock(
     FanSpeed(
-      Timer(
-        Active(
-          OnOff(
-            GoveeDevice,
+      FilterMaintenance(
+        Timer(
+          Active(
+            OnOff(
+              GoveeDevice,
+            ),
           ),
         ),
       ),
@@ -39,10 +42,12 @@ export class GoveeAirPurifierLite
     ProgrammableFanSpeed(
       SimpleFanSpeed(
         StatusMode(
-          Timer(
-            Active(
-              OnOff(
-                GoveeDevice,
+          FilterMaintenance(
+            Timer(
+              Active(
+                OnOff(
+                  GoveeDevice,
+                ),
               ),
             ),
           ),

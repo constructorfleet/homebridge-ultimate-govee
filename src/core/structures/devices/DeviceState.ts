@@ -27,6 +27,8 @@ export interface DeviceState {
 
   colorTemperature?: number;
 
+  filterExpired?: boolean;
+
   mode?: number;
 
   color?: DeviceStateColor;

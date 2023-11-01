@@ -122,37 +122,35 @@ export class PurifierService extends AccessoryService<void, typeof Service.AirPu
       : 'fanSpeed' in device
         ? (device as unknown as FanSpeedState).fanSpeed
         : undefined;
-    if (goveeFanSpeed === undefined) {
-      return;
-    }
+    if (goveeFanSpeed !== undefined) {
+      const isSimpleFanSpeed = 'simpleFanSpeed' in device;
+      const fromPercentage: (number) => number = device['fromPercentage'];
 
-    const isSimpleFanSpeed = 'simpleFanSpeed' in device;
-    const fromPercentage: (number) => number = device['fromPercentage'];
-
-    service
-      .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
-      .setProps({
-        minValue: 0,
-        maxValue: 100,
-      })
-      .updateValue(
-        isSimpleFanSpeed
-          ? (device as unknown as SimpleFanSpeedState).asPercentage()
-          : (device as unknown as FanSpeedState).asPercentage())
-      .onSet(async (value: CharacteristicValue) =>
-        this.emit(
-          new DeviceCommandEvent(
-            isSimpleFanSpeed
-              ? new DeviceSimpleFanSpeedTransition(
-                device.deviceId,
-                fromPercentage(value as number ?? 0)
-              )
-              : new DeviceFanSpeedTransition(
-                device.deviceId,
-                fromPercentage(value as number ?? 0)
-              ),
+      service
+        .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
+        .setProps({
+          minValue: 0,
+          maxValue: 100,
+        })
+        .updateValue(
+          isSimpleFanSpeed
+            ? (device as unknown as SimpleFanSpeedState).asPercentage()
+            : (device as unknown as FanSpeedState).asPercentage())
+        .onSet(async (value: CharacteristicValue) =>
+          this.emit(
+            new DeviceCommandEvent(
+              isSimpleFanSpeed
+                ? new DeviceSimpleFanSpeedTransition(
+                  device.deviceId,
+                  fromPercentage(value as number ?? 0)
+                )
+                : new DeviceFanSpeedTransition(
+                  device.deviceId,
+                  fromPercentage(value as number ?? 0)
+                ),
+            ),
           ),
-        ),
-      );
+        );
+    }
   }
 }
