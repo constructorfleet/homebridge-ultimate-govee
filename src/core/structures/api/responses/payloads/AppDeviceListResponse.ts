@@ -23,6 +23,21 @@ export class AppDeviceSettingsResponse {
   @Expose({name: 'pactCode'})
   public pactCode!: number;
 
+  @Expose({name: 'boilWaterCompletedNotiOnOff'})
+  public boilWaterCompletedNotiOnOff?: number;
+
+  @Expose({name: 'completionNotiOnOff'})
+  public completionNotiOnOff?: number;
+
+  @Expose({name: 'autoShutDownOnOff'})
+  public autoShutDownOnOff?: number;
+
+  @Expose({name: 'filterExpireOnOff'})
+  public filterExpireOnOff?: number;
+
+  @Expose({name: "playState"})
+  public playState?: boolean;
+
   @Expose({name: 'wifiSoftVersion'})
   public wifiSoftwareVersion?: string;
 

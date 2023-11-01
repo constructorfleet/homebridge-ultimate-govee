@@ -6,6 +6,8 @@ import { GoveeDevice } from '../GoveeDevice';
 import { ControlLock } from '../states/ControlLock';
 import { DeviceFactory } from '../DeviceFactory';
 import { ProgrammableFanSpeed } from '../states/ProgrammableFanSpeed';
+import { StatusMode } from '../states/StatusMode';
+import { SimpleFanSpeed } from '../states/SimpleFanSpeed';
 
 @DeviceFactory.register(
   'H7121',
@@ -33,9 +35,22 @@ export class GoveeAirPurifier
   'H7126',
 )
 export class GoveeAirPurifierLite
-  extends ProgrammableFanSpeed(
-    GoveeAirPurifier
+  extends ControlLock(
+    ProgrammableFanSpeed(
+      SimpleFanSpeed(
+        StatusMode(
+          Timer(
+            Active(
+              OnOff(
+                GoveeDevice,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
   ) {
+
   constructor(args) {
     super(args);
   }

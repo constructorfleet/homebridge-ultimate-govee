@@ -1,22 +1,27 @@
-import {AccessoryService} from './AccessoryService';
-import {Inject} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
-import {Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID} from 'homebridge';
-import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {ActiveState} from '../../../devices/states/Active';
-import {FanSpeedState} from '../../../devices/states/FanSpeed';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
-import {DeviceActiveTransition} from '../../../core/structures/devices/transitions/DeviceActiveTransition';
-import {DeviceFanSpeedTransition} from '../../../core/structures/devices/transitions/DeviceFanSpeedTransition';
-import {LoggingService} from '../../../logging/LoggingService';
-import {ControlLockState} from '../../../devices/states/ControlLock';
-import {DeviceControlLockTransition} from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
-import {GoveeAirPurifier} from '../../../devices/implementations/GoveeAirPurifier';
-import {PlatformConfigService} from '../../config/PlatformConfigService';
-import {ServiceRegistry} from '../ServiceRegistry';
+import { AccessoryService } from './AccessoryService';
+import { Inject } from '@nestjs/common';
+import { PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES } from '../../../util/const';
+import { Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID } from 'homebridge';
+import { GoveeDevice } from '../../../devices/GoveeDevice';
+import { ActiveState } from '../../../devices/states/Active';
+import { FanSpeedState } from '../../../devices/states/FanSpeed';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DeviceCommandEvent } from '../../../core/events/devices/DeviceCommand';
+import { DeviceActiveTransition } from '../../../core/structures/devices/transitions/DeviceActiveTransition';
+import { DeviceFanSpeedTransition } from '../../../core/structures/devices/transitions/DeviceFanSpeedTransition';
+import { LoggingService } from '../../../logging/LoggingService';
+import { ControlLockState } from '../../../devices/states/ControlLock';
+import { DeviceControlLockTransition } from '../../../core/structures/devices/transitions/DeviceControlLockTransition';
+import { GoveeAirPurifier, GoveeAirPurifierLite } from '../../../devices/implementations/GoveeAirPurifier';
+import { PlatformConfigService } from '../../config/PlatformConfigService';
+import { ServiceRegistry } from '../ServiceRegistry';
+import { SimpleFanSpeedState } from '../../../devices/states/SimpleFanSpeed';
+import { DeviceSimpleFanSpeedTransition } from '../../../core/structures/devices/transitions/DeviceSimpleFanSpeedTransition';
 
-@ServiceRegistry.register(GoveeAirPurifier)
+@ServiceRegistry.register(
+  GoveeAirPurifier,
+  GoveeAirPurifierLite,
+)
 export class PurifierService extends AccessoryService<void, typeof Service.AirPurifier> {
   protected readonly serviceType: WithUUID<typeof Service.AirPurifier> = this.SERVICES.AirPurifier;
 
@@ -46,7 +51,7 @@ export class PurifierService extends AccessoryService<void, typeof Service.AirPu
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return device instanceof GoveeAirPurifier;
+    return device instanceof GoveeAirPurifier || device instanceof GoveeAirPurifierLite;
   }
 
   protected updateServiceCharacteristics(
@@ -112,7 +117,18 @@ export class PurifierService extends AccessoryService<void, typeof Service.AirPu
           ),
         ),
       );
-    const fanSpeed = (device as unknown as FanSpeedState)?.fanSpeed ?? 0;
+    const goveeFanSpeed = 'simpleFanSpeed' in device
+      ? (device as unknown as SimpleFanSpeedState).simpleFanSpeed
+      : 'fanSpeed' in device
+        ? (device as unknown as FanSpeedState).fanSpeed
+        : undefined;
+    if (goveeFanSpeed === undefined) {
+      return;
+    }
+
+    const isSimpleFanSpeed = 'simpleFanSpeed' in device;
+    const fromPercentage: (number) => number = device['fromPercentage'];
+
     service
       .getCharacteristic(this.CHARACTERISTICS.RotationSpeed)
       .setProps({
@@ -120,16 +136,21 @@ export class PurifierService extends AccessoryService<void, typeof Service.AirPu
         maxValue: 100,
       })
       .updateValue(
-        fanSpeed === 16
-          ? 25
-          : ((fanSpeed + 1) * 25))
+        isSimpleFanSpeed
+          ? (device as unknown as SimpleFanSpeedState).asPercentage()
+          : (device as unknown as FanSpeedState).asPercentage())
       .onSet(async (value: CharacteristicValue) =>
         this.emit(
           new DeviceCommandEvent(
-            new DeviceFanSpeedTransition(
-              device.deviceId,
-              Math.max(Math.ceil((value as number ?? 0) / 25) - 1, 0) || 16,
-            ),
+            isSimpleFanSpeed
+              ? new DeviceSimpleFanSpeedTransition(
+                device.deviceId,
+                fromPercentage(value as number ?? 0)
+              )
+              : new DeviceFanSpeedTransition(
+                device.deviceId,
+                fromPercentage(value as number ?? 0)
+              ),
           ),
         ),
       );
