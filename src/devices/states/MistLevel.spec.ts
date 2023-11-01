@@ -2,7 +2,7 @@ import {State} from './State';
 import {COMMAND_IDENTIFIER, REPORT_IDENTIFIER} from '../../util/const';
 import {MistLevel, MistLevelState} from './MistLevel';
 
-class TestState extends MistLevel(State) {
+class TestState extends MistLevel(8, State) {
   constructor(...args) {
     super(...args);
   }
