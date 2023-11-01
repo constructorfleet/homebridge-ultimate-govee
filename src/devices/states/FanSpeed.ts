@@ -26,12 +26,23 @@ export function FanSpeed<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
-      const commandValues = getCommandValues(
-        [REPORT_IDENTIFIER, ...commandIdentifiers],
-        deviceState.commands,
-      );
-      if (commandValues?.length === 1) {
-        this.fanSpeed = commandValues[0][0];
+      console.dir(deviceState, {depth: 5});
+      if (deviceState.command === 'multiSync') {
+        const commandValues = getCommandValues(
+          [REPORT_IDENTIFIER, ...commandIdentifiers, 1],
+          deviceState.commands,
+        );
+        if (commandValues?.length === 1) {
+          this.fanSpeed = commandValues[0][0];
+        }
+      } else {
+        const commandValues = getCommandValues(
+          [REPORT_IDENTIFIER, ...commandIdentifiers],
+          deviceState.commands,
+        );
+        if (commandValues?.length === 1) {
+          this.fanSpeed = commandValues[0][0];
+        }
       }
 
       return super.parse(deviceState);

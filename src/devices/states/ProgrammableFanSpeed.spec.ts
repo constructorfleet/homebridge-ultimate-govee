@@ -1,15 +1,15 @@
 import {State} from './State';
 import {REPORT_IDENTIFIER} from '../../util/const';
-import {ProgrammableMistLevel, ProgrammableMistLevelState} from './ProgrammableMistLevel';
-import {MistLevel, MistLevelState} from './MistLevel';
+import {ProgrammableFanSpeed, ProgrammableFanSpeedState} from './ProgrammableFanSpeed';
+import {FanSpeed, FanSpeedState} from './FanSpeed';
 
-class TestState extends ProgrammableMistLevel(MistLevel(8, State)) {
+class TestState extends ProgrammableFanSpeed(FanSpeed(State)) {
   constructor(...args) {
     super(...args);
   }
 }
 
-let testState: ProgrammableMistLevelState & MistLevelState & State;
+let testState: ProgrammableFanSpeedStateState & FanSpeedState & State;
 
 describe('ProgrammableMistLevelState', () => {
   beforeEach(() => {

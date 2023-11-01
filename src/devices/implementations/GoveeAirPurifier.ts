@@ -9,6 +9,7 @@ import {DeviceFactory} from '../DeviceFactory';
 @DeviceFactory.register(
   'H7121',
   'H7122',
+  'H7126'
 )
 export class GoveeAirPurifier
   extends ControlLock(
