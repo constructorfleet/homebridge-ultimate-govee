@@ -39,7 +39,6 @@ export function ProgrammableFanSpeed<StateType extends State & SimpleFanSpeedSta
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
-      console.dir(commandValues);
       if (commandValues?.length === 1) {
         this.fanProgramId = commandValues[0][0];
         for (let i = 0; i < 3; i++) {

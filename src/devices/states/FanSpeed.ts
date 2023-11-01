@@ -39,7 +39,6 @@ export function FanSpeed<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
-      console.dir(deviceState, {depth: 5});
       if (deviceState.command === 'multiSync') {
         const commandValues = getCommandValues(
           [REPORT_IDENTIFIER, ...commandIdentifiers, 1],
