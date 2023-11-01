@@ -35,13 +35,13 @@ export function ProgrammableFanSpeed<StateType extends State & FanSpeedState & S
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
-      super.parse(deviceState);
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
       );
+      console.dir(commandValues);
       if (commandValues?.length === 1) {
-        this.fanProgramId = Math.floor(commandValues[0][0] / 16);
+        this.fanProgramId = commandValues[0][0];
         for (let i = 0; i < 3; i++) {
           const program: FanSpeedProgram = {
             fanSpeed: commandValues[0][i * 5 + 1],
@@ -50,10 +50,9 @@ export function ProgrammableFanSpeed<StateType extends State & FanSpeedState & S
           };
           this.fanPrograms.set(i, program);
         }
-      }
-
-      if (this.statusMode === 2 && this.fanProgramId !== undefined) {
-        this.fanSpeed = this.fanPrograms.get(this.fanProgramId)?.fanSpeed;
+        if (this.fanProgramId !== undefined) {
+          this.fanSpeed = this.fanPrograms.get(this.fanProgramId)?.fanSpeed;
+        }
       }
 
       return super.parse(deviceState);
