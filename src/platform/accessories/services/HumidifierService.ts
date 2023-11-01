@@ -12,11 +12,11 @@ import {DeviceMistLevelTransition} from '../../../core/structures/devices/transi
 import {StatusModeState} from '../../../devices/states/StatusMode';
 import {LoggingService} from '../../../logging/LoggingService';
 import {ControlLockState} from '../../../devices/states/ControlLock';
-import {GoveeHumidifier} from '../../../devices/implementations/GoveeHumidifier';
+import {GoveeHumidifier, GoveeHumidifier6L} from '../../../devices/implementations/GoveeHumidifier';
 import {PlatformConfigService} from '../../config/PlatformConfigService';
 import {ServiceRegistry} from '../ServiceRegistry';
 
-@ServiceRegistry.register(GoveeHumidifier)
+@ServiceRegistry.register(GoveeHumidifier, GoveeHumidifier6L)
 export class HumidifierService extends AccessoryService<void, typeof Service.HumidifierDehumidifier> {
   protected readonly serviceType: WithUUID<typeof Service.HumidifierDehumidifier> = this.SERVICES.HumidifierDehumidifier;
 
@@ -37,7 +37,7 @@ export class HumidifierService extends AccessoryService<void, typeof Service.Hum
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return device instanceof GoveeHumidifier;
+    return device instanceof GoveeHumidifier || device instanceof GoveeHumidifier6L;
   }
 
   protected override addServiceTo(
@@ -121,14 +121,14 @@ export class HumidifierService extends AccessoryService<void, typeof Service.Hum
         minValue: 0,
         maxValue: 100,
       })
-      .updateValue(((device as unknown as MistLevelState).mistLevel ?? 0) / 8 * 100)
+      .updateValue(((device as unknown as MistLevelState).mistLevel ?? 0) / (device as unknown as MistLevelState).maxMistLevel * 100)
       .onSet(
         async (value: CharacteristicValue) =>
           this.emit(
             new DeviceCommandEvent(
               new DeviceMistLevelTransition(
                 device.deviceId,
-                Math.ceil((value as number || 0) / 12.5),
+                Math.ceil((value as number || 0) * 100 / (device as unknown as MistLevelState).maxMistLevel),
               ),
             ),
           ),

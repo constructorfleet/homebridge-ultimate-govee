@@ -10,16 +10,19 @@ const commandIdentifiers = [
 
 export interface MistLevelState {
   mistLevel?: number;
+  maxMistLevel: number;
 
   get mistLevelChange(): number[];
 }
 
 export function MistLevel<StateType extends State>(
+  maxMistLevel: number,
   stateType: new (...args) => StateType,
 ) {
   // @ts-ignore
   return class extends stateType implements MistLevelState {
     public mistLevel?: number;
+    public maxMistLevel: number = maxMistLevel;
 
     public constructor(...args) {
       super(...args);
@@ -27,7 +30,6 @@ export function MistLevel<StateType extends State>(
     }
 
     public override parse(deviceState: DeviceState): ThisType<this> {
-      console.dir({name: this['name'], commands: deviceState.commands});
       const commandValues = getCommandValues(
         [REPORT_IDENTIFIER, ...commandIdentifiers],
         deviceState.commands,
