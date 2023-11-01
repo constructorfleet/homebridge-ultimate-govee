@@ -34,5 +34,28 @@
         "qhgAZAAAAAAAAAAAAAAAAAAAANY="
       ]
     }
+  },
+  {
+    "deviceId": "",
+    "model": "'H7126",
+    "command": "'multiSync",
+    "on": "undefined",
+    "connected": "undefined",
+    "brightness": "undefined",
+    "colorTemperature": "undefined",
+    "mode": "undefined",
+    "color": "undefined",
+    "commands": [
+      [
+        170, 5, 0, 2, 0,   0, 0,
+          0, 0, 0, 0, 0,   0, 0,
+          0, 0, 0, 0, 0, 173
+      ],
+      [
+        170,   5,   2,   0,   3,   0, 10,
+          0,  10,   2,   0,  10,   0, 10,
+          1, 255, 255, 255, 255, 173
+      ]
+    ]
   }
 ]
