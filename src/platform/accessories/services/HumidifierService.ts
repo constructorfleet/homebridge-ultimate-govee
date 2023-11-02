@@ -56,9 +56,11 @@ export class HumidifierService extends AccessoryService<void, typeof Service.Hum
     service
       .getCharacteristic(this.CHARACTERISTICS.TargetHumidifierDehumidifierState)
       .setProps({
-        validValues: [this.CHARACTERISTICS.TargetHumidifierDehumidifierState.HUMIDIFIER],
+        validValues: [
+          this.CHARACTERISTICS.TargetHumidifierDehumidifierState.HUMIDIFIER,
+        ],
       })
-      .updateValue(this.CHARACTERISTICS.TargetHumidifierDehumidifierState.HUMIDIFIER);
+      .setValue(this.CHARACTERISTICS.TargetHumidifierDehumidifierState.HUMIDIFIER);
     service
       .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityDehumidifierThreshold)
       .setProps({

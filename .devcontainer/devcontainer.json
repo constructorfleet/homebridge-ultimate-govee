@@ -7,13 +7,16 @@
 	"remoteEnv": {
 		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
 	},
-	"mounts": [
-		"source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
-		"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
-	],
+	// "mounts": [
+	// 	"source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
+	// 	"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
+	// ],
 	"forwardPorts": [
 		51826,
 		8581
+	],
+	"runArgs": [
+		"--net=host"
 	],
 	"features": {
 		"ghcr.io/devcontainers-contrib/features/shfmt:1": {},
