@@ -7,10 +7,6 @@
 	"remoteEnv": {
 		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
 	},
-	// "mounts": [
-	// 	"source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
-	// 	"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
-	// ],
 	"forwardPorts": [
 		51826,
 		8581
@@ -31,20 +27,7 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"mkhl.shfmt",
 				"dbaeumer.vscode-eslint",
-				"foxundermoon.shell-format",
-				"mads-hartmann.bash-ide-vscode",
-				"shakram02.bash-beautify",
-				// Markdown Extensions
-				"jebbs.markdown-extended",
-				"bierner.markdown-checkbox",
-				"bierner.markdown-footnotes",
-				"koehlma.markdown-math",
-				"yzane.markdown-pdf",
-				"bierner.markdown-mermaid",
-				"darkriszty.markdown-table-prettify",
-				"DavidAnson.vscode-markdownlint"
 			]
 		}
 	}
