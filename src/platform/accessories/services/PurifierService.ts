@@ -95,11 +95,11 @@ export class PurifierService extends AccessoryService<void, typeof Service.AirPu
     service
       .getCharacteristic(this.CHARACTERISTICS.TargetAirPurifierState)
       .setProps({
-        minValue: 1,
-        maxValue: 1,
-        validValues: [1],
+        minValue: this.CHARACTERISTICS.TargetAirPurifierState.AUTO,
+        maxValue: this.CHARACTERISTICS.TargetAirPurifierState.AUTO,
+        validValues: [this.CHARACTERISTICS.TargetAirPurifierState.AUTO],
       })
-      .updateValue(1);
+      .updateValue(this.CHARACTERISTICS.TargetAirPurifierState.AUTO);
     service
       .getCharacteristic(this.CHARACTERISTICS.CurrentAirPurifierState)
       .updateValue(
