@@ -137,7 +137,9 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
       ...device['effects'] || [],
       ...device['diyEffects'] || [],
     ];
-    return effects.filter((effect) => effect.enabled).length > 0;
+    const result = effects.filter((effect) => effect.enabled).length > 0;
+    this.log.info(`${device.name} - supports effects? ${result}`);
+    return result;
   }
 
   protected shouldAddService(
