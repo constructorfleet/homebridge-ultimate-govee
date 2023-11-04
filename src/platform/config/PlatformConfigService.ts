@@ -101,10 +101,10 @@ export class PlatformConfigService implements OnModuleDestroy {
       this.goveePluginConfig.featureFlags =
         this.goveePluginConfig.featureFlags || [] as string[];
 
-      setTimeout(
-        async () => await this.reloadConfig(),
-        10 * 1000,
-      );
+      // setTimeout(
+      //   async () => await this.reloadConfig(),
+      //   10 * 1000,
+      // );
     } finally {
       this.writeLock.release();
     }
