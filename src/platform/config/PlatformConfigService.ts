@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PLATFORM_CONFIG_FILE } from '../../util/const';
-import fs from 'fs';
+import fs, { WatchEventType } from 'fs';
 import { PLATFORM_NAME } from '../../settings';
 import {
   GoveeDeviceOverride,
@@ -53,7 +53,8 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
 
   async onModuleInit() {
     this.log.info('Watching', this.configFilePath);
-    this.fsWatcher = fs.watch(this.configFilePath, {persistent: true}, () => {
+    this.fsWatcher = fs.watch(this.configFilePath, {persistent: true}, (event: WatchEventType, filename) => {
+      this.log.info(event, filename);
       if (this.debouncer) {
         clearTimeout(this.debouncer);
       }
