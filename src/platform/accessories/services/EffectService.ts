@@ -114,17 +114,18 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
     if (!sceneModeState) {
       return;
     }
+    const serviceName =
+      service.name
+      ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
     if (device.name === 'Soffit Lights') {
       this.log.info(
         service.name,
+        serviceName,
         device.name,
         serviceIdentifier,
         this.subTypes?.find((subType) => subType.identifier === serviceIdentifier),
       );
     }
-    const serviceName =
-      service.name
-      ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
 
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
@@ -133,7 +134,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
       .updateValue(serviceName);
     service.getCharacteristic(this.CHARACTERISTICS.On)
       .updateValue(isModeActive && isSceneActive)
-      .onSet(async (value: CharacteristicValue) => {
+      .onSet(async () => {
         await this.emitAsync(
           new DeviceCommandEvent(
             new DeviceSceneTransition(
