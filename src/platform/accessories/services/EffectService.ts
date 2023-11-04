@@ -55,11 +55,12 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
       subType.nameSuffix,
       subType.subType,
     );
+    accessory.addService(subService);
     subService.updateCharacteristic(this.CHARACTERISTICS.Name,
       subType.nameSuffix!);
     subService.addOptionalCharacteristic(this.CHARACTERISTICS.ConfiguredName);
     subService.updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, subType.nameSuffix!);
-    return accessory.addService(subService);
+    return subService;
   }
 
   public override setup(
