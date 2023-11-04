@@ -85,7 +85,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
       this.subTypes.push(...newTypes);
       return;
     }
-    this.subTypes =
+    const subTypes =
       lightOverride.effects
         ?.filter(
           (effect) => effect.enabled,
@@ -100,6 +100,9 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
               true,
             ),
         );
+    if (subTypes && subTypes.length > 0) {
+      this.subTypes = subTypes;
+    }
   }
 
   updateServiceCharacteristics(
@@ -147,7 +150,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
     deviceOverride?: GoveeDeviceOverride,
     subType?: ServiceSubType<number>,
   ): boolean {
-    if (!deviceOverride) {
+    if (!deviceOverride || !subType) {
       return false;
     }
     return (deviceOverride as GoveeLightOverride).effects?.some(

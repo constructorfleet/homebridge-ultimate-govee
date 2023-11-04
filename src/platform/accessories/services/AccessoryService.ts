@@ -143,7 +143,7 @@ export abstract class AccessoryService<IdentifierType, ServiceType extends typeo
     accessory: PlatformAccessory,
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType>[] {
-    if (!this.subTypes || this.subTypes.length === 0) {
+    if (this.subTypes === undefined || this.subTypes.length === 0) {
       return this.getService(
         accessory,
         deviceOverride,
