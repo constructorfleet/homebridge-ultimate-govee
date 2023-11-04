@@ -19,9 +19,12 @@ import { DIYLightEffect } from '../../effects/implementations/DIYLightEffect';
 import { Lock } from 'async-await-mutex-lock';
 import { LoggingService } from '../../logging/LoggingService';
 import { GoveeRGBLight } from '../../devices/implementations/GoveeRGBLight';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformConfigurationReloaded } from './events/PluginConfiguration';
+import { Emitter } from '../../util/types';
 
 @Injectable()
-export class PlatformConfigService implements OnModuleDestroy {
+export class PlatformConfigService extends Emitter implements OnModuleDestroy {
   private goveePluginConfig: GoveePluginConfig = new GoveePluginConfig;
   private readonly writeLock: Lock<void> = new Lock<void>();
   private debouncer?: NodeJS.Timeout = undefined;
@@ -29,8 +32,10 @@ export class PlatformConfigService implements OnModuleDestroy {
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
+    eventEmitter: EventEmitter2,
     private readonly log: LoggingService,
   ) {
+    super(eventEmitter);
     this.fsWatcher = fs.watch(this.configFilePath, () => {
       if (this.debouncer) {
         clearTimeout(this.debouncer);
@@ -82,7 +87,9 @@ export class PlatformConfigService implements OnModuleDestroy {
   }
 
   private async reloadConfig() {
+    this.log.info('Will reload config...');
     await this.writeLock.acquire();
+    this.log.info('Reloading!');
     try {
       const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
       const config = JSON.parse(data);
@@ -97,6 +104,11 @@ export class PlatformConfigService implements OnModuleDestroy {
       if (!platformConfig) {
         return;
       }
+      const before = this.goveePluginConfig;
+      const after = platformConfig;
+      await this.emitAsync(
+        new PlatformConfigurationReloaded({ before, after}),
+      );
       this.goveePluginConfig = platformConfig;
       this.goveePluginConfig.featureFlags =
         this.goveePluginConfig.featureFlags || [] as string[];
