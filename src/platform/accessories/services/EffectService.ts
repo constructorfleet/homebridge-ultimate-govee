@@ -51,6 +51,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
   protected override addSubserviceTo(accessory: PlatformAccessory<UnknownContext>,
     subType: ServiceSubType<number>,
   ): Service | undefined {
+    this.log.info(`Adding subservice`, `${accessory.displayName} ${subType.nameSuffix || subType.subType}`);
     return accessory.addService(
       this.serviceType,
       `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
