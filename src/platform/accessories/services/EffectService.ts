@@ -78,7 +78,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
               effect.name,
               effect.id,
               effect.name,
-              undefined,
+              false,
               true,
             ),
         ) || [];
@@ -97,7 +97,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
               effect.name,
               effect.id,
               effect.name,
-              undefined,
+              false,
               true,
             ),
         );
