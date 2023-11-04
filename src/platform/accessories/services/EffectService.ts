@@ -110,6 +110,14 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
     service: Service,
     device: GoveeDevice,
     serviceIdentifier: number) {
+    if (serviceIdentifier === 101) {
+      this.log.info(
+        service.name,
+        device.name,
+        serviceIdentifier,
+        this.subTypes?.find((subType) => subType.identifier === serviceIdentifier),
+      );
+    }
     const serviceName =
       service.name
       ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
