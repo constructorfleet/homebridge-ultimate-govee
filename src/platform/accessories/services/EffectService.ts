@@ -14,6 +14,7 @@ import { DeviceSceneTransition } from '../../../core/structures/devices/transiti
 import { ServiceRegistry } from '../ServiceRegistry';
 import { GoveeRGBICLight } from '../../../devices/implementations/GoveeRGBICLight';
 import { GoveeRGBLight } from '../../../devices/implementations/GoveeRGBLight';
+import { LightDevice } from '../../../devices/implementations/GoveeLight';
 
 
 @ServiceRegistry.register(
@@ -133,11 +134,11 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
   }
 
   protected supports(device: GoveeDevice): boolean {
-    const effects = [
-      ...device['effects'] || [],
-      ...device['diyEffects'] || [],
-    ];
-    const result = effects.filter((effect) => effect.enabled).length > 0;
+    // const effects = [
+    //   ...device['effects'] || [],
+    //   ...device['diyEffects'] || [],
+    // ];
+    const result = device instanceof LightDevice; // effects.filter((effect) => effect.enabled).length > 0;
     this.log.info(`${device.name} - supports effects? ${result}`);
     return result;
   }

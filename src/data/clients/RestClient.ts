@@ -217,6 +217,7 @@ export class RestClient
     this.log.info(
       'RestClient',
       'Getting device scenes',
+      device.name,
     );
     try {
       const authData = await this.login(false);
