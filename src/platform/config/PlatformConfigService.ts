@@ -58,9 +58,6 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
       if (this.configFilePath !== join(this.configDirectory, filename)) {
         return;
       }
-      if (!fs.existsSync(this.configFilePath)) {
-        return;
-      }
       this.log.info(event, filename);
       if (this.debouncer) {
         clearTimeout(this.debouncer);
