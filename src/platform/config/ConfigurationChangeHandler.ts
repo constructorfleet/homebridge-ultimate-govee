@@ -41,7 +41,9 @@ export class ConfigurationChangeHandler extends Emitter {
       '}',
     );
 
-    specificChanges.devices.reduce(
+    this.log.info(specificChanges, specificChanges?.devices);
+
+    const deviceIds: Set<string> = specificChanges.devices.reduce(
       (acc: Set<string>, cur) => {
         const deviceTypeIndex: string = cur['path']?.split('.')[1] ?? undefined;
         if (!deviceTypeIndex) {
@@ -58,14 +60,15 @@ export class ConfigurationChangeHandler extends Emitter {
           return acc;
         }
         acc.add(devices[deviceIndex].deviceId);
+        return acc;
       },
       new Set<string>(),
-    ).forEach(async (deviceId) => await this.emitAsync(
-      new DeviceRefreshEvent({
-        deviceId,
-      }),
-    ));
+    );
 
-    this.log.info(specificChanges);
+    deviceIds.forEach(
+      async (deviceId) => await this.emitAsync(
+        new DeviceRefreshEvent({deviceId}),
+      ),
+    );
   }
 }
