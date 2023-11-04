@@ -423,10 +423,11 @@ export class SegmentedLightService extends BaseLightService<GoveeRGBICLight, num
     accessory: PlatformAccessory<UnknownContext>,
     subType: ServiceSubType<number>,
   ): Service | undefined {
+    const subService = new this.serviceType(subType.nameSuffix, subType.subType);
+    subService.addOptionalCharacteristic(this.CHARACTERISTICS.ConfiguredName);
+    subService.updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, subType.nameSuffix!);
     return accessory.addService(
-      this.serviceType,
-      `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
-      subType.subType,
+      subService,
     );
   }
 
