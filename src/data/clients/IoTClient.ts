@@ -31,8 +31,10 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Initialize', {
-    nextTick: true
-  })
+      async: true,
+      nextTick: true,
+    },
+  )
   public async setup(data: IoTInitializeClientData) {
     if (this.awsIOTDevice) {
       return;
@@ -135,7 +137,10 @@ export class IoTClient
   }
 
   @OnEvent(
-    'IOT.Unsubscribe',
+    'IOT.Unsubscribe', {
+      async: true,
+      nextTick: true,
+    },
   )
   async unsubscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -159,11 +164,10 @@ export class IoTClient
   }
 
   @OnEvent(
-    'IOT.Subscribe',
-    {
+    'IOT.Subscribe', {
+      async: true,
       nextTick: true,
-      async: true
-    }
+    },
   )
   async subscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -191,8 +195,8 @@ export class IoTClient
   }
 
   @OnEvent(
-    'IOT.Publish',
-    {
+    'IOT.Publish', {
+      async: true,
       nextTick: true,
     },
   )

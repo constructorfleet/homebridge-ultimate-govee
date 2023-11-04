@@ -26,14 +26,20 @@ export class BLEEventProcessor extends Emitter {
   }
 
   @OnEvent(
-    'BLE.CONNECTION',
+    'BLE.CONNECTION', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onBLEConnection(connection: ConnectionState) {
     this.bleConnected = connection === ConnectionState.Connected;
   }
 
   @OnEvent(
-    'BLE.PERIPHERAL.Receive',
+    'BLE.PERIPHERAL.Receive', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onPeripheralReceive(state: BLEPeripheralStateReceive) {
     try {
@@ -54,8 +60,8 @@ export class BLEEventProcessor extends Emitter {
   }
 
   @OnEvent(
-    'DEVICE.REQUEST.State',
-    {
+    'DEVICE.REQUEST.State', {
+      async: true,
       nextTick: true,
     },
   )

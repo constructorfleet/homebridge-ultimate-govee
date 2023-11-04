@@ -34,7 +34,8 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.AUTHENTICATION.Failure', {
-    nextTick: true,
+      async: true,
+      nextTick: true,
     },
   )
   async onAuthenticationFailure(response: ApiResponseStatus) {
@@ -52,7 +53,8 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.RESPONSE.DIYEffects', {
-    nextTick: true,
+      async: true,
+      nextTick: true,
     },
   )
   async onDIYEffectListReceived(
@@ -81,7 +83,8 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.RESPONSE.DeviceScenes', {
-    nextTick: true,
+      async: true,
+      nextTick: true,
     },
   )
   async onDeviceScenesReceived(
@@ -116,7 +119,8 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.RESPONSE.DeviceList', {
-    nextTick: true,
+      async: true,
+      nextTick: true,
     },
   )
   async onDeviceListReceived(payload: AppDeviceListResponse) {

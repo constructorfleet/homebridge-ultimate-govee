@@ -40,6 +40,7 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
   }
 
   async onModuleDestroy() {
+    this.log.info('Unwatching', this.configFilePath);
     if(this.fsWatcher) {
       this.fsWatcher.close();
     }
@@ -51,6 +52,7 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
   }
 
   async onModuleInit() {
+    this.log.info('Watching', this.configFilePath);
     this.fsWatcher = fs.watch(this.configFilePath, {persistent: true}, () => {
       if (this.debouncer) {
         clearTimeout(this.debouncer);
