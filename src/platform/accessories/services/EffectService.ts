@@ -55,6 +55,8 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
       subType.nameSuffix,
       subType.subType,
     );
+    subService.updateCharacteristic(this.CHARACTERISTICS.name,
+      subType.nameSuffix!);
     subService.addOptionalCharacteristic(this.CHARACTERISTICS.ConfiguredName);
     subService.updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, subType.nameSuffix!);
     return accessory.addService(subService);
@@ -115,12 +117,8 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
     if (!sceneModeState) {
       return;
     }
-
-    // const name = service.displayName || this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)?.subType || '';
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
-    // service.getCharacteristic(this.CHARACTERISTICS.Name)
-    //   .updateValue(name);
     service.getCharacteristic(this.CHARACTERISTICS.On)
       .updateValue(isModeActive && isSceneActive)
       .onSet(async () => {
