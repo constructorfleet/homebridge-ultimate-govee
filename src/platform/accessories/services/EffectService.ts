@@ -115,11 +115,12 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
       return;
     }
     const serviceName =
-      service.name
+      service.displayName
       ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
     if (device.name === 'Soffit Lights') {
       this.log.info(
         service.name,
+        service.displayName,
         serviceName,
         device.name,
         serviceIdentifier,
@@ -129,7 +130,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
 
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
-
+    service.displayName = serviceName;
     service.getCharacteristic(this.CHARACTERISTICS.Name)
       .updateValue(serviceName);
     service.getCharacteristic(this.CHARACTERISTICS.On)
