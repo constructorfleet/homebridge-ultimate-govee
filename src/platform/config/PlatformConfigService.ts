@@ -57,12 +57,6 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
   async onModuleInit() {
     this.log.info('Watching', this.configDirectory);
     this.fsWatcher = fs.watch(this.configDirectory, {persistent: true}, async (event: WatchEventType, filename) => {
-      this.log.info(
-        this.configDirectory,
-        this.configFilePath,
-        filename,
-        event,
-      );
       if (this.configFilePath !== join(this.configDirectory, filename || '')) {
         return;
       }
