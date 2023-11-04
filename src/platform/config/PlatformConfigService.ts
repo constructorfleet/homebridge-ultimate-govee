@@ -36,7 +36,7 @@ export class PlatformConfigService extends Emitter implements OnModuleDestroy {
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
-    this.fsWatcher = fs.watch(this.configFilePath, () => {
+    this.fsWatcher = fs.watch(this.configFilePath, {persistent: true}, () => {
       if (this.debouncer) {
         clearTimeout(this.debouncer);
       }
@@ -90,6 +90,8 @@ export class PlatformConfigService extends Emitter implements OnModuleDestroy {
     this.log.info('Will reload config...');
     await this.writeLock.acquire();
     this.log.info('Reloading!');
+    let before: GoveePluginConfig | undefined = undefined;
+    let after: GoveePluginConfig | undefined = undefined;
     try {
       const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
       const config = JSON.parse(data);
@@ -104,11 +106,8 @@ export class PlatformConfigService extends Emitter implements OnModuleDestroy {
       if (!platformConfig) {
         return;
       }
-      const before = this.goveePluginConfig;
-      const after = platformConfig;
-      await this.emitAsync(
-        new PlatformConfigurationReloaded({ before, after}),
-      );
+      before = this.goveePluginConfig;
+      after = platformConfig;
       this.goveePluginConfig = platformConfig;
       this.goveePluginConfig.featureFlags =
         this.goveePluginConfig.featureFlags || [] as string[];
@@ -119,6 +118,12 @@ export class PlatformConfigService extends Emitter implements OnModuleDestroy {
       // );
     } finally {
       this.writeLock.release();
+    }
+
+    if (before && after) {
+      await this.emitAsync(
+        new PlatformConfigurationReloaded({ before, after }),
+      );
     }
   }
 
