@@ -34,7 +34,7 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) configFilePath: string,
-    eventEmitter: EventEmitter2,
+      eventEmitter: EventEmitter2,
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
@@ -61,9 +61,9 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
         this.configDirectory,
         this.configFilePath,
         filename,
-        event
+        event,
       );
-      if (this.configFilePath !== join(this.configDirectory, filename)) {
+      if (this.configFilePath !== join(this.configDirectory, filename || '')) {
         return;
       }
       this.log.info(event, filename);
