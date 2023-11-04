@@ -58,17 +58,21 @@ export class RestEventProcessor extends Emitter {
   async onDIYEffectListReceived(
     payload: DIYListResponse,
   ) {
-    const effects = payload.data.diys
-      .filter(
+    const effects = payload.data?.diys
+      ?.filter(
         (group: DIYGroup) => group.diys !== undefined && Symbol.iterator in Object(group),
       )
-      .reduce(
+      ?.reduce(
         (effects: DIYEffect[], group: DIYGroup) => effects
           .concat(
             ...group.diys,
           ),
         [] as DIYEffect[],
       );
+
+    if (!effects) {
+      return;
+    }
 
     await this.emitAsync(
       new DIYEffectReceived(effects),
