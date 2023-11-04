@@ -180,6 +180,7 @@ export abstract class AccessoryService<IdentifierType, ServiceType extends typeo
     subType: ServiceSubType<IdentifierType>,
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType> {
+    this.log.info(subType?.subType, subType?.primary);
     return {
       service: this.setServicePrimary(
         accessory,

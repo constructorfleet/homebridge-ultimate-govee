@@ -1,11 +1,12 @@
-import {Emitter} from '../../util/types';
-import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {Injectable} from '@nestjs/common';
-import {PlatformConfigBeforeAfter} from './events/PluginConfiguration';
+import { Emitter } from '../../util/types';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Injectable } from '@nestjs/common';
+import { PlatformConfigBeforeAfter } from './events/PluginConfiguration';
 import deepDiff from 'deep-diff-pizza';
 import jmesPath from 'jmespath';
-import {LoggingService} from '../../logging/LoggingService';
+import { LoggingService } from '../../logging/LoggingService';
 import { DeviceRefreshEvent } from '../../core/events/devices/DeviceRefresh';
+import { is } from 'rambda';
 
 @Injectable()
 export class ConfigurationChangeHandler extends Emitter {
@@ -19,9 +20,9 @@ export class ConfigurationChangeHandler extends Emitter {
 
   @OnEvent(
     'PLATFORM.CONFIG.Reloaded', {
-      async: true,
-      nextTick: true,
-    }
+    async: true,
+    nextTick: true,
+  }
   )
   async onPlatformConfigurationReloaded(
     {
@@ -49,13 +50,17 @@ export class ConfigurationChangeHandler extends Emitter {
         if (!deviceTypeIndex) {
           return acc;
         }
-        const indexMatch = /.+\[(?<index>\d+)\]/.exec(deviceTypeIndex);
-        if (!indexMatch || !indexMatch.groups) {
+        const isMatch = /.+\[(?<index>\d+)\]/.exec(deviceTypeIndex);
+        if (!isMatch || !isMatch.groups || !isMatch.groups['index']) {
           return acc;
         }
-        const deviceIndex = indexMatch.groups['index'];
+        const deviceIndex = isMatch.groups['index'];
         const deviceType = deviceTypeIndex.substring(0, deviceTypeIndex.indexOf('['));
-        const devices = before.devices ? before.devices[deviceType] : after.devices ? after.devices[deviceType] : undefined;
+        const devices = before.devices
+          ? before.devices[deviceType]
+          : after.devices
+            ? after.devices[deviceType]
+            : undefined;
         if (!devices) {
           return acc;
         }
@@ -67,7 +72,7 @@ export class ConfigurationChangeHandler extends Emitter {
 
     deviceIds.forEach(
       async (deviceId) => await this.emitAsync(
-        new DeviceRefreshEvent({deviceId}),
+        new DeviceRefreshEvent({ deviceId }),
       ),
     );
   }
