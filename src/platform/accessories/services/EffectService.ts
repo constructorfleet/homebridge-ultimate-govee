@@ -53,9 +53,10 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
   ): Service | undefined {
     this.log.info(`Adding subservice`, `${accessory.displayName} ${subType.nameSuffix || subType.subType}`);
     return accessory.addService(
-      this.serviceType,
-      `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
-      subType.subType,
+      new this.serviceType(
+        `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+        subType.subType,
+      ),
     );
   }
 
