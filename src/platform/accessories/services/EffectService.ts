@@ -115,8 +115,11 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
       return;
     }
 
+    const name = service.displayName || this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)?.subType || '';
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
+    service.getCharacteristic(this.CHARACTERISTICS.Name)
+      .updateValue(name);
     service.getCharacteristic(this.CHARACTERISTICS.On)
       .updateValue(isModeActive && isSceneActive)
       .onSet(async () => {
