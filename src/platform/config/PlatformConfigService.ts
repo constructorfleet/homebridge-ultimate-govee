@@ -27,6 +27,7 @@ import { Emitter } from '../../util/types';
 @Injectable()
 export class PlatformConfigService extends Emitter implements OnModuleInit, OnModuleDestroy {
   private readonly configFilePath: string;
+  private readonly configDirectory: string;
   private goveePluginConfig: GoveePluginConfig = new GoveePluginConfig;
   private readonly writeLock: Lock<void> = new Lock<void>();
   private debouncer?: NodeJS.Timeout = undefined;
@@ -39,32 +40,30 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
   ) {
     super(eventEmitter);
     this.configFilePath = fs.realpathSync(configFilePath);
+    this.configDirectory = dirname(fs.realpathSync(this.configFilePath));
     this.reloadConfig().then();
   }
 
   async onModuleDestroy() {
-    this.log.info('Unwatching', this.configDirectory);
     if(this.fsWatcher) {
       this.fsWatcher.close();
+      this.fsWatcher = undefined;
     }
     if(this.debouncer) {
       clearTimeout(this.debouncer);
+      this.debouncer = undefined;
     }
-    this.fsWatcher = undefined;
-    this.debouncer = undefined;
   }
 
   async onModuleInit() {
-    this.log.info('Watching', this.configDirectory);
     this.fsWatcher = fs.watch(this.configDirectory, {persistent: true}, async (event: WatchEventType, filename) => {
       if (this.configFilePath !== join(this.configDirectory, filename || '') || !fs.existsSync(this.configFilePath)) {
         return;
       }
-      this.log.info(event, filename);
       if (this.debouncer) {
         clearTimeout(this.debouncer);
       }
-      this.log.info('Debouncing...');
+      this.log.debug('Debouncing...');
       this.debouncer = setTimeout(async () => await this.reloadConfig(), 1000);
     });
   }
@@ -93,10 +92,6 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
     return deviceMap;
   }
 
-  get configDirectory(): string {
-    return dirname(fs.realpathSync(this.configFilePath));
-  }
-
   get pluginConfiguration(): GoveePluginConfig {
     return this.goveePluginConfig;
   }
@@ -106,9 +101,9 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
   }
 
   private async reloadConfig() {
-    this.log.info('Will reload config...');
+    this.log.debug('Will reload config...');
     await this.writeLock.acquire();
-    this.log.info('Reloading!');
+    this.log.debug('Reloading!');
     const before: GoveePluginConfig | undefined = this.goveePluginConfig;
     let after: GoveePluginConfig | undefined = undefined;
     try {
@@ -129,11 +124,6 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
       this.goveePluginConfig = platformConfig;
       this.goveePluginConfig.featureFlags =
         this.goveePluginConfig.featureFlags || [] as string[];
-
-      // setTimeout(
-      //   async () => await this.reloadConfig(),
-      //   10 * 1000,
-      // );
     } finally {
       this.writeLock.release();
     }
