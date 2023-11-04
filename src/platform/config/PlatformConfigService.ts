@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PLATFORM_CONFIG_FILE } from '../../util/const';
 import fs from 'fs';
 import { PLATFORM_NAME } from '../../settings';
@@ -21,15 +21,32 @@ import { LoggingService } from '../../logging/LoggingService';
 import { GoveeRGBLight } from '../../devices/implementations/GoveeRGBLight';
 
 @Injectable()
-export class PlatformConfigService {
+export class PlatformConfigService implements OnModuleDestroy {
   private goveePluginConfig: GoveePluginConfig = new GoveePluginConfig;
   private readonly writeLock: Lock<void> = new Lock<void>();
+  private debouncer?: NodeJS.Timeout = undefined;
+  private fsWatcher?: fs.FSWatcher;
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
     private readonly log: LoggingService,
   ) {
+    this.fsWatcher = fs.watch(this.configFilePath, () => {
+      if (this.debouncer) {
+        clearTimeout(this.debouncer);
+      }
+      this.debouncer = setTimeout(async () => await this.reloadConfig(), 1000);
+    });
     this.reloadConfig().then();
+  }
+
+  async onModuleDestroy() {
+    if(this.fsWatcher) {
+      this.fsWatcher.close();
+    }
+    if(this.debouncer) {
+      clearTimeout(this.debouncer);
+    }
   }
 
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
