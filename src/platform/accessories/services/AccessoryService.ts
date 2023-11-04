@@ -33,9 +33,9 @@ export abstract class AccessoryService<IdentifierType, ServiceType extends typeo
     if (!service) {
       return undefined;
     }
-    // if (service.isPrimaryService !== primary) {
-    //   service.setPrimaryService(primary);
-    // }
+    if (primary && service.isPrimaryService !== primary) {
+      service.setPrimaryService(primary);
+    }
 
     // if (linkToPrimary) {
     //   accessory.services.find(
