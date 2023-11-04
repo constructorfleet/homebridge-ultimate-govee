@@ -55,7 +55,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
       subType.nameSuffix,
       subType.subType,
     );
-    subService.updateCharacteristic(this.CHARACTERISTICS.name,
+    subService.updateCharacteristic(this.CHARACTERISTICS.Name,
       subType.nameSuffix!);
     subService.addOptionalCharacteristic(this.CHARACTERISTICS.ConfiguredName);
     subService.updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, subType.nameSuffix!);
