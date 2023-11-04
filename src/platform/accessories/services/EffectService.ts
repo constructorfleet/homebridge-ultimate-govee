@@ -133,7 +133,8 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return true;
+    const effects = device['effects'] || device['diyEffects'] || [];
+    return effects.length > 0;
   }
 
   protected shouldAddService(
