@@ -110,7 +110,11 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
     service: Service,
     device: GoveeDevice,
     serviceIdentifier: number) {
-    if (serviceIdentifier === 101) {
+    const sceneModeState: SceneModeState = device as unknown as SceneModeState;
+    if (!sceneModeState) {
+      return;
+    }
+    if (device.name === 'Soffit Lights') {
       this.log.info(
         service.name,
         device.name,
@@ -121,10 +125,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
     const serviceName =
       service.name
       ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
-    const sceneModeState: SceneModeState = device as unknown as SceneModeState;
-    if (!sceneModeState) {
-      return;
-    }
+
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
 
