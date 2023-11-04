@@ -1,5 +1,5 @@
 import { AccessoryService, IdentifiedService, ServiceSubType } from './AccessoryService';
-import { Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID } from 'homebridge';
+import { Characteristic, PlatformAccessory, Service, UnknownContext, WithUUID } from 'homebridge';
 import { GoveeDevice } from '../../../devices/GoveeDevice';
 import { GoveeDeviceOverride, GoveeLightOverride } from '../../config/GoveePluginConfig';
 import { SceneModeState } from '../../../devices/states/modes/Scene';
@@ -19,7 +19,7 @@ import { LightDevice } from '../../../devices/implementations/GoveeLight';
 
 @ServiceRegistry.register(
   GoveeRGBICLight,
-  GoveeRGBLight
+  GoveeRGBLight,
 )
 export class EffectService extends AccessoryService<number, typeof Service.Switch> {
   protected readonly serviceType: WithUUID<typeof Service.Switch> = this.SERVICES.Switch;
@@ -51,10 +51,9 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
   protected override addSubserviceTo(accessory: PlatformAccessory<UnknownContext>,
     subType: ServiceSubType<number>,
   ): Service | undefined {
-    this.log.info(`Adding subservice`, `${accessory.displayName} ${subType.nameSuffix || subType.subType}`);
     return accessory.addService(
       new this.serviceType(
-        `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+        subType.nameSuffix,
         subType.subType,
       ),
     );
@@ -114,19 +113,6 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
     const sceneModeState: SceneModeState = device as unknown as SceneModeState;
     if (!sceneModeState) {
       return;
-    }
-    const serviceName =
-      service.displayName
-      ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
-    if (device.name === 'Soffit Lights') {
-      this.log.info(
-        service.name,
-        service.displayName,
-        serviceName,
-        device.name,
-        serviceIdentifier,
-        this.subTypes?.find((subType) => subType.identifier === serviceIdentifier),
-      );
     }
 
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
