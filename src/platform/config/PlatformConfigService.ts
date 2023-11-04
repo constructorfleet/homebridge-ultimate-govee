@@ -98,7 +98,7 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
     this.log.info('Will reload config...');
     await this.writeLock.acquire();
     this.log.info('Reloading!');
-    let before: GoveePluginConfig | undefined = undefined;
+    const before: GoveePluginConfig | undefined = this.goveePluginConfig;
     let after: GoveePluginConfig | undefined = undefined;
     try {
       const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
@@ -114,7 +114,6 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
       if (!platformConfig) {
         return;
       }
-      before = this.goveePluginConfig;
       after = platformConfig;
       this.goveePluginConfig = platformConfig;
       this.goveePluginConfig.featureFlags =
