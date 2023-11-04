@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PLATFORM_CONFIG_FILE } from '../../util/const';
 import fs from 'fs';
 import { PLATFORM_NAME } from '../../settings';
@@ -24,11 +24,11 @@ import { PlatformConfigurationReloaded } from './events/PluginConfiguration';
 import { Emitter } from '../../util/types';
 
 @Injectable()
-export class PlatformConfigService extends Emitter implements OnModuleDestroy {
+export class PlatformConfigService extends Emitter implements OnModuleInit, OnModuleDestroy {
   private goveePluginConfig: GoveePluginConfig = new GoveePluginConfig;
   private readonly writeLock: Lock<void> = new Lock<void>();
   private debouncer?: NodeJS.Timeout = undefined;
-  private fsWatcher?: fs.FSWatcher;
+  private fsWatcher?: fs.FSWatcher = undefined;
 
   constructor(
     @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
@@ -36,12 +36,6 @@ export class PlatformConfigService extends Emitter implements OnModuleDestroy {
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
-    this.fsWatcher = fs.watch(this.configFilePath, {persistent: true}, () => {
-      if (this.debouncer) {
-        clearTimeout(this.debouncer);
-      }
-      this.debouncer = setTimeout(async () => await this.reloadConfig(), 1000);
-    });
     this.reloadConfig().then();
   }
 
@@ -52,6 +46,18 @@ export class PlatformConfigService extends Emitter implements OnModuleDestroy {
     if(this.debouncer) {
       clearTimeout(this.debouncer);
     }
+    this.fsWatcher = undefined;
+    this.debouncer = undefined;
+  }
+
+  async onModuleInit() {
+    this.fsWatcher = fs.watch(this.configFilePath, {persistent: true}, () => {
+      if (this.debouncer) {
+        clearTimeout(this.debouncer);
+      }
+      this.log.info('Debouncing...');
+      this.debouncer = setTimeout(async () => await this.reloadConfig(), 1000);
+    });
   }
 
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
