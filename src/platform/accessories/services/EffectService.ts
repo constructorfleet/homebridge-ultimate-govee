@@ -89,7 +89,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
     const subTypes =
       lightOverride.effects
         ?.filter(
-          (effect) => effect.enabled,
+          (effect) => effect.enabled && effect.name !== undefined && effect.name.length > 0,
         )
         ?.map(
           (effect: DeviceLightEffect) =>
@@ -138,12 +138,7 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
   }
 
   protected supports(device: GoveeDevice): boolean {
-    // const effects = [
-    //   ...device['effects'] || [],
-    //   ...device['diyEffects'] || [],
-    // ];
-    const result = device instanceof LightDevice; // effects.filter((effect) => effect.enabled).length > 0;
-    this.log.info(`${device.name} - supports effects? ${result}`);
+    const result = device instanceof LightDevice;
     return result;
   }
 
