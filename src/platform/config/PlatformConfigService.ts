@@ -1,4 +1,5 @@
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { dirname, join } from 'path';
 import { PLATFORM_CONFIG_FILE } from '../../util/const';
 import fs, { WatchEventType } from 'fs';
 import { PLATFORM_NAME } from '../../settings';
@@ -40,7 +41,7 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
   }
 
   async onModuleDestroy() {
-    this.log.info('Unwatching', this.configFilePath);
+    this.log.info('Unwatching', this.configDirectory);
     if(this.fsWatcher) {
       this.fsWatcher.close();
     }
@@ -52,8 +53,14 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
   }
 
   async onModuleInit() {
-    this.log.info('Watching', this.configFilePath);
-    this.fsWatcher = fs.watch(this.configFilePath, {persistent: true}, (event: WatchEventType, filename) => {
+    this.log.info('Watching', this.configDirectory);
+    this.fsWatcher = fs.watch(this.configDirectory, {persistent: true}, async (event: WatchEventType, filename) => {
+      if (this.configFilePath !== join(this.configDirectory, filename)) {
+        return;
+      }
+      if (!fs.existsSync(this.configFilePath)) {
+        return;
+      }
       this.log.info(event, filename);
       if (this.debouncer) {
         clearTimeout(this.debouncer);
@@ -85,6 +92,10 @@ export class PlatformConfigService extends Emitter implements OnModuleInit, OnMo
     );
 
     return deviceMap;
+  }
+
+  get configDirectory(): string {
+    return dirname(fs.realpathSync(this.configFilePath));
   }
 
   get pluginConfiguration(): GoveePluginConfig {
