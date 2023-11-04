@@ -91,8 +91,8 @@ export class BLEClient
   }
 
   @OnEvent(
-    'BLE.PERIPHERAL.Send',
-    {
+    'BLE.PERIPHERAL.Send', {
+      async: true,
       nextTick: true,
     },
   )

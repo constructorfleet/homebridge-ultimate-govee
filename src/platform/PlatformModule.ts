@@ -24,6 +24,7 @@ import {DeviceSubEffectsFeature} from './config/features/DeviceSubEffects';
 import {Features} from './config/Features';
 import {DisableDIYEffectsFeature} from './config/features/DisableDIYEffectsFeature';
 import { FilterService } from './accessories/services/FilterService';
+import { ConfigurationChangeHandler } from './config/ConfigurationChangeHandler';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ACCESSORY_SERVICES = [
@@ -129,6 +130,7 @@ export class PlatformModule {
         AccessoryManager,
         PlatformService,
         PlatformConfigService,
+        ConfigurationChangeHandler,
       ],
       exports: [
         GoveePluginModule,

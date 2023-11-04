@@ -1,6 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { dirname, join } from 'path';
 import { PLATFORM_CONFIG_FILE } from '../../util/const';
-import fs from 'fs';
+import fs, { WatchEventType } from 'fs';
 import { PLATFORM_NAME } from '../../settings';
 import {
   GoveeDeviceOverride,
@@ -19,17 +20,52 @@ import { DIYLightEffect } from '../../effects/implementations/DIYLightEffect';
 import { Lock } from 'async-await-mutex-lock';
 import { LoggingService } from '../../logging/LoggingService';
 import { GoveeRGBLight } from '../../devices/implementations/GoveeRGBLight';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformConfigurationReloaded } from './events/PluginConfiguration';
+import { Emitter } from '../../util/types';
 
 @Injectable()
-export class PlatformConfigService {
+export class PlatformConfigService extends Emitter implements OnModuleInit, OnModuleDestroy {
+  private readonly configFilePath: string;
+  private readonly configDirectory: string;
   private goveePluginConfig: GoveePluginConfig = new GoveePluginConfig;
   private readonly writeLock: Lock<void> = new Lock<void>();
+  private debouncer?: NodeJS.Timeout = undefined;
+  private fsWatcher?: fs.FSWatcher = undefined;
 
   constructor(
-    @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
+    @Inject(PLATFORM_CONFIG_FILE) configFilePath: string,
+      eventEmitter: EventEmitter2,
     private readonly log: LoggingService,
   ) {
+    super(eventEmitter);
+    this.configFilePath = fs.realpathSync(configFilePath);
+    this.configDirectory = dirname(fs.realpathSync(this.configFilePath));
     this.reloadConfig().then();
+  }
+
+  async onModuleDestroy() {
+    if(this.fsWatcher) {
+      this.fsWatcher.close();
+      this.fsWatcher = undefined;
+    }
+    if(this.debouncer) {
+      clearTimeout(this.debouncer);
+      this.debouncer = undefined;
+    }
+  }
+
+  async onModuleInit() {
+    this.fsWatcher = fs.watch(this.configDirectory, {persistent: true}, async (event: WatchEventType, filename) => {
+      if (this.configFilePath !== join(this.configDirectory, filename || '') || !fs.existsSync(this.configFilePath)) {
+        return;
+      }
+      if (this.debouncer) {
+        clearTimeout(this.debouncer);
+      }
+      this.log.debug('Debouncing...');
+      this.debouncer = setTimeout(async () => await this.reloadConfig(), 1000);
+    });
   }
 
   private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
@@ -65,7 +101,11 @@ export class PlatformConfigService {
   }
 
   private async reloadConfig() {
+    this.log.debug('Will reload config...');
     await this.writeLock.acquire();
+    this.log.debug('Reloading!');
+    const before: GoveePluginConfig | undefined = this.goveePluginConfig;
+    let after: GoveePluginConfig | undefined = undefined;
     try {
       const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
       const config = JSON.parse(data);
@@ -80,16 +120,18 @@ export class PlatformConfigService {
       if (!platformConfig) {
         return;
       }
+      after = platformConfig;
       this.goveePluginConfig = platformConfig;
       this.goveePluginConfig.featureFlags =
         this.goveePluginConfig.featureFlags || [] as string[];
-
-      setTimeout(
-        async () => await this.reloadConfig(),
-        10 * 1000,
-      );
     } finally {
       this.writeLock.release();
+    }
+
+    if (before && after) {
+      await this.emitAsync(
+        new PlatformConfigurationReloaded({ before, after }),
+      );
     }
   }
 

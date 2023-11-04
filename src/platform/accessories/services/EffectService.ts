@@ -1,5 +1,5 @@
 import { AccessoryService, IdentifiedService, ServiceSubType } from './AccessoryService';
-import { Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID } from 'homebridge';
+import { Characteristic, PlatformAccessory, Service, UnknownContext, WithUUID } from 'homebridge';
 import { GoveeDevice } from '../../../devices/GoveeDevice';
 import { GoveeDeviceOverride, GoveeLightOverride } from '../../config/GoveePluginConfig';
 import { SceneModeState } from '../../../devices/states/modes/Scene';
@@ -14,11 +14,12 @@ import { DeviceSceneTransition } from '../../../core/structures/devices/transiti
 import { ServiceRegistry } from '../ServiceRegistry';
 import { GoveeRGBICLight } from '../../../devices/implementations/GoveeRGBICLight';
 import { GoveeRGBLight } from '../../../devices/implementations/GoveeRGBLight';
+import { LightDevice } from '../../../devices/implementations/GoveeLight';
 
 
 @ServiceRegistry.register(
   GoveeRGBICLight,
-  GoveeRGBLight
+  GoveeRGBLight,
 )
 export class EffectService extends AccessoryService<number, typeof Service.Switch> {
   protected readonly serviceType: WithUUID<typeof Service.Switch> = this.SERVICES.Switch;
@@ -50,11 +51,15 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
   protected override addSubserviceTo(accessory: PlatformAccessory<UnknownContext>,
     subType: ServiceSubType<number>,
   ): Service | undefined {
-    return accessory.addService(
-      this.serviceType,
-      `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+    const subService = new this.serviceType(
+      subType.nameSuffix,
       subType.subType,
     );
+    subService.updateCharacteristic(this.CHARACTERISTICS.name,
+      subType.nameSuffix!);
+    subService.addOptionalCharacteristic(this.CHARACTERISTICS.ConfiguredName);
+    subService.updateCharacteristic(this.CHARACTERISTICS.ConfiguredName, subType.nameSuffix!);
+    return accessory.addService(subService);
   }
 
   public override setup(
@@ -76,18 +81,18 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
               effect.name,
               effect.id,
               effect.name,
-              undefined,
-              true,
+              false,
+              false,
             ),
         ) || [];
 
       this.subTypes.push(...newTypes);
       return;
     }
-    this.subTypes =
+    const subTypes =
       lightOverride.effects
         ?.filter(
-          (effect) => effect.enabled,
+          (effect) => effect.enabled && effect.name !== undefined && effect.name.length > 0,
         )
         ?.map(
           (effect: DeviceLightEffect) =>
@@ -95,31 +100,28 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
               effect.name,
               effect.id,
               effect.name,
-              undefined,
-              true,
+              false,
+              false,
             ),
         );
+    if (subTypes && subTypes.length > 0) {
+      this.subTypes = subTypes;
+    }
   }
 
   updateServiceCharacteristics(
     service: Service,
     device: GoveeDevice,
     serviceIdentifier: number) {
-    const serviceName =
-      service.name
-      ?? `${device.name} ${this.subTypes?.find((subType) => subType.identifier === serviceIdentifier)!.nameSuffix}`;
     const sceneModeState: SceneModeState = device as unknown as SceneModeState;
     if (!sceneModeState) {
       return;
     }
     const isModeActive = sceneModeState.activeMode === sceneModeState.sceneModeIdentifier;
     const isSceneActive = sceneModeState.activeSceneId === serviceIdentifier;
-
-    service.getCharacteristic(this.CHARACTERISTICS.Name)
-      .updateValue(serviceName);
     service.getCharacteristic(this.CHARACTERISTICS.On)
       .updateValue(isModeActive && isSceneActive)
-      .onSet(async (value: CharacteristicValue) => {
+      .onSet(async () => {
         await this.emitAsync(
           new DeviceCommandEvent(
             new DeviceSceneTransition(
@@ -133,14 +135,15 @@ export class EffectService extends AccessoryService<number, typeof Service.Switc
   }
 
   protected supports(device: GoveeDevice): boolean {
-    return true;
+    const result = device instanceof LightDevice;
+    return result;
   }
 
   protected shouldAddService(
     deviceOverride?: GoveeDeviceOverride,
     subType?: ServiceSubType<number>,
   ): boolean {
-    if (!deviceOverride) {
+    if (!deviceOverride || !subType) {
       return false;
     }
     return (deviceOverride as GoveeLightOverride).effects?.some(

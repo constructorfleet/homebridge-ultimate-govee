@@ -12,6 +12,7 @@ import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
 import {LoggingService} from '../logging/LoggingService';
 import {PersistService} from '../persist/PersistService';
 import {RestRequestDeviceScenes, RestRequestDIYEffects} from '../core/events/dataClients/rest/RestRequest';
+import { DeviceRefreshData } from '../core/events/devices/DeviceRefresh';
 
 
 @Injectable()
@@ -28,7 +29,10 @@ export class DeviceManager extends Emitter {
   }
 
   @OnEvent(
-    'DEVICE.RECEIVED.Settings',
+    'DEVICE.RECEIVED.Settings', {
+      async: true,
+      nextTick: true,
+    }
   )
   async onDeviceSetting(deviceSettings: DeviceConfig) {
     if (!deviceSettings) {
@@ -76,7 +80,10 @@ export class DeviceManager extends Emitter {
   }
 
   @OnEvent(
-    'DEVICE.RECEIVED.State',
+    'DEVICE.RECEIVED.State', {
+      async: true,
+      nextTick: true,
+    }
   )
   async onDeviceState(deviceState: DeviceState) {
     if (!this.devices.has(deviceState.deviceId)) {
@@ -98,7 +105,10 @@ export class DeviceManager extends Emitter {
   }
 
   @OnEvent(
-    'DEVICE.Command',
+    'DEVICE.Command', {
+      async: true,
+      nextTick: true,
+    }
   )
   async onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
     const device = this.devices.get(deviceTransition.deviceId);
@@ -120,7 +130,10 @@ export class DeviceManager extends Emitter {
   }
 
   @OnEvent(
-    'DEVICE.REQUEST.Poll',
+    'DEVICE.REQUEST.Poll', {
+      async: true,
+      nextTick: true,
+    }
   )
   async pollDeviceStates(
     deviceId: string,
@@ -137,5 +150,22 @@ export class DeviceManager extends Emitter {
       ),
       30 * 1000,
     );
+  }
+
+  @OnEvent(
+    'DEVICE.Refresh', {
+      async: true,
+      nextTick: true,
+    }
+  )
+  async refreshDevice(
+    data: DeviceRefreshData
+  ) {
+    const device = this.devices.get(data.deviceId);
+    if (device) {
+      await this.emitAsync(
+        new DeviceUpdatedEvent(device),
+      );
+    }
   }
 }

@@ -33,15 +33,15 @@ export abstract class AccessoryService<IdentifierType, ServiceType extends typeo
     if (!service) {
       return undefined;
     }
-    if (service.isPrimaryService !== primary) {
-      service.setPrimaryService(primary);
-    }
+    // if (service.isPrimaryService !== primary) {
+    //   service.setPrimaryService(primary);
+    // }
 
-    if (linkToPrimary) {
-      accessory.services.find(
-        (service) => service.isPrimaryService,
-      )?.addLinkedService(service);
-    }
+    // if (linkToPrimary) {
+    //   accessory.services.find(
+    //     (service) => service.isPrimaryService,
+    //   )?.addLinkedService(service);
+    // }
 
     return service;
   }
@@ -143,7 +143,7 @@ export abstract class AccessoryService<IdentifierType, ServiceType extends typeo
     accessory: PlatformAccessory,
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType>[] {
-    if (!this.subTypes || this.subTypes.length === 0) {
+    if (this.subTypes === undefined || this.subTypes.length === 0) {
       return this.getService(
         accessory,
         deviceOverride,

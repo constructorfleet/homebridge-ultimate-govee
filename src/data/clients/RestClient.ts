@@ -211,12 +211,16 @@ export class RestClient
   //     );
   // }
   @OnEvent(
-    'REST.REQUEST.DeviceScenes',
+    'REST.REQUEST.DeviceScenes', {
+      async: true,
+      nextTick: true,
+    },
   )
   async getDeviceScenes(device: GoveeDevice) {
     this.log.info(
       'RestClient',
       'Getting device scenes',
+      device.name,
     );
     try {
       const authData = await this.login(false);
@@ -247,7 +251,10 @@ export class RestClient
   }
 
   @OnEvent(
-    'REST.REQUEST.DIYEffects',
+    'REST.REQUEST.DIYEffects', {
+      async: true,
+      nextTick: true,
+    },
   )
   async getDIYGroups() {
     this.log.info(
@@ -278,7 +285,10 @@ export class RestClient
   }
 
   @OnEvent(
-    'REST.REQUEST.Devices',
+    'REST.REQUEST.Devices', {
+      async: true,
+      nextTick: true,
+    },
   )
   async getDevices(): Promise<void> {
     this.log.info(

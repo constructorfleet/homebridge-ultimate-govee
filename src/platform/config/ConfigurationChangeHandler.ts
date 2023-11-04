@@ -1,10 +1,12 @@
-import {Emitter} from '../../util/types';
-import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {Injectable} from '@nestjs/common';
-import {PlatformConfigBeforeAfter} from './events/PluginConfiguration';
+import { Emitter } from '../../util/types';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Injectable } from '@nestjs/common';
+import { PlatformConfigBeforeAfter } from './events/PluginConfiguration';
 import deepDiff from 'deep-diff-pizza';
 import jmesPath from 'jmespath';
-import {LoggingService} from '../../logging/LoggingService';
+import { LoggingService } from '../../logging/LoggingService';
+import { DeviceRefreshEvent } from '../../core/events/devices/DeviceRefresh';
+import { is } from 'rambda';
 
 @Injectable()
 export class ConfigurationChangeHandler extends Emitter {
@@ -17,7 +19,10 @@ export class ConfigurationChangeHandler extends Emitter {
   }
 
   @OnEvent(
-    'PLATFORM.CONFIG.Reloaded',
+    'PLATFORM.CONFIG.Reloaded', {
+    async: true,
+    nextTick: true,
+  }
   )
   async onPlatformConfigurationReloaded(
     {
@@ -37,6 +42,38 @@ export class ConfigurationChangeHandler extends Emitter {
       '}',
     );
 
-    this.log.info(specificChanges);
+    this.log.info(specificChanges, specificChanges?.devices);
+
+    const deviceIds: Set<string> = specificChanges.devices.reduce(
+      (acc: Set<string>, cur) => {
+        const deviceTypeIndex: string = cur['path']?.split('.')[1] ?? undefined;
+        if (!deviceTypeIndex) {
+          return acc;
+        }
+        const isMatch = /.+\[(?<index>\d+)\]/.exec(deviceTypeIndex);
+        if (!isMatch || !isMatch.groups || !isMatch.groups['index']) {
+          return acc;
+        }
+        const deviceIndex = isMatch.groups['index'];
+        const deviceType = deviceTypeIndex.substring(0, deviceTypeIndex.indexOf('['));
+        const devices = before.devices
+          ? before.devices[deviceType]
+          : after.devices
+            ? after.devices[deviceType]
+            : undefined;
+        if (!devices) {
+          return acc;
+        }
+        acc.add(devices[deviceIndex].deviceId);
+        return acc;
+      },
+      new Set<string>(),
+    );
+
+    deviceIds.forEach(
+      async (deviceId) => await this.emitAsync(
+        new DeviceRefreshEvent({ deviceId }),
+      ),
+    );
   }
 }

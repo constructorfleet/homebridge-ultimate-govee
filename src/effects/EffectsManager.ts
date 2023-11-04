@@ -25,7 +25,10 @@ export class EffectsManager extends Emitter {
   }
 
   @OnEvent(
-    'EFFECT.DIY.Received',
+    'EFFECT.DIY.Received', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onDIYEffectReceived(effects: DIYEffect[]) {
     const lightEffects =
@@ -51,7 +54,10 @@ export class EffectsManager extends Emitter {
   }
 
   @OnEvent(
-    'EFFECT.DEVICE.Configured',
+    'EFFECT.DEVICE.Configured', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onDeviceEffectConfigured(effects: DeviceLightEffect[]) {
     effects.forEach(
@@ -63,7 +69,10 @@ export class EffectsManager extends Emitter {
   }
 
   @OnEvent(
-    'EFFECT.DEVICE.Received',
+    'EFFECT.DEVICE.Received', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onDeviceEffectReceived(effects: CategoryScene[]) {
     const lightEffects =

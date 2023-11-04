@@ -78,7 +78,10 @@ export class AccessoryManager extends Emitter {
   }
 
   @OnEvent(
-    'DEVICE.Discovered',
+    'DEVICE.Discovered', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onDeviceDiscovered(device: GoveeDevice) {
     const deviceConfig =
@@ -112,7 +115,10 @@ export class AccessoryManager extends Emitter {
   }
 
   @OnEvent(
-    'DEVICE.Updated',
+    'DEVICE.Updated', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onDeviceUpdated(device: GoveeDevice) {
     const deviceUUID = this.api.hap.uuid.generate(device.deviceId);
@@ -136,14 +142,20 @@ export class AccessoryManager extends Emitter {
   }
 
   @OnEvent(
-    'EFFECT.DEVICE.Discovered',
+    'EFFECT.DEVICE.Discovered', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onDeviceEffectDiscovered(effects: DeviceLightEffect[]) {
     await this.platformConfigService.updateConfigurationWithEffects(undefined, effects);
   }
 
   @OnEvent(
-    'EFFECT.DIY.Discovered',
+    'EFFECT.DIY.Discovered', {
+      async: true,
+      nextTick: true,
+    },
   )
   async onDIYEffectDiscovered(effects: DIYLightEffect[]) {
     await this.platformConfigService.updateConfigurationWithEffects(effects);
