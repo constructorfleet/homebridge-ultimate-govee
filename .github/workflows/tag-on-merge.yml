@@ -43,11 +43,18 @@ jobs:
           else
             echo ::set-output name=exit_code::1
           fi
+      - name: Push to protected branch
+        uses: CasperWA/push-protected@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          branch: main
+          unprotect_reviews: true
       - name: Push changes
-        uses: ad-m/github-push-action@master
+        uses: CasperWA/push-protected@v2
         if: steps.commit.outputs.exit_code == 0
         with:
           github_token: ${{ secrets.GH_TOKEN }}
+          tags: true
           force: true
           branch: ${{ github.ref }}
 
