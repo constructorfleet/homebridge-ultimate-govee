@@ -26,17 +26,19 @@ import { Emitter } from '../../util/types';
 
 @Injectable()
 export class PlatformConfigService extends Emitter implements OnModuleInit, OnModuleDestroy {
+  private readonly configFilePath: string;
   private goveePluginConfig: GoveePluginConfig = new GoveePluginConfig;
   private readonly writeLock: Lock<void> = new Lock<void>();
   private debouncer?: NodeJS.Timeout = undefined;
   private fsWatcher?: fs.FSWatcher = undefined;
 
   constructor(
-    @Inject(PLATFORM_CONFIG_FILE) private readonly configFilePath: string,
+    @Inject(PLATFORM_CONFIG_FILE) configFilePath: string,
     eventEmitter: EventEmitter2,
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
+    this.configFilePath = fs.realpathSync(configFilePath);
     this.reloadConfig().then();
   }
 
