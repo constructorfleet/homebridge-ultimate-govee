@@ -30,6 +30,7 @@ export class GoveeHumidifier
 
 @DeviceFactory.register(
   'H7142',
+  'H7160',
 )
 export class GoveeHumidifier6L
   extends ProgrammableMistLevel(
