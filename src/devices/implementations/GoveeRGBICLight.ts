@@ -10,6 +10,7 @@ import {ColorMode} from '../states/modes/Color';
   'H611A',
   'H6144',
   'H6072',
+  'H705A',
 )
 export class GoveeRGBICLight
   extends SceneMode(
