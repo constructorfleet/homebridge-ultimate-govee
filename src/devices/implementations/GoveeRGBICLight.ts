@@ -32,6 +32,7 @@ export class GoveeRGBICLight
 @DeviceFactory.register(
   'H6061',
   'H6062',
+  'H606A',
 )
 export class GoveeVariableRGBICLight extends GoveeRGBICLight {
   constructor(args) {
