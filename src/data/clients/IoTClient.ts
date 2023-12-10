@@ -1,6 +1,6 @@
 import { device } from 'aws-iot-device-sdk';
 import { GoveeClient } from './GoveeClient';
-import { GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY } from '../../util/const';
+import { GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE } from '../../util/const';
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { IoTConnectionStateEvent, IoTErrorEvent, IoTEventData, IoTInitializeClientData } from '../../core/events/dataClients/iot/IoTEvent';

@@ -6,7 +6,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { IoTEventData } from '../../core/events/dataClients/iot/IoTEvent';
 import { plainToInstance } from 'class-transformer';
 import { DeviceStateReceived } from '../../core/events/devices/DeviceReceived';
-import { base64ToHex } from '../../util/encodingUtils';
+import { base64ToHex, unpaddedHexToArray } from '../../util/encodingUtils';
 import { IoTPublishToEvent } from '../../core/events/dataClients/iot/IoTPublish';
 import { GoveeDevice } from '../../devices/GoveeDevice';
 import { LoggingService } from '../../logging/LoggingService';
@@ -117,6 +117,9 @@ export function toDeviceState(
     connected: message?.state?.connected,
     brightness: message?.state?.brightness,
     colorTemperature: message?.state?.colorTemperature,
+    status: {
+      codes: unpaddedHexToArray(message?.status?.statusCode),
+    },
     mode: message?.state?.mode,
     color: message?.state?.color === undefined
       ? undefined

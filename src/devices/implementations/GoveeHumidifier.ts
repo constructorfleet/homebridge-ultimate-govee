@@ -1,10 +1,11 @@
-import {OnOff} from '../states/OnOff';
-import {Active} from '../states/Active';
-import {StatusMode} from '../states/StatusMode';
-import {MistLevel} from '../states/MistLevel';
-import {ProgrammableMistLevel} from '../states/ProgrammableMistLevel';
-import {GoveeDevice} from '../GoveeDevice';
-import {DeviceFactory} from '../DeviceFactory';
+import { OnOff } from '../states/OnOff';
+import { Active } from '../states/Active';
+import { StatusMode } from '../states/StatusMode';
+import { MistLevel } from '../states/MistLevel';
+import { ProgrammableMistLevel } from '../states/ProgrammableMistLevel';
+import { GoveeDevice } from '../GoveeDevice';
+import { DeviceFactory } from '../DeviceFactory';
+import { HumidityReading } from '../states/HumidityReading';
 
 @DeviceFactory.register(
   'H7141',
@@ -33,18 +34,19 @@ export class GoveeHumidifier
   'H7160',
 )
 export class GoveeHumidifier6L
-  extends ProgrammableMistLevel(
-    MistLevel(
-      9,
-      StatusMode(
-        Active(
-          OnOff(
-            GoveeDevice,
+  extends HumidityReading(
+    ProgrammableMistLevel(
+      MistLevel(
+        9,
+        StatusMode(
+          Active(
+            OnOff(
+              GoveeDevice,
+            ),
           ),
         ),
       ),
-    ),
-  ) {
+    )) {
 
   constructor(args) {
     super(args);

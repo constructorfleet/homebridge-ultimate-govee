@@ -1,20 +1,21 @@
-import {AccessoryService} from './AccessoryService';
-import {Inject} from '@nestjs/common';
-import {PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES} from '../../../util/const';
-import {Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID} from 'homebridge';
-import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {ActiveState} from '../../../devices/states/Active';
-import {MistLevelState} from '../../../devices/states/MistLevel';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {DeviceCommandEvent} from '../../../core/events/devices/DeviceCommand';
-import {DeviceActiveTransition} from '../../../core/structures/devices/transitions/DeviceActiveTransition';
-import {DeviceMistLevelTransition} from '../../../core/structures/devices/transitions/DeviceMistLevelTransition';
-import {StatusModeState} from '../../../devices/states/StatusMode';
-import {LoggingService} from '../../../logging/LoggingService';
-import {ControlLockState} from '../../../devices/states/ControlLock';
-import {GoveeHumidifier, GoveeHumidifier6L} from '../../../devices/implementations/GoveeHumidifier';
-import {PlatformConfigService} from '../../config/PlatformConfigService';
-import {ServiceRegistry} from '../ServiceRegistry';
+import { AccessoryService } from './AccessoryService';
+import { Inject } from '@nestjs/common';
+import { PLATFORM_CHARACTERISTICS, PLATFORM_SERVICES } from '../../../util/const';
+import { Characteristic, CharacteristicValue, PlatformAccessory, Service, UnknownContext, WithUUID } from 'homebridge';
+import { GoveeDevice } from '../../../devices/GoveeDevice';
+import { ActiveState } from '../../../devices/states/Active';
+import { MistLevelState } from '../../../devices/states/MistLevel';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DeviceCommandEvent } from '../../../core/events/devices/DeviceCommand';
+import { DeviceActiveTransition } from '../../../core/structures/devices/transitions/DeviceActiveTransition';
+import { DeviceMistLevelTransition } from '../../../core/structures/devices/transitions/DeviceMistLevelTransition';
+import { StatusModeState } from '../../../devices/states/StatusMode';
+import { LoggingService } from '../../../logging/LoggingService';
+import { ControlLockState } from '../../../devices/states/ControlLock';
+import { GoveeHumidifier, GoveeHumidifier6L } from '../../../devices/implementations/GoveeHumidifier';
+import { PlatformConfigService } from '../../config/PlatformConfigService';
+import { ServiceRegistry } from '../ServiceRegistry';
+import { HumidityReadingState } from '../../../devices/states/HumidityReading';
 
 @ServiceRegistry.register(GoveeHumidifier, GoveeHumidifier6L)
 export class HumidifierService extends AccessoryService<void, typeof Service.HumidifierDehumidifier> {
@@ -53,6 +54,7 @@ export class HumidifierService extends AccessoryService<void, typeof Service.Hum
     service: Service,
     device: GoveeDevice,
   ) {
+    const humidityReading: number = (device as unknown as HumidityReadingState).humidityReading ?? 0;
     service
       .getCharacteristic(this.CHARACTERISTICS.TargetHumidifierDehumidifierState)
       .setProps({
@@ -64,19 +66,22 @@ export class HumidifierService extends AccessoryService<void, typeof Service.Hum
     service
       .getCharacteristic(this.CHARACTERISTICS.RelativeHumidityDehumidifierThreshold)
       .setProps({
-        validValues: [100],
+        validValues: [ 100 ],
       })
       .updateValue(100);
 
     service
       .getCharacteristic(this.CHARACTERISTICS.WaterLevel)
       .setProps({
-        validValues: [0, 100],
+        validValues: [ 0, 100 ],
       })
       .updateValue(
         ((device as unknown as StatusModeState).statusMode === 4)
           ? 0
           : 100);
+    service
+      .getCharacteristic(this.CHARACTERISTICS.CurrentRelativeHumidity)
+      .updateValue(humidityReading);
     service
       .getCharacteristic(this.CHARACTERISTICS.LockPhysicalControls)
       .updateValue(

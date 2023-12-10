@@ -1,9 +1,22 @@
-import {decode, encode} from 'base64-arraybuffer';
+import { decode, encode } from 'base64-arraybuffer';
+
+export const unpaddedHexToArray =
+  (hexString?: string): number[] | undefined => {
+    if (!hexString) {
+      return undefined;
+    }
+    const padded = hexString
+      ?.split(/(.{2})/g)
+      ?.filter(i => i.length > 0)
+      ?.join(' ');
+    return hexStringToArray(padded);
+  };
+
 
 export const hexStringToArray =
   (hexString: string): number[] =>
     hexString.trim().split(' ')
-      .map((x) => parseInt(`0x${x}`));
+      .map((x) => parseInt(`0x${ x }`));
 
 export const uint8ToHex =
   (uint8Array: Uint8Array): string =>

@@ -12,6 +12,10 @@ export interface DeviceStateColor {
   b?: number;
 }
 
+export interface DeviceStatus {
+  codes?: number[];
+}
+
 export interface DeviceState {
   deviceId: string;
 
@@ -32,6 +36,8 @@ export interface DeviceState {
   mode?: number;
 
   color?: DeviceStateColor;
+
+  status?: DeviceStatus;
 
   modeValue?: number[];
 
