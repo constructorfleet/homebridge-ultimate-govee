@@ -57,6 +57,7 @@ export class IoTEventProcessor extends Emitter {
       );
       const devState = toDeviceState(acctMessage);
       if (acctMessage.deviceId === '23:66:D4:AD:FC:6B:57:E8') {
+        this.log.error(JSON.stringify(acctMessage, null, 2));
         this.log.error(JSON.stringify(devState, null, 2));
       }
       await this.emitAsync(
