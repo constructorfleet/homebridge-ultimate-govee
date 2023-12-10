@@ -52,8 +52,8 @@ export class IoTEventProcessor extends Emitter {
   async onIoTMessage(message: IoTEventData) {
     try {
       const payload = JSON.parse(message.payload);
-      if (payload.device === "14:F9:D4:AD:FC:6D:BF:D4") {
-        this.log.warn(JSON.stringify(payload, null, 2));
+      if (payload.device === '14:F9:D4:AD:FC:6D:BF:D4') {
+        this.log.error(JSON.stringify(payload, null, 2));
       }
       const acctMessage = plainToInstance(
         IoTAccountMessage,
