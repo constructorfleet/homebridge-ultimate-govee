@@ -9,7 +9,9 @@ export const unpaddedHexToArray =
       ?.split(/(.{2})/g)
       ?.filter(i => i.length > 0)
       ?.join(' ');
-    return hexStringToArray(padded);
+    const result = hexStringToArray(padded);
+    console.dir({ hexString, padded, result });
+    return result;
   };
 
 

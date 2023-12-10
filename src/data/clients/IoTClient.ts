@@ -27,7 +27,6 @@ export class IoTClient
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
-    console.dir({ caPath });
   }
 
   @OnEvent(

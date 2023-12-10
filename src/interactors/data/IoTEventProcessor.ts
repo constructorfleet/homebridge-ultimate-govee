@@ -118,7 +118,7 @@ export function toDeviceState(
     brightness: message?.state?.brightness,
     colorTemperature: message?.state?.colorTemperature,
     status: {
-      codes: unpaddedHexToArray(message?.status?.statusCode),
+      codes: unpaddedHexToArray(message?.state?.status?.statusCode),
     },
     mode: message?.state?.mode,
     color: message?.state?.color === undefined

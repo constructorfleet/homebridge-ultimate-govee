@@ -11,6 +11,11 @@ export class RGBColor {
   blue!: number;
 }
 
+export class IoTDeviceStatus {
+  @Expose({ name: 'stc' })
+  public statusCode?: string;
+}
+
 export class IoTStateResponse {
   @Expose({ name: 'onOff' })
   public onOff?: number;
@@ -33,6 +38,10 @@ export class IoTStateResponse {
 
   @Expose({ name: 'result' })
   public result!: number;
+
+  @Expose({ name: 'sta' })
+  @Type(() => IoTDeviceStatus)
+  public status?: IoTDeviceStatus;
 }
 
 export class IoTOperatingStateResponse {
@@ -53,11 +62,6 @@ export class IoTOperatingStateResponse {
 
   @Expose({ name: 'timerValue' })
   public timerValue!: string[];
-}
-
-export class IoTDeviceStatus {
-  @Expose({ name: 'stc' })
-  public statusCode?: string;
 }
 
 interface IoTMessage {
@@ -93,10 +97,6 @@ export class IoTAccountMessage
 
   @Expose({ name: 'pactCode' })
   public pactCode!: number;
-
-  @Expose({ name: 'sta' })
-  @Type(() => IoTDeviceStatus)
-  public status?: IoTDeviceStatus;
 
   @Expose({ name: 'softVersion' })
   public softwareVersion?: string;
