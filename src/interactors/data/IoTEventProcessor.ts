@@ -51,16 +51,14 @@ export class IoTEventProcessor extends Emitter {
   )
   async onIoTMessage(message: IoTEventData) {
     try {
-      const payload = JSON.parse(message.payload);
-      if (payload.device === '14:F9:D4:AD:FC:6D:BF:D4') {
-        this.log.error(JSON.stringify(payload, null, 2));
-      }
       const acctMessage = plainToInstance(
         IoTAccountMessage,
         JSON.parse(message.payload),
       );
-
       const devState = toDeviceState(acctMessage);
+      if (acctMessage.deviceId === '23:66:D4:AD:FC:6B:57:E8') {
+        this.log.error(JSON.stringify(acctMessage, null, 2));
+      }
       await this.emitAsync(
         new DeviceStateReceived(devState),
       );
