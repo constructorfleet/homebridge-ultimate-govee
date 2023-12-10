@@ -27,13 +27,14 @@ export class IoTClient
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
+    console.dir({ caPath });
   }
 
   @OnEvent(
     'IOT.Initialize', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   public async setup(data: IoTInitializeClientData) {
     if (this.awsIOTDevice) {
@@ -42,7 +43,7 @@ export class IoTClient
     this.awsIOTDevice = new device({
       privateKey: data.privateKey,
       clientCert: data.certificate,
-      clientId: `AP/${data.accountId}/${this.clientId}`,
+      clientId: `AP/${ data.accountId }/${ this.clientId }`,
       caPath: this.caPath,
       host: data.endpoint,
     });
@@ -138,9 +139,9 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Unsubscribe', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async unsubscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -165,9 +166,9 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Subscribe', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async subscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -196,9 +197,9 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Publish', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async publishTo(message: IoTEventData) {
     if (!this.awsIOTDevice) {
@@ -225,7 +226,7 @@ export class IoTClient
     for (let i = 0; i < this.subscriptions.size; i++) {
       await this.emitAsync(
         new IoTSubscribeToEvent(
-          this.subscriptions[i],
+          this.subscriptions[ i ],
         ),
       );
     }
