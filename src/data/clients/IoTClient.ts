@@ -1,6 +1,6 @@
 import { device } from 'aws-iot-device-sdk';
 import { GoveeClient } from './GoveeClient';
-import { GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE, IOT_CERTIFICATE, IOT_HOST, IOT_KEY } from '../../util/const';
+import { GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE } from '../../util/const';
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { IoTConnectionStateEvent, IoTErrorEvent, IoTEventData, IoTInitializeClientData } from '../../core/events/dataClients/iot/IoTEvent';
@@ -31,9 +31,9 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Initialize', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   public async setup(data: IoTInitializeClientData) {
     if (this.awsIOTDevice) {
@@ -42,7 +42,7 @@ export class IoTClient
     this.awsIOTDevice = new device({
       privateKey: data.privateKey,
       clientCert: data.certificate,
-      clientId: `AP/${data.accountId}/${this.clientId}`,
+      clientId: `AP/${ data.accountId }/${ this.clientId }`,
       caPath: this.caPath,
       host: data.endpoint,
     });
@@ -138,9 +138,9 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Unsubscribe', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async unsubscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -165,9 +165,9 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Subscribe', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async subscribe(message: IoTEventData) {
     if (!message.topic) {
@@ -196,9 +196,9 @@ export class IoTClient
 
   @OnEvent(
     'IOT.Publish', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async publishTo(message: IoTEventData) {
     if (!this.awsIOTDevice) {
@@ -225,7 +225,7 @@ export class IoTClient
     for (let i = 0; i < this.subscriptions.size; i++) {
       await this.emitAsync(
         new IoTSubscribeToEvent(
-          this.subscriptions[i],
+          this.subscriptions[ i ],
         ),
       );
     }

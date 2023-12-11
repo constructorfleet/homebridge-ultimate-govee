@@ -1,18 +1,18 @@
-import {IoTAccountMessage} from '../../core/structures/iot/IoTAccountMessage';
-import {DeviceState} from '../../core/structures/devices/DeviceState';
-import {Injectable} from '@nestjs/common';
-import {Emitter} from '../../util/types';
-import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {IoTEventData} from '../../core/events/dataClients/iot/IoTEvent';
-import {plainToInstance} from 'class-transformer';
-import {DeviceStateReceived} from '../../core/events/devices/DeviceReceived';
-import {base64ToHex} from '../../util/encodingUtils';
-import {IoTPublishToEvent} from '../../core/events/dataClients/iot/IoTPublish';
-import {GoveeDevice} from '../../devices/GoveeDevice';
-import {LoggingService} from '../../logging/LoggingService';
-import {ConnectionState} from '../../core/events/dataClients/DataClientEvent';
-import {PersistService} from '../../persist/PersistService';
-import {IoTSubscribeToEvent} from '../../core/events/dataClients/iot/IotSubscription';
+import { IoTAccountMessage } from '../../core/structures/iot/IoTAccountMessage';
+import { DeviceState } from '../../core/structures/devices/DeviceState';
+import { Injectable } from '@nestjs/common';
+import { Emitter } from '../../util/types';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { IoTEventData } from '../../core/events/dataClients/iot/IoTEvent';
+import { plainToInstance } from 'class-transformer';
+import { DeviceStateReceived } from '../../core/events/devices/DeviceReceived';
+import { base64ToHex, unpaddedHexToArray } from '../../util/encodingUtils';
+import { IoTPublishToEvent } from '../../core/events/dataClients/iot/IoTPublish';
+import { GoveeDevice } from '../../devices/GoveeDevice';
+import { LoggingService } from '../../logging/LoggingService';
+import { ConnectionState } from '../../core/events/dataClients/DataClientEvent';
+import { PersistService } from '../../persist/PersistService';
+import { IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
 
 @Injectable()
 export class IoTEventProcessor extends Emitter {
@@ -28,9 +28,9 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'IOT.CONNECTION', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async onIoTConnection(connection: ConnectionState) {
     this.iotConnected = connection === ConnectionState.Connected;
@@ -45,9 +45,9 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'IOT.Received', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async onIoTMessage(message: IoTEventData) {
     try {
@@ -55,8 +55,11 @@ export class IoTEventProcessor extends Emitter {
         IoTAccountMessage,
         JSON.parse(message.payload),
       );
-
       const devState = toDeviceState(acctMessage);
+      if (acctMessage.deviceId === '23:66:D4:AD:FC:6B:57:E8') {
+        this.log.error(JSON.stringify(acctMessage, null, 2));
+        this.log.error(JSON.stringify(devState, null, 2));
+      }
       await this.emitAsync(
         new DeviceStateReceived(devState),
       );
@@ -67,9 +70,9 @@ export class IoTEventProcessor extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.State', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async onRequestDeviceState(
     device: GoveeDevice,
@@ -92,7 +95,7 @@ export class IoTEventProcessor extends Emitter {
             accountTopic: this.persist.oauthData?.accountIoTTopic,
             cmd: 'status',
             cmdVersion: 0,
-            transaction: `u_${Date.now()}`,
+            transaction: `u_${ Date.now() }`,
             type: 0,
           },
         }),
@@ -114,6 +117,9 @@ export function toDeviceState(
     connected: message?.state?.connected,
     brightness: message?.state?.brightness,
     colorTemperature: message?.state?.colorTemperature,
+    status: {
+      codes: unpaddedHexToArray(message?.state?.status?.statusCode),
+    },
     mode: message?.state?.mode,
     color: message?.state?.color === undefined
       ? undefined
