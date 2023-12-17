@@ -55,14 +55,6 @@ export class DeviceManager extends Emitter {
       return;
     }
 
-    if (deviceSettings.deviceId === "5F:D3:7C:A6:B0:4A:17:8C" && deviceSettings.deviceTopic !== undefined) {
-      await this.emitAsync(
-        new IoTSubscribeToEvent(
-          deviceSettings.deviceTopic
-        )
-      );
-    }
-
     const newDevice = !this.devices.has(deviceSettings.deviceId);
     let deviceCtor;
     try {
