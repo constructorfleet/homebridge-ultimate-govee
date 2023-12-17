@@ -40,10 +40,10 @@ export class IoTClient
   )
   public async setup(data: IoTInitializeClientData) {
     if (!this.client || !this.config) {
-      this.config = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_pkcs12_builder({
-        pkcs12_file: data.goveePfxFile,
-        pkcs12_password: data.p12Password,
-      }).with_certificate_authority_from_path(this.caPath)
+      this.config = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_builder(
+        data.certificate.toString(),
+        data.privateKey.toString()
+      ).with_certificate_authority_from_path(this.caPath)
         .with_client_id(`AP/${ data.accountId }/a${ this.clientId }`)
         .with_endpoint(data.endpoint)
         .with_clean_session(false)
