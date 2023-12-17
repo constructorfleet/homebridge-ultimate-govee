@@ -22,7 +22,6 @@ import { ResponseWithDevice } from '../../core/events/dataClients/rest/RestRespo
 import { DIYEffectReceived } from '../../core/events/effects/DIYEffects';
 import { DeviceEffectReceived } from '../../core/events/effects/DeviceEffects';
 import console from 'console';
-import { IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
 
 
 @Injectable()
@@ -153,11 +152,6 @@ export class RestEventProcessor extends Emitter {
     if (settings.iotDeviceTopic && device.device === "5F:D3:7C:A6:B0:4A:17:8C") {
       console.dir(settings);
       console.dir(device);
-      await this.emitAsync(
-        new IoTSubscribeToEvent(
-          settings.iotDeviceTopic
-        )
-      );
     }
     return {
       deviceId: settings.deviceId,

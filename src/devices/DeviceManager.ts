@@ -15,7 +15,6 @@ import { RestRequestDeviceScenes, RestRequestDIYEffects } from '../core/events/d
 import { DeviceRefreshData } from '../core/events/devices/DeviceRefresh';
 import { mkdir, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { IoTSubscribeToEvent } from '../core/events/dataClients/iot/IotSubscription';
 
 
 @Injectable()

@@ -23,6 +23,7 @@ export class IoTClient
   private connection?: mqtt.MqttClientConnection = undefined;
   private connected = false;
   private lock = new Lock<void>();
+  private connectionLock = new Lock<void>();
   private readonly subscriptions: Set<string> = new Set<string>();
 
   constructor(
@@ -32,6 +33,7 @@ export class IoTClient
     private readonly log: LoggingService,
   ) {
     super(eventEmitter);
+    this.connectionLock.acquire();
   }
 
   @OnEvent(
@@ -72,6 +74,7 @@ export class IoTClient
                 'Connection Connected',
               );
               this.connected = true;
+              this.connectionLock.release();
               await this.resubscribe();
               await this.emitAsync(
                 new IoTConnectionStateEvent(ConnectionState.Connected),
@@ -92,6 +95,7 @@ export class IoTClient
                   'Connection Reconnected',
                 );
                 this.connected = true;
+                this.connectionLock.release();
                 await this.emitAsync(
                   new IoTConnectionStateEvent(ConnectionState.Connected),
                 );
@@ -139,6 +143,7 @@ export class IoTClient
                   'onOffline',
                   'Connection Offline',
                 );
+                this.connectionLock.acquire();
                 this.connected = false;
                 this.connection = undefined;
                 await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
@@ -160,6 +165,7 @@ export class IoTClient
                   'onClose',
                   'Connection Closed',
                 );
+                this.connectionLock.acquire();
                 this.connected = false;
                 this.connection = undefined;
                 await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
@@ -247,33 +253,34 @@ export class IoTClient
   },
   )
   async publishTo(message: IoTEventData) {
-    if (!this.connection) {
-      this.log.warn('AWS Client not initialized.');
-      return;
-    }
-    if (!message.topic) {
-      this.log.info(
-        'IoTClient',
-        'publishTo',
-        'No topic to publish to',
-      );
-      return;
-    }
+    await this.connectionLock.acquire();
+    try {
+      if (!this.connection) {
+        this.log.warn('AWS Client not initialized.');
+        return;
+      }
+      if (!message.topic) {
+        this.log.info(
+          'IoTClient',
+          'publishTo',
+          'No topic to publish to',
+        );
+        return;
+      }
 
-    await this.connection.publish(
-      message.topic,
-      message.payload,
-      mqtt.QoS.AtLeastOnce,
-    );
+      await this.connection.publish(
+        message.topic,
+        message.payload,
+        mqtt.QoS.AtLeastOnce,
+      );
+    } finally {
+      this.connectionLock.release();
+    }
   }
 
   private async resubscribe() {
     for (let i = 0; i < this.subscriptions.size; i++) {
-      await this.emitAsync(
-        new IoTSubscribeToEvent(
-          this.subscriptions[ i ],
-        ),
-      );
+      await this.subscribe(this.subscriptions[ i ]);
     }
   }
 }
