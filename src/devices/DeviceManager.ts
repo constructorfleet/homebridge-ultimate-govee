@@ -1,18 +1,20 @@
-import {Injectable} from '@nestjs/common';
-import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
-import {Emitter} from '../util/types';
-import {ModuleRef} from '@nestjs/core';
-import {DeviceState} from '../core/structures/devices/DeviceState';
-import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
-import {DevicePollRequest, DeviceStateRequest} from '../core/events/devices/DeviceRequests';
-import {GoveeDevice} from './GoveeDevice';
-import {DeviceDiscoveredEvent} from '../core/events/devices/DeviceDiscovered';
-import {DeviceUpdatedEvent} from '../core/events/devices/DeviceUpdated';
-import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
-import {LoggingService} from '../logging/LoggingService';
-import {PersistService} from '../persist/PersistService';
-import {RestRequestDeviceScenes, RestRequestDIYEffects} from '../core/events/dataClients/rest/RestRequest';
+import { Injectable } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Emitter } from '../util/types';
+import { ModuleRef } from '@nestjs/core';
+import { DeviceState } from '../core/structures/devices/DeviceState';
+import { DeviceConfig } from '../core/structures/devices/DeviceConfig';
+import { DevicePollRequest, DeviceStateRequest } from '../core/events/devices/DeviceRequests';
+import { GoveeDevice } from './GoveeDevice';
+import { DeviceDiscoveredEvent } from '../core/events/devices/DeviceDiscovered';
+import { DeviceUpdatedEvent } from '../core/events/devices/DeviceUpdated';
+import { DeviceTransition } from '../core/structures/devices/DeviceTransition';
+import { LoggingService } from '../logging/LoggingService';
+import { PersistService } from '../persist/PersistService';
+import { RestRequestDeviceScenes, RestRequestDIYEffects } from '../core/events/dataClients/rest/RestRequest';
 import { DeviceRefreshData } from '../core/events/devices/DeviceRefresh';
+import { mkdir, writeFile } from 'fs/promises';
+import { existsSync } from 'fs';
 
 
 @Injectable()
@@ -28,11 +30,23 @@ export class DeviceManager extends Emitter {
     super(eventEmitter);
   }
 
+  async recordUnknownDevice(deviceId: string, model: string, data: unknown) {
+    const deviceLogDir = `/homebridge/logs/devices/${ model }`;
+    if (!existsSync(deviceLogDir)) {
+      await mkdir(deviceLogDir, { recursive: true });
+    }
+    await writeFile(
+      `${ deviceLogDir }/${ deviceId }`,
+      JSON.stringify(data, null, 2),
+      { encoding: 'utf-8' }
+    );
+  }
+
   @OnEvent(
     'DEVICE.RECEIVED.Settings', {
-      async: true,
-      nextTick: true,
-    }
+    async: true,
+    nextTick: true,
+  }
   )
   async onDeviceSetting(deviceSettings: DeviceConfig) {
     if (!deviceSettings) {
@@ -51,6 +65,10 @@ export class DeviceManager extends Emitter {
         'Unknown model',
         deviceSettings.model,
       );
+      await this.recordUnknownDevice(
+        deviceSettings.deviceId,
+        deviceSettings.model,
+        deviceSettings);
       return;
     }
 
@@ -81,9 +99,9 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.RECEIVED.State', {
-      async: true,
-      nextTick: true,
-    }
+    async: true,
+    nextTick: true,
+  }
   )
   async onDeviceState(deviceState: DeviceState) {
     if (!this.devices.has(deviceState.deviceId)) {
@@ -93,6 +111,7 @@ export class DeviceManager extends Emitter {
         'Unknown Device',
         deviceState.deviceId,
       );
+      await this.recordUnknownDevice(deviceState.deviceId, deviceState.model || "unknown", deviceState);
       return;
     }
     const device = this.devices.get(deviceState.deviceId);
@@ -106,9 +125,9 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Command', {
-      async: true,
-      nextTick: true,
-    }
+    async: true,
+    nextTick: true,
+  }
   )
   async onDeviceCommand(deviceTransition: DeviceTransition<GoveeDevice>) {
     const device = this.devices.get(deviceTransition.deviceId);
@@ -131,9 +150,9 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.REQUEST.Poll', {
-      async: true,
-      nextTick: true,
-    }
+    async: true,
+    nextTick: true,
+  }
   )
   async pollDeviceStates(
     deviceId: string,
@@ -154,9 +173,9 @@ export class DeviceManager extends Emitter {
 
   @OnEvent(
     'DEVICE.Refresh', {
-      async: true,
-      nextTick: true,
-    }
+    async: true,
+    nextTick: true,
+  }
   )
   async refreshDevice(
     data: DeviceRefreshData
