@@ -10,8 +10,8 @@ import { IoTSubscribedToEvent, IoTSubscribeToEvent } from '../../core/events/dat
 import { IoTUnsubscribedFromEvent } from '../../core/events/dataClients/iot/IotRemoveSubscription';
 import { LoggingService } from '../../logging/LoggingService';
 import { Lock } from 'async-await-mutex-lock';
-import { promisify } from 'util';
-import { QOS } from 'aws-iot-device-sdk-v2/dist/greengrasscoreipc/model';
+import { readFile } from 'fs/promises';
+import { EOL } from 'os';
 
 @Injectable()
 export class IoTClient
@@ -40,8 +40,12 @@ export class IoTClient
   )
   public async setup(data: IoTInitializeClientData) {
     if (!this.client || !this.config) {
-      this.config = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_builder(
+      const certWithCA = [
         data.certificate.toString(),
+        await readFile(this.caPath, 'utf-8')
+      ].join(EOL);
+      this.config = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_builder(
+        certWithCA,
         data.privateKey.toString()
       ).with_certificate_authority_from_path(this.caPath)
         .with_client_id(`AP/${ data.accountId }/a${ this.clientId }`)
@@ -166,7 +170,7 @@ export class IoTClient
     await this.lock.acquire();
     try {
       if (this.connection) {
-        await promisify(this.connection.unsubscribe)(message.topic);
+        await this.connection.unsubscribe(message.topic);
       }
       this.subscriptions.delete(message.topic);
       await this.emitAsync(
