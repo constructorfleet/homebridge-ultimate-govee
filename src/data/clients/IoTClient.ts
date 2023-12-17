@@ -1,4 +1,4 @@
-import { device } from 'aws-iot-device-sdk';
+import { iot, mqtt } from 'aws-iot-device-sdk-v2';
 import { GoveeClient } from './GoveeClient';
 import { GOVEE_CLIENT_ID, IOT_CA_CERTIFICATE } from '../../util/const';
 import { Inject, Injectable } from '@nestjs/common';
@@ -11,11 +11,14 @@ import { IoTUnsubscribedFromEvent } from '../../core/events/dataClients/iot/IotR
 import { LoggingService } from '../../logging/LoggingService';
 import { Lock } from 'async-await-mutex-lock';
 import { promisify } from 'util';
+import { QOS } from 'aws-iot-device-sdk-v2/dist/greengrasscoreipc/model';
 
 @Injectable()
 export class IoTClient
   extends GoveeClient {
-  private awsIOTDevice?: device = undefined;
+  private client?: mqtt.MqttClient = undefined;
+  private config?: mqtt.MqttConnectionConfig = undefined;
+  private connection?: mqtt.MqttClientConnection = undefined;
   private connected = false;
   private lock = new Lock<void>();
   private readonly subscriptions: Set<string> = new Set<string>();
@@ -36,18 +39,28 @@ export class IoTClient
   },
   )
   public async setup(data: IoTInitializeClientData) {
-    if (this.awsIOTDevice) {
+    if (!this.client || !this.config) {
+      this.config = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_pkcs12_builder({
+        pkcs12_file: data.goveePfxFile,
+        pkcs12_password: data.p12Password,
+      }).with_certificate_authority_from_path(this.caPath)
+        .with_client_id(`AP/${ data.accountId }/a${ this.clientId }`)
+        .with_endpoint(data.endpoint)
+        .with_clean_session(false)
+        .build();
+
+      this.client = new mqtt.MqttClient();
+    }
+    this.connection = this.client.new_connection(this.config!);
+
+    try {
+      await this.connection.connect();
+    } catch (error) {
+      this.log.error(error);
       return;
     }
-    this.awsIOTDevice = new device({
-      privateKey: data.privateKey,
-      clientCert: data.certificate,
-      clientId: `AP/${ data.accountId }/${ this.clientId }`,
-      caPath: this.caPath,
-      host: data.endpoint,
-    });
 
-    this.awsIOTDevice.on(
+    this.connection.on(
       'connect',
       async () => {
         if (!this.connected) {
@@ -65,8 +78,8 @@ export class IoTClient
       },
     );
 
-    this.awsIOTDevice.on(
-      'reconnect',
+    this.connection.on(
+      'resume',
       async () => {
         this.log.info(
           'IoTClient',
@@ -83,7 +96,19 @@ export class IoTClient
       },
     );
 
-    this.awsIOTDevice.on(
+    this.connection.on(
+      'message',
+      async (topic: string, payload: ArrayBuffer, dup: boolean, qos: mqtt.QoS, retain: boolean) => {
+        await this.emitAsync(
+          new IotReceive(
+            topic,
+            payload.toString(),
+          ),
+        );
+      },
+    );
+
+    this.connection.on(
       'error',
       (error: Error | string) => {
         this.log.error(
@@ -93,8 +118,9 @@ export class IoTClient
         );
       },
     );
-    this.awsIOTDevice.on(
-      'offline',
+
+    this.connection.on(
+      'disconnect',
       async () => {
         this.log.info(
           'IoTClient',
@@ -103,13 +129,14 @@ export class IoTClient
         );
         if (this.connected) {
           this.connected = false;
+          this.connection = undefined;
           await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
         }
       },
     );
 
-    this.awsIOTDevice.on(
-      'close',
+    this.connection.on(
+      'closed',
       async () => {
         this.log.info(
           'IoTClient',
@@ -118,20 +145,9 @@ export class IoTClient
         );
         if (this.connected) {
           this.connected = false;
+          this.connection = undefined;
           await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
         }
-      },
-    );
-
-    this.awsIOTDevice.on(
-      'message',
-      async (topic: string, payload: string) => {
-        await this.emitAsync(
-          new IotReceive(
-            topic,
-            payload.toString(),
-          ),
-        );
       },
     );
   }
@@ -149,8 +165,8 @@ export class IoTClient
     }
     await this.lock.acquire();
     try {
-      if (this.awsIOTDevice) {
-        await promisify(this.awsIOTDevice.unsubscribe)(message.topic);
+      if (this.connection) {
+        await promisify(this.connection.unsubscribe)(message.topic);
       }
       this.subscriptions.delete(message.topic);
       await this.emitAsync(
@@ -178,10 +194,10 @@ export class IoTClient
     try {
       if (!this.subscriptions.has(message.topic)) {
         this.log.info('Subscribing', message.topic);
-        if (this.awsIOTDevice) {
-          await promisify(this.awsIOTDevice.subscribe)(
+        if (this.connection) {
+          await this.connection.subscribe(
             message.topic,
-            undefined,
+            mqtt.QoS.AtLeastOnce
           );
         }
         this.subscriptions.add(message.topic);
@@ -201,7 +217,7 @@ export class IoTClient
   },
   )
   async publishTo(message: IoTEventData) {
-    if (!this.awsIOTDevice) {
+    if (!this.connection) {
       this.log.warn('AWS Client not initialized.');
       return;
     }
@@ -214,10 +230,10 @@ export class IoTClient
       return;
     }
 
-    await promisify(this.awsIOTDevice.publish)(
+    await this.connection.publish(
       message.topic,
       message.payload,
-      undefined,
+      mqtt.QoS.AtLeastOnce,
     );
   }
 

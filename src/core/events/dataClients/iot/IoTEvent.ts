@@ -1,5 +1,5 @@
 import { pfxToBundle } from '../../../../util/p12Utils';
-import {ConnectionState, DataClientConnectionStateEvent, DataClientErrorEvent, DataClientEvent} from '../DataClientEvent';
+import { ConnectionState, DataClientConnectionStateEvent, DataClientErrorEvent, DataClientEvent } from '../DataClientEvent';
 
 export class IoTEventData {
   constructor(
@@ -22,6 +22,8 @@ export class IoTInitializeClientData {
       bundle.privateKey,
       endpoint,
       accountId,
+      goveePfxFile,
+      p12Password
     );
   }
 
@@ -30,7 +32,9 @@ export class IoTInitializeClientData {
     public readonly privateKey: Buffer,
     public readonly endpoint: string,
     public readonly accountId: string,
-  ) {}
+    public readonly goveePfxFile: string,
+    public readonly p12Password: string,
+  ) { }
 }
 
 export class IoTInitializeClientEvent
@@ -71,7 +75,7 @@ export abstract class IoTEvent<EventDataType extends IoTEventData>
     eventData?: EventDataType,
   ) {
     super(
-      `IOT.${eventName}`,
+      `IOT.${ eventName }`,
       eventData,
     );
   }
