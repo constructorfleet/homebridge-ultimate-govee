@@ -78,7 +78,7 @@ export class GoveeDevice extends State {
       return undefined;
     }
     return new IoTPublishToEvent(
-      accountTopic!,
+      this.iotTopic!,
       JSON.stringify({
         topic: this.iotTopic,
         msg: commandMessage,

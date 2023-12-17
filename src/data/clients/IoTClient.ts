@@ -271,7 +271,7 @@ export class IoTClient
       await this.connection.publish(
         message.topic,
         message.payload,
-        mqtt.QoS.AtLeastOnce,
+        mqtt.QoS.ExactlyOnce,
       );
     } finally {
       this.connectionLock.release();
