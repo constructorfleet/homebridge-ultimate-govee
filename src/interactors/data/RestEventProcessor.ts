@@ -24,6 +24,7 @@ import { DeviceEffectReceived } from '../../core/events/effects/DeviceEffects';
 import console from 'console';
 import { IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
 
+
 @Injectable()
 export class RestEventProcessor extends Emitter {
   constructor(
@@ -150,6 +151,8 @@ export class RestEventProcessor extends Emitter {
     device: AppDeviceResponse,
   ): Promise<DeviceConfig> {
     if (settings.iotDeviceTopic) {
+      console.dir(settings);
+      console.dir(device);
       await this.emitAsync(
         new IoTSubscribeToEvent(
           settings.iotDeviceTopic
