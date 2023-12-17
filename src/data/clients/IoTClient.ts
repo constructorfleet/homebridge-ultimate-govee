@@ -14,6 +14,8 @@ import { readFile } from 'fs/promises';
 import { EOL } from 'os';
 import { TextDecoder } from 'util';
 
+let tempConnection: mqtt.MqttClientConnection;
+
 @Injectable()
 export class IoTClient
   extends GoveeClient {
@@ -67,6 +69,10 @@ export class IoTClient
         this.connection.on(
           'connect',
           async () => {
+            tempConnection = this.client?.new_connection(this.config!)!;
+            tempConnection.subscribe("GD/71c42734956f56f1e0ad571119ecc266", mqtt.QoS.AtLeastOnce, (topic, payload) => {
+              console.dir(JSON.parse(this.decoder.decode(payload)));
+            });
             if (!this.connected) {
               this.log.info(
                 'IoTClient',
@@ -271,7 +277,7 @@ export class IoTClient
       await this.connection.publish(
         message.topic,
         message.payload,
-        mqtt.QoS.ExactlyOnce,
+        mqtt.QoS.AtLeastOnce,
       );
     } finally {
       this.connectionLock.release();
