@@ -107,6 +107,7 @@ export class IoTEventProcessor extends Emitter {
 export function toDeviceState(
   message: IoTAccountMessage,
 ): DeviceState {
+  console.dir(message);
   return {
     deviceId: message.deviceId,
     model: message.model,
