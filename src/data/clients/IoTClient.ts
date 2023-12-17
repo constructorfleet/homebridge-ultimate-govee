@@ -12,10 +12,12 @@ import { LoggingService } from '../../logging/LoggingService';
 import { Lock } from 'async-await-mutex-lock';
 import { readFile } from 'fs/promises';
 import { EOL } from 'os';
+import { TextDecoder } from 'util';
 
 @Injectable()
 export class IoTClient
   extends GoveeClient {
+  private readonly decoder = new TextDecoder();
   private client?: mqtt.MqttClient = undefined;
   private config?: mqtt.MqttConnectionConfig = undefined;
   private connection?: mqtt.MqttClientConnection = undefined;
@@ -110,7 +112,7 @@ export class IoTClient
             await this.emitAsync(
               new IotReceive(
                 topic,
-                payload.toString(),
+                this.decoder.decode(payload),
               ),
             );
           },
