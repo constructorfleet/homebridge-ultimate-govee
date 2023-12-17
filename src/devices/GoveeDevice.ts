@@ -1,14 +1,14 @@
-import {State} from './states/State';
-import {DeviceConfig} from '../core/structures/devices/DeviceConfig';
-import {supportsIoT} from '../core/structures/devices/configs/IoTConfig';
-import {DeviceState} from '../core/structures/devices/DeviceState';
-import {supportsBLE} from '../core/structures/devices/configs/BLEConfig';
-import {Emitter} from '../util/types';
-import {IoTPublishToEvent} from '../core/events/dataClients/iot/IoTPublish';
-import {BLEPeripheralCommandSend, BLEPeripheralSendEvent} from '../core/events/dataClients/ble/BLEPeripheral';
-import {DeviceTransition} from '../core/structures/devices/DeviceTransition';
-import {getIoTCommandMessage} from '../core/structures/iot/IoTCommandMessage';
-import {DevicePollRequest} from '../core/events/devices/DeviceRequests';
+import { State } from './states/State';
+import { DeviceConfig } from '../core/structures/devices/DeviceConfig';
+import { supportsIoT } from '../core/structures/devices/configs/IoTConfig';
+import { DeviceState } from '../core/structures/devices/DeviceState';
+import { supportsBLE } from '../core/structures/devices/configs/BLEConfig';
+import { Emitter } from '../util/types';
+import { IoTPublishToEvent } from '../core/events/dataClients/iot/IoTPublish';
+import { BLEPeripheralCommandSend, BLEPeripheralSendEvent } from '../core/events/dataClients/ble/BLEPeripheral';
+import { DeviceTransition } from '../core/structures/devices/DeviceTransition';
+import { getIoTCommandMessage } from '../core/structures/iot/IoTCommandMessage';
+import { DevicePollRequest } from '../core/events/devices/DeviceRequests';
 
 export class GoveeDevice extends State {
 
@@ -78,7 +78,7 @@ export class GoveeDevice extends State {
       return undefined;
     }
     return new IoTPublishToEvent(
-      this.iotTopic,
+      accountTopic!,
       JSON.stringify({
         topic: this.iotTopic,
         msg: commandMessage,
