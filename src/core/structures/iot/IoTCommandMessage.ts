@@ -65,11 +65,7 @@ export abstract class BaseIoTCommandMessage implements IoTCommandMessage {
   ) {
     // this.device = transition.deviceId;
     this.cmd = command;
-    this.data = {
-      command: [
-        'MwUAAAAAAAAAAAAAAAAAAAAAADY=', 'qgUKAwAAAAAAAAAAAAAAAAAAAKY='
-      ]
-    };
+    this.data = commandData;
   }
 
   public abstract isValid(): boolean;
