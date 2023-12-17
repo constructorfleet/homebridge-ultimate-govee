@@ -43,9 +43,6 @@ export class IoTClient
   public async setup(data: IoTInitializeClientData) {
     try {
       await this.lock.acquire();
-      if (this.client && this.connection) {
-        return;
-      }
       if (!this.client || !this.config) {
         const certWithCA = [
           data.certificate.toString(),
@@ -233,6 +230,7 @@ export class IoTClient
             mqtt.QoS.AtLeastOnce
           );
         }
+        console.dir(this.connection);
         this.subscriptions.add(message.topic);
         await this.emitAsync(new IoTSubscribedToEvent(message.topic));
       }
