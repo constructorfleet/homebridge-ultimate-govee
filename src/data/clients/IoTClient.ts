@@ -84,17 +84,22 @@ export class IoTClient
         this.connection.on(
           'resume',
           async () => {
-            this.log.info(
-              'IoTClient',
-              'onReconnect',
-              'Connection Reconnected',
-            );
-            if (!this.connected) {
-              this.connected = true;
-              await this.emitAsync(
-                new IoTConnectionStateEvent(ConnectionState.Connected),
-              );
-              await this.resubscribe();
+            try {
+              await this.lock.acquire();
+              if (!this.connected) {
+                this.log.info(
+                  'IoTClient',
+                  'onReconnect',
+                  'Connection Reconnected',
+                );
+                this.connected = true;
+                await this.emitAsync(
+                  new IoTConnectionStateEvent(ConnectionState.Connected),
+                );
+                await this.resubscribe();
+              }
+            } finally {
+              this.lock.release();
             }
           },
         );
@@ -125,15 +130,20 @@ export class IoTClient
         this.connection.on(
           'disconnect',
           async () => {
-            this.log.info(
-              'IoTClient',
-              'onOffline',
-              'Connection Offline',
-            );
-            if (this.connected) {
-              this.connected = false;
-              this.connection = undefined;
-              await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
+            try {
+              await this.lock.acquire();
+              if (this.connected) {
+                this.log.info(
+                  'IoTClient',
+                  'onOffline',
+                  'Connection Offline',
+                );
+                this.connected = false;
+                this.connection = undefined;
+                await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
+              }
+            } finally {
+              this.lock.release();
             }
           },
         );
@@ -141,15 +151,20 @@ export class IoTClient
         this.connection.on(
           'closed',
           async () => {
-            this.log.info(
-              'IoTClient',
-              'onClose',
-              'Connection Closed',
-            );
-            if (this.connected) {
-              this.connected = false;
-              this.connection = undefined;
-              await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
+            try {
+              await this.lock.acquire();
+              if (this.connected) {
+                this.log.info(
+                  'IoTClient',
+                  'onClose',
+                  'Connection Closed',
+                );
+                this.connected = false;
+                this.connection = undefined;
+                await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
+              }
+            } finally {
+              this.lock.release();
             }
           },
         );
@@ -158,8 +173,7 @@ export class IoTClient
       try {
         await this.connection.connect();
       } catch (error) {
-        this.log.error(error);
-        return;
+        this.log.error("Error establishing connection to AWS services", error);
       }
     } finally {
       this.lock.release();
@@ -187,6 +201,7 @@ export class IoTClient
         new IoTUnsubscribedFromEvent(message.topic),
       );
     } catch (error) {
+      this.log.error(`Unexpected error unsubscribing from ${ message.topic }`, error);
       await this.emitAsync(new IoTErrorEvent(error as Error));
     } finally {
       this.lock.release();
@@ -218,6 +233,7 @@ export class IoTClient
         await this.emitAsync(new IoTSubscribedToEvent(message.topic));
       }
     } catch (error) {
+      this.log.error(`Unexpected error subscribing to ${ message.topic }`);
       await this.emitAsync(new IoTErrorEvent(error as Error));
     } finally {
       this.lock.release();
