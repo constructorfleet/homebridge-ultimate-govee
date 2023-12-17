@@ -230,7 +230,6 @@ export class IoTClient
             mqtt.QoS.AtLeastOnce
           );
         }
-        console.dir(this.connection);
         this.subscriptions.add(message.topic);
         await this.emitAsync(new IoTSubscribedToEvent(message.topic));
       }
