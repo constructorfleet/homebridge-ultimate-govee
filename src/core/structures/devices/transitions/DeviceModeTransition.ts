@@ -1,7 +1,8 @@
-import {DeviceTransition} from '../DeviceTransition';
-import {GoveeDevice} from '../../../../devices/GoveeDevice';
-import {ModesState} from '../../../../devices/states/Modes';
-import {SceneModeState} from '../../../../devices/states/modes/Scene';
+import { DeviceTransition } from '../DeviceTransition';
+import { GoveeDevice } from '../../../../devices/GoveeDevice';
+import { ModesState } from '../../../../devices/states/Modes';
+import { SceneModeState } from '../../../../devices/states/modes/Scene';
+import { getCommandCodes } from '../../../../util/opCodeUtils';
 
 export abstract class DeviceModeTransition
   extends DeviceTransition<ModesState & GoveeDevice> {
@@ -35,7 +36,7 @@ export class DeviceSceneTransition extends DeviceModeTransition {
       return this;
     }
     sceneModeState.activeSceneId = this.sceneId;
-    this.commandCodes = [sceneModeState.sceneIdChange()];
+    this.commandCodes = [ getCommandCodes(0xa3, [ 0x02 ]), sceneModeState.sceneIdChange() ];
 
     return super.updateState(device);
   }
