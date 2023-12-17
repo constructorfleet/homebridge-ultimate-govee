@@ -39,121 +39,131 @@ export class IoTClient
   },
   )
   public async setup(data: IoTInitializeClientData) {
-    if (!this.client || !this.config) {
-      const certWithCA = [
-        data.certificate.toString(),
-        await readFile(this.caPath, 'utf-8')
-      ].join(EOL);
-      this.config = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_builder(
-        certWithCA,
-        data.privateKey.toString()
-      )
-        .with_client_id(`AP/${ data.accountId }/a${ this.clientId }`)
-        .with_endpoint(data.endpoint)
-        .with_clean_session(false)
-        .build();
-
-      this.client = new mqtt.MqttClient();
-    }
-    this.connection = this.client.new_connection(this.config!);
-
     try {
-      await this.connection.connect();
-    } catch (error) {
-      this.log.error(error);
-      return;
+      await this.lock.acquire();
+      if (this.client && this.connection) {
+        return;
+      }
+      if (!this.client || !this.config) {
+        const certWithCA = [
+          data.certificate.toString(),
+          await readFile(this.caPath, 'utf-8')
+        ].join(EOL);
+        this.config = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_builder(
+          certWithCA,
+          data.privateKey.toString()
+        )
+          .with_client_id(`AP/${ data.accountId }/a${ this.clientId }`)
+          .with_endpoint(data.endpoint)
+          .with_clean_session(false)
+          .build();
+
+        this.client = new mqtt.MqttClient();
+      }
+      if (!this.connection) {
+        this.connection = this.client.new_connection(this.config!);
+
+        this.connection.on(
+          'connect',
+          async () => {
+            if (!this.connected) {
+              this.log.info(
+                'IoTClient',
+                'onConnect',
+                'Connection Connected',
+              );
+              this.connected = true;
+              await this.emitAsync(
+                new IoTConnectionStateEvent(ConnectionState.Connected),
+              );
+              await this.resubscribe();
+            }
+          },
+        );
+
+        this.connection.on(
+          'resume',
+          async () => {
+            this.log.info(
+              'IoTClient',
+              'onReconnect',
+              'Connection Reconnected',
+            );
+            if (!this.connected) {
+              this.connected = true;
+              await this.emitAsync(
+                new IoTConnectionStateEvent(ConnectionState.Connected),
+              );
+              await this.resubscribe();
+            }
+          },
+        );
+
+        this.connection.on(
+          'message',
+          async (topic: string, payload: ArrayBuffer, dup: boolean, qos: mqtt.QoS, retain: boolean) => {
+            await this.emitAsync(
+              new IotReceive(
+                topic,
+                payload.toString(),
+              ),
+            );
+          },
+        );
+
+        this.connection.on(
+          'error',
+          (error: Error | string) => {
+            this.log.error(
+              'IoTClient',
+              'onError',
+              error,
+            );
+          },
+        );
+
+        this.connection.on(
+          'disconnect',
+          async () => {
+            this.log.info(
+              'IoTClient',
+              'onOffline',
+              'Connection Offline',
+            );
+            if (this.connected) {
+              this.connected = false;
+              this.connection = undefined;
+              await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
+            }
+          },
+        );
+
+        this.connection.on(
+          'closed',
+          async () => {
+            this.log.info(
+              'IoTClient',
+              'onClose',
+              'Connection Closed',
+            );
+            if (this.connected) {
+              this.connected = false;
+              this.connection = undefined;
+              await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
+            }
+          },
+        );
+      }
+
+      try {
+        await this.connection.connect();
+      } catch (error) {
+        this.log.error(error);
+        return;
+      }
+    } finally {
+      this.lock.release();
     }
-
-    this.connection.on(
-      'connect',
-      async () => {
-        if (!this.connected) {
-          this.log.info(
-            'IoTClient',
-            'onConnect',
-            'Connection Connected',
-          );
-          this.connected = true;
-          await this.emitAsync(
-            new IoTConnectionStateEvent(ConnectionState.Connected),
-          );
-          await this.resubscribe();
-        }
-      },
-    );
-
-    this.connection.on(
-      'resume',
-      async () => {
-        this.log.info(
-          'IoTClient',
-          'onReconnect',
-          'Connection Reconnected',
-        );
-        if (!this.connected) {
-          this.connected = true;
-          await this.emitAsync(
-            new IoTConnectionStateEvent(ConnectionState.Connected),
-          );
-          await this.resubscribe();
-        }
-      },
-    );
-
-    this.connection.on(
-      'message',
-      async (topic: string, payload: ArrayBuffer, dup: boolean, qos: mqtt.QoS, retain: boolean) => {
-        await this.emitAsync(
-          new IotReceive(
-            topic,
-            payload.toString(),
-          ),
-        );
-      },
-    );
-
-    this.connection.on(
-      'error',
-      (error: Error | string) => {
-        this.log.error(
-          'IoTClient',
-          'onError',
-          error,
-        );
-      },
-    );
-
-    this.connection.on(
-      'disconnect',
-      async () => {
-        this.log.info(
-          'IoTClient',
-          'onOffline',
-          'Connection Offline',
-        );
-        if (this.connected) {
-          this.connected = false;
-          this.connection = undefined;
-          await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Offline));
-        }
-      },
-    );
-
-    this.connection.on(
-      'closed',
-      async () => {
-        this.log.info(
-          'IoTClient',
-          'onClose',
-          'Connection Closed',
-        );
-        if (this.connected) {
-          this.connected = false;
-          this.connection = undefined;
-          await this.emitAsync(new IoTConnectionStateEvent(ConnectionState.Closed));
-        }
-      },
-    );
   }
 
   @OnEvent(
