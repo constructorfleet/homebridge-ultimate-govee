@@ -65,6 +65,7 @@ export class IoTEventProcessor extends Emitter {
       );
     } catch (err) {
       this.log.error(err);
+      console.dir(message);
     }
   }
 
