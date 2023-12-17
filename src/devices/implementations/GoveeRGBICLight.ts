@@ -1,9 +1,9 @@
-import {ColorSegmentsMode} from '../states/modes/ColorSegments';
-import {DeviceFactory} from '../DeviceFactory';
-import {LightDevice} from './GoveeLight';
-import {RGBICMusicMode} from '../states/modes/RGBICMusic';
-import {SceneMode} from '../states/modes/Scene';
-import {ColorMode} from '../states/modes/Color';
+import { ColorSegmentsMode } from '../states/modes/ColorSegments';
+import { DeviceFactory } from '../DeviceFactory';
+import { LightDevice } from './GoveeLight';
+import { RGBICMusicMode } from '../states/modes/RGBICMusic';
+import { SceneMode } from '../states/modes/Scene';
+import { ColorMode } from '../states/modes/Color';
 
 
 @DeviceFactory.register(
@@ -11,6 +11,7 @@ import {ColorMode} from '../states/modes/Color';
   'H6144',
   'H6072',
   'H705A',
+  'H61A8'
 )
 export class GoveeRGBICLight
   extends SceneMode(
