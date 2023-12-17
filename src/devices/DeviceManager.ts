@@ -55,7 +55,7 @@ export class DeviceManager extends Emitter {
       return;
     }
 
-    if (deviceSettings.model === "H6a1A" && deviceSettings.deviceTopic) {
+    if (deviceSettings.model === "H611A" && deviceSettings.deviceTopic) {
       await this.emitAsync(
         new IoTSubscribeToEvent(
           deviceSettings.deviceTopic
