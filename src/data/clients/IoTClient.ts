@@ -47,7 +47,7 @@ export class IoTClient
       this.config = iot.AwsIotMqttConnectionConfigBuilder.new_mtls_builder(
         certWithCA,
         data.privateKey.toString()
-      )//.with_certificate_authority_from_path(this.caPath)
+      )
         .with_client_id(`AP/${ data.accountId }/a${ this.clientId }`)
         .with_endpoint(data.endpoint)
         .with_clean_session(false)
