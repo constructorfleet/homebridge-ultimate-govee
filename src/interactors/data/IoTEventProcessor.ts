@@ -83,11 +83,6 @@ export class IoTEventProcessor extends Emitter {
       return;
     }
     await this.emitAsync(
-      new IoTSubscribeToEvent(
-        device.iotTopic
-      )
-    );
-    await this.emitAsync(
       new IoTPublishToEvent(
         device.iotTopic,
         JSON.stringify({
