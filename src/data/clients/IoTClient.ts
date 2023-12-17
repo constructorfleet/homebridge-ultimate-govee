@@ -109,6 +109,8 @@ export class IoTClient
         this.connection.on(
           'message',
           async (topic: string, payload: ArrayBuffer, dup: boolean, qos: mqtt.QoS, retain: boolean) => {
+            console.dir(topic);
+            console.dir(JSON.parse(this.decoder.decode(payload)));
             await this.emitAsync(
               new IotReceive(
                 topic,
