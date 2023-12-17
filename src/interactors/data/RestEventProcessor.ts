@@ -22,6 +22,7 @@ import { ResponseWithDevice } from '../../core/events/dataClients/rest/RestRespo
 import { DIYEffectReceived } from '../../core/events/effects/DIYEffects';
 import { DeviceEffectReceived } from '../../core/events/effects/DeviceEffects';
 import console from 'console';
+import { IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
 
 @Injectable()
 export class RestEventProcessor extends Emitter {
@@ -34,9 +35,9 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.AUTHENTICATION.Failure', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async onAuthenticationFailure(response: ApiResponseStatus) {
     this.log.error('Unexpected error authenticating with API', response.message);
@@ -53,9 +54,9 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.RESPONSE.DIYEffects', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async onDIYEffectListReceived(
     payload: DIYListResponse,
@@ -83,9 +84,9 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.RESPONSE.DeviceScenes', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async onDeviceScenesReceived(
     payload: ResponseWithDevice<DeviceSceneListResponse>,
@@ -119,50 +120,58 @@ export class RestEventProcessor extends Emitter {
 
   @OnEvent(
     'REST.RESPONSE.DeviceList', {
-      async: true,
-      nextTick: true,
-    },
+    async: true,
+    nextTick: true,
+  },
   )
   async onDeviceListReceived(payload: AppDeviceListResponse) {
-    const deviceConfigs = payload.devices
+    const deviceConfigs = await Promise.all(payload.devices
       .map(
-        (device) =>
-          toDeviceConfig(
+        async (device) =>
+          this.toDeviceConfig(
             plainToInstance(
               AppDeviceSettingsResponse,
               JSON.parse(device.deviceExt.deviceSettings),
             ) as AppDeviceSettingsResponse,
             device,
           ),
-      );
+      )
+    );
 
     for (let i = 0; i < deviceConfigs.length; i++) {
       await this.emitAsync(
-        new DeviceSettingsReceived(deviceConfigs[i]),
+        new DeviceSettingsReceived(deviceConfigs[ i ]),
       );
     }
   }
-}
 
-export function toDeviceConfig(
-  settings: AppDeviceSettingsResponse,
-  device: AppDeviceResponse,
-): DeviceConfig {
-  return {
-    deviceId: settings.deviceId,
-    name: settings.deviceName,
-    model: settings.deviceModel,
-    pactType: settings.pactType,
-    pactCode: settings.pactCode,
-    goodsType: device.goodsType,
-    hardwareVersion: settings.hardwareVersion,
-    softwareVersion: settings.softwareVersion,
-    deviceTopic: settings?.iotDeviceTopic,
-    bleName: settings?.bleName,
-    bleAddress: settings?.address,
-    ssid: settings?.wifiSSID,
-    wifiHardwareVersion: settings?.wifiHardwareVersion,
-    wifiSoftwareVersion: settings?.wifiSoftwareVersion,
-    macAddress: settings?.wifiMACAddress,
-  };
+  async toDeviceConfig(
+    settings: AppDeviceSettingsResponse,
+    device: AppDeviceResponse,
+  ): Promise<DeviceConfig> {
+    if (settings.iotDeviceTopic) {
+      await this.emitAsync(
+        new IoTSubscribeToEvent(
+          settings.iotDeviceTopic
+        )
+      );
+    }
+    return {
+      deviceId: settings.deviceId,
+      name: settings.deviceName,
+      model: settings.deviceModel,
+      pactType: settings.pactType,
+      pactCode: settings.pactCode,
+      goodsType: device.goodsType,
+      hardwareVersion: settings.hardwareVersion,
+      softwareVersion: settings.softwareVersion,
+      deviceTopic: settings?.iotDeviceTopic,
+      bleName: settings?.bleName,
+      bleAddress: settings?.address,
+      ssid: settings?.wifiSSID,
+      wifiHardwareVersion: settings?.wifiHardwareVersion,
+      wifiSoftwareVersion: settings?.wifiSoftwareVersion,
+      macAddress: settings?.wifiMACAddress,
+    };
+  }
 }

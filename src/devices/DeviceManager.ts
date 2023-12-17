@@ -54,13 +54,7 @@ export class DeviceManager extends Emitter {
       this.log.info('No device settings');
       return;
     }
-    if (deviceSettings.deviceTopic) {
-      await this.emitAsync(
-        new IoTSubscribeToEvent(
-          deviceSettings.deviceTopic
-        )
-      );
-    }
+
     const newDevice = !this.devices.has(deviceSettings.deviceId);
     let deviceCtor;
     try {
