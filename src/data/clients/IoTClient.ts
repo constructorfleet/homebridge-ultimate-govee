@@ -221,7 +221,7 @@ export class IoTClient
   },
   )
   async subscribe(message: IoTEventData) {
-    if (!message.topic) {
+    if (!message?.topic) {
       this.log.info('No topic to subscribe to');
       return;
     }
