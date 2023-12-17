@@ -13,6 +13,7 @@ import { LoggingService } from '../../logging/LoggingService';
 import { ConnectionState } from '../../core/events/dataClients/DataClientEvent';
 import { PersistService } from '../../persist/PersistService';
 import { IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
+import { DeviceManager } from '../../devices/DeviceManager';
 
 @Injectable()
 export class IoTEventProcessor extends Emitter {
@@ -55,6 +56,8 @@ export class IoTEventProcessor extends Emitter {
         IoTAccountMessage,
         JSON.parse(message.payload),
       );
+      const payload = JSON.parse(message.payload);
+      await DeviceManager.recordUnknownDevice(payload.device, payload.sku, payload);
       const devState = toDeviceState(acctMessage);
       await this.emitAsync(
         new DeviceStateReceived(devState),

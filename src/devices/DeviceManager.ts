@@ -31,7 +31,7 @@ export class DeviceManager extends Emitter {
     super(eventEmitter);
   }
 
-  async recordUnknownDevice(deviceId: string, model: string, data: unknown) {
+  static async recordUnknownDevice(deviceId: string, model: string, data: unknown) {
     const deviceLogDir = `/homebridge/logs/devices/${ model }`;
     if (!existsSync(deviceLogDir)) {
       await mkdir(deviceLogDir, { recursive: true });
@@ -67,7 +67,7 @@ export class DeviceManager extends Emitter {
         'Unknown model',
         deviceSettings.model,
       );
-      await this.recordUnknownDevice(
+      await DeviceManager.recordUnknownDevice(
         deviceSettings.deviceId,
         deviceSettings.model,
         deviceSettings);
@@ -113,7 +113,7 @@ export class DeviceManager extends Emitter {
         'Unknown Device',
         deviceState.deviceId,
       );
-      await this.recordUnknownDevice(deviceState.deviceId, deviceState.model || "unknown", deviceState);
+      await DeviceManager.recordUnknownDevice(deviceState.deviceId, deviceState.model || "unknown", deviceState);
       return;
     }
     const device = this.devices.get(deviceState.deviceId);
