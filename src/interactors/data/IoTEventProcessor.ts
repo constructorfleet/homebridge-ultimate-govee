@@ -56,16 +56,11 @@ export class IoTEventProcessor extends Emitter {
         JSON.parse(message.payload),
       );
       const devState = toDeviceState(acctMessage);
-      if (acctMessage.deviceId === '23:66:D4:AD:FC:6B:57:E8') {
-        this.log.error(JSON.stringify(acctMessage, null, 2));
-        this.log.error(JSON.stringify(devState, null, 2));
-      }
       await this.emitAsync(
         new DeviceStateReceived(devState),
       );
     } catch (err) {
       this.log.error(err);
-      console.dir(message);
     }
   }
 
@@ -88,6 +83,11 @@ export class IoTEventProcessor extends Emitter {
       return;
     }
     await this.emitAsync(
+      new IoTSubscribeToEvent(
+        device.iotTopic
+      )
+    );
+    await this.emitAsync(
       new IoTPublishToEvent(
         device.iotTopic,
         JSON.stringify({
@@ -108,7 +108,6 @@ export class IoTEventProcessor extends Emitter {
 export function toDeviceState(
   message: IoTAccountMessage,
 ): DeviceState {
-  console.dir(message);
   return {
     deviceId: message.deviceId,
     model: message.model,

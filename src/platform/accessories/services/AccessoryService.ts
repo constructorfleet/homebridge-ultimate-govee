@@ -1,10 +1,10 @@
-import {Characteristic, PlatformAccessory, Service, WithUUID} from 'homebridge';
-import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {Emitter} from '../../../util/types';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {LoggingService} from '../../../logging/LoggingService';
-import {PlatformConfigService} from '../../config/PlatformConfigService';
-import {GoveeDeviceOverride} from '../../config/GoveePluginConfig';
+import { Characteristic, PlatformAccessory, Service, WithUUID } from 'homebridge';
+import { GoveeDevice } from '../../../devices/GoveeDevice';
+import { Emitter } from '../../../util/types';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { LoggingService } from '../../../logging/LoggingService';
+import { PlatformConfigService } from '../../config/PlatformConfigService';
+import { GoveeDeviceOverride } from '../../config/GoveePluginConfig';
 
 export class ServiceSubType<IdentifierType> {
   constructor(
@@ -162,7 +162,7 @@ export abstract class AccessoryService<IdentifierType, ServiceType extends typeo
     accessory: PlatformAccessory,
     deviceOverride?: GoveeDeviceOverride,
   ): IdentifiedService<IdentifierType>[] {
-    return [{
+    return [ {
       service: this.setServicePrimary(
         accessory,
         accessory.getService(
@@ -172,7 +172,7 @@ export abstract class AccessoryService<IdentifierType, ServiceType extends typeo
           deviceOverride,
         ),
       ),
-    }];
+    } ];
   }
 
   private getSubTypeService(
@@ -209,26 +209,14 @@ export abstract class AccessoryService<IdentifierType, ServiceType extends typeo
     }
     if (!subType || !subType?.subType) {
       return this.addServiceTo(accessory);
-      // return accessory.addService(
-      //   this.serviceType,
-      //   `${accessory.displayName}`,
-      //   this.serviceType.UUID,
-      //   undefined,
-      // );
     }
     try {
       return this.addSubserviceTo(accessory, subType);
-      // return accessory.addService(
-      //   this.serviceType,
-      //   `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
-      //   this.serviceType.UUID,
-      //   subType.subType,
-      // );
     } catch (ex) {
       this.log.error(
         'AccessoryService',
         'tryAddService',
-        `${accessory.displayName} ${subType.nameSuffix || subType.subType}`,
+        `${ accessory.displayName } ${ subType.nameSuffix || subType.subType }`,
         ex);
       return undefined;
     }
