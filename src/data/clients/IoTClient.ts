@@ -75,10 +75,10 @@ export class IoTClient
                 'Connection Connected',
               );
               this.connected = true;
+              await this.resubscribe();
               await this.emitAsync(
                 new IoTConnectionStateEvent(ConnectionState.Connected),
               );
-              await this.resubscribe();
             }
           },
         );

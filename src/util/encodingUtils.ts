@@ -10,7 +10,6 @@ export const unpaddedHexToArray =
       ?.filter(i => i.length > 0)
       ?.join(' ');
     const result = hexStringToArray(padded);
-    console.dir({ hexString, padded, result });
     return result;
   };
 
