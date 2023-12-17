@@ -15,6 +15,7 @@ import { RestRequestDeviceScenes, RestRequestDIYEffects } from '../core/events/d
 import { DeviceRefreshData } from '../core/events/devices/DeviceRefresh';
 import { mkdir, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import { IoTSubscribeToEvent } from '../core/events/dataClients/iot/IotSubscription';
 
 
 @Injectable()
@@ -52,6 +53,14 @@ export class DeviceManager extends Emitter {
     if (!deviceSettings) {
       this.log.info('No device settings');
       return;
+    }
+
+    if (deviceSettings.model === "H6a1A" && deviceSettings.deviceTopic) {
+      await this.emitAsync(
+        new IoTSubscribeToEvent(
+          deviceSettings.deviceTopic
+        )
+      );
     }
 
     const newDevice = !this.devices.has(deviceSettings.deviceId);
