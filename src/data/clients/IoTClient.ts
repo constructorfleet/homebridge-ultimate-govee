@@ -169,12 +169,11 @@ export class IoTClient
             }
           },
         );
-      }
-
-      try {
-        await this.connection.connect();
-      } catch (error) {
-        this.log.error("Error establishing connection to AWS services", error);
+        try {
+          await this.connection.connect();
+        } catch (error) {
+          this.log.error("Error establishing connection to AWS services", error);
+        }
       }
     } finally {
       this.lock.release();
