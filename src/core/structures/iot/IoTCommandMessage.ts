@@ -1,12 +1,12 @@
-import {DeviceTransition} from '../devices/DeviceTransition';
-import {State} from '../../../devices/states/State';
-import {GoveeDevice} from '../../../devices/GoveeDevice';
-import {DeviceBrightnessTransition} from '../devices/transitions/DeviceBrightnessTransition';
-import {DeviceColorTransition} from '../devices/transitions/DeviceColorTransition';
-import {DeviceOnOffTransition} from '../devices/transitions/DeviceOnOffTransition';
-import {DeviceColorTemperatureTransition} from '../devices/transitions/DeviceColorTemperatureTransition';
-import {DeviceColorTemperatureWCTransition} from '../devices/transitions/DeviceColorTemperatureWCTransition';
-import {DeviceColorWCTransition} from '../devices/transitions/DeviceColorWCTransition';
+import { DeviceTransition } from '../devices/DeviceTransition';
+import { State } from '../../../devices/states/State';
+import { GoveeDevice } from '../../../devices/GoveeDevice';
+import { DeviceBrightnessTransition } from '../devices/transitions/DeviceBrightnessTransition';
+import { DeviceColorTransition } from '../devices/transitions/DeviceColorTransition';
+import { DeviceOnOffTransition } from '../devices/transitions/DeviceOnOffTransition';
+import { DeviceColorTemperatureTransition } from '../devices/transitions/DeviceColorTemperatureTransition';
+import { DeviceColorTemperatureWCTransition } from '../devices/transitions/DeviceColorTemperatureWCTransition';
+import { DeviceColorWCTransition } from '../devices/transitions/DeviceColorWCTransition';
 
 export interface IoTCommandDataColor {
   r?: number;
@@ -54,7 +54,7 @@ export abstract class BaseIoTCommandMessage implements IoTCommandMessage {
   public readonly device: string;
   public readonly cmd: IoTCommand;
   public readonly cmdVersion = 0;
-  public readonly transaction = `u_${Date.now()}`;
+  public readonly transaction = `v_${ Date.now() }000`;
   public readonly type = 1;
   public readonly data: IoTCommandData;
 
@@ -87,7 +87,7 @@ export class IoTOnOffCommandMessage extends BaseIoTCommandMessage {
   }
 
   isValid(): boolean {
-    return [0, 1].includes(this.data.val ?? -1);
+    return [ 0, 1 ].includes(this.data.val ?? -1);
   }
 }
 
@@ -180,7 +180,7 @@ export class IoTColorTemperatureWCCommandMessage extends BaseIoTCommandMessage {
   }
 
   isValid(): boolean {
-    return ![this.data.color?.r, this.data.color?.g, this.data.color?.b]
+    return ![ this.data.color?.r, this.data.color?.g, this.data.color?.b ]
       .some((color) => color === undefined || color < 0 || color > 255);
   }
 }
@@ -206,7 +206,7 @@ export class IoTColorTemperatureCommandMessage extends BaseIoTCommandMessage {
   }
 
   isValid(): boolean {
-    return ![this.data.color?.red, this.data.color?.green, this.data.color?.blue]
+    return ![ this.data.color?.red, this.data.color?.green, this.data.color?.blue ]
       .some((color) => color === undefined || color < 0 || color > 255);
   }
 }
