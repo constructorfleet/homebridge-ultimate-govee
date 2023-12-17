@@ -32,7 +32,7 @@ export interface IoTCommandData {
 export type IoTCommand = 'pt' | 'ptReal' | 'turn' | 'brightness' | 'color' | 'colorTem' | 'colorwc';
 
 export interface IoTCommandMessage {
-  // device: string;
+  device: string;
   cmd: IoTCommand;
   cmdVersion: number;
   transaction: string;
@@ -51,7 +51,7 @@ export function getIoTCommandMessage<T extends DeviceTransition<State & GoveeDev
 }
 
 export abstract class BaseIoTCommandMessage implements IoTCommandMessage {
-  // public readonly device: string;
+  public readonly device: string;
   public readonly cmd: IoTCommand;
   public readonly cmdVersion = 0;
   public readonly transaction = `v_${ Date.now() }000`;
@@ -63,7 +63,7 @@ export abstract class BaseIoTCommandMessage implements IoTCommandMessage {
     command: IoTCommand,
     commandData: IoTCommandData,
   ) {
-    // this.device = transition.deviceId;
+    this.device = transition.deviceId;
     this.cmd = command;
     this.data = commandData;
   }
