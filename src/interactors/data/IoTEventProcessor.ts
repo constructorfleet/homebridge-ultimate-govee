@@ -57,6 +57,9 @@ export class IoTEventProcessor extends Emitter {
         JSON.parse(message.payload),
       );
       const payload = JSON.parse(message.payload);
+      if (payload.device === "5F:D3:7C:A6:B0:4A:17:8C") {
+        console.dir(payload);
+      }
       await DeviceManager.recordUnknownDevice(payload.device, payload.sku, payload);
       const devState = toDeviceState(acctMessage);
       await this.emitAsync(

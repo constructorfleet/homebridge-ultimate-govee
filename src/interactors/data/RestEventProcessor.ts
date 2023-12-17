@@ -149,10 +149,6 @@ export class RestEventProcessor extends Emitter {
     settings: AppDeviceSettingsResponse,
     device: AppDeviceResponse,
   ): Promise<DeviceConfig> {
-    if (settings.iotDeviceTopic && device.device === "5F:D3:7C:A6:B0:4A:17:8C") {
-      console.dir(settings);
-      console.dir(device);
-    }
     return {
       deviceId: settings.deviceId,
       name: settings.deviceName,
