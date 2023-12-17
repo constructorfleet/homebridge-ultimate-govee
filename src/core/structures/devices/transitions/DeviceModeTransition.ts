@@ -36,7 +36,8 @@ export class DeviceSceneTransition extends DeviceModeTransition {
       return this;
     }
     sceneModeState.activeSceneId = this.sceneId;
-    this.commandCodes = [ getCommandCodes(0xa3, [ 0x02 ]), sceneModeState.sceneIdChange() ];
+    // this.commandCodes = [ getCommandCodes(0xa3, [ 0x02 ]), sceneModeState.sceneIdChange() ];
+    this.commandCodes = [ getCommandCodes(33, [ 5 ]), getCommandCodes(0xaa, [ 0x05, 0x0a, 0x03 ]) ];
 
     return super.updateState(device);
   }
