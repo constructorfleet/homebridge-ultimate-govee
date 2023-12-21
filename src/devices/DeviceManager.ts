@@ -15,7 +15,6 @@ import { RestRequestDeviceScenes, RestRequestDIYEffects } from '../core/events/d
 import { DeviceRefreshData } from '../core/events/devices/DeviceRefresh';
 import { mkdir, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { IoTSubscribeToEvent } from '../core/events/dataClients/iot/IotSubscription';
 
 
 @Injectable()
@@ -29,18 +28,6 @@ export class DeviceManager extends Emitter {
     public moduleRef: ModuleRef,
   ) {
     super(eventEmitter);
-  }
-
-  static async recordUnknownDevice(deviceId: string, model: string, data: unknown) {
-    const deviceLogDir = `/homebridge/logs/devices/${ model }`;
-    if (!existsSync(deviceLogDir)) {
-      await mkdir(deviceLogDir, { recursive: true });
-    }
-    await writeFile(
-      `${ deviceLogDir }/${ deviceId }`,
-      JSON.stringify(data, null, 2),
-      { encoding: 'utf-8' }
-    );
   }
 
   @OnEvent(
@@ -67,11 +54,6 @@ export class DeviceManager extends Emitter {
         'Unknown model',
         deviceSettings.model,
       );
-      await DeviceManager.recordUnknownDevice(
-        deviceSettings.deviceId,
-        deviceSettings.model,
-        deviceSettings);
-      return;
     }
 
     try {
@@ -113,7 +95,6 @@ export class DeviceManager extends Emitter {
         'Unknown Device',
         deviceState.deviceId,
       );
-      await DeviceManager.recordUnknownDevice(deviceState.deviceId, deviceState.model || "unknown", deviceState);
       return;
     }
     const device = this.devices.get(deviceState.deviceId);

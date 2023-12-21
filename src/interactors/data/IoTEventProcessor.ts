@@ -99,7 +99,7 @@ export class IoTEventProcessor extends Emitter {
         statusCode: unpaddedHexToArray(payload.state?.sta?.stc)
       });
       // }
-      await DeviceManager.recordUnknownDevice(payload.device, payload.sku, payload);
+
       const devState = toDeviceState(acctMessage);
       await this.emitAsync(
         new DeviceStateReceived(devState),
