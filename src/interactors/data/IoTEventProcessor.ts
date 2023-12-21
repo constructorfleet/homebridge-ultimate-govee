@@ -103,8 +103,9 @@ export class IoTEventProcessor extends Emitter {
       const payload = JSON.parse(message.payload);
       // if (payload.device === "5F:D3:7C:A6:B0:4A:17:8C") {
       getLogger(payload.device || "unknown").info({
+        topic: message.topic,
         ...payload,
-        commandDecoded: (payload.op?.command ?? []).map(base64ToHex).join(""),
+        commandDecoded: (payload.op?.command ?? []).map((x) => base64ToHex(x).join(" ")),
         // opCodeDecoded: payload.op?.opcode ?  ([ payload.op?.opcode ] ?? []).map(base64ToHex),
         statusCode: unpaddedHexToArray(payload.state?.sta?.stc)?.join(" ")
       });
