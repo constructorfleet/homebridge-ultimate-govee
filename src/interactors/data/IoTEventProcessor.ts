@@ -79,6 +79,16 @@ export class IoTEventProcessor extends Emitter {
   }
 
   @OnEvent(
+    'IOT.Device.ReceivedReceived', {
+    async: true,
+    nextTick: true,
+  },
+  )
+  async onIoTDeviceMessage(message: IoTEventData) {
+    console.dir(message);
+  }
+
+  @OnEvent(
     'IOT.Received', {
     async: true,
     nextTick: true,

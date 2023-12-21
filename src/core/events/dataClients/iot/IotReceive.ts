@@ -1,4 +1,4 @@
-import {IoTEvent, IoTEventData} from './IoTEvent';
+import { IoTEvent, IoTEventData } from './IoTEvent';
 
 export class IotReceive
   extends IoTEvent<IoTEventData> {
@@ -9,6 +9,23 @@ export class IotReceive
   ) {
     super(
       'Received',
+      new IoTEventData(
+        topic,
+        payload,
+      ),
+    );
+  }
+}
+
+export class IotDeviceReceive
+  extends IoTEvent<IoTEventData> {
+
+  constructor(
+    topic: string,
+    payload: string,
+  ) {
+    super(
+      'Device.Received',
       new IoTEventData(
         topic,
         payload,

@@ -5,7 +5,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { IoTConnectionStateEvent, IoTErrorEvent, IoTEventData, IoTInitializeClientData } from '../../core/events/dataClients/iot/IoTEvent';
 import { ConnectionState } from '../../core/events/dataClients/DataClientEvent';
-import { IotReceive } from '../../core/events/dataClients/iot/IotReceive';
+import { IotDeviceReceive, IotReceive } from '../../core/events/dataClients/iot/IotReceive';
 import { IoTSubscribedToEvent, IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
 import { IoTUnsubscribedFromEvent } from '../../core/events/dataClients/iot/IotRemoveSubscription';
 import { LoggingService } from '../../logging/LoggingService';
@@ -13,6 +13,7 @@ import { Lock } from 'async-await-mutex-lock';
 import { readFile } from 'fs/promises';
 import { EOL } from 'os';
 import { TextDecoder } from 'util';
+import { v4 as uuidv4 } from "uuid";
 
 @Injectable()
 export class IoTClient
@@ -25,6 +26,7 @@ export class IoTClient
   private lock = new Lock<void>();
   private connectionLock = new Lock<void>();
   private readonly subscriptions: Set<string> = new Set<string>();
+  private connections: Record<string, mqtt.MqttClientConnection> = {};
 
   constructor(
     eventEmitter: EventEmitter2,
@@ -228,10 +230,28 @@ export class IoTClient
       if (!this.subscriptions.has(message.topic)) {
         this.log.info('Subscribing', message.topic);
         if (this.connection) {
-          await this.connection.subscribe(
-            message.topic,
-            mqtt.QoS.AtLeastOnce
-          );
+          if (!message.topic.startsWith("GA")) {
+            if (!this.connections[ message.topic ]) {
+              this.connections[ message.topic ] = this.client!.new_connection({
+                ...this.config!,
+                client_id: `${ this.config!.client_id }/${ uuidv4() }`
+              });
+              const conn = this.connections[ message.topic ];
+              conn.on('message', async (topic, payload) => {
+                await this.emitAsync(
+                  new IotDeviceReceive(topic, this.decoder.decode(payload))
+                );
+              });
+              await conn.connect();
+              await conn.subscribe();
+            }
+
+          } else {
+            await this.connection.subscribe(
+              message.topic,
+              mqtt.QoS.AtLeastOnce
+            );
+          }
         }
         this.subscriptions.add(message.topic);
         await this.emitAsync(new IoTSubscribedToEvent(message.topic));
