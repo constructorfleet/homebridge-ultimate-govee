@@ -95,7 +95,7 @@ export class IoTEventProcessor extends Emitter {
       getLogger(payload.device || "unknown").info({
         ...payload,
         commandDecoded: (payload.op?.command ?? []).map(base64ToHex),
-        opCodeDecoded: ([ payload.op?.opcode ] ?? []).map(base64ToHex),
+        // opCodeDecoded: payload.op?.opcode ?  ([ payload.op?.opcode ] ?? []).map(base64ToHex),
         statusCode: unpaddedHexToArray(payload.state?.sta?.stc)
       });
       // }
