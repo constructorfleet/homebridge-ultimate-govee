@@ -85,7 +85,7 @@ export class IoTEventProcessor extends Emitter {
   },
   )
   async onIoTDeviceMessage(message: IoTEventData) {
-    console.dir(message);
+    console.dir(message, { colors: true, depth: 5 });
   }
 
   @OnEvent(
@@ -104,9 +104,9 @@ export class IoTEventProcessor extends Emitter {
       // if (payload.device === "5F:D3:7C:A6:B0:4A:17:8C") {
       getLogger(payload.device || "unknown").info({
         ...payload,
-        commandDecoded: (payload.op?.command ?? []).map(base64ToHex),
+        commandDecoded: (payload.op?.command ?? []).map(base64ToHex).join(""),
         // opCodeDecoded: payload.op?.opcode ?  ([ payload.op?.opcode ] ?? []).map(base64ToHex),
-        statusCode: unpaddedHexToArray(payload.state?.sta?.stc)
+        statusCode: unpaddedHexToArray(payload.state?.sta?.stc)?.join(" ")
       });
       // }
 
