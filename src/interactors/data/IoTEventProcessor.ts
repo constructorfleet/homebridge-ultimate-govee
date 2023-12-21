@@ -92,16 +92,12 @@ export class IoTEventProcessor extends Emitter {
       );
       const payload = JSON.parse(message.payload);
       // if (payload.device === "5F:D3:7C:A6:B0:4A:17:8C") {
-      payload[ 'state' ] = {
-        ...payload[ 'state' ],
-        statusCode: unpaddedHexToArray(payload.state?.sta?.stc)
-      };
-      payload[ 'op' ] = {
-        ...payload[ 'op' ],
+      getLogger(payload.device || "unknown").info({
+        ...payload,
         commandDecoded: (payload.op?.command ?? []).map(base64ToHex),
-        opCodeDecoded: ([ payload.op?.opcode ] ?? []).map(base64ToHex)
-      };
-      getLogger(payload.device || "unknown").info(payload);
+        opCodeDecoded: ([ payload.op?.opcode ] ?? []).map(base64ToHex),
+        statusCode: unpaddedHexToArray(payload.state?.sta?.stc)
+      });
       // }
       await DeviceManager.recordUnknownDevice(payload.device, payload.sku, payload);
       const devState = toDeviceState(acctMessage);
