@@ -277,7 +277,7 @@ export class RestClient
         () => this.emit(
           new RestRequestDevices(),
         ),
-        60 * 1000,
+        30 * 60 * 1000,
       );
     } catch (error) {
       this.log.error('RestClient', 'getDevices', error);

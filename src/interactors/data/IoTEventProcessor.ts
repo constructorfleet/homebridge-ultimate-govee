@@ -14,6 +14,40 @@ import { ConnectionState } from '../../core/events/dataClients/DataClientEvent';
 import { PersistService } from '../../persist/PersistService';
 import { IoTSubscribeToEvent } from '../../core/events/dataClients/iot/IotSubscription';
 import { DeviceManager } from '../../devices/DeviceManager';
+import Winston from 'winston';
+import DailyRotateFile from "winston-daily-rotate-file";
+
+
+const logFiles = {};
+const getLogger = (deviceId: string): Winston.Logger => {
+  if (!logFiles[ deviceId ]) {
+    logFiles[ deviceId ] = Winston.createLogger({
+      level: 'info', // Set the log level
+      format: Winston.format.combine(
+        Winston.format.timestamp(),
+        Winston.format.json({
+          space: 2
+        })
+      ),
+      transports: [
+        // Console transport for logging to the console
+        new Winston.transports.Console(),
+
+        // Daily Rotate File transport for rotating log files
+        new DailyRotateFile({
+          dirname: '/opt/homebridge/logs/devices', // Directory to store log files
+          filename: `${ deviceId.replace(/:/g, "") }-%DATE%.log`, // Log file name with date pattern
+          datePattern: 'YYYY-MM-DD', // Date pattern for rotation
+          zippedArchive: true, // Compress old log files
+          maxSize: '20m', // Maximum size for a single log file
+          maxFiles: '7d', // Maximum number of log files to keep
+        }),
+      ],
+    });
+  }
+
+  return logFiles[ deviceId ];
+};
 
 @Injectable()
 export class IoTEventProcessor extends Emitter {
@@ -57,9 +91,18 @@ export class IoTEventProcessor extends Emitter {
         JSON.parse(message.payload),
       );
       const payload = JSON.parse(message.payload);
-      if (payload.device === "5F:D3:7C:A6:B0:4A:17:8C") {
-        console.dir(payload);
-      }
+      // if (payload.device === "5F:D3:7C:A6:B0:4A:17:8C") {
+      payload[ 'state' ] = {
+        ...payload[ 'state' ],
+        statusCode: unpaddedHexToArray(payload.state?.sta?.stc)
+      };
+      payload[ 'op' ] = {
+        ...payload[ 'op' ],
+        commandDecoded: (payload.op?.command ?? []).map(base64ToHex),
+        opCodeDecoded: ([ payload.op?.opcode ] ?? []).map(base64ToHex)
+      };
+      getLogger(payload.device || "unknown").info(payload);
+      // }
       await DeviceManager.recordUnknownDevice(payload.device, payload.sku, payload);
       const devState = toDeviceState(acctMessage);
       await this.emitAsync(
