@@ -1,6 +1,7 @@
 import { FactoryProvider } from '@nestjs/common';
 import {
   CoreModuleOptionsKey,
+  GenerateUUIDKey,
   HomebridgeApiKey,
   HomebridgeServicesKey,
 } from './core.const';
@@ -23,3 +24,9 @@ export const HomebridgeApiProvider: FactoryProvider = {
   inject: [CoreModuleOptionsKey],
   useFactory: (options: CoreModuleOptions) => options.api,
 };
+
+export const HomebridgeUUIDProvider: FactoryProvider = {
+  provide: GenerateUUIDKey,
+  inject: [CoreModuleOptionsKey],
+  useFactory: (options: CoreModuleOptions) => options.generateUUID
+}

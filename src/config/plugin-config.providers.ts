@@ -1,12 +1,13 @@
 import { FactoryProvider, Inject } from '@nestjs/common';
 import {
+  ConfigFilePathKey,
   GoveePluginConfigKey,
   MODULE_OPTIONS_TOKEN,
   PluginConfigVersion,
 } from './plugin-config.const';
 import { GoveePluginConfig } from './v1/plugin-config.govee';
 import { plainToInstance } from 'class-transformer';
-import { PartialBehaviorSubject } from '../../common';
+import { PartialBehaviorSubject } from '../common';
 import { PluginConfigModuleOptions } from './plugin-config.types';
 import { pluginConfigMigrate } from './plugin-config.migrate';
 
@@ -20,4 +21,11 @@ export const GoveePluginConfiguration: FactoryProvider = {
         ? plainToInstance(GoveePluginConfig, options.config)
         : await pluginConfigMigrate(options.config, PluginConfigVersion),
     ),
+};
+
+export const InjectConfigFilePath = Inject(ConfigFilePathKey);
+export const ConfigFilePathProvider: FactoryProvider = {
+  provide: ConfigFilePathKey,
+  inject: [MODULE_OPTIONS_TOKEN],
+  useFactory: (options: PluginConfigModuleOptions) => options.path,
 };

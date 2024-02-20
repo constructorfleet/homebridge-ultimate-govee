@@ -1,14 +1,20 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { HOMEBRIDGE_API } from '../util/const';
+import { Injectable } from '@nestjs/common';
 import { API, PlatformAccessory } from 'homebridge';
 import { AccessoryManager } from './accessory/accessory.manager';
 import { LoggingService } from '../logger/logger.service';
+import { InjectHomebridgeApi } from '../core';
+import { InjectConfig } from '../config/plugin-config.providers';
+import { GoveePluginConfig } from '../config/v2/plugin-config.govee';
+import { PartialBehaviorSubject } from '../common';
+import { UltimateGoveeService } from '@constructorfleet/ultimate-govee';
 
 @Injectable()
 export class PlatformService {
   constructor(
-    @Inject(HOMEBRIDGE_API) private readonly api: API,
-
+    @InjectHomebridgeApi private readonly api: API,
+    @InjectConfig
+    private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
+    private readonly service: UltimateGoveeService,
     private readonly accessoryManager: AccessoryManager,
     private readonly log: LoggingService,
   ) {}
@@ -37,6 +43,13 @@ export class PlatformService {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   async discoverDevices() {
-    // await this.emitAsync(new RestRequestDevices());
+    const credentials = this.config.getValue()?.credentials;
+    if (
+      credentials?.username === undefined ||
+      credentials?.password === undefined
+    ) {
+      return;
+    }
+    await this.service.connect(credentials.username, credentials.password);
   }
 }

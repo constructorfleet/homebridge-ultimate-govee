@@ -1,5 +1,5 @@
 import { Exclude, Expose, Type } from 'class-transformer';
-import { PLATFORM_NAME, PLUGIN_NAME } from '../../../settings';
+import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
 
 type LightType = 'WW' | 'RGB' | 'RGBIC';
 

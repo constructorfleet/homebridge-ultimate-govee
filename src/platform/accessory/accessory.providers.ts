@@ -5,20 +5,21 @@ import {
   OPTIONS_TYPE,
 } from './accessory.const';
 import { DeltaMap } from '@constructorfleet/ultimate-govee/dist/common';
-import { GoveeAccessory } from './accessory.types';
+import { PlatformAccessory } from 'homebridge';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { Device } from '@constructorfleet/ultimate-govee';
 
 export const InjectAccessoryMap = Inject(AccessoryMapKey);
 export const AccessoryMapProvider: FactoryProvider = {
   provide: AccessoryMapKey,
   inject: [MODULE_OPTIONS_TOKEN],
   useFactory: (options: typeof OPTIONS_TYPE) =>
-    new DeltaMap<string, Observable<GoveeAccessory>>(
+    new DeltaMap<string, Observable<PlatformAccessory<Device>>>(
       options.accessories
-        ?.map((a) => [a.id, a])
+        ?.map((a) => [a.context.id, a])
         .map(([id, a]) => [
           id as string,
-          new BehaviorSubject<GoveeAccessory>(a as GoveeAccessory),
+          new BehaviorSubject<PlatformAccessory>(a as PlatformAccessory),
         ]) ?? [],
     ),
 };

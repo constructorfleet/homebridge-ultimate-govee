@@ -10,7 +10,7 @@ import { NestFactory } from '@nestjs/core';
 import { PlatformModule } from './platform/platform.module';
 import { PlatformService } from './platform/platform.service';
 import { plainToInstance } from 'class-transformer';
-import { GoveePluginConfig } from './platform/config/v1/plugin-config.govee';
+import { GoveePluginConfig } from './config/v1/plugin-config.govee';
 
 /**
  * HomebridgePlatform
@@ -40,6 +40,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
         characteristic: this.api.hap.Characteristic,
         config,
         configPath: this.api.user.configPath(),
+        storagePath: this.api.user.persistPath(),
         generateUUID: this.api.hap.uuid.generate,
         registerAccessory: this.api.registerPlatformAccessories,
         updateAccessory: this.api.updatePlatformAccessories,
@@ -51,7 +52,6 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
     ).then(async (context) => {
       this.appContext = context;
       this.service = context.get(PlatformService);
-      await this.service.handleFeatureFlags();
       while (this.cachedAccessories.length) {
         const acc = this.cachedAccessories.pop();
         if (acc) {

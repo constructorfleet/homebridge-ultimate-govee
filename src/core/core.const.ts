@@ -8,3 +8,5 @@ export const HomebridgeCharacteristicsKey =
 export const InjectCharacteristics = Inject(HomebridgeCharacteristicsKey);
 export const HomebridgeApiKey = 'Core.Homebridge.Api' as const;
 export const InjectHomebridgeApi = Inject(HomebridgeApiKey);
+export const GenerateUUIDKey = 'Core.Homebridge.UUID' as const;
+export const InjectUUID = Inject(GenerateUUIDKey);

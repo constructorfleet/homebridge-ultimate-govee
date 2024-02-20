@@ -1,24 +1,18 @@
-import {
-  Inject,
-  Injectable,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { dirname, join } from 'path';
-import { PLATFORM_CONFIG_FILE } from '../../util/const';
 import fs, { WatchEventType } from 'fs';
-import { PLATFORM_NAME } from '../../settings';
+import { PLATFORM_NAME } from '../settings';
 import {
-  GoveeDeviceOverride,
   GoveePluginConfig,
-} from './v1/plugin-config.govee';
+} from './v2/plugin-config.govee';
 import { Lock } from 'async-await-mutex-lock';
 import { InjectGoveeConfig } from '@constructorfleet/ultimate-govee';
 import { BehaviorSubject } from 'rxjs';
-import { PluginConfigChangeHandler } from './v1/plugin-config.change-handler';
+import { InjectConfigFilePath } from './plugin-config.providers';
+import { DeviceConfig } from './v2/devices/device.config';
 
 @Injectable()
-export class PlatformConfigService implements OnModuleInit, OnModuleDestroy {
+export class PluginConfigService implements OnModuleInit, OnModuleDestroy {
   private readonly configFilePath: string;
   private readonly configDirectory: string;
   private readonly writeLock: Lock<void> = new Lock<void>();
@@ -26,10 +20,9 @@ export class PlatformConfigService implements OnModuleInit, OnModuleDestroy {
   private fsWatcher?: fs.FSWatcher = undefined;
 
   constructor(
-    @Inject(PLATFORM_CONFIG_FILE) configFilePath: string,
+    @InjectConfigFilePath configFilePath: string,
     @InjectGoveeConfig
     private readonly goveePluginConfig: BehaviorSubject<GoveePluginConfig>,
-    private readonly changeHandler: PluginConfigChangeHandler,
   ) {
     this.configFilePath = fs.realpathSync(configFilePath);
     this.configDirectory = dirname(fs.realpathSync(this.configFilePath));
@@ -70,22 +63,12 @@ export class PlatformConfigService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  private get deviceOverridesById(): Map<string, GoveeDeviceOverride> {
-    const deviceMap = new Map<string, GoveeDeviceOverride>();
+  private get deviceConfigById(): Map<string, DeviceConfig> {
+    const deviceMap = new Map<string, DeviceConfig>();
     this.goveePluginConfig
       .getValue()
-      ?.devices?.humidifiers?.forEach((deviceOverride) =>
-        deviceMap.set(deviceOverride.deviceId!, deviceOverride),
-      );
-    this.goveePluginConfig
-      ?.getValue()
-      .devices?.airPurifiers?.forEach((deviceOverride) =>
-        deviceMap.set(deviceOverride.deviceId!, deviceOverride),
-      );
-    this.goveePluginConfig
-      ?.getValue()
-      .devices?.lights?.forEach((deviceOverride) =>
-        deviceMap.set(deviceOverride.deviceId!, deviceOverride),
+      ?.devices?.forEach((deviceConfig) =>
+        deviceMap.set(deviceConfig.id!, deviceConfig),
       );
 
     return deviceMap;
@@ -95,18 +78,10 @@ export class PlatformConfigService implements OnModuleInit, OnModuleDestroy {
     return this.goveePluginConfig.getValue();
   }
 
-  public hasFeatureFlag(featureFlag: string): boolean {
-    return this.goveePluginConfig
-      .getValue()
-      .featureFlags?.includes(featureFlag);
-  }
-
   private async reloadConfig() {
     // this.log.debug('Will reload config...');
     await this.writeLock.acquire();
     // this.log.debug('Reloading!');
-    const before: GoveePluginConfig | undefined =
-      this.goveePluginConfig.getValue();
     let after: GoveePluginConfig | undefined = undefined;
     try {
       const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
@@ -126,26 +101,21 @@ export class PlatformConfigService implements OnModuleInit, OnModuleDestroy {
       this.writeLock.release();
     }
 
-    if (before && after) {
-      this.changeHandler.onPlatformConfigurationReloaded({ before, after });
-    }
     if (after !== undefined) {
       this.goveePluginConfig.next(after);
     }
   }
 
-  getDeviceConfiguration<OverrideType extends GoveeDeviceOverride>(
+  getDeviceConfiguration<ConfigType extends DeviceConfig>(
     deviceId: string,
-  ): OverrideType | undefined {
-    const deviceConfigurations: GoveeDeviceOverride[] =
-      new Array<GoveeDeviceOverride>(
-        ...(this.pluginConfiguration.devices?.humidifiers || []),
-        ...(this.pluginConfiguration.devices?.airPurifiers || []),
-        ...(this.pluginConfiguration.devices?.lights || []),
+  ): ConfigType | undefined {
+    const deviceConfigurations: DeviceConfig[] =
+      new Array<DeviceConfig>(
+        ...(this.pluginConfiguration.devices || []),
       );
     return deviceConfigurations.find(
-      (deviceConfig) => deviceConfig.deviceId === deviceId,
-    ) as OverrideType;
+      (deviceConfig) => deviceConfig.id === deviceId,
+    ) as ConfigType;
   }
 
   // async addFeatureFlags(...featureFlags: string[]) {

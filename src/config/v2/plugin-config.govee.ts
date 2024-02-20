@@ -2,7 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { GoveeCredentials } from './credentials.config';
 import { ControlChannels } from './control-channel.config';
 import { DeviceConfig } from './devices/device.config';
-import { PLATFORM_NAME, PLUGIN_NAME } from '../../../settings';
+import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
 
 export class GoveePluginConfig {
   @Expose({ name: '_version' })

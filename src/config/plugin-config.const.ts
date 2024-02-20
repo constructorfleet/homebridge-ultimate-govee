@@ -4,6 +4,7 @@ import { PluginConfigModuleOptions } from './plugin-config.types';
 export const GoveePluginConfigKey = 'Config.Plugin.Govee';
 export const PluginConfigModuleOptionsKey = 'Options.PluginConfig';
 export const DeviceConfigChangedKey = 'Config.Plugin.Govee.Device';
+export const ConfigFilePathKey = 'Config.Plugin.Path';
 
 export const PluginConfigVersion = 2 as const;
 

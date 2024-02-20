@@ -11,4 +11,6 @@ import { LoggerLevelsProvider, LoggerProvider } from './logger.providers';
 export class LoggerModule extends createConfigurableDynamicRootModule<
   LoggerModule,
   LoggerModuleOptions
->(LoggerModuleOptionsKey) {}
+>(LoggerModuleOptionsKey) {
+  static deferred = () => LoggerModule.externallyConfigured(LoggerModule, 0);
+}
