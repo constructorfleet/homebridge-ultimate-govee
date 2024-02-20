@@ -24,14 +24,8 @@
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
   },
-  "include": [
-    "src/",
-  ],
-  "exclude": [
-    ".vscode/",
-    ".idea/",
-    "**/*.spec.ts"
-  ]
+  "include": ["src/"],
+  "exclude": [".vscode/", ".idea/", "**/*.spec.ts"],
 }

@@ -1,45 +1,41 @@
 {
-	"name": "Homebridge",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-	"remoteEnv": {
-		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
-	},
-	"forwardPorts": [
-		51826,
-		8581
-	],
-	"runArgs": [
-		"--net=host"
-	],
-	"features": {
-		"ghcr.io/devcontainers-contrib/features/shfmt:1": {},
-		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
-			"plugins": "ssh-agent npm",
-			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
-			"username": "vscode"
-		},
-		"ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
-		"ghcr.io/marcozac/devcontainer-features/shellcheck:1": {}
-	},
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"dbaeumer.vscode-eslint",
-				"trunk.io"
-			],
-			"settings": {
-				"editor.defaultFormatter": "trunk.io",
-				"javascript.preferences.quoteStyle": "single",
-				"typescript.preferences.quoteStyle": "single",
-				"[typescript]": {
-					"editor.defaultFormatter": "trunk.io",
-					"editor.formatOnSave": true,
-					"editor.formatOnSaveMode": "file"
-				}
-			}
-		}
-	}
+  "name": "Homebridge",
+  "build": {
+    "dockerfile": "Dockerfile",
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+  },
+  "forwardPorts": [51826, 8581],
+  "runArgs": ["--net=host"],
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/shfmt:1": {},
+    "ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+      "plugins": "ssh-agent npm",
+      "omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
+      "username": "vscode",
+    },
+    "ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
+    "ghcr.io/marcozac/devcontainer-features/shellcheck:1": {},
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "trunk.io",
+        "DanielSanMedium.dscodegpt",
+      ],
+      "settings": {
+        "editor.defaultFormatter": "trunk.io",
+        "javascript.preferences.quoteStyle": "single",
+        "typescript.preferences.quoteStyle": "single",
+        "[typescript]": {
+          "editor.defaultFormatter": "trunk.io",
+          "editor.formatOnSave": true,
+          "editor.formatOnSaveMode": "file",
+        },
+      },
+    },
+  },
 }

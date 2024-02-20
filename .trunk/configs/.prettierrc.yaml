@@ -1,0 +1,9 @@
+singleQuote: true
+trailingComma: all
+bracketSpacing: true
+bracketSameLine: true
+singleAttributePerLine: true
+proseWrap: always
+tabWidth: 2
+useTabs: false
+semi: true

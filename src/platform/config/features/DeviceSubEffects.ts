@@ -1,7 +1,7 @@
-import {BaseFeatureHandler} from './BaseFeatureHandler';
-import {PlatformConfigService} from '../PlatformConfigService';
-import {Features} from '../Features';
-import {LoggingService} from '../../../logging/LoggingService';
+import { BaseFeatureHandler } from './BaseFeatureHandler';
+import { PlatformConfigService } from '../plugin-config.service';
+import { Features } from '../v1/Features';
+import { LoggingService } from '../../../logger/logger.service';
 
 @Features.add
 export class DeviceSubEffectsFeature extends BaseFeatureHandler {
@@ -9,26 +9,16 @@ export class DeviceSubEffectsFeature extends BaseFeatureHandler {
     configService: PlatformConfigService,
     log: LoggingService,
   ) {
-    super(
-      'DeviceSubEffects',
-      true,
-      configService,
-      log,
-    );
+    super('DeviceSubEffects', true, configService, log);
   }
 
   async onFeatureActivated(): Promise<void> {
     this.log.info('Activating Feature', this.featureFlag);
-    return await this.configService.setConfigurationEffects(
-      undefined,
-      []);
+    return await this.configService.setConfigurationEffects(undefined, []);
   }
 
   async onFeatureDeactivated(): Promise<void> {
     this.log.info('Deactivating Feature', this.featureFlag);
-    return await this.configService.setConfigurationEffects(
-      undefined,
-      []);
+    return await this.configService.setConfigurationEffects(undefined, []);
   }
-
 }
