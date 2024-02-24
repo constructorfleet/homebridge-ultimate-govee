@@ -11,6 +11,7 @@ import {
   Service,
 } from 'homebridge';
 import { BinaryLike } from 'crypto';
+import { Logger } from '@nestjs/common';
 
 export type PlatformStateType = {
   configuration: Observable<GoveePluginConfig>;
@@ -29,13 +30,14 @@ export interface GoveeConnections {
   enableAPI: boolean;
 }
 
-export interface PlatformModuleOptions {
+export type PlatformModuleOptions = {
   api: API;
   service: typeof Service;
   characteristic: typeof Characteristic;
   config: PlatformConfig;
   configPath: string;
   storagePath: string;
+  logger?: Logger;
   registerAccessory: (
     pluginIdentifier: PluginIdentifier,
     platformName: PlatformName,
@@ -43,4 +45,4 @@ export interface PlatformModuleOptions {
   ) => void;
   updateAccessory: (accessories: PlatformAccessory[]) => void;
   generateUUID: (data: BinaryLike) => string;
-}
+};

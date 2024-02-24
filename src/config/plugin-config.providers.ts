@@ -15,12 +15,13 @@ export const InjectConfig = Inject(GoveePluginConfigKey);
 export const GoveePluginConfiguration: FactoryProvider = {
   provide: GoveePluginConfigKey,
   inject: [MODULE_OPTIONS_TOKEN],
-  useFactory: async (options: PluginConfigModuleOptions) =>
-    new PartialBehaviorSubject(
+  useFactory: async (options: PluginConfigModuleOptions) => {
+    const pluginConfig =
       options.config.version === PluginConfigVersion
         ? plainToInstance(GoveePluginConfig, options.config)
-        : await pluginConfigMigrate(options.config, PluginConfigVersion),
-    ),
+        : await pluginConfigMigrate(options.config, PluginConfigVersion);
+    return new PartialBehaviorSubject(pluginConfig);
+  },
 };
 
 export const InjectConfigFilePath = Inject(ConfigFilePathKey);

@@ -6,7 +6,7 @@ name: Node.js CI
 on:
   workflow_dispatch:
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CI: true
@@ -15,7 +15,7 @@ jobs:
   build:
     strategy:
       matrix:
-        node-version: [ 18.16.0 ]
+        node-version: [18.16.0]
     runs-on: ubuntu-latest
 
     steps:

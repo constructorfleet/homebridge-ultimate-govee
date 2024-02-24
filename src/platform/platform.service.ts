@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { API, PlatformAccessory } from 'homebridge';
 import { AccessoryManager } from './accessory/accessory.manager';
-import { LoggingService } from '../logger/logger.service';
+// import { LoggingService } from '../logger/logger.service';
 import { InjectHomebridgeApi } from '../core';
 import { InjectConfig } from '../config/plugin-config.providers';
 import { GoveePluginConfig } from '../config/v2/plugin-config.govee';
@@ -16,7 +16,7 @@ export class PlatformService {
     private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
     private readonly service: UltimateGoveeService,
     private readonly accessoryManager: AccessoryManager,
-    private readonly log: LoggingService,
+    // private readonly log: LoggingService,
   ) {}
 
   async handleFeatureFlags() {

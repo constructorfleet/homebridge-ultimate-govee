@@ -5,26 +5,23 @@ import { GoveeHumiditySensorService } from './govee-humidity-sensor-service';
 import { GoveeIceMakerService } from './govee-ice-maker-service';
 import { GoveePurifierService } from './govee-purifier-service';
 import { GoveeTemperatureSensorService } from './govee-temperature-sensor-service';
-import { ServiceFactory } from './services.providers';
+import { ServiceRegistry } from './services.registry';
 
 @Module({
   providers: [
-    GoveeAirQualitySensorService,
-    GoveeHumidifierService,
-    GoveeHumiditySensorService,
-    GoveeIceMakerService,
-    GoveePurifierService,
-    GoveeTemperatureSensorService,
-    ServiceFactory
+    {
+      provide: 'Govee.Service.List',
+      useValue: [
+        GoveeAirQualitySensorService,
+        GoveeHumidifierService,
+        GoveeHumiditySensorService,
+        GoveeIceMakerService,
+        GoveePurifierService,
+        GoveeTemperatureSensorService,
+      ],
+    },
+    ServiceRegistry,
   ],
-  exports: [
-    GoveeAirQualitySensorService,
-    GoveeHumidifierService,
-    GoveeHumiditySensorService,
-    GoveeIceMakerService,
-    GoveePurifierService,
-    GoveeTemperatureSensorService,
-    ServiceFactory
-  ]
+  exports: [ServiceRegistry],
 })
 export class ServicesModule {}

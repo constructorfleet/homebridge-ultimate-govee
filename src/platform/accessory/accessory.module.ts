@@ -1,12 +1,21 @@
-import { Module } from '@nestjs/common';
-import { ConfigurableModuleClass } from './accessory.const';
+import { DynamicModule, Module } from '@nestjs/common';
+import { ConfigurableModuleClass, OPTIONS_TYPE } from './accessory.const';
 import { AccessoryMapProvider } from './accessory.providers';
-import { CoreModule } from '../../core';
 import { ServicesModule } from './services/services.module';
+import { AccessoryManager } from './accessory.manager';
+import { CoreModule } from '../../core';
 
 @Module({
-  imports: [CoreModule.deferred(), ServicesModule],
-  providers: [AccessoryMapProvider],
-  exports: [AccessoryMapProvider],
+  imports: [ServicesModule],
+  providers: [AccessoryMapProvider, AccessoryManager],
+  exports: [CoreModule, AccessoryMapProvider, AccessoryManager],
 })
-export class AccessoryModule extends ConfigurableModuleClass {}
+export class AccessoryModule extends ConfigurableModuleClass {
+  static forRoot(options: typeof OPTIONS_TYPE): DynamicModule {
+    const base = super.forRoot(options);
+    return {
+      ...base,
+      imports: [...(base.imports ?? []), options.core, options.pluginConfig],
+    };
+  }
+}

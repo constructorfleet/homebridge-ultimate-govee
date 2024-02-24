@@ -5,7 +5,7 @@ name: Tag on Merge
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CI: true
@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        node-version: [ 18.16.0 ]
+        node-version: [18.16.0]
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +29,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           WITH_V: true
           DEFAULT_BUMP: minor
-      - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
+      - run:
+          npm version --allow-same-version=true --git-tag-version=false $(git
+          describe --tags)
       - name: Commit Package Version
         id: commit
         run: |
@@ -50,4 +52,3 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           branch: main
           unprotect_reviews: true
-

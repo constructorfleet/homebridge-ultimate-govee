@@ -4,11 +4,12 @@ export const pluginConfigMigrate = async (
   config,
   version: number,
 ): Promise<GoveePluginConfig | undefined> => {
-  let fromVersion = config.version ?? 1;
+  let fromVersion = config.version ?? 2;
   let pluginConfig: GoveePluginConfig | undefined = undefined;
-  while (fromVersion < version) {
+  while (fromVersion <= version) {
     const migrate = await import(`./v${fromVersion}/migrate.config`);
-    pluginConfig = migrate.pluginConfigMigrate(config);
+    console.dir(migrate.migrateConfig);
+    pluginConfig = migrate.migrateConfig(config);
     fromVersion++;
   }
 

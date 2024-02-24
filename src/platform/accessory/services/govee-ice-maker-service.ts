@@ -1,7 +1,10 @@
+import { ServiceRegistry } from './services.registry';
 import { Device, IceMaker } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
+import { IceMakerDevice } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/ice-maker/ice-maker';
 
+@ServiceRegistry.register(IceMakerDevice)
 export class GoveeIceMakerService extends GoveeService(Service.HeaterCooler) {
   constructor(device: Device & IceMaker) {
     super(device);

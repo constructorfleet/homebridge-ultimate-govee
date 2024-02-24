@@ -7,8 +7,7 @@ import { BinaryLike } from 'crypto';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
 import { InjectConfig } from '../../config/plugin-config.providers';
 import { PluginConfigService } from '../../config/plugin-config.service';
-import { InjectServiceFactory } from './services/services.const';
-import { ServiceFactory } from './services/services.types';
+import { ServiceRegistry } from './services/services.registry';
 import { PartialBehaviorSubject } from '../../common';
 import { GoveePluginConfig } from '../../config/v2/plugin-config.govee';
 
@@ -20,42 +19,39 @@ export class AccessoryManager {
   >();
 
   constructor(
-    @InjectServiceFactory private readonly serviceFactory: ServiceFactory,
-    @InjectConfig private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
+    private readonly serviceRegistry: ServiceRegistry,
+    @InjectConfig
+    private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
     private readonly configService: PluginConfigService,
     @InjectHomebridgeApi private readonly api: API,
-    @InjectConfig  @InjectUUID private readonly uuid: (data: BinaryLike) => string) {}
+    @InjectConfig
+    @InjectUUID
+    private readonly uuid: (data: BinaryLike) => string,
+  ) {}
 
   async onAccessoryLoaded(accessory: PlatformAccessory) {
     const device = accessory.context.device;
     if (!device || !device.deviceId) {
-      this.api.unregisterPlatformAccessories(
-        PLUGIN_NAME,
-        PLATFORM_NAME,
-        [accessory],
-      );
+      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+        accessory,
+      ]);
       return;
     }
-    const deviceConfig =
-      this.configService.getDeviceConfiguration(device.deviceId);
+    const deviceConfig = this.configService.getDeviceConfiguration(
+      device.deviceId,
+    );
 
     if (deviceConfig?.ignore) {
-      this.api.unregisterPlatformAccessories(
-        PLUGIN_NAME,
-        PLATFORM_NAME,
-        [accessory],
-      );
+      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+        accessory,
+      ]);
       return;
     }
 
-    this.accessories.set(
-      accessory.UUID,
-      accessory,
+    this.accessories.set(accessory.UUID, accessory);
+    (await this.serviceRegistry.getServices(device))?.forEach((service) =>
+      this.updateAccessory(accessory, service),
     );
-    (await this.serviceFactory(device))
-      ?.forEach(
-        (service) => this.updateAccessory(accessory, service),
-      );
     this.api.updatePlatformAccessories([accessory]);
   }
 
@@ -72,10 +68,9 @@ export class AccessoryManager {
 
     accessory.context.device = device;
 
-    (await this.serviceFactory(device))
-      ?.forEach(
-        (service) => this.updateAccessory(accessory, service),
-      );
+    (await this.serviceRegistry.getServices(device))?.forEach((service) =>
+      this.updateAccessory(accessory, service),
+    );
 
     this.api.updatePlatformAccessories([accessory]);
   }
@@ -83,23 +78,15 @@ export class AccessoryManager {
   async onDeviceDiscovered(device: Device) {
     const uuid = this.uuid(device.id);
     const accessory =
-      this.accessories.get(uuid)
-      || new this.api.platformAccessory(
-        device.name,
-        uuid,
-      );
+      this.accessories.get(uuid) ||
+      new this.api.platformAccessory(device.name, uuid);
     // accessory.context.config = deviceConfig;
     // device.name = deviceConfig?.displayName || device.name;
     if (!this.accessories.has(uuid)) {
-      this.accessories.set(
-        uuid,
+      this.accessories.set(uuid, accessory);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
         accessory,
-      );
-      this.api.registerPlatformAccessories(
-        PLUGIN_NAME,
-        PLATFORM_NAME,
-        [accessory],
-      );
+      ]);
     }
     await this.onDeviceUpdated(device);
     // await this.platformConfigService.updateConfigurationWithDevices(device);
@@ -109,14 +96,16 @@ export class AccessoryManager {
     accessory: PlatformAccessory,
     service: Service,
   ): PlatformAccessory {
-    if (!accessory.getServiceById(service.UUID, service.subtype ?? "")) {
+    if (!accessory.getServiceById(service.UUID, service.subtype ?? '')) {
       accessory.addService(service);
-    
     }
     return accessory;
   }
 
-  private get(accessory: PlatformAccessory, service: WithUUID<Service>): Service {
+  private get(
+    accessory: PlatformAccessory,
+    service: WithUUID<Service>,
+  ): Service {
     return accessory.getService(service.UUID) ?? accessory.addService(service);
   }
 }

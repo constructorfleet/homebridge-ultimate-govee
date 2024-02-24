@@ -2,13 +2,10 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { dirname, join } from 'path';
 import fs, { WatchEventType } from 'fs';
 import { PLATFORM_NAME } from '../settings';
-import {
-  GoveePluginConfig,
-} from './v2/plugin-config.govee';
+import { GoveePluginConfig } from './v2/plugin-config.govee';
 import { Lock } from 'async-await-mutex-lock';
-import { InjectGoveeConfig } from '@constructorfleet/ultimate-govee';
 import { BehaviorSubject } from 'rxjs';
-import { InjectConfigFilePath } from './plugin-config.providers';
+import { InjectConfig, InjectConfigFilePath } from './plugin-config.providers';
 import { DeviceConfig } from './v2/devices/device.config';
 
 @Injectable()
@@ -21,7 +18,7 @@ export class PluginConfigService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @InjectConfigFilePath configFilePath: string,
-    @InjectGoveeConfig
+    @InjectConfig
     private readonly goveePluginConfig: BehaviorSubject<GoveePluginConfig>,
   ) {
     this.configFilePath = fs.realpathSync(configFilePath);
@@ -109,10 +106,9 @@ export class PluginConfigService implements OnModuleInit, OnModuleDestroy {
   getDeviceConfiguration<ConfigType extends DeviceConfig>(
     deviceId: string,
   ): ConfigType | undefined {
-    const deviceConfigurations: DeviceConfig[] =
-      new Array<DeviceConfig>(
-        ...(this.pluginConfiguration.devices || []),
-      );
+    const deviceConfigurations: DeviceConfig[] = new Array<DeviceConfig>(
+      ...(this.pluginConfiguration.devices || []),
+    );
     return deviceConfigurations.find(
       (deviceConfig) => deviceConfig.id === deviceId,
     ) as ConfigType;

@@ -1,3 +1,4 @@
+import { ServiceRegistry } from './services.registry';
 import {
   Device,
   ActiveState,
@@ -6,6 +7,7 @@ import {
 } from '@constructorfleet/ultimate-govee';
 import { Service } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
+import { HygrometerDevice } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/home-improvement/hygrometer/hygrometer';
 
 export type HumiditySensor = {
   humidity?: HumidityState;
@@ -13,6 +15,7 @@ export type HumiditySensor = {
   batteryLevel?: BatteryLevelState;
 };
 
+@ServiceRegistry.register(HygrometerDevice)
 export class GoveeHumiditySensorService extends GoveeService(
   Service.HumiditySensor,
 ) {

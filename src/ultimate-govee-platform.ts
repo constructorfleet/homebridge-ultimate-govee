@@ -1,16 +1,16 @@
 import {
   API,
   DynamicPlatformPlugin,
-  Logger,
   PlatformAccessory,
   PlatformConfig,
+  Logger as HomebridgeLogger,
 } from 'homebridge';
-import { INestApplicationContext } from '@nestjs/common';
+import { INestApplicationContext, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { PlatformModule } from './platform/platform.module';
 import { PlatformService } from './platform/platform.service';
 import { plainToInstance } from 'class-transformer';
-import { GoveePluginConfig } from './config/v1/plugin-config.govee';
+import { GoveePluginConfig } from './config/v2/plugin-config.govee';
 
 /**
  * HomebridgePlatform
@@ -18,18 +18,21 @@ import { GoveePluginConfig } from './config/v1/plugin-config.govee';
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class UltimateGoveePlatform implements DynamicPlatformPlugin {
+  private readonly logger: Logger = new Logger(UltimateGoveePlatform.name);
   private appContext!: INestApplicationContext;
   private service!: PlatformService;
   private loaded = false;
   private cachedAccessories: PlatformAccessory[] = [];
 
   constructor(
-    public readonly log: Logger,
+    public readonly log: HomebridgeLogger,
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
     const goveeConfig = plainToInstance(GoveePluginConfig, config);
-    if (!goveeConfig.isValid()) {
+    this.logger.log(goveeConfig.isValid);
+    this.logger.log(JSON.stringify(goveeConfig));
+    if (!goveeConfig.isValid) {
       log.error('Configuration is missing required properties');
       return;
     }
@@ -50,8 +53,13 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
         abortOnError: false,
       },
     ).then(async (context) => {
+      const logger = new Logger(
+        `${UltimateGoveePlatform.name}.createApplicationContext`,
+      );
+      logger.log('Created');
       this.appContext = context;
       this.service = context.get(PlatformService);
+      logger.log('PlatformService', PlatformService);
       while (this.cachedAccessories.length) {
         const acc = this.cachedAccessories.pop();
         if (acc) {
@@ -70,6 +78,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', async () => {
+      new Logger('didFinishLaunching').log('');
       if (this.service) {
         await this.service.discoverDevices();
       }

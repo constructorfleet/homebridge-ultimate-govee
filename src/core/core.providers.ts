@@ -28,5 +28,5 @@ export const HomebridgeApiProvider: FactoryProvider = {
 export const HomebridgeUUIDProvider: FactoryProvider = {
   provide: GenerateUUIDKey,
   inject: [CoreModuleOptionsKey],
-  useFactory: (options: CoreModuleOptions) => options.generateUUID
-}
+  useFactory: (options: CoreModuleOptions) => options.generateUUID,
+};

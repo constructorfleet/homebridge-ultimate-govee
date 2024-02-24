@@ -1,7 +1,10 @@
+import { ServiceRegistry } from './services.registry';
 import { Device, Humidifier } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
+import { HumidifierDevice } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/humidifier/humidifier';
 
+@ServiceRegistry.register(HumidifierDevice)
 export class GoveeHumidifierService extends GoveeService(
   Service.HumidifierDehumidifier,
 ) {

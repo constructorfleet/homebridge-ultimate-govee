@@ -1,7 +1,10 @@
+import { ServiceRegistry } from './services.registry';
 import { Device, Purifier } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
+import { PurifierDevice } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/purifier/purifier';
 
+@ServiceRegistry.register(PurifierDevice)
 export class GoveePurifierService extends GoveeService(Service.AirPurifier) {
   constructor(device: Device & Purifier) {
     super(device);

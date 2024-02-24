@@ -34,7 +34,7 @@
     "govee"
   ],
   "dependencies": {
-    "@constructorfleet/ultimate-govee": "^0.6.0",
+    "@constructorfleet/ultimate-govee": "^0.13.0",
     "@golevelup/nestjs-modules": "^0.7.1",
     "@nestjs/common": "^10.3.3",
     "@nestjs/config": "^3.2.0",
@@ -66,10 +66,6 @@
     "util": "^0.12.5",
     "winston": "^3.11.0",
     "winston-daily-rotate-file": "^4.7.1"
-  },
-  "optionalDependencies": {
-    "@abandonware/bluetooth-hci-socket": "^0.5.3-10",
-    "@abandonware/noble": "^1.9.2-23"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.3.2",

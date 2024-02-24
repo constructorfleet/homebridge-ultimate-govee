@@ -25,4 +25,13 @@ export class GoveePluginConfig {
   @Expose({ name: 'devices' })
   @Type(() => DeviceConfig)
   devices: DeviceConfig[] = [];
+
+  get isValid(): boolean {
+    return ![
+      this.credentials.username,
+      this.credentials.password,
+      this.controlChannels.ble,
+      this.controlChannels.iot,
+    ].includes(undefined);
+  }
 }
