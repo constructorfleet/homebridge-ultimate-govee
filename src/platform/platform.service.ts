@@ -7,6 +7,7 @@ import { InjectConfig } from '../config/plugin-config.providers';
 import { GoveePluginConfig } from '../config/v2/plugin-config.govee';
 import { PartialBehaviorSubject } from '../common';
 import { UltimateGoveeService } from '@constructorfleet/ultimate-govee';
+import { map } from 'rxjs';
 
 @Injectable()
 export class PlatformService {
@@ -43,6 +44,11 @@ export class PlatformService {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   async discoverDevices() {
+    this.service.deviceDiscovered
+      .pipe(map((event) => event.device))
+      .subscribe((device) => {
+        this.accessoryManager.onDeviceDiscovered(device);
+      });
     const credentials = this.config.getValue()?.credentials;
     if (
       credentials?.username === undefined ||

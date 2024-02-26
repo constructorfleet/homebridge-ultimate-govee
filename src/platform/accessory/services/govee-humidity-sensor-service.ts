@@ -19,6 +19,7 @@ export type HumiditySensor = {
 export class GoveeHumiditySensorService extends GoveeService(
   Service.HumiditySensor,
 ) {
+  static readonly UUID = Service.HumiditySensor.UUID;
   constructor(device: Device & HumiditySensor) {
     super(device);
   }

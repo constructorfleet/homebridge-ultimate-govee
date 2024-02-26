@@ -4,6 +4,7 @@ import {
   TemperatureStateName,
 } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
+import { Logger } from '@nestjs/common';
 
 export type TemperatureDevice = {
   temperature?: TemperatureState;
@@ -28,12 +29,14 @@ export const Temperature = (
     }
   }
   device[TemperatureStateName]?.subscribe((value) => {
+    const logger = new Logger('Temperature');
+    logger.error(value);
     const { min, max } = value.range;
     if (min !== undefined && max !== undefined) {
       char.setProps({ minValue: min, maxValue: max });
     }
     if (value.current !== undefined) {
-      char.updateValue(value.current);
+      char.setValue(value.current);
     }
   });
 };

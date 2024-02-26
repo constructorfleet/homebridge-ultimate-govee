@@ -5,7 +5,7 @@ import {
   PlatformConfig,
   Logger as HomebridgeLogger,
 } from 'homebridge';
-import { INestApplicationContext, Logger } from '@nestjs/common';
+import { ConsoleLogger, INestApplicationContext, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { PlatformModule } from './platform/platform.module';
 import { PlatformService } from './platform/platform.service';
@@ -36,6 +36,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
       log.error('Configuration is missing required properties');
       return;
     }
+
     NestFactory.createApplicationContext(
       PlatformModule.register({
         api: this.api,
@@ -49,7 +50,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
         updateAccessory: this.api.updatePlatformAccessories,
       }),
       {
-        logger: console,
+        logger: new ConsoleLogger(),
         abortOnError: false,
       },
     ).then(async (context) => {

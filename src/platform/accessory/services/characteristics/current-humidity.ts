@@ -32,7 +32,7 @@ export const Humidity = (device: Device & HumidityDevice, service: Service) => {
       char.setProps({ minValue: min, maxValue: max });
     }
     if (value.current !== undefined) {
-      char.updateValue(value.current);
+      char.setValue(value.current);
     }
   });
 };

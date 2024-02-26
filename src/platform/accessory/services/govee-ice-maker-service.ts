@@ -6,6 +6,7 @@ import { IceMakerDevice } from '@constructorfleet/ultimate-govee/dist/domain/dev
 
 @ServiceRegistry.register(IceMakerDevice)
 export class GoveeIceMakerService extends GoveeService(Service.HeaterCooler) {
+  static readonly UUID = Service.HeaterCooler.UUID;
   constructor(device: Device & IceMaker) {
     super(device);
     const toSpeed = (size): number => {

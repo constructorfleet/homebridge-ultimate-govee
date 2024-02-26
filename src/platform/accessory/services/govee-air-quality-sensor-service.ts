@@ -8,6 +8,7 @@ import { AirQualityDevice } from '@constructorfleet/ultimate-govee/dist/domain/d
 export class GoveeAirQualitySensorService extends GoveeService(
   Service.AirQualitySensor,
 ) {
+  static readonly UUID = Service.AirQualitySensor.UUID;
   constructor(device: Device & AirQualitySensor) {
     super(device);
     const [pm25Char] = [this.getCharacteristic(Characteristic.PM2_5Density)];

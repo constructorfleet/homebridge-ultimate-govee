@@ -19,6 +19,7 @@ export type TemperatureSensor = {
 export class GoveeTemperatureSensorService extends GoveeService(
   Service.TemperatureSensor,
 ) {
+  static readonly UUID = Service.TemperatureSensor.UUID;
   constructor(device: Device & TemperatureSensor) {
     super(device);
   }

@@ -7,6 +7,7 @@ import { Humidity } from './characteristics/current-humidity';
 import { Active } from './characteristics/Active';
 import { mixin } from '@nestjs/common';
 import { ClassConstructor } from 'class-transformer';
+import { WithUUID } from 'homebridge';
 
 export type OptionalChar = Characteristic | undefined;
 
@@ -31,7 +32,7 @@ export type GoveeServiceConstructor<TService extends Service> = {
   new (device: Device): TService & GoveeService;
 };
 
-export const GoveeService = <TService extends Service>(
+export const GoveeService = <TService extends WithUUID<Service>>(
   serviceType: ClassConstructor<TService>,
 ): GoveeServiceConstructor<TService> => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -50,7 +51,11 @@ export const GoveeService = <TService extends Service>(
       value: ValueType,
       ...characteristics: OptionalChar[]
     ): OptionalChar[] {
-      return characteristics.map((char) => char?.updateValue(value));
+      return characteristics
+        .filter((char) => char !== undefined)
+        .map((char) =>
+          this.getCharacteristicByIID(char!.iid ?? -1000)?.updateValue(value),
+        );
     }
 
     setValues(

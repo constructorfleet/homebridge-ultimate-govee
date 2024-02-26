@@ -24,7 +24,6 @@ export class AccessoryManager {
     private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
     private readonly configService: PluginConfigService,
     @InjectHomebridgeApi private readonly api: API,
-    @InjectConfig
     @InjectUUID
     private readonly uuid: (data: BinaryLike) => string,
   ) {}
@@ -49,13 +48,13 @@ export class AccessoryManager {
     }
 
     this.accessories.set(accessory.UUID, accessory);
-    (await this.serviceRegistry.getServices(device))?.forEach((service) =>
-      this.updateAccessory(accessory, service),
+    (await this.serviceRegistry.getServices(device, accessory))?.forEach(
+      (service) => this.updateAccessory(accessory, service),
     );
     this.api.updatePlatformAccessories([accessory]);
   }
 
-  async onDeviceUpdated(device: Device) {
+  onDeviceUpdated(device: Device) {
     const deviceUUID = this.api.hap.uuid.generate(device.id);
     if (!this.accessories.has(deviceUUID)) {
       return;
@@ -68,14 +67,14 @@ export class AccessoryManager {
 
     accessory.context.device = device;
 
-    (await this.serviceRegistry.getServices(device))?.forEach((service) =>
-      this.updateAccessory(accessory, service),
-    );
+    this.serviceRegistry
+      .getServices(device, accessory)
+      ?.forEach((service) => this.updateAccessory(accessory, service));
 
     this.api.updatePlatformAccessories([accessory]);
   }
 
-  async onDeviceDiscovered(device: Device) {
+  onDeviceDiscovered(device: Device) {
     const uuid = this.uuid(device.id);
     const accessory =
       this.accessories.get(uuid) ||
@@ -88,7 +87,11 @@ export class AccessoryManager {
         accessory,
       ]);
     }
-    await this.onDeviceUpdated(device);
+    this.onDeviceUpdated(device);
+    device.subscribe((device) => {
+      console.dir(device);
+      this.onDeviceUpdated(device);
+    });
     // await this.platformConfigService.updateConfigurationWithDevices(device);
   }
 

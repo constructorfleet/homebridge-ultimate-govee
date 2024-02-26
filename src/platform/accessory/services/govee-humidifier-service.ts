@@ -8,6 +8,7 @@ import { HumidifierDevice } from '@constructorfleet/ultimate-govee/dist/domain/d
 export class GoveeHumidifierService extends GoveeService(
   Service.HumidifierDehumidifier,
 ) {
+  static readonly UUID = Service.HumidifierDehumidifier.UUID;
   constructor(device: Device & Humidifier) {
     super(device);
     const [targetChar, currentChar, waterLevelChar, lockChar, fanSpeedChar] = [

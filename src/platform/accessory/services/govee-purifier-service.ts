@@ -6,6 +6,7 @@ import { PurifierDevice } from '@constructorfleet/ultimate-govee/dist/domain/dev
 
 @ServiceRegistry.register(PurifierDevice)
 export class GoveePurifierService extends GoveeService(Service.AirPurifier) {
+  static readonly UUID = Service.AirPurifier.UUID;
   constructor(device: Device & Purifier) {
     super(device);
     const [lockChar, activeChar, targetStatechar, fanSpeedChar] = [

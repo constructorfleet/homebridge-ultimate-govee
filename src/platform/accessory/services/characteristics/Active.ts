@@ -25,7 +25,7 @@ export const Active = (device: Device & ActiveDevice, service: Service) => {
 
   device[ActiveStateName]?.subscribe((value) => {
     if (value !== undefined) {
-      char.updateValue(
+      char.setValue(
         value ? Characteristic.Active.ACTIVE : Characteristic.Active.INACTIVE,
       );
     }
