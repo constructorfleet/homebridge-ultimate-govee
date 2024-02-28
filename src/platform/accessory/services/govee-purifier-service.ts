@@ -1,84 +1,61 @@
 import { ServiceRegistry } from './services.registry';
-import { Device, Purifier } from '@constructorfleet/ultimate-govee';
+import {
+  ActiveStateName,
+  ControlLockStateName,
+  Device,
+  Purifier,
+  PurifierDevice,
+} from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
-import { PurifierDevice } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/purifier/purifier';
+import { FanSpeedStateName } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/purifier/purifier.fan-speed';
+import { Subscription } from 'rxjs';
+import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 
 @ServiceRegistry.register(PurifierDevice)
-export class GoveePurifierService extends GoveeService(Service.AirPurifier) {
+export class GoveePurifierService extends GoveeService(
+  Service.AirPurifier,
+  true,
+  ActiveStateName,
+  ControlLockStateName,
+  FanSpeedStateName,
+) {
   static readonly UUID = Service.AirPurifier.UUID;
+  readonly UUID = Service.AirPurifier.UUID;
+
   constructor(device: Device & Purifier) {
     super(device);
-    const [lockChar, activeChar, targetStatechar, fanSpeedChar] = [
-      this.getCharacteristic(Characteristic.LockPhysicalControls),
-      this.getCharacteristic(Characteristic.Active),
-      this.getCharacteristic(Characteristic.TargetAirPurifierState),
-      this.getCharacteristic(Characteristic.RotationSpeed),
-    ];
-    if (device.controlLock?.value !== undefined) {
-      this.updateValue(
-        device.controlLock?.value
-          ? Characteristic.LockPhysicalControls.CONTROL_LOCK_ENABLED
-          : Characteristic.LockPhysicalControls.CONTROL_LOCK_DISABLED,
-        lockChar,
-      );
-    }
-    if (device.isActive?.value !== undefined) {
-      this.updateValue(
-        device.isActive?.value
-          ? Characteristic.Active.ACTIVE
-          : Characteristic.Active.INACTIVE,
-        activeChar,
-      );
-    }
-    this.updateValue(
-      Characteristic.TargetAirPurifierState.MANUAL,
-      targetStatechar,
-    );
-    if (device.fanSpeed?.value !== undefined) {
-      this.updateValue(device.fanSpeed.value, fanSpeedChar);
-    }
+  }
 
-    lockChar.onSet((value) =>
-      device.controlLock?.setState(
+  setStates() {
+    this.setState(
+      Characteristic.Active,
+      ActiveStateName,
+      (value) => value === Characteristic.Active.ACTIVE,
+    );
+    this.setState(
+      Characteristic.LockPhysicalControls,
+      ControlLockStateName,
+      (value) =>
         value === Characteristic.LockPhysicalControls.CONTROL_LOCK_ENABLED,
+    );
+    this.setState(Characteristic.RotationSpeed, FanSpeedStateName);
+  }
+
+  updateCharacteristics(): Optional<Subscription>[] {
+    return [
+      this.subscribeToState(ActiveStateName, Characteristic.Active, (value) =>
+        value ? Characteristic.Active.ACTIVE : Characteristic.Active.INACTIVE,
       ),
-    );
-    activeChar.onSet((value) => {
-      device.isActive?.setState(
-        value === Characteristic.LockPhysicalControls.CONTROL_LOCK_ENABLED,
-      );
-    });
-    targetStatechar.onSet(() => {
-      // no-op
-    });
-    fanSpeedChar.onSet((value) => {
-      device.fanSpeed?.setState(value as number);
-    });
-
-    device.controlLock?.subscribe((value) => {
-      if (value !== undefined) {
-        this.updateValue(
+      this.subscribeToState(
+        ControlLockStateName,
+        Characteristic.LockPhysicalControls,
+        (value) =>
           value
             ? Characteristic.LockPhysicalControls.CONTROL_LOCK_ENABLED
             : Characteristic.LockPhysicalControls.CONTROL_LOCK_DISABLED,
-          lockChar,
-        );
-      }
-    });
-    device.isActive?.subscribe((value) => {
-      if (value !== undefined) {
-        this.updateValue(
-          value ? Characteristic.Active.ACTIVE : Characteristic.Active.INACTIVE,
-          activeChar,
-        );
-      }
-    });
-    // TODO: Mode
-    device.fanSpeed?.subscribe((value) => {
-      if (value !== undefined) {
-        this.updateValue(value, fanSpeedChar);
-      }
-    });
+      ),
+      this.subscribeToState(FanSpeedStateName, Characteristic.RotationSpeed),
+    ];
   }
 }

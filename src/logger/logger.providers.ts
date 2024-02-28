@@ -1,4 +1,4 @@
-import { FactoryProvider, Logger } from '@nestjs/common';
+import { FactoryProvider } from '@nestjs/common';
 import {
   LoggerKey,
   LoggerLevels,
@@ -14,5 +14,6 @@ export const LoggerLevelsProvider: FactoryProvider = {
 
 export const LoggerProvider: FactoryProvider = {
   provide: LoggerKey,
-  useFactory: () => Logger,
+  inject: [LoggerModuleOptionsKey],
+  useFactory: (options: LoggerModuleOptions) => options.logger,
 };

@@ -9,6 +9,7 @@ import {
   PlatformName,
   PluginIdentifier,
   Service,
+  Logger as HomebridgeLogger,
 } from 'homebridge';
 import { BinaryLike } from 'crypto';
 import { Logger } from '@nestjs/common';
@@ -38,6 +39,7 @@ export type PlatformModuleOptions = {
   configPath: string;
   storagePath: string;
   logger?: Logger;
+  log: HomebridgeLogger;
   registerAccessory: (
     pluginIdentifier: PluginIdentifier,
     platformName: PlatformName,

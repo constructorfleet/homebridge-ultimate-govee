@@ -1,23 +1,34 @@
 import { ServiceRegistry } from './services.registry';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
-import { AirQualitySensor, Device } from '@constructorfleet/ultimate-govee';
-import { AirQualityDevice } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/home-improvement/air-quality/air-quality';
+import {
+  AirQualitySensor,
+  AirQualityDevice,
+  Device,
+  PM25StateName,
+} from '@constructorfleet/ultimate-govee';
+import { Subscription } from 'rxjs';
+import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 
 @ServiceRegistry.register(AirQualityDevice)
 export class GoveeAirQualitySensorService extends GoveeService(
   Service.AirQualitySensor,
+  true,
+  PM25StateName,
 ) {
   static readonly UUID = Service.AirQualitySensor.UUID;
+  readonly UUID = Service.AirQualitySensor.UUID;
+
   constructor(device: Device & AirQualitySensor) {
     super(device);
-    const [pm25Char] = [this.getCharacteristic(Characteristic.PM2_5Density)];
-    if (device.pm25?.value !== undefined) {
-      this.updateValue(device.pm25.value, pm25Char);
-    }
+  }
 
-    device.pm25?.subscribe((value) => {
-      this.updateValue(value as number, pm25Char);
-    });
+  updateCharacteristics(): Optional<Subscription>[] {
+    return [
+      this.subscribeToState(PM25StateName, Characteristic.PM2_5Density),
+      this.subscribeToState(PM25StateName, Characteristic.AirQuality, (value) =>
+        Math.ceil(value / 250),
+      ),
+    ].filter((sub) => sub !== undefined);
   }
 }

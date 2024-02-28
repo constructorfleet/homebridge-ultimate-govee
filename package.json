@@ -25,6 +25,7 @@
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=0",
     "test": "jest",
+    "start": "npm run build && npm link && ./node_modules/homebridge/bin/homebridge -I -D | tee /home/node/.homebridge/homebridge.log",
     "watch": "npm run build && npm link && nodemon",
     "build": "rimraf ./dist && tsc && copyfiles assets/* dist/.",
     "prepublishOnly": "npm run build && npm run lint && npm run test"
@@ -34,7 +35,7 @@
     "govee"
   ],
   "dependencies": {
-    "@constructorfleet/ultimate-govee": "^0.15.0",
+    "@constructorfleet/ultimate-govee": "^0.21.1",
     "@golevelup/nestjs-modules": "^0.7.1",
     "@nestjs/common": "^10.3.3",
     "@nestjs/config": "^3.2.0",

@@ -4,10 +4,13 @@ import {
   ActiveState,
   BatteryLevelState,
   HumidityState,
+  HumidityStateName,
+  HygrometerDevice,
 } from '@constructorfleet/ultimate-govee';
-import { Service } from 'hap-nodejs';
+import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
-import { HygrometerDevice } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/home-improvement/hygrometer/hygrometer';
+import { Subscription } from 'rxjs';
+import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 
 export type HumiditySensor = {
   humidity?: HumidityState;
@@ -16,11 +19,33 @@ export type HumiditySensor = {
 };
 
 @ServiceRegistry.register(HygrometerDevice)
+@ServiceRegistry.registerForStateNames(HumidityStateName)
 export class GoveeHumiditySensorService extends GoveeService(
   Service.HumiditySensor,
+  false,
+  HumidityStateName,
 ) {
   static readonly UUID = Service.HumiditySensor.UUID;
+  readonly UUID = Service.HumiditySensor.UUID;
+
   constructor(device: Device & HumiditySensor) {
     super(device);
+  }
+
+  updateCharacteristics(): Optional<Subscription>[] {
+    return [
+      this.setCharacteristicProps(
+        Characteristic.CurrentRelativeHumidity,
+        HumidityStateName,
+        (value: { range?: { min?: number; max?: number } }) =>
+          value?.range?.min !== undefined && value?.range?.max !== undefined
+            ? { maxValue: value.range.max, minValue: value.range.min }
+            : {},
+      ),
+      this.subscribeToState(
+        HumidityStateName,
+        Characteristic.CurrentRelativeHumidity,
+      ),
+    ];
   }
 }

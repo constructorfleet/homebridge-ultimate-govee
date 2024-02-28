@@ -11,5 +11,6 @@ export type Logger = {
 };
 
 export type LoggerModuleOptions = {
+  logger: Logger;
   disabledLevels?: LogLevel[];
 };

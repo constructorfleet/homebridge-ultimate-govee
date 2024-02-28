@@ -1,29 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { API, PlatformAccessory } from 'homebridge';
 import { AccessoryManager } from './accessory/accessory.manager';
-// import { LoggingService } from '../logger/logger.service';
 import { InjectHomebridgeApi } from '../core';
 import { InjectConfig } from '../config/plugin-config.providers';
 import { GoveePluginConfig } from '../config/v2/plugin-config.govee';
 import { PartialBehaviorSubject } from '../common';
 import { UltimateGoveeService } from '@constructorfleet/ultimate-govee';
-import { map } from 'rxjs';
+import { BehaviorSubject, map } from 'rxjs';
+import { PLATFORM_NAME, PLUGIN_NAME } from '../settings';
+import { LoggingService } from '../logger/logger.service';
 
 @Injectable()
 export class PlatformService {
   constructor(
     @InjectHomebridgeApi private readonly api: API,
+    private readonly logger: LoggingService,
     @InjectConfig
     private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
     private readonly service: UltimateGoveeService,
     private readonly accessoryManager: AccessoryManager,
-    // private readonly log: LoggingService,
   ) {}
-
-  async handleFeatureFlags() {
-    // const processHandler = (handler: BaseFeatureHandler) => handler.process();
-    await Promise.resolve();
-  }
 
   /**
    * This function is invoked when homebridge restores cached accessories from disk at startup.
@@ -31,11 +27,20 @@ export class PlatformService {
    */
   async configureAccessory(accessory: PlatformAccessory) {
     // add the restored accessory to the accessories cache so we can track if it has already been registered
-    await this.accessoryManager.onAccessoryLoaded(accessory);
-  }
-
-  updateAccessory(accessory: PlatformAccessory) {
-    this.api.updatePlatformAccessories([accessory]);
+    const deviceModel = accessory.context.device;
+    if (!deviceModel) {
+      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+        accessory,
+      ]);
+      return;
+    }
+    await this.accessoryManager.onAccessoryLoaded(
+      accessory,
+      this.service.constructDevice({
+        ...deviceModel,
+        status: new BehaviorSubject(deviceModel.status),
+      }),
+    );
   }
 
   /**
@@ -46,8 +51,8 @@ export class PlatformService {
   async discoverDevices() {
     this.service.deviceDiscovered
       .pipe(map((event) => event.device))
-      .subscribe((device) => {
-        this.accessoryManager.onDeviceDiscovered(device);
+      .subscribe(async (device) => {
+        await this.accessoryManager.onDeviceDiscovered(device);
       });
     const credentials = this.config.getValue()?.credentials;
     if (
@@ -57,5 +62,10 @@ export class PlatformService {
       return;
     }
     await this.service.connect(credentials.username, credentials.password);
+    const controlChannels = this.config.getValue()?.controlChannels;
+    if (controlChannels !== undefined) {
+      this.service.channel('ble').setEnabled(controlChannels.ble);
+      this.service.channel('iot').setEnabled(controlChannels.iot);
+    }
   }
 }

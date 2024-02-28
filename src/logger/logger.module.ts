@@ -3,10 +3,11 @@ import { LoggerModuleOptions } from './logger.types';
 import { LoggerModuleOptionsKey } from './logger.const';
 import { createConfigurableDynamicRootModule } from '@golevelup/nestjs-modules';
 import { LoggerLevelsProvider, LoggerProvider } from './logger.providers';
+import { LoggingService } from './logger.service';
 
 @Module({
-  providers: [LoggerLevelsProvider, LoggerProvider],
-  exports: [LoggerProvider],
+  providers: [LoggerLevelsProvider, LoggerProvider, LoggingService],
+  exports: [LoggerProvider, LoggingService],
 })
 export class LoggerModule extends createConfigurableDynamicRootModule<
   LoggerModule,
