@@ -41,7 +41,10 @@ export class ServiceRegistry {
     };
   }
 
-  static register(...deviceTypes: ClassConstructor<Device>[]): (ctor) => void {
+  static register<
+    DeviceType extends Device<any>,
+    Arguments extends ClassConstructor<DeviceType>[],
+  >(...deviceTypes: Arguments): (ctor) => void {
     return (ctor) => {
       deviceTypes.forEach(async (deviceType) => {
         await this.lockService.acquire();

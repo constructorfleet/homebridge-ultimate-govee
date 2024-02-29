@@ -5,14 +5,14 @@ import {
   Humidifier,
   HumidifierDevice,
   HumidityStateName,
+  MistLevelStateName,
+  Optional,
   WaterShortageStateName,
 } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
-import { TargetHumidityStateName } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/humidifier/humidifier.target-humidity';
-import { MistLevelStateName } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/humidifier/humidifier.mist';
-import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 import { Subscription } from 'rxjs';
+import { TargetHumidityStateName } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/humidifier/humidifier.target-humidity';
 
 @ServiceRegistry.register(HumidifierDevice)
 export class GoveeHumidifierService extends GoveeService(

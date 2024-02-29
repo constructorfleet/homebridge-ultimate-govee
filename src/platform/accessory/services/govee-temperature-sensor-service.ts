@@ -5,11 +5,11 @@ import {
   ActiveState,
   BatteryLevelState,
   TemperatureStateName,
+  HygrometerDevice,
+  Optional,
 } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
-import { HygrometerDevice } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/home-improvement/hygrometer/hygrometer';
-import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 import { Subscription } from 'rxjs';
 
 export type TemperatureSensor = {

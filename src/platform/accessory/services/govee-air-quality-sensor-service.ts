@@ -6,9 +6,9 @@ import {
   AirQualityDevice,
   Device,
   PM25StateName,
+  Optional,
 } from '@constructorfleet/ultimate-govee';
 import { Subscription } from 'rxjs';
-import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 
 @ServiceRegistry.register(AirQualityDevice)
 export class GoveeAirQualitySensorService extends GoveeService(

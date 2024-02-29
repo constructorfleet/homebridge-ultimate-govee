@@ -69,21 +69,25 @@ export const GoveeService = <TService extends WithUUID<Service>>(
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     update(device: Device) {
-      // if (this.device === device) {
-      //   console.error('Device is the same');
-      //   return;
-      // }
+      if (this.device === device) {
+        console.error('Device is the same');
+        return;
+      }
       while (this.subscriptions.length > 0) {
         this.subscriptions.pop()?.unsubscribe();
       }
       this.setStates();
-      this.updateCharacterististics();
+      // this.updateCharacterististics();
+      // this.subscriptions.push(
+      //   device.subscribe(() => {
+      //     this.updateCharacterististics();
+      //   }),
+      // );
       this.subscriptions.push(
-        device.subscribe(() => {
-          this.updateCharacterististics();
-        }),
+        ...this.updateCharacterististics()
+          .filter((sub) => sub !== undefined)
+          .map((sub) => sub!),
       );
-      // this.subscriptions.push(...this.updateCharacterististics().filter((sub) => sub !== undefined).map((sub) => sub!));
     }
 
     setStates() {}
@@ -97,33 +101,34 @@ export const GoveeService = <TService extends WithUUID<Service>>(
       characteristic: CharacteristicType | CharacteristicType[],
       handler?: (stateValue) => CharacteristicValue,
     ): Subscription | undefined {
-      console.dir({
+      console.error({
         stateName: state,
         id: this.device?.id,
         state: this.device?.state(state)?.value,
       });
       const value = this.device?.state(state)?.value;
-      if (value === undefined) {
-        return;
+      if (value !== undefined) {
+        (Array.isArray(characteristic)
+          ? characteristic
+          : [characteristic]
+        ).forEach((char) =>
+          this.getCharacteristic(char).updateValue(
+            handler !== undefined ? handler(value) : value,
+          ),
+        );
       }
-      (Array.isArray(characteristic)
-        ? characteristic
-        : [characteristic]
-      ).forEach((char) =>
-        this.getCharacteristic(char).updateValue(
-          handler !== undefined ? handler(value) : value,
-        ),
-      );
-      // return this.device?.state(state)?.v(
-      //   (value) => {
-      //     if (value !== undefined) {
-      //       (Array.isArray(characteristic) ? characteristic : [ characteristic ]).forEach(
-      //         (char) =>
-      //           this.getCharacteristic(char).updateValue(handler !== undefined
-      //             ? handler(value)
-      //             : value));
-      //     }
-      //   });
+      return this.device?.state(state)?.subscribe((value) => {
+        if (value !== undefined) {
+          (Array.isArray(characteristic)
+            ? characteristic
+            : [characteristic]
+          ).forEach((char) =>
+            this.getCharacteristic(char).updateValue(
+              handler !== undefined ? handler(value) : value,
+            ),
+          );
+        }
+      });
     }
 
     setState<
@@ -154,25 +159,24 @@ export const GoveeService = <TService extends WithUUID<Service>>(
       handler: (value: StateValue) => PartialAllowingNull<CharacteristicProps>,
     ): Subscription | undefined {
       const value = this.device?.state(state)?.value;
-      if (value === undefined) {
-        return;
+      if (value !== undefined) {
+        (Array.isArray(characteristic)
+          ? characteristic
+          : [characteristic]
+        ).forEach((char) =>
+          this.getCharacteristic(char).setProps(handler(value)),
+        );
       }
-      (Array.isArray(characteristic)
-        ? characteristic
-        : [characteristic]
-      ).forEach((char) =>
-        this.getCharacteristic(char).setProps(handler(value)),
-      );
-      // return this.device?.state(state)?.subscribe(
-      //   (value) => {
-      //     if (value !== undefined) {
-      //       (Array.isArray(characteristic) ? characteristic : [ characteristic ])
-      //         .forEach(
-      //           (char) => this.getCharacteristic(char).setProps(handler(value))
-      //         );
-      //     }
-      //   }
-      // );
+      return this.device?.state(state)?.subscribe((value) => {
+        if (value !== undefined) {
+          (Array.isArray(characteristic)
+            ? characteristic
+            : [characteristic]
+          ).forEach((char) =>
+            this.getCharacteristic(char).setProps(handler(value)),
+          );
+        }
+      });
     }
   }
 

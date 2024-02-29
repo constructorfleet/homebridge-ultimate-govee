@@ -3,14 +3,14 @@ import {
   ActiveStateName,
   ControlLockStateName,
   Device,
+  Optional,
   Purifier,
   PurifierDevice,
 } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
-import { FanSpeedStateName } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/purifier/purifier.fan-speed';
 import { Subscription } from 'rxjs';
-import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
+import { FanSpeedStateName } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/purifier/purifier.fan-speed';
 
 @ServiceRegistry.register(PurifierDevice)
 export class GoveePurifierService extends GoveeService(

@@ -3,13 +3,13 @@ import {
   Device,
   FilterExpiredStateName,
   FilterLifeStateName,
+  Optional,
   Purifier,
   PurifierDevice,
 } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
 import { Subscription } from 'rxjs';
-import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 
 @ServiceRegistry.register(PurifierDevice)
 export class GoveeFilterService extends GoveeService(

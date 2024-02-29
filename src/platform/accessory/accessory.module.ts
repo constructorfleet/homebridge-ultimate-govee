@@ -5,9 +5,10 @@ import { ServicesModule } from './services/services.module';
 import { AccessoryManager } from './accessory.manager';
 import { CoreModule } from '../../core';
 import { LoggerModule } from '../../logger';
+import { HandlerModule } from './handlers/handler.module';
 
 @Module({
-  imports: [ServicesModule, LoggerModule.deferred()],
+  imports: [ServicesModule, HandlerModule, LoggerModule.deferred()],
   providers: [AccessoryMapProvider, AccessoryManager],
   exports: [CoreModule, AccessoryMapProvider, AccessoryManager],
 })

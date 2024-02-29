@@ -6,11 +6,11 @@ import {
   HumidityState,
   HumidityStateName,
   HygrometerDevice,
+  Optional,
 } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
 import { Subscription } from 'rxjs';
-import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 
 export type HumiditySensor = {
   humidity?: HumidityState;

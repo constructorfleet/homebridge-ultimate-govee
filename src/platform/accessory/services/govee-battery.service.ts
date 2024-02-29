@@ -5,8 +5,8 @@ import {
   BatteryLevelState,
   BatteryLevelStateName,
   Device,
+  Optional,
 } from '@constructorfleet/ultimate-govee';
-import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 import { Subscription } from 'rxjs';
 
 export type BatteryDevice = {

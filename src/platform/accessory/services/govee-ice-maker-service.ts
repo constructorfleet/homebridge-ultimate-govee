@@ -6,10 +6,10 @@ import {
   IceMakerDevice,
   MakingIceStateName,
   NuggetSizeStateName,
+  Optional,
 } from '@constructorfleet/ultimate-govee';
 import { Service, Characteristic } from 'hap-nodejs';
 import { GoveeService } from './govee-service';
-import { Optional } from '@constructorfleet/ultimate-govee/dist/common';
 import { Subscription } from 'rxjs';
 
 const toSpeed = (device: Device & IceMaker, size): number => {
@@ -63,7 +63,7 @@ export class GoveeIceMakerService extends GoveeService(
 
   setStates() {
     this.setState(Characteristic.RotationSpeed, NuggetSizeStateName, (value) =>
-      toSize(this.device as IceMakerDevice, value as number),
+      toSize(this.device as Device & IceMaker, value as number),
     );
     this.setState(
       Characteristic.Active,
@@ -93,7 +93,7 @@ export class GoveeIceMakerService extends GoveeService(
       this.subscribeToState(
         NuggetSizeStateName,
         Characteristic.RotationSpeed,
-        (value) => toSpeed(this.device as IceMakerDevice, value),
+        (value) => toSpeed(this.device as Device & IceMaker, value),
       ),
     ];
   }

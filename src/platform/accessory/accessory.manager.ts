@@ -26,7 +26,9 @@ import { PartialBehaviorSubject } from '../../common';
 import { GoveePluginConfig } from '../../config/v2/plugin-config.govee';
 import { LoggingService } from '../../logger/logger.service';
 import { Lock } from 'async-await-mutex-lock';
-import { GoveeService } from './services/govee-service';
+import { HandlerRegistry } from './handlers';
+import { sampleTime } from 'rxjs';
+
 const categoryMap = {
   [HumidifierDevice.deviceType]: Categories.AIR_HUMIDIFIER,
   [PurifierDevice.deviceType]: Categories.AIR_PURIFIER,
@@ -46,6 +48,7 @@ export class AccessoryManager {
 
   constructor(
     private readonly serviceRegistry: ServiceRegistry,
+    private readonly handlerRegistry: HandlerRegistry,
     @InjectConfig
     private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
     private readonly logger: LoggingService,
@@ -57,22 +60,28 @@ export class AccessoryManager {
     this.serviceRegistry.logger = logger;
   }
 
-  async onAccessoryLoaded(accessory: PlatformAccessory, device: Device) {
+  onAccessoryLoaded(accessory: PlatformAccessory) {
+    //}, device: Device) {
+    const device = accessory.context.device;
+    accessory.context.initialized = {};
     if (!device || !device.id) {
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
         accessory,
       ]);
       return;
     }
-    const deviceConfig = this.configService.getDeviceConfiguration(device.id);
+    const deviceConfig = this.configService.getDeviceConfiguration(device);
 
     if (deviceConfig?.ignore) {
+      this.logger.debug(`Ignoring ${accessory.displayName}`);
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
         accessory,
       ]);
       return;
     }
-    await this.onDeviceDiscovered(device);
+    this.accessories.set(device.id, accessory);
+    this.api.updatePlatformAccessories([accessory]);
+    this.logger.debug(`Loaded ${accessory.displayName} from cache`);
   }
 
   onDeviceUpdated(device: Device) {
@@ -86,13 +95,21 @@ export class AccessoryManager {
     }
 
     accessory.context.device = this.getSafeDeviceModel(device);
-    // accessory.services.filter((service) => 'update' in service).forEach((service) => 'update' in service && typeof service.update === 'function' && service.update(device));
+    accessory.services
+      .filter((service) => 'update' in service)
+      .forEach(
+        (service) =>
+          'update' in service &&
+          typeof service.update === 'function' &&
+          service.update(device),
+      );
 
     this.api.updatePlatformAccessories([accessory]);
   }
 
   async onDeviceDiscovered(device: Device) {
     await this.lock.acquire();
+    this.logger.debug(`Discovered Device ${device.id}`);
     try {
       const accessory: PlatformAccessory =
         this.accessories.get(device.id) ??
@@ -101,27 +118,21 @@ export class AccessoryManager {
           this.uuid(device.id),
           categoryMap[device.deviceType],
         );
-
-      accessory.context.device = this.getSafeDeviceModel(device);
-      // accessory.context.config = deviceConfig;
-      // device.name = deviceConfig?.displayName || device.name;
-      this.serviceRegistry.getServices(device, accessory);
-      if (this.accessories.has(device.id)) {
-        this.accessories
-          .get(device.id)
-          ?.services?.forEach((service) =>
-            (service as GoveeService).update(device),
-          );
-        return;
+      if (!this.accessories.has(device.id)) {
+        this.logger.debug(`Registering new accessory for ${device.id}`);
+        this.accessories.set(device.id, accessory);
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+          accessory,
+        ]);
       }
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-        accessory,
-      ]);
-      // device.subscribe((device) => {
-      //   this.onDeviceUpdated(device);
-      // });
-      this.accessories.set(device.id, accessory);
-      this.api.updatePlatformAccessories([accessory]);
+      accessory.context.device = this.getSafeDeviceModel(device);
+      this.handlerRegistry
+        .for(device)
+        ?.forEach((handler) => handler.setup(accessory, device));
+
+      device.pipe(sampleTime(20000)).subscribe(() => {
+        this.api.updatePlatformAccessories([accessory]);
+      });
     } finally {
       this.lock.release();
     }

@@ -6,8 +6,7 @@ import { InjectConfig } from '../config/plugin-config.providers';
 import { GoveePluginConfig } from '../config/v2/plugin-config.govee';
 import { PartialBehaviorSubject } from '../common';
 import { UltimateGoveeService } from '@constructorfleet/ultimate-govee';
-import { BehaviorSubject, map } from 'rxjs';
-import { PLATFORM_NAME, PLUGIN_NAME } from '../settings';
+import { map } from 'rxjs';
 import { LoggingService } from '../logger/logger.service';
 
 @Injectable()
@@ -25,21 +24,13 @@ export class PlatformService {
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  async configureAccessory(accessory: PlatformAccessory) {
-    // add the restored accessory to the accessories cache so we can track if it has already been registered
-    const deviceModel = accessory.context.device;
-    if (!deviceModel) {
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-        accessory,
-      ]);
-      return;
-    }
-    await this.accessoryManager.onAccessoryLoaded(
+  configureAccessory(accessory: PlatformAccessory) {
+    this.accessoryManager.onAccessoryLoaded(
       accessory,
-      this.service.constructDevice({
-        ...deviceModel,
-        status: new BehaviorSubject(deviceModel.status),
-      }),
+      // this.service.constructDevice({
+      //   ...deviceModel,
+      //   status: new BehaviorSubject(deviceModel.status),
+      // }),
     );
   }
 
@@ -54,6 +45,12 @@ export class PlatformService {
       .subscribe(async (device) => {
         await this.accessoryManager.onDeviceDiscovered(device);
       });
+    const controlChannels = this.config.getValue()?.controlChannels;
+    if (controlChannels !== undefined) {
+      this.service.channel('ble').setEnabled(controlChannels.ble);
+      this.service.channel('iot').setEnabled(controlChannels.iot);
+    }
+
     const credentials = this.config.getValue()?.credentials;
     if (
       credentials?.username === undefined ||
@@ -62,10 +59,5 @@ export class PlatformService {
       return;
     }
     await this.service.connect(credentials.username, credentials.password);
-    const controlChannels = this.config.getValue()?.controlChannels;
-    if (controlChannels !== undefined) {
-      this.service.channel('ble').setEnabled(controlChannels.ble);
-      this.service.channel('iot').setEnabled(controlChannels.iot);
-    }
   }
 }
