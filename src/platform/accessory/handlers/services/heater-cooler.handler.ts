@@ -3,9 +3,8 @@ import { ServiceHandler } from '../service.handler';
 import { CharacteristicHandler } from '../characteristic.handler';
 import { WithUUID, Service, Characteristic } from 'hap-nodejs';
 import { Type } from '@nestjs/common';
-import { Device, IceMaker, IceMakerStatusStateName, MakingIceStateName, NuggetSizeStateName } from '@constructorfleet/ultimate-govee';
-import { IceMakerStatus } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/ice-maker/types';
-import { IceMakerStates } from '@constructorfleet/ultimate-govee/dist/domain';
+import { Device, IceMaker, IceMakerStatus, IceMakerStatusStateName, MakingIceStateName, NuggetSizeStateName } from '@constructorfleet/ultimate-govee';
+
 
 const toSpeed = (device: Device & IceMaker, size): number => {
   switch (size) {
@@ -30,13 +29,13 @@ const toSize = (device: Device & IceMaker, speed: number) => {
 };
 
 export class IceMakerHeaderCoolerServiceHandler extends ServiceHandler<
-  IceMakerStates,
+  Omit<IceMaker, 'NuggetSize'>,
   WithUUID<Service>
 > {
   readonly serviceType = Service.HeaterCooler;
   readonly isPrimary: boolean = true;
   readonly handlers: Record<
-    keyof IceMakerStates,
+    keyof Omit<IceMaker, 'NuggetSize'>,
     CharacteristicHandler<WithUUID<Type<Characteristic>>, unknown>[]
   > = {
       [ IceMakerStatusStateName ]: [
