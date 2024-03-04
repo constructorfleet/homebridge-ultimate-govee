@@ -57,7 +57,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
           updateAccessory: this.api.updatePlatformAccessories,
         }),
         {
-          logger: ['warn', 'error'],
+          logger: ['log', 'warn', 'error'],
           abortOnError: false,
         },
       );

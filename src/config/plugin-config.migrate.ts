@@ -8,7 +8,6 @@ export const pluginConfigMigrate = async (
   let pluginConfig: GoveePluginConfig | undefined = undefined;
   while (fromVersion <= version) {
     const migrate = await import(`./v${fromVersion}/migrate.config`);
-    console.dir(migrate.migrateConfig);
     pluginConfig = migrate.migrateConfig(config);
     fromVersion++;
   }

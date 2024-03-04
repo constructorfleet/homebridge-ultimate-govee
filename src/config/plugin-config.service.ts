@@ -106,6 +106,9 @@ export class PluginConfigService implements OnModuleInit, OnModuleDestroy {
   getDeviceConfiguration<ConfigType extends DeviceConfig>(
     deviceId: string,
   ): ConfigType | undefined {
+    if (!Array.isArray(this.pluginConfiguration.devices)) {
+      this.pluginConfiguration.devices = [];
+    }
     const deviceConfigurations: DeviceConfig[] = new Array<DeviceConfig>(
       ...(this.pluginConfiguration.devices || []),
     );

@@ -10,6 +10,7 @@ import {
   LightStripHandler,
 } from './services/light-bulb.handler';
 import { FilterMaintenanceHandler } from './services/filter-maintenance.handler';
+import { LightEffectHandler } from './services/dynamic/light-effect.handler';
 
 @Module({
   providers: [
@@ -21,6 +22,10 @@ import { FilterMaintenanceHandler } from './services/filter-maintenance.handler'
     LightBulbHandler,
     LightStripHandler,
     FilterMaintenanceHandler,
+    {
+      provide: 'LightEffectHandler',
+      useValue: LightEffectHandler,
+    },
     HandlerRegistry,
   ],
   exports: [HandlerRegistry],

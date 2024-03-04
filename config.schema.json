@@ -253,7 +253,7 @@
     {
       "type": "section",
       "condition": {
-        "functionBody": "return model._version === undefined && !('credentials' in model);"
+        "functionBody": "return model !== undefined && 'username' in model &&  model._version === undefined && !('credentials' in model);"
       },
       "items": [
         {
@@ -495,7 +495,7 @@
     {
       "type": "section",
       "condition": {
-        "functionBody": "return model['2'] === 2 || model._version === 2 || model._version === '2'"
+        "functionBody": "return model === undefined || !('username' in model) || model['2'] === 2 || model._version === 2 || model._version === '2'"
       },
       "items": [
         {

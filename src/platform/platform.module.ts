@@ -19,17 +19,19 @@ export class PlatformModule {
       path: options.configPath,
     });
     const coreModule = CoreModule.forRoot(CoreModule, options);
+    const loggerModule = LoggerModule.forRoot(LoggerModule, {
+      disabledLevels: ['debug'],
+      logger: options.log,
+    });
     return {
       module: PlatformModule,
       imports: [
-        LoggerModule.forRoot(LoggerModule, {
-          disabledLevels: ['debug'],
-          logger: options.log,
-        }),
+        loggerModule,
         coreModule,
         configModule,
         AccessoryModule.forRoot({
           core: coreModule,
+          logger: loggerModule,
           pluginConfig: configModule,
           accessories: [],
         }),

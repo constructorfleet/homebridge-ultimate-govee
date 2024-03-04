@@ -21,7 +21,6 @@ import { BinaryLike } from 'crypto';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
 import { InjectConfig } from '../../config/plugin-config.providers';
 import { PluginConfigService } from '../../config/plugin-config.service';
-import { ServiceRegistry } from './services/services.registry';
 import { PartialBehaviorSubject } from '../../common';
 import { GoveePluginConfig } from '../../config/v2/plugin-config.govee';
 import { LoggingService } from '../../logger/logger.service';
@@ -47,7 +46,6 @@ export class AccessoryManager {
   >();
 
   constructor(
-    private readonly serviceRegistry: ServiceRegistry,
     private readonly handlerRegistry: HandlerRegistry,
     @InjectConfig
     private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
@@ -56,9 +54,7 @@ export class AccessoryManager {
     @InjectHomebridgeApi private readonly api: API,
     @InjectUUID
     private readonly uuid: (data: BinaryLike) => string,
-  ) {
-    this.serviceRegistry.logger = logger;
-  }
+  ) {}
 
   onAccessoryLoaded(accessory: PlatformAccessory) {
     const device = accessory.context.device;
@@ -125,13 +121,13 @@ export class AccessoryManager {
         ]);
       }
       accessory.context.device = this.getSafeDeviceModel(device);
-      this.handlerRegistry
-        .for(device)
-        ?.forEach((handler) => handler.setup(accessory, device));
 
-      device.pipe(sampleTime(20000)).subscribe(() => {
+      device.pipe(sampleTime(10000)).subscribe(async () => {
+        const handlers = await this.handlerRegistry.for(device);
+        handlers?.forEach((handler) => handler.setup(accessory, device));
         this.api.updatePlatformAccessories([accessory]);
       });
+      this.api.updatePlatformAccessories([accessory]);
     } finally {
       this.lock.release();
     }
