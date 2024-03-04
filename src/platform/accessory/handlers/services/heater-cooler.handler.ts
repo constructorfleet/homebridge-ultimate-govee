@@ -1,15 +1,11 @@
 import { ServiceHandler } from '../service.handler';
-import {
-  DeviceStatesType,
-  IceMaker,
-  IceMakerStates,
-  MakingIceStateName,
-  NuggetSizeStateName,
-} from '@constructorfleet/ultimate-govee/dist/domain';
+
 import { CharacteristicHandler } from '../characteristic.handler';
 import { WithUUID, Service, Characteristic } from 'hap-nodejs';
 import { Type } from '@nestjs/common';
-import { Device, IceMakerDevice } from '@constructorfleet/ultimate-govee';
+import { Device, IceMaker, IceMakerStatusStateName, MakingIceStateName, NuggetSizeStateName } from '@constructorfleet/ultimate-govee';
+import { IceMakerStatus } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/appliances/ice-maker/types';
+import { IceMakerStates } from '@constructorfleet/ultimate-govee/dist/domain';
 
 const toSpeed = (device: Device & IceMaker, size): number => {
   switch (size) {
@@ -43,22 +39,40 @@ export class IceMakerHeaderCoolerServiceHandler extends ServiceHandler<
     keyof IceMakerStates,
     CharacteristicHandler<WithUUID<Type<Characteristic>>, unknown>[]
   > = {
-    [MakingIceStateName]: [
-      {
-        characteristic: Characteristic.Active,
-        updateValue: (value) =>
-          value ? Characteristic.Active.ACTIVE : Characteristic.Active.INACTIVE,
-        onSet: (value) => value === Characteristic.Active.ACTIVE,
-      },
-    ],
-    [NuggetSizeStateName]: [
-      {
-        characteristic: Characteristic.RotationSpeed,
-        updateValue: (value, { device }) =>
-          toSpeed(device as Device & IceMaker, value),
-        onSet: (value, { device }) =>
-          toSize(device as Device & IceMaker, value as number),
-      },
-    ],
-  };
+      [ IceMakerStatusStateName ]: [
+        {
+          characteristic: Characteristic.CurrentHeaterCoolerState,
+          updateValue: (value) => {
+            switch (value) {
+              case IceMakerStatus.FULL:
+              case IceMakerStatus.WASHING:
+                return Characteristic.CurrentHeaterCoolerState.INACTIVE;
+              case IceMakerStatus.MAKING_ICE:
+                return Characteristic.CurrentHeaterCoolerState.COOLING;
+              default:
+                return Characteristic.CurrentHeaterCoolerState.IDLE;
+            }
+          }
+        }
+      ],
+      [ MakingIceStateName ]: [
+        {
+          characteristic: Characteristic.Active,
+          updateValue: (value) => value ? Characteristic.Active.ACTIVE : Characteristic.Active.INACTIVE,
+          onSet: (value) => value === Characteristic.Active.ACTIVE,
+        },
+      ],
+      [ NuggetSizeStateName ]: [
+        {
+          characteristic: Characteristic.RotationSpeed,
+          updateValue: (value, { device }) => toSpeed(device as Device & IceMaker, value),
+          onSet: (value, { device }) => toSize(device as Device & IceMaker, value as number),
+        },
+      ],
+      basketFull: [],
+      scheduledStart: [],
+      power: [],
+      isConnected: [],
+      isActive: []
+    };
 }
