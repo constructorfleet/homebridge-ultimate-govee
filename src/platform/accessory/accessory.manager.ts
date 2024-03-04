@@ -61,7 +61,6 @@ export class AccessoryManager {
   }
 
   onAccessoryLoaded(accessory: PlatformAccessory) {
-    //}, device: Device) {
     const device = accessory.context.device;
     accessory.context.initialized = {};
     if (!device || !device.id) {
