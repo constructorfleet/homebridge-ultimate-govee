@@ -1,32 +1,29 @@
 {
   "name": "Homebridge",
   "build": {
-    "dockerfile": "Dockerfile",
+    "dockerfile": "Dockerfile"
   },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "remoteEnv": {
-    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
   },
-  "forwardPorts": [51826, 8581],
-  "runArgs": ["--net=host"],
-  "appPort": [
-    "5112:5112", // CodeGPT
+  "forwardPorts": [
+    51826,
+    8581
+  ],
+  "runArgs": [
+    "--net=host"
   ],
   "features": {
-    "installZsh": true,
-    "configureZshAsDefaultShell": true,
-    "installOhMyZsh": true,
-    "installOhMyZshConfig": true,
-    "upgradePackages": true,
     "ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
       "plugins": "ssh-agent npm",
       "omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
-      "username": "vscode",
+      "username": "vscode"
     },
     "ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
     "ghcr.io/marcozac/devcontainer-features/shellcheck:1": {},
     "ghcr.io/jungaretti/features/vim:1": {},
-    "ghcr.io/trunk-io/devcontainer-feature/trunk:1": {},
+    "ghcr.io/trunk-io/devcontainer-feature/trunk:1": {}
   },
   "customizations": {
     "vscode": {
@@ -39,7 +36,7 @@
         "YaleHuang.chatgpt-ai",
         "huizhou.githd",
         "awhitenose.explorerGitTools",
-        "DanielSanMedium.dscodegpt",
+        "DanielSanMedium.dscodegpt"
       ],
       "settings": {
         "editor.defaultFormatter": "trunk.io",
@@ -54,7 +51,7 @@
           "editor.tabSize": 2,
           "editor.formatOnSave": true,
           "editor.defaultFormatter": "trunk.io",
-          "typescript.preferences.quoteStyle": "single",
+          "typescript.preferences.quoteStyle": "single"
         },
         "CodeGPT.Autocomplete.enabled": true,
         "CodeGPT.Autocomplete.maxTokens": 200,
@@ -63,9 +60,9 @@
         "trunk.trunkPath": "/workspaces/homebridge-ultimate-govee/.trunk/tools/trunk",
         "trunk.workspaceFolderName": "homebridge-ultimate-govee",
         "[json]": {
-          "editor.defaultFormatter": "trunk.io",
-        },
-      },
-    },
-  },
+          "editor.defaultFormatter": "trunk.io"
+        }
+      }
+    }
+  }
 }
