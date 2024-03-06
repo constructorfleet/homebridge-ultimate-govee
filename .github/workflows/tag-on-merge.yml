@@ -34,16 +34,16 @@ jobs:
           describe --tags)
       - name: Commit Package Version
         id: commit
-        run: |
+        run: |-
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           if [ -n "$(git status --porcelain package.json)" ]; then
             git add package.json
             git add package-lock.json
             git commit -m "[ci skip] chore(package.json): update package json"
-            echo ::set-output name=exit_code::0
+            echo "exit_code=0" >> $GITHUB_OUTPUT
           else
-            echo ::set-output name=exit_code::1
+            echo "exit_code=1" >> $GITHUB_OUTPUT
           fi
       - name: Push to protected branch
         uses: CasperWA/push-protected@v2
