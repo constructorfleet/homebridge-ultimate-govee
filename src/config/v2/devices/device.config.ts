@@ -1,8 +1,12 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
+import { BehaviorSubject } from 'rxjs';
 
 export class DeviceConfig {
+  constructor() {
+    this.ignore = new BehaviorSubject(false);
+  }
   @Expose({ name: '_type' })
-  type!: string;
+  type: string = 'device';
 
   @Expose({ name: 'id' })
   id!: string;
@@ -11,5 +15,7 @@ export class DeviceConfig {
   name?: string;
 
   @Expose({ name: 'ignore' })
-  ignore: boolean = false;
+  @Transform(({ value }) => new BehaviorSubject(value), { toClassOnly: true })
+  @Transform(({ value }) => value.getValue(), { toPlainOnly: true })
+  ignore: BehaviorSubject<boolean>;
 }

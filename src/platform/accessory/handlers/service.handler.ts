@@ -7,26 +7,35 @@ import { Service, Characteristic } from 'hap-nodejs';
 import {
   CharacteristicHandler,
   CharacteristicHandlerFunctions,
-} from './characteristic.handler';
+  ServiceCharacteristicHandlers,
+  ServiceName,
+  SubServiceHandler as SubServiceHandlerType,
+  ServiceType,
+} from './handler.types';
 import { Logger, Type, mixin } from '@nestjs/common';
-import { PlatformAccessory, WithUUID } from 'homebridge';
-import { ClassConstructor } from 'class-transformer';
+import { API, PlatformAccessory, WithUUID } from 'homebridge';
+import { InjectHomebridgeApi } from '../accessory.const';
+import { Subscription } from 'rxjs';
 
-export abstract class ServiceHandler<
-  States extends DeviceStatesType,
-  TService extends WithUUID<Service>,
-> {
+const defaultName = <States extends DeviceStatesType>(device: Device<States>) =>
+  device.name;
+
+export const getServiceIdentifier = (
+  deviceType: string,
+  serviceType: WithUUID<Type<Service>>,
+  subType?: string,
+) => `${deviceType}.${serviceType}.${subType}`;
+
+export abstract class ServiceHandler<States extends DeviceStatesType> {
   protected readonly logger: Logger = new Logger(this.constructor.name);
-  abstract readonly handlers: Partial<
-    Record<
-      keyof States,
-      CharacteristicHandler<WithUUID<Type<Characteristic>>, any>[]
-    >
-  >;
-  abstract readonly serviceType: WithUUID<ClassConstructor<TService>>;
+  abstract readonly handlers: ServiceCharacteristicHandlers<States>;
+  abstract readonly serviceType: ServiceType;
+  readonly name: ServiceName<States> = defaultName;
   readonly isPrimary: boolean = false;
-  readonly link: boolean = false;
   readonly subType: string | undefined = undefined;
+  readonly subscriptions: Map<string, Subscription[]> = new Map();
+
+  constructor(@InjectHomebridgeApi private readonly api: API) {}
 
   private filterHandlers<ServiceType extends WithUUID<Service>>(
     logger: Logger,
@@ -124,11 +133,26 @@ export abstract class ServiceHandler<
     });
   }
 
-  setup(
-    accessory: PlatformAccessory,
-    device: Device<States>,
-    updatePlatformAccessories?: (accessories: PlatformAccessory[]) => void,
-  ) {
+  tearDown(accessory: PlatformAccessory, device: Device<States>) {
+    const initializedKey = `${this.serviceType.UUID}${this.subType === undefined ? '' : this.subType}`;
+    if (!accessory.context.initialized) {
+      accessory.context.initialized = {};
+    }
+    accessory.context.initialized[initializedKey] = false;
+    const service = accessory.services.find(
+      (service) =>
+        service.UUID === this.serviceType.UUID &&
+        service.subtype === this.subType,
+    );
+    if (service === undefined) {
+      return;
+    }
+    accessory.removeService(service);
+    this.api.updatePlatformAccessories([accessory]);
+    this.subscriptions.get(device.id)?.forEach((sub) => sub.unsubscribe());
+  }
+
+  setup(accessory: PlatformAccessory, device: Device<States>) {
     const initializedKey = `${this.serviceType.UUID}${this.subType === undefined ? '' : this.subType}`;
     const logger = new Logger(`${ServiceHandler.name} - ${device.name}`);
     if (!accessory.context.initialized) {
@@ -150,29 +174,13 @@ export abstract class ServiceHandler<
     );
     if (newService === undefined) {
       newService = new this.serviceType(device.name, this.subType);
-      // if (this.link === true) {
-      //   const primary = accessory.services.find((s) => s.isPrimaryService);
-      //   if (primary) {
-      //     primary.addLinkedService(newService);
-      //   } else {
-      //     accessory.context.linkedServices = [
-      //       ...accessory.context.linkedServices ?? [],
-      //       newService,
-      //     ];
-      //   }
-      // } else {
       accessory.addService(newService);
-      // }
     }
     const service = newService!;
     if (service.isPrimaryService !== this.isPrimary) {
       service.setPrimaryService(this.isPrimary);
-      if (this.isPrimary) {
-        while ((accessory.context.linkedServices ?? []).length > 0) {
-          service.addLinkedService(accessory.context.linkedServices.pop());
-        }
-      }
     }
+    const subscriptions: Subscription[] = [];
     Object.entries(this.handlers).forEach(([stateName, handlers]) => {
       const state = device.state(stateName);
       if (state === undefined) {
@@ -181,9 +189,12 @@ export abstract class ServiceHandler<
 
       this.setProps(logger, device, service, handlers, state?.value);
       this.doUpdate(logger, device, service, handlers, state?.value);
-      state?.subscribe((value) => {
+      const sub = state?.subscribe((value) => {
         this.doUpdate(logger, device, service, handlers, value);
       });
+      if (sub !== undefined) {
+        subscriptions.push(sub);
+      }
 
       this.filterHandlers(logger, service, handlers, 'onSet')?.forEach(
         (handler) => {
@@ -209,52 +220,33 @@ export abstract class ServiceHandler<
         },
       );
     });
+    this.subscriptions.set(device.id, subscriptions);
     accessory.context.initialized[initializedKey] = true;
-    if (updatePlatformAccessories !== undefined) {
-      updatePlatformAccessories([accessory]);
-    }
+    this.api.updatePlatformAccessories([accessory]);
   }
 }
 
-export type DynamicServiceHandlerOptions<
-  States extends DeviceStatesType,
-  TService extends WithUUID<Service>,
-> = {
-  handlers: Partial<
-    Record<
-      keyof States,
-      CharacteristicHandler<WithUUID<Type<Characteristic>>, any>[]
-    >
-  >;
-  serviceType: WithUUID<ClassConstructor<TService>>;
-  isPrimary?: boolean;
+export const SubServiceHandler = <States extends DeviceStatesType>(
+  deviceType: Device<States>,
+  serviceType: ServiceType,
+  subType: string,
+  name: ServiceName<States>,
+  characteristicHandlers: ServiceCharacteristicHandlers<States>,
+): Type<SubServiceHandlerType<States>> => {
+  const identifier = getServiceIdentifier(
+    deviceType.deviceType,
+    serviceType,
+    subType,
+  );
+  class SubServiceHandlerMixin extends ServiceHandler<States> {
+    static readonly identifier: string = identifier;
+    readonly identifier: string = identifier;
+    readonly handlers: ServiceCharacteristicHandlers<States> =
+      characteristicHandlers;
+    readonly name: ServiceName<States> = name;
+    readonly serviceType: ServiceType = serviceType;
+    readonly subType: string | undefined = subType;
+  }
+
+  return mixin(SubServiceHandlerMixin);
 };
-
-export const DynamicServiceHandler = <
-  States extends DeviceStatesType,
-  TService extends WithUUID<Service>,
->(
-  baseHandler: ClassConstructor<ServiceHandler<any, WithUUID<Service>>>,
-  ...options: DynamicServiceHandlerOptions<States, TService>[]
-): Type<ServiceHandler<States, TService>>[] => {
-  return options.map((handlerOptions) => {
-    class ServiceHandlerMixin extends baseHandler {
-      readonly handlers: Partial<
-        Record<
-          keyof States,
-          CharacteristicHandler<WithUUID<Type<Characteristic>>, any>[]
-        >
-      > = handlerOptions.handlers;
-      readonly serviceType: WithUUID<ClassConstructor<TService>> =
-        handlerOptions.serviceType;
-      readonly isPrimary: boolean = handlerOptions.isPrimary === true;
-    }
-
-    return mixin(ServiceHandlerMixin);
-  });
-};
-
-export type DynamicServiceHandler<
-  States extends DeviceStatesType,
-  TService extends WithUUID<Service>,
-> = (device: Device<States>) => Type<ServiceHandler<States, TService>>[];

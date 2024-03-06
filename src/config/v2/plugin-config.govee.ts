@@ -3,6 +3,7 @@ import { GoveeCredentials } from './credentials.config';
 import { ControlChannels } from './control-channel.config';
 import { DeviceConfig } from './devices/device.config';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
+import { RGBICLightDeviceConfig, RGBLightDeviceConfig } from './devices';
 
 export class GoveePluginConfig {
   @Expose({ name: '_version' })
@@ -23,8 +24,18 @@ export class GoveePluginConfig {
   controlChannels: ControlChannels = new ControlChannels();
 
   @Expose({ name: 'devices' })
-  @Type(() => DeviceConfig)
-  devices: DeviceConfig[] = [];
+  @Type(() => DeviceConfig, {
+    discriminator: {
+      property: '_type',
+      subTypes: [
+        { name: 'rgbic', value: RGBICLightDeviceConfig },
+        { name: 'rgb', value: RGBLightDeviceConfig },
+        { name: 'device', value: DeviceConfig },
+      ],
+    },
+    keepDiscriminatorProperty: true,
+  })
+  deviceConfigs: DeviceConfig[] = [];
 
   get isValid(): boolean {
     return ![

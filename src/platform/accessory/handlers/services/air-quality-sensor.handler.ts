@@ -1,4 +1,4 @@
-import { Characteristic, Service, WithUUID } from 'hap-nodejs';
+import { Characteristic, Service } from 'hap-nodejs';
 import {
   AirQualityDevice,
   AirQualitySensor,
@@ -7,10 +7,7 @@ import { ServiceHandler } from '../service.handler';
 import { HandlerRegistry } from '../handler.registry';
 
 @HandlerRegistry.forDevice(AirQualityDevice)
-export class AirQualitySensorHandler extends ServiceHandler<
-  AirQualitySensor,
-  WithUUID<Service>
-> {
+export class AirQualitySensorHandler extends ServiceHandler<AirQualitySensor> {
   readonly serviceType = Service.AirQualitySensor;
   readonly handlers = {
     pm25: [

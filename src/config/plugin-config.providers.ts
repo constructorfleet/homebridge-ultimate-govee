@@ -3,19 +3,19 @@ import {
   ConfigFilePathKey,
   GoveePluginConfigKey,
   MODULE_OPTIONS_TOKEN,
+  OPTIONS_TYPE,
   PluginConfigVersion,
 } from './plugin-config.const';
 import { GoveePluginConfig } from './v1/plugin-config.govee';
 import { plainToInstance } from 'class-transformer';
-import { PartialBehaviorSubject } from '../common';
-import { PluginConfigModuleOptions } from './plugin-config.types';
 import { pluginConfigMigrate } from './plugin-config.migrate';
+import { PartialBehaviorSubject } from '@constructorfleet/ultimate-govee';
 
 export const InjectConfig = Inject(GoveePluginConfigKey);
 export const GoveePluginConfiguration: FactoryProvider = {
   provide: GoveePluginConfigKey,
   inject: [MODULE_OPTIONS_TOKEN],
-  useFactory: async (options: PluginConfigModuleOptions) => {
+  useFactory: async (options: typeof OPTIONS_TYPE) => {
     const pluginConfig =
       options.config.version === PluginConfigVersion
         ? plainToInstance(GoveePluginConfig, options.config)
@@ -28,5 +28,5 @@ export const InjectConfigFilePath = Inject(ConfigFilePathKey);
 export const ConfigFilePathProvider: FactoryProvider = {
   provide: ConfigFilePathKey,
   inject: [MODULE_OPTIONS_TOKEN],
-  useFactory: (options: PluginConfigModuleOptions) => options.path,
+  useFactory: (options: typeof OPTIONS_TYPE) => options.path,
 };

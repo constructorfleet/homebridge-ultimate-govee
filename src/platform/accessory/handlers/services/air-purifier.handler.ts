@@ -2,14 +2,11 @@ import { Characteristic, Service, WithUUID } from 'hap-nodejs';
 import { Purifier, PurifierDevice } from '@constructorfleet/ultimate-govee';
 import { ServiceHandler } from '../service.handler';
 import { Type } from '@nestjs/common';
-import { CharacteristicHandler } from '../characteristic.handler';
+import { CharacteristicHandler } from '../handler.types';
 import { HandlerRegistry } from '../handler.registry';
 
 @HandlerRegistry.forDevice(PurifierDevice)
-export class PurififerServiceHandler extends ServiceHandler<
-  Purifier,
-  WithUUID<Service>
-> {
+export class PurififerServiceHandler extends ServiceHandler<Purifier> {
   readonly serviceType = Service.AirPurifier;
   readonly isPrimary: boolean = true;
   readonly handlers: Record<

@@ -2,18 +2,18 @@ import { FactoryProvider } from '@nestjs/common';
 import {
   LoggerKey,
   LoggerLevels,
-  LoggerModuleOptionsKey,
+  MODULE_OPTIONS_TOKEN,
+  OPTIONS_TYPE,
 } from './logger.const';
-import { LoggerModuleOptions } from './logger.types';
 
 export const LoggerLevelsProvider: FactoryProvider = {
   provide: LoggerLevels,
-  inject: [LoggerModuleOptionsKey],
-  useFactory: (options: LoggerModuleOptions) => options?.disabledLevels ?? [],
+  inject: [MODULE_OPTIONS_TOKEN],
+  useFactory: (options: typeof OPTIONS_TYPE) => options?.disabledLevels ?? [],
 };
 
 export const LoggerProvider: FactoryProvider = {
   provide: LoggerKey,
-  inject: [LoggerModuleOptionsKey],
-  useFactory: (options: LoggerModuleOptions) => options.logger,
+  inject: [MODULE_OPTIONS_TOKEN],
+  useFactory: (options: typeof OPTIONS_TYPE) => options.logger,
 };

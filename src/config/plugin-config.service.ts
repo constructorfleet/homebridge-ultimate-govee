@@ -64,7 +64,7 @@ export class PluginConfigService implements OnModuleInit, OnModuleDestroy {
     const deviceMap = new Map<string, DeviceConfig>();
     this.goveePluginConfig
       .getValue()
-      ?.devices?.forEach((deviceConfig) =>
+      ?.deviceConfigs?.forEach((deviceConfig) =>
         deviceMap.set(deviceConfig.id!, deviceConfig),
       );
 
@@ -106,11 +106,11 @@ export class PluginConfigService implements OnModuleInit, OnModuleDestroy {
   getDeviceConfiguration<ConfigType extends DeviceConfig>(
     deviceId: string,
   ): ConfigType | undefined {
-    if (!Array.isArray(this.pluginConfiguration.devices)) {
-      this.pluginConfiguration.devices = [];
+    if (!Array.isArray(this.pluginConfiguration.deviceConfigs)) {
+      this.pluginConfiguration.deviceConfigs = [];
     }
     const deviceConfigurations: DeviceConfig[] = new Array<DeviceConfig>(
-      ...(this.pluginConfiguration.devices || []),
+      ...(this.pluginConfiguration.deviceConfigs || []),
     );
     return deviceConfigurations.find(
       (deviceConfig) => deviceConfig.id === deviceId,

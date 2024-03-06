@@ -1,4 +1,4 @@
-import { Characteristic, Service, WithUUID } from 'hap-nodejs';
+import { Characteristic, Service } from 'hap-nodejs';
 import {
   BatteryLevelState,
   BatteryLevelStateName,
@@ -12,10 +12,7 @@ type BatteryLevelDevice = {
 };
 
 @HandlerRegistry.forDevice(HygrometerDevice)
-export class BatteryHandler extends ServiceHandler<
-  BatteryLevelDevice,
-  WithUUID<Service>
-> {
+export class BatteryHandler extends ServiceHandler<BatteryLevelDevice> {
   readonly serviceType = Service.Battery;
   readonly handlers = {
     [BatteryLevelStateName]: [

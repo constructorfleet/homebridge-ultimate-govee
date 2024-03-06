@@ -1,6 +1,6 @@
 import { ServiceHandler } from '../service.handler';
 
-import { CharacteristicHandler } from '../characteristic.handler';
+import { CharacteristicHandler } from '../handler.types';
 import { WithUUID, Service, Characteristic } from 'hap-nodejs';
 import { Type } from '@nestjs/common';
 import {
@@ -35,8 +35,7 @@ const toSize = (device: Device & IceMaker, speed: number) => {
 };
 
 export class IceMakerHeaderCoolerServiceHandler extends ServiceHandler<
-  Omit<IceMaker, 'NuggetSize'>,
-  WithUUID<Service>
+  Omit<IceMaker, 'NuggetSize'>
 > {
   readonly serviceType = Service.HeaterCooler;
   readonly isPrimary: boolean = true;

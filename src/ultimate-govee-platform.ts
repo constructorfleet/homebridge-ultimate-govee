@@ -37,14 +37,9 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
       return;
     }
 
-    this.log.debug('Finished initializing platform:', this.config.name);
-    // When this event is fired it means Homebridge has restored all cached accessories from disk.
-    // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to homebridge already. This event can also be used
-    // to start discovery of new accessories.
-    this.api.on('didFinishLaunching', async () => {
-      this.appContext = await NestFactory.createApplicationContext(
-        PlatformModule.register({
+    NestFactory.createApplicationContext(
+      PlatformModule.forRootAsync({
+        useFactory: () => ({
           api: this.api,
           service: this.api.hap.Service,
           characteristic: this.api.hap.Characteristic,
@@ -56,32 +51,43 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
           registerAccessory: this.api.registerPlatformAccessories,
           updateAccessory: this.api.updatePlatformAccessories,
         }),
-        {
-          logger: ['log', 'warn', 'error'],
-          abortOnError: false,
-        },
-      );
-      const logger = new Logger(
-        `${UltimateGoveePlatform.name}.createApplicationContext`,
-      );
-      logger.log('Created');
+      }),
+      {
+        logger: ['log', 'warn', 'error'],
+        abortOnError: false,
+      },
+    ).then((appContext) => {
+      this.appContext = appContext;
+      this.logger.log('Created Nest Context');
       this.service = this.appContext.get(PlatformService);
-      new Logger('didFinishLaunching').log('');
-      if (this.service) {
-        while (this.cachedAccessories.length) {
-          const acc = this.cachedAccessories.pop();
-          if (acc) {
-            await this.service.configureAccessory(acc);
-          }
-        }
-        await this.service.discoverDevices();
-      }
+      this.startGovee();
+    });
+
+    this.log.debug('Finished initializing platform:', this.config.platform);
+    // When this event is fired it means Homebridge has restored all cached accessories from disk.
+    // Dynamic Platform plugins should only register new accessories after this event was fired,
+    // in order to ensure they weren't added to homebridge already. This event can also be used
+    // to start discovery of new accessories.
+    this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
       this.loaded = true;
+      this.startGovee();
     });
     this.api.on('shutdown', async () => {
       await this.appContext.close();
     });
+  }
+
+  private startGovee() {
+    if (this.service !== undefined && this.loaded === true) {
+      while (this.cachedAccessories.length) {
+        const acc = this.cachedAccessories.pop();
+        if (acc) {
+          this.service.configureAccessory(acc);
+        }
+      }
+      this.service.discoverDevices();
+    }
   }
 
   /**
@@ -89,7 +95,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory): void {
-    if (this.service) {
+    if (this.service && this.loaded) {
       (async (accessory: PlatformAccessory) =>
         await this.service.configureAccessory(accessory))(accessory);
     } else {

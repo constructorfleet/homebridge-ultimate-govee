@@ -1,7 +1,11 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { DeviceConfig } from './device.config';
+import { BehaviorSubject } from 'rxjs';
 
 export class LightEffectConfig {
+  constructor() {
+    this.enabled = new BehaviorSubject(false);
+  }
   @Expose({ name: 'name' })
   name: string = '';
 
@@ -12,7 +16,9 @@ export class LightEffectConfig {
   description: string = '';
 
   @Expose({ name: 'enabled' })
-  enabled: boolean = false;
+  @Transform(({ value }) => new BehaviorSubject(value), { toClassOnly: true })
+  @Transform(({ value }) => value.getValue(), { toPlainOnly: true })
+  enabled: BehaviorSubject<boolean>;
 }
 
 export class DiyEffectConfig {
@@ -24,6 +30,7 @@ export class DiyEffectConfig {
 }
 
 export class RGBLightDeviceConfig extends DeviceConfig {
+  @Expose({ name: '_type' })
   type: string = 'rgb';
 
   @Expose({ name: 'effects' })
@@ -35,9 +42,16 @@ export class RGBLightDeviceConfig extends DeviceConfig {
   diy: DiyEffectConfig[] = [];
 }
 
-export class RGBICLightDeviceConfig extends DeviceConfig {
+export class RGBICLightDeviceConfig extends RGBLightDeviceConfig {
+  constructor() {
+    super();
+    this.showSegments = new BehaviorSubject(false);
+  }
+  @Expose({ name: '_type' })
   type: string = 'rgbic';
 
   @Expose({ name: 'segments' })
-  showSegments: boolean = false;
+  @Transform(({ value }) => new BehaviorSubject(value), { toClassOnly: true })
+  @Transform(({ value }) => value.getValue(), { toPlainOnly: true })
+  showSegments: BehaviorSubject<boolean>;
 }

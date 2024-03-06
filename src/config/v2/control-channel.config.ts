@@ -1,9 +1,14 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
+import { BehaviorSubject } from 'rxjs';
 
 export class ControlChannels {
   @Expose({ name: 'iot' })
-  iot: boolean = false;
+  @Transform(({ value }) => new BehaviorSubject(value), { toClassOnly: true })
+  @Transform(({ value }) => value.getValue(), { toPlainOnly: true })
+  iot: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
   @Expose({ name: 'ble' })
-  ble: boolean = false;
+  @Transform(({ value }) => new BehaviorSubject(value), { toClassOnly: true })
+  @Transform(({ value }) => value.getValue(), { toPlainOnly: true })
+  ble: BehaviorSubject<boolean> = new BehaviorSubject(false);
 }

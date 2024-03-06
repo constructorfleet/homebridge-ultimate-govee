@@ -7,7 +7,7 @@ import {
 } from '@constructorfleet/ultimate-govee';
 import { ServiceHandler } from '../service.handler';
 import { Type } from '@nestjs/common';
-import { CharacteristicHandler } from '../characteristic.handler';
+import { CharacteristicHandler } from '../handler.types';
 import { HandlerRegistry } from '../handler.registry';
 
 type TemperatureDeviceState = {
@@ -16,8 +16,7 @@ type TemperatureDeviceState = {
 
 @HandlerRegistry.forDevice(HygrometerDevice, AirQualityDevice)
 export class TemperatureSensorHandler extends ServiceHandler<
-  TemperatureDeviceState,
-  WithUUID<Service>
+  TemperatureDeviceState
 > {
   readonly serviceType = Service.TemperatureSensor;
   readonly handlers: Record<

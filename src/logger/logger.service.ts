@@ -1,37 +1,37 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Logger } from './logger.types';
-import { InjectLogLevels, LoggerKey } from './logger.const';
+import { InjectDisabledLevels, LoggerKey } from './logger.const';
 
 @Injectable()
 export class LoggingService {
   constructor(
     @Inject(LoggerKey) private readonly logger: Logger,
-    @InjectLogLevels private readonly logLevels: string[],
+    @InjectDisabledLevels private readonly disabledLevels: string[],
   ) {}
 
   info(message: unknown, ...parameters: unknown[]): void {
-    if (this.logLevels.includes('info')) {
+    if (this.disabledLevels.includes('info')) {
       return;
     }
     this.logger.info(message, ...parameters);
   }
 
   warn(message: unknown, ...parameters: unknown[]): void {
-    if (this.logLevels.includes('warn')) {
+    if (this.disabledLevels.includes('warn')) {
       return;
     }
     this.logger.warn(message, ...parameters);
   }
 
   error(message: unknown, ...parameters: unknown[]): void {
-    if (this.logLevels.includes('error')) {
+    if (this.disabledLevels.includes('error')) {
       return;
     }
     this.logger.error(message, ...parameters);
   }
 
   debug(message: unknown, ...parameters: unknown[]): void {
-    if (this.logLevels.includes('debug')) {
+    if (this.disabledLevels.includes('debug')) {
       return;
     }
     this.logger.debug(message, ...parameters);

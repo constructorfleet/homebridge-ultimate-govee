@@ -1,6 +1,9 @@
 import { FactoryProvider, Inject } from '@nestjs/common';
 import {
   AccessoryMapKey,
+  GenerateUUIDKey,
+  HomebridgeApiKey,
+  HomebridgeServicesKey,
   MODULE_OPTIONS_TOKEN,
   OPTIONS_TYPE,
 } from './accessory.const';
@@ -17,4 +20,28 @@ export const AccessoryMapProvider: FactoryProvider = {
     new DeltaMap<string, BehaviorSubject<PlatformAccessory<Device>>>(
       options.accessories?.map((a) => [a.UUID, new BehaviorSubject(a)]) ?? [],
     ),
+};
+
+export const HomebridgeServiceProvider: FactoryProvider = {
+  provide: HomebridgeServicesKey,
+  inject: [MODULE_OPTIONS_TOKEN],
+  useFactory: (options: typeof OPTIONS_TYPE) => options.api.hap.Service,
+};
+
+export const HomebridgeCharacteristicProvider: FactoryProvider = {
+  provide: HomebridgeServicesKey,
+  inject: [MODULE_OPTIONS_TOKEN],
+  useFactory: (options: typeof OPTIONS_TYPE) => options.api.hap.Characteristic,
+};
+
+export const HomebridgeApiProvider: FactoryProvider = {
+  provide: HomebridgeApiKey,
+  inject: [MODULE_OPTIONS_TOKEN],
+  useFactory: (options: typeof OPTIONS_TYPE) => options.api,
+};
+
+export const HomebridgeUUIDProvider: FactoryProvider = {
+  provide: GenerateUUIDKey,
+  inject: [MODULE_OPTIONS_TOKEN],
+  useFactory: (options: typeof OPTIONS_TYPE) => options.generateUUID,
 };

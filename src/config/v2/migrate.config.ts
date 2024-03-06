@@ -18,8 +18,8 @@ export const migrateConfig = (config: v1Config): GoveePluginConfig => {
   newConfig.credentials.username = config.username;
   newConfig.credentials.password = config.password;
 
-  newConfig.controlChannels.ble = config.connections?.ble === true;
-  newConfig.controlChannels.iot = config.connections?.iot === true;
+  newConfig.controlChannels.ble.next(config.connections?.ble === true);
+  newConfig.controlChannels.iot.next(config.connections?.iot === true);
 
   config.devices?.airPurifiers
     ?.filter((device) => device.deviceId !== undefined)
@@ -27,8 +27,8 @@ export const migrateConfig = (config: v1Config): GoveePluginConfig => {
       const deviceConfig = new DeviceConfig();
       deviceConfig.id = device.deviceId!;
       deviceConfig.name = device.displayName;
-      deviceConfig.ignore = device.ignore === true;
-      newConfig.devices.push(deviceConfig);
+      deviceConfig.ignore.next(device.ignore === true);
+      newConfig.deviceConfigs.push(deviceConfig);
     });
   config.devices?.humidifiers
     ?.filter((device) => device.deviceId !== undefined)
@@ -36,8 +36,8 @@ export const migrateConfig = (config: v1Config): GoveePluginConfig => {
       const deviceConfig = new DeviceConfig();
       deviceConfig.id = device.deviceId!;
       deviceConfig.name = device.displayName;
-      deviceConfig.ignore = device.ignore === true;
-      newConfig.devices.push(deviceConfig);
+      deviceConfig.ignore.next(device.ignore === true);
+      newConfig.deviceConfigs.push(deviceConfig);
     });
   config.devices?.lights
     ?.filter((device) => device.deviceId !== undefined)
@@ -53,14 +53,14 @@ export const migrateConfig = (config: v1Config): GoveePluginConfig => {
       const deviceConfig = new ctor();
       deviceConfig.id = device.deviceId!;
       deviceConfig.name = device.displayName;
-      deviceConfig.ignore = device.ignore === true;
+      deviceConfig.ignore.next(device.ignore === true);
       deviceConfig.override = device;
       deviceConfig.effects =
         device.effects?.map((effect) => {
           const lightConfig = new LightEffectConfig();
           lightConfig.code = effect.id;
           lightConfig.description = effect.description;
-          lightConfig.enabled = effect.enabled;
+          lightConfig.enabled.next(effect.enabled === true);
           lightConfig.name = effect.name;
           return lightConfig;
         }) ?? [];
@@ -71,7 +71,7 @@ export const migrateConfig = (config: v1Config): GoveePluginConfig => {
           diyConfig.name = effect.name;
           return diyConfig;
         }) ?? [];
-      newConfig.devices.push(deviceConfig);
+      newConfig.deviceConfigs.push(deviceConfig);
     });
 
   return newConfig;

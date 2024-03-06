@@ -1,4 +1,4 @@
-import { Characteristic, Service, WithUUID } from 'hap-nodejs';
+import { Characteristic, Service } from 'hap-nodejs';
 import {
   BrightnessStateName,
   ColorRGBStateName,
@@ -16,10 +16,7 @@ import { HandlerRegistry } from '../handler.registry';
 import { ColorRGB, hsvToRGB, rgbToHSV } from '../../../../common';
 
 @HandlerRegistry.forDevice(RGBLightDevice)
-export class LightBulbHandler extends ServiceHandler<
-  RGBLight,
-  WithUUID<Service>
-> {
+export class LightBulbHandler extends ServiceHandler<RGBLight> {
   readonly serviceType = Service.Lightbulb;
   readonly isPrimary: boolean = true;
   readonly handlers = {
@@ -93,10 +90,7 @@ export class LightBulbHandler extends ServiceHandler<
 }
 
 @HandlerRegistry.forDevice(RGBICLightDevice)
-export class LightStripHandler extends ServiceHandler<
-  RGBICLight,
-  WithUUID<Service>
-> {
+export class LightStripHandler extends ServiceHandler<RGBICLight> {
   readonly serviceType = Service.Lightbulb;
   readonly isPrimary: boolean = true;
   readonly handlers = {

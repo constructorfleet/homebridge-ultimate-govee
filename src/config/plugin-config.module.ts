@@ -1,10 +1,11 @@
-import { PluginConfigModuleOptionsKey } from './plugin-config.const';
+import {
+  ConfigurableModuleClass,
+  MODULE_OPTIONS_TOKEN,
+} from './plugin-config.const';
 import {
   ConfigFilePathProvider,
   GoveePluginConfiguration,
 } from './plugin-config.providers';
-import { createConfigurableDynamicRootModule } from '@golevelup/nestjs-modules';
-import { PluginConfigModuleOptions } from './plugin-config.types';
 import { Module } from '@nestjs/common';
 import { PluginConfigService } from './plugin-config.service';
 
@@ -18,12 +19,7 @@ import { PluginConfigService } from './plugin-config.service';
     GoveePluginConfiguration,
     PluginConfigService,
     ConfigFilePathProvider,
+    MODULE_OPTIONS_TOKEN,
   ],
 })
-export class PluginConfigModule extends createConfigurableDynamicRootModule<
-  PluginConfigModule,
-  PluginConfigModuleOptions
->(PluginConfigModuleOptionsKey) {
-  static deferred = (wait: number = 0) =>
-    PluginConfigModule.externallyConfigured(PluginConfigModule, wait);
-}
+export class PluginConfigModule extends ConfigurableModuleClass {}

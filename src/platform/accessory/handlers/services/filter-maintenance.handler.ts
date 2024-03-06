@@ -1,4 +1,4 @@
-import { Characteristic, Service, WithUUID } from 'hap-nodejs';
+import { Characteristic, Service } from 'hap-nodejs';
 import {
   FilterExpiredStateName,
   FilterLifeStateName,
@@ -9,10 +9,7 @@ import { ServiceHandler } from '../service.handler';
 import { HandlerRegistry } from '../handler.registry';
 
 @HandlerRegistry.forDevice(PurifierDevice)
-export class FilterMaintenanceHandler extends ServiceHandler<
-  Purifier,
-  WithUUID<Service>
-> {
+export class FilterMaintenanceHandler extends ServiceHandler<Purifier> {
   readonly serviceType = Service.FilterMaintenance;
   readonly handlers = {
     [FilterExpiredStateName]: [

@@ -6,27 +6,26 @@ import {
   Service,
   WithUUID,
 } from 'homebridge';
-import { InjectHomebridgeApi } from '../../core';
 import {
   AirQualityDevice,
   Device,
   HumidifierDevice,
   HygrometerDevice,
+  PartialBehaviorSubject,
   PurifierDevice,
   RGBICLightDevice,
   RGBLightDevice,
 } from '@constructorfleet/ultimate-govee';
-import { InjectUUID } from '../../core/core.const';
 import { BinaryLike } from 'crypto';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
 import { InjectConfig } from '../../config/plugin-config.providers';
 import { PluginConfigService } from '../../config/plugin-config.service';
-import { PartialBehaviorSubject } from '../../common';
 import { GoveePluginConfig } from '../../config/v2/plugin-config.govee';
 import { LoggingService } from '../../logger/logger.service';
 import { Lock } from 'async-await-mutex-lock';
 import { HandlerRegistry } from './handlers';
 import { sampleTime } from 'rxjs';
+import { InjectHomebridgeApi, InjectUUID } from './accessory.const';
 
 const categoryMap = {
   [HumidifierDevice.deviceType]: Categories.AIR_HUMIDIFIER,
@@ -65,8 +64,8 @@ export class AccessoryManager {
       ]);
       return;
     }
-    const deviceConfig = this.configService.getDeviceConfiguration(device);
-
+    const deviceConfig = this.configService.getDeviceConfiguration(device.id);
+    accessory.context.deviceConfig = deviceConfig;
     if (deviceConfig?.ignore) {
       this.logger.debug(`Ignoring ${accessory.displayName}`);
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
@@ -88,7 +87,8 @@ export class AccessoryManager {
     if (!accessory) {
       return;
     }
-
+    const deviceConfig = this.configService.getDeviceConfiguration(device.id);
+    accessory.context.deviceConfig = deviceConfig;
     accessory.context.device = this.getSafeDeviceModel(device);
     accessory.services
       .filter((service) => 'update' in service)
@@ -120,12 +120,12 @@ export class AccessoryManager {
           accessory,
         ]);
       }
+      const deviceConfig = this.configService.getDeviceConfiguration(device.id);
+      accessory.context.deviceConfig = deviceConfig;
       accessory.context.device = this.getSafeDeviceModel(device);
 
       device.pipe(sampleTime(10000)).subscribe(async () => {
-        const handlers = await this.handlerRegistry.for(device);
-        handlers?.forEach((handler) => handler.setup(accessory, device));
-        this.api.updatePlatformAccessories([accessory]);
+        await this.handlerRegistry.for(accessory, device);
       });
       this.api.updatePlatformAccessories([accessory]);
     } finally {
