@@ -21,7 +21,7 @@ export class GoveeAccessory<States extends DeviceStatesType> {
     readonly accessory: PlatformAccessory,
     readonly deviceConfig: PartialBehaviorSubject<ConfigType<States>>,
   ) {
-    this.setupInformationService(); 
+    this.setupInformationService();
   }
 
   private setupInformationService() {
@@ -32,25 +32,29 @@ export class GoveeAccessory<States extends DeviceStatesType> {
     const config = this.deviceConfig.getValue();
 
     if (config.name !== undefined) {
-      service?.getCharacteristic(Characteristic.Name)
-        ?.updateValue(config.name);
-      service?.getCharacteristic(Characteristic.ConfiguredName)
+      service?.getCharacteristic(Characteristic.Name)?.updateValue(config.name);
+      service
+        ?.getCharacteristic(Characteristic.ConfiguredName)
         ?.updateValue(config.name);
     }
     service
       ?.getCharacteristic(Characteristic.Manufacturer)
-        ?.updateValue('Govee');
+      ?.updateValue('Govee');
     service
       ?.getCharacteristic(Characteristic.Model)
-        ?.updateValue(this.device.model);
-      service
+      ?.updateValue(this.device.model);
+    service
       ?.getCharacteristic(Characteristic.SerialNumber)
-        ?.setValue(this.device.id);
-      if (this.device.version?.hardwareVersion !== undefined) {
-        service?.getCharacteristic(Characteristic.FirmwareRevision)?.updateValue(this.device.version.hardwareVersion);
-      }
-      if (this.device.version?.softwareVersion !== undefined) {
-        service?.getCharacteristic(Characteristic.SoftwareRevision)?.updateValue(this.device.version.softwareVersion);
-      }
+      ?.setValue(this.device.id);
+    if (this.device.version?.hardwareVersion !== undefined) {
+      service
+        ?.getCharacteristic(Characteristic.FirmwareRevision)
+        ?.updateValue(this.device.version.hardwareVersion);
+    }
+    if (this.device.version?.softwareVersion !== undefined) {
+      service
+        ?.getCharacteristic(Characteristic.SoftwareRevision)
+        ?.updateValue(this.device.version.softwareVersion);
+    }
   }
 }

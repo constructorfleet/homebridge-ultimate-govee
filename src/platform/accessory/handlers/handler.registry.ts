@@ -40,9 +40,7 @@ export class HandlerRegistry {
 
   private deviceTypeHandlers: Map<string, ServiceHandler<any>[]> = new Map();
 
-  constructor(
-    private readonly moduleRef: ModuleRef,
-  ) {}
+  constructor(private readonly moduleRef: ModuleRef) {}
 
   async for<States extends DeviceStatesType>(
     accessory: GoveeAccessory<States>,
@@ -50,10 +48,13 @@ export class HandlerRegistry {
     const handlers: ServiceHandler<any>[] =
       this.deviceTypeHandlers.get(accessory.deviceType) ??
       ([] as ServiceHandler<any>[]);
-    (await Promise.all([
-      this.getHandlersFor(accessory),
-      this.getHandlersFromFactories(accessory)
-    ])).flat()
+    (
+      await Promise.all([
+        this.getHandlersFor(accessory),
+        this.getHandlersFromFactories(accessory),
+      ])
+    )
+      .flat()
       .filter(
         (handler) =>
           handlers.find(
@@ -127,7 +128,11 @@ export class HandlerRegistry {
     accessory: GoveeAccessory<States>,
   ) {
     (await this.for(accessory)).forEach((handler) => {
-      if (handler.isPrimary || handler.subType === undefined || handler.isEnabled(accessory, handler.subType)) {
+      if (
+        handler.isPrimary ||
+        handler.subType === undefined ||
+        handler.isEnabled(accessory, handler.subType)
+      ) {
         handler.setup(accessory);
       }
       // if (handler.isEnabled(accessory, handler.subType)) {

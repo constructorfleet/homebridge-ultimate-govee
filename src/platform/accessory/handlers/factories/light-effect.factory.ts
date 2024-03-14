@@ -50,8 +50,12 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
       },
       {
         characteristic: Characteristic.Name,
-        updateValue: (value: LightEffect, {device, service}) => {
-          const effect = Array.from(device.state<LightEffectState>(LightEffectStateName)?.effects?.values() ?? []).find((effect) => effect.code?.toString() === subType);
+        updateValue: (value: LightEffect, { device, service }) => {
+          const effect = Array.from(
+            device
+              .state<LightEffectState>(LightEffectStateName)
+              ?.effects?.values() ?? [],
+          ).find((effect) => effect.code?.toString() === subType);
           if (effect === undefined) {
             return;
           }
@@ -59,8 +63,8 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
             service.displayName = effect.name;
           }
           return `${device.name} ${effect.name}`;
-        }
-      }
+        },
+      },
     ],
   });
   isEnabled: IsServiceEnabled<RGBICLight> = (

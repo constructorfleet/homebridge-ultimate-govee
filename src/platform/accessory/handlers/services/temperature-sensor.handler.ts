@@ -7,7 +7,7 @@ import {
 } from '@constructorfleet/ultimate-govee';
 import { ServiceHandler } from '../service.handler';
 import { Type } from '@nestjs/common';
-import { CharacteristicHandler, } from '../handler.types';
+import { CharacteristicHandler } from '../handler.types';
 import { HandlerRegistry } from '../handler.registry';
 
 type TemperatureDeviceState = {
