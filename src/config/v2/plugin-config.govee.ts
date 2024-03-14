@@ -71,6 +71,7 @@ export const configFromDevice = <
     config.type = 'device';
     if (config instanceof RGBLightDeviceConfig) {
       config.type = 'rgb';
+      config.effects = [];
       Array.from(
         device
           .state<LightEffectState>(LightEffectStateName)
