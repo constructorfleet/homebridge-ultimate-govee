@@ -4,51 +4,83 @@
 name: Tag on Merge
 
 on:
-  push:
-    branches: [main]
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+  # push:
+  #   branches:
+  #     - main
 
 env:
   CI: true
 
+permissions: write-all
+
 jobs:
-  build:
+  version_tag:
+    if: github.event.pull_request.merged == true
+    env:
+      BUMP: |-
+        ${{
+          contains(github.event.pull_request.labels.*.name, 'major') && 'major'
+          || contains(github.event.pull_request.labels.*.name, 'minor') && 'minor'
+          || 'patch'
+        }}
     strategy:
       matrix:
-        node-version: [18.16.0]
+        node-version:
+          - 20.7.0
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-tags: true
       - name: Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
-          node-version: 18.16.0
-      - name: Bump version and push tag
-        uses: anothrNick/github-tag-action@1.36.0
+          node-version: ${{ matrix.node-version }}
+      - name: Bump version and get tag
+        id: new_version
+        uses: anothrNick/github-tag-action@1.67.0
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          WITH_V: true
-          DEFAULT_BUMP: minor
-      - run:
-          npm version --allow-same-version=true --git-tag-version=false $(git
-          describe --tags)
+          WITH_V: 'true'
+          DEFAULT_BUMP: ${{ env.BUMP }}
+          DRY_RUN: 'true'
+      - name: NPM version
+        shell: bash
+        run:
+          npm version --allow-same-version=true --git-tag-version=false ${{
+          env.NEW_TAG }}
+        env:
+          NEW_TAG: ${{ steps.new_version.outputs.new_tag}}
       - name: Commit Package Version
         id: commit
-        run: |-
+        shell: bash
+        run: |
+          exit_code=1
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          if [ -n "$(git status --porcelain package.json)" ]; then
+          if [[ -n "$(git status --porcelain package.json)" ]]; then
             git add package.json
             git add package-lock.json
             git commit -m "[ci skip] chore(package.json): update package json"
-            echo "exit_code=0" >> $GITHUB_OUTPUT
-          else
-            echo "exit_code=1" >> $GITHUB_OUTPUT
+            git tag -a "${{ env.NEW_TAG }}" -m "${{ env.NEW_TAG }}"
+            exit_code=0
           fi
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+        env:
+          NEW_TAG: ${{ steps.new_version.outputs.new_tag}}
       - name: Push to protected branch
-        uses: CasperWA/push-protected@v2
+        uses: CasperWA/push-protected@v2.15.0
         if: steps.commit.outputs.exit_code == 0
         with:
           token: ${{ secrets.GH_TOKEN }}
           branch: main
+          force: true
+          tags: true
           unprotect_reviews: true

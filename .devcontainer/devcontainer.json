@@ -32,6 +32,7 @@
         "huizhou.githd",
         "awhitenose.explorerGitTools",
         "DanielSanMedium.dscodegpt",
+        "github.vscode-github-actions",
       ],
       "settings": {
         "editor.defaultFormatter": "trunk.io",
