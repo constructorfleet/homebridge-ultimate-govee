@@ -10,6 +10,8 @@ import {
   TemperatureSensorHandler,
 } from './services';
 import { LightEffectFactory } from './factories';
+import { PresenceOccupancySensorHandler } from './services/occupancy.handler';
+import { PresenceMotionSensorHandler } from './services/motion.handler';
 export * from './handler.registry';
 export * from './handler.types';
 export const ServiceHandlers = [
@@ -22,6 +24,8 @@ export const ServiceHandlers = [
   HumiditySensorHandler,
   LightBulbHandler,
   TemperatureSensorHandler,
+  PresenceOccupancySensorHandler,
+  PresenceMotionSensorHandler,
 ];
 
 export const SubServiceFactories = [LightEffectFactory];

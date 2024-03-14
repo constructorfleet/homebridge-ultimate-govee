@@ -6,11 +6,13 @@ import { Type } from '@nestjs/common';
 import {
   Device,
   IceMaker,
+  IceMakerDevice,
   IceMakerStatus,
   IceMakerStatusStateName,
   MakingIceStateName,
   NuggetSizeStateName,
 } from '@constructorfleet/ultimate-govee';
+import { HandlerRegistry } from '../handler.registry';
 
 const toSpeed = (device: Device & IceMaker, size): number => {
   switch (size) {
@@ -34,6 +36,7 @@ const toSize = (device: Device & IceMaker, speed: number) => {
   return device.NuggetSize.LARGE;
 };
 
+@HandlerRegistry.forDevice(IceMakerDevice)
 export class IceMakerHeaderCoolerServiceHandler extends ServiceHandler<
   Omit<IceMaker, 'NuggetSize'>
 > {
