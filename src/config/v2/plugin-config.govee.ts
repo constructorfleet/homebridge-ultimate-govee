@@ -57,6 +57,7 @@ export const configFromDevice = <
   T extends Device<States>,
 >(
   device: T,
+  pluginConfig: GoveePluginConfig,
 ): DeviceConfig => {
   const config =
     device instanceof RGBICLightDevice
@@ -83,13 +84,16 @@ export const configFromDevice = <
           using(new LightEffectConfig()).do((effectConfig) => {
             effectConfig.name = effect.name!;
             effectConfig.code = effect.code!;
+            effectConfig.enabled = false;
           }),
         );
       });
       if (config instanceof RGBICLightDeviceConfig) {
+        config.showSegments = false;
         config.type = 'rgbic';
       }
     }
+    pluginConfig.deviceConfigs.push(config);
   });
 };
 

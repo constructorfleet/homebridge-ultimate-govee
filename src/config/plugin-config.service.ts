@@ -9,6 +9,7 @@ import { readFile, writeFile } from 'fs/promises';
 import {
   Device,
   DeviceStatesType,
+  LightEffect,
   LightEffectState,
   LightEffectStateName,
   PartialBehaviorSubject,
@@ -196,28 +197,33 @@ export class PluginConfigService implements OnModuleDestroy {
     if (!this.deviceConfigs.has(device.id)) {
       const config =
         this.config.deviceConfigs.find((c) => c.id === device.id) ??
-        configFromDevice<States, T>(device);
+        configFromDevice<States, T>(device, this.config);
       if (device instanceof RGBLightDevice) {
         const existingCodes = (config as RGBLightDeviceConfig).effects.map(
           (e) => e.code,
         );
-        const effectSub =
-          device.state<LightEffectState>(LightEffectStateName)?.effects;
-        Array.from(effectSub?.values() ?? []).forEach((effect) => {
-          if (effect.code === undefined || effect.name === undefined) {
-            return;
-          }
-          if (!existingCodes.includes(effect.code)) {
-            const lightConfig = new LightEffectConfig();
-            lightConfig.code = effect.code;
-            lightConfig.name = effect.name;
-            lightConfig.description = '';
-            lightConfig.enabled = false;
-            (config as RGBLightDeviceConfig).effects.push(lightConfig);
-          }
-        });
-        this.resumeWriteInterval();
-        effectSub?.delta$?.subscribe(() => this.resumeWriteInterval());
+        const updateEffects = (effects?: Map<number, LightEffect>) => {
+          Array.from(effects?.values() ?? []).forEach((effect) => {
+            if (effect.code === undefined || effect.name === undefined) {
+              return;
+            }
+            if (!existingCodes.includes(effect.code)) {
+              const lightConfig = new LightEffectConfig();
+              lightConfig.code = effect.code;
+              lightConfig.name = effect.name;
+              lightConfig.description = '';
+              lightConfig.enabled = false;
+              (config as RGBLightDeviceConfig).effects.push(lightConfig);
+            }
+            this.resumeWriteInterval();
+          });
+        };
+        updateEffects(
+          device.state<LightEffectState>(LightEffectStateName)?.effects,
+        );
+        device
+          .state<LightEffectState>(LightEffectStateName)
+          ?.effects?.delta$?.subscribe((delta) => updateEffects(delta.all));
       }
       this.deviceConfigs.set(device.id, new PartialBehaviorSubject(config));
     }

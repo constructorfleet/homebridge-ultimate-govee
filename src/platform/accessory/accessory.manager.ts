@@ -18,7 +18,6 @@ import { HandlerRegistry } from './handlers';
 import { Subscription } from 'rxjs';
 import { InjectHomebridgeApi, InjectUUID } from './accessory.const';
 import { GoveeAccessory } from './govee.accessory';
-import { sleep } from '@constructorfleet/ultimate-govee/dist/common';
 
 const categoryMap = {
   [HumidifierDevice.deviceType]: Categories.AIR_HUMIDIFIER,
@@ -88,8 +87,6 @@ export class AccessoryManager {
         }, 1000);
       });
     }
-
-    await sleep(1000);
 
     const goveeAccessory = new GoveeAccessory(
       device,

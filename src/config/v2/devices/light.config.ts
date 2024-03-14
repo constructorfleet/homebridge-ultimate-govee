@@ -3,16 +3,16 @@ import { DeviceConfig } from './device.config';
 
 export class LightEffectConfig {
   @Expose({ name: 'name' })
-  name: string = '';
+  name!: string;
 
   @Expose({ name: 'code' })
-  code: number = 0;
+  code!: number;
 
   @Expose({ name: 'description' })
-  description: string = '';
+  description?: string;
 
   @Expose({ name: 'enabled' })
-  enabled: boolean = false;
+  enabled!: boolean;
 }
 
 export class DiyEffectConfig {
@@ -29,7 +29,7 @@ export class RGBLightDeviceConfig extends DeviceConfig {
 
   @Expose({ name: 'effects' })
   @Type(() => LightEffectConfig)
-  effects: LightEffectConfig[] = [];
+  effects!: LightEffectConfig[];
 
   @Exclude()
   get effectMap(): Map<number, LightEffectConfig> {
@@ -41,7 +41,7 @@ export class RGBLightDeviceConfig extends DeviceConfig {
 
   @Expose({ name: 'diy' })
   @Type(() => LightEffectConfig)
-  diy: DiyEffectConfig[] = [];
+  diy!: DiyEffectConfig[];
 }
 
 export class RGBICLightDeviceConfig extends RGBLightDeviceConfig {
@@ -49,5 +49,5 @@ export class RGBICLightDeviceConfig extends RGBLightDeviceConfig {
   type: string = 'rgbic';
 
   @Expose({ name: 'segments' })
-  showSegments: boolean = false;
+  showSegments!: boolean;
 }
