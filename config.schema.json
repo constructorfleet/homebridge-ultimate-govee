@@ -10,17 +10,26 @@
         "default": [],
         "items": {
           "type": "string"
+        },
+        "condition": {
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
         }
       },
       "username": {
         "type": "string",
         "title": "Govee Account E-Email Address",
-        "required": true
+        "required": false,
+        "condition": {
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
+        }
       },
       "password": {
         "type": "string",
         "title": "Govee Account Password",
-        "required": true
+        "required": false,
+        "condition": {
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
+        }
       },
       "connections": {
         "title": "Connection Settings",
@@ -34,13 +43,17 @@
           "ble": {
             "title": "Enable Bluetooth LE",
             "type": "boolean",
-            "default": true
+            "default": false
           },
           "api": {
             "title": "Enable API",
             "type": "boolean",
             "default": true
           }
+        },
+        "required": false,
+        "condition": {
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
         }
       },
       "devices": {
@@ -55,7 +68,7 @@
             "items": {
               "type": "object",
               "condition": {
-                "functionBody": "return (model.devices.airPurifiers && model.devices.airPurifiers[arrayIndices] && model.devices.airPurifiers[arrayIndices].deviceId && model.devices.airPurifiers[arrayIndices].model);"
+                "functionBody": "return (model.devices.airPurifiers && model.devices.airPurifiers[arrayIndices] && model.devices.airPurifiers[arrayIndices].deviceId && model.devices.airPurifiers[arrayIndices].model;"
               },
               "properties": {
                 "deviceId": {
@@ -182,95 +195,164 @@
               }
             }
           }
+        },
+        "required": false,
+        "condition": {
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined;"
+        }
+      },
+      "version": {
+        "type": "hidden",
+        "default": 2
+      },
+      "credentials": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Govee Account E-Email Address",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "title": "Govee Account Password",
+            "required": true
+          },
+          "apiKey": {
+            "type": "string",
+            "title": "Govee Developer API Key",
+            "required": false
+          }
+        },
+        "condition": {
+          "functionBody": "return model === undefined || model['_version'] === 2 || model['credentials'] !== undefined;"
+        }
+      },
+      "controlChannels": {
+        "type": "object",
+        "properties": {
+          "ble": {
+            "type": "boolean",
+            "default": false,
+            "title": "BLE Control"
+          },
+          "iot": {
+            "type": "boolean",
+            "default": true,
+            "title": "AWS IoT Control"
+          }
+        },
+        "condition": {
+          "functionBody": "return model === undefined || model['_version'] === 2 || model['credentials'] !== undefined;"
+        }
+      },
+      "deviceConfigs": {
+        "type": "array",
+        "removeable": false,
+        "addable": false,
+        "items": {
+          "type": "object",
+          "properties": {
+            "_type": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string",
+              "title": "Device ID"
+            },
+            "name": {
+              "type": "string",
+              "title": "Name Override"
+            },
+            "debug": {
+              "type": "boolean",
+              "title": "Enable Debug",
+              "default": false
+            },
+            "ignore": {
+              "type": "boolean",
+              "title": "Ignore Device",
+              "default": false
+            },
+            "exposePrevious": {
+              "type": "boolean",
+              "title": "Expose Previous Button",
+              "default": false
+            },
+            "showSegments": {
+              "type": "boolean",
+              "title": "Show Each Segment",
+              "default": false,
+              "condition": {
+                "functionBody": "return model.deviceConfigs[arrayIndices]._type === 'rgbic';"
+              }
+            },
+            "effects": {
+              "type": "array",
+              "removeable": false,
+              "addable": false,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "title": "Effect Name"
+                  },
+                  "code": {
+                    "type": "hidden",
+                    "title": "Effect Code"
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "title": "Enable Light Effect",
+                    "default": false
+                  }
+                }
+              },
+              "condition": {
+                "functionBody": "return model.deviceConfigs[arrayIndices]._type !== 'device;"
+              }
+            }
+          },
+          "condition": {
+            "functionBody": "return model.deviceConfigs[arrayIndices];"
+          }
         }
       }
     }
   },
   "layout": [
     {
-      "type": "flex",
-      "flex-flow": "row wrap",
-      "items": [
-        "username",
-        "password"
-      ]
-    },
-    {
       "type": "section",
-      "key": "connections",
+      "condition": {
+        "functionBody": "return model !== undefined && 'username' in model &&  model._version === undefined && !('credentials' in model) && !('deviceConfigs' in model);"
+      },
       "items": [
         {
-          "type": "div",
-          "displayFlex": true,
-          "flex-direction": "row",
-          "items": [
-            {
-              "key": "connections.iot",
-              "flex": "1 1 33%"
-            },
-            {
-              "key": "connections.ble",
-              "flex": "1 1 33%"
-            },
-            {
-              "key": "connections.api",
-              "flex": "1 1 33%"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "section",
-      "key": "devices",
-      "items": [
+          "type": "flex",
+          "flex-flow": "row wrap",
+          "items": ["username", "password"]
+        },
         {
           "type": "section",
-          "title": "Air Purifiers",
-          "expandable": true,
-          "expanded": true,
+          "key": "connections",
           "items": [
             {
-              "type": "array",
-              "key": "devices.airPurifiers",
-              "notitle": true,
+              "type": "div",
+              "displayFlex": true,
+              "flex-direction": "row",
               "items": [
                 {
-                  "type": "div",
-                  "displayFlex": true,
-                  "flex-direction": "column",
-                  "items": [
-                    {
-                      "type": "div",
-                      "displayFlex": true,
-                      "flex-direction": "row",
-                      "items": [
-                        {
-                          "key": "devices.airPurifiers[].deviceId",
-                          "flex": "4 4 50%"
-                        },
-                        {
-                          "key": "devices.airPurifiers[].model",
-                          "flex": "1 1 50%"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "div",
-                      "displayFlex": "true",
-                      "flex-direction": "row",
-                      "items": [
-                        {
-                          "key": "devices.airPurifiers[].ignore",
-                          "flex": "1 1 20%"
-                        },
-                        {
-                          "key": "devices.airPurifiers[].displayName",
-                          "flex": "4 4 80%"
-                        }
-                      ]
-                    }
-                  ]
+                  "key": "connections.iot",
+                  "flex": "1 1 33%"
+                },
+                {
+                  "key": "connections.ble",
+                  "flex": "1 1 33%"
+                },
+                {
+                  "key": "connections.api",
+                  "flex": "1 1 33%"
                 }
               ]
             }
@@ -278,137 +360,195 @@
         },
         {
           "type": "section",
-          "title": "Humidifiers",
-          "expandable": true,
-          "expanded": true,
+          "key": "devices",
           "items": [
             {
-              "type": "array",
-              "key": "devices.humidifiers",
-              "removeable": false,
-              "addable": false,
-              "notitle": true,
+              "type": "section",
+              "title": "Air Purifiers",
+              "expandable": true,
+              "expanded": true,
               "items": [
                 {
-                  "type": "div",
-                  "displayFlex": true,
-                  "flex-direction": "column",
+                  "type": "array",
+                  "key": "devices.airPurifiers",
+                  "notitle": true,
                   "items": [
                     {
                       "type": "div",
                       "displayFlex": true,
-                      "flex-direction": "row",
+                      "flex-direction": "column",
                       "items": [
                         {
-                          "key": "devices.humidifiers[].deviceId",
-                          "flex": "4 4 50%"
-                        },
-                        {
-                          "key": "devices.humidifiers[].model",
-                          "flex": "1 1 50%"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "div",
-                      "displayFlex": "true",
-                      "flex-direction": "row",
-                      "items": [
-                        {
-                          "key": "devices.humidifiers[].ignore",
-                          "flex": "1 1 20%"
-                        },
-                        {
-                          "key": "devices.humidifiers[].displayName",
-                          "flex": "4 4 80%"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "section",
-          "title": "Lights",
-          "expandable": true,
-          "expanded": true,
-          "items": [
-            {
-              "type": "array",
-              "key": "devices.lights",
-              "notitle": true,
-              "items": [
-                {
-                  "type": "div",
-                  "displayFlex": true,
-                  "flex-direction": "column",
-                  "items": [
-                    {
-                      "type": "div",
-                      "displayFlex": true,
-                      "flex-direction": "row",
-                      "items": [
-                        {
-                          "key": "devices.lights[].deviceId",
-                          "flex": "4 4 50%"
-                        },
-                        {
-                          "key": "devices.lights[].model",
-                          "flex": "1 1 50%"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "div",
-                      "displayFlex": "true",
-                      "flex-direction": "row",
-                      "items": [
-                        {
-                          "key": "devices.lights[].ignore",
-                          "flex": "1 1 20%"
-                        },
-                        {
-                          "key": "devices.lights[].displayName",
-                          "flex": "4 4 60%"
-                        },
-                        {
-                          "key": "devices.lights[].hideSegments",
-                          "flex": "1 1 20%",
-                          "condition": {
-                            "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && (model.devices.lights[arrayIndices]._lightType === 'RGBIC' || model.devices.lights[arrayIndices].hideSegments !== undefined);"
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "title": "Effects",
-                      "expandable": true,
-                      "expanded": false,
-                      "items": [
-                        {
-                          "type": "array",
-                          "key": "devices.lights[].effects",
-                          "htmlClass": "pre-scrollable",
-                          "notitle": true,
+                          "type": "div",
+                          "displayFlex": true,
+                          "flex-direction": "row",
                           "items": [
                             {
-                              "type": "div",
-                              "displayFlex": true,
-                              "flex-direction": "row",
+                              "key": "devices.airPurifiers[].deviceId",
+                              "flex": "4 4 50%"
+                            },
+                            {
+                              "key": "devices.airPurifiers[].model",
+                              "flex": "1 1 50%"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "div",
+                          "displayFlex": "true",
+                          "flex-direction": "row",
+                          "items": [
+                            {
+                              "key": "devices.airPurifiers[].ignore",
+                              "flex": "1 1 20%"
+                            },
+                            {
+                              "key": "devices.airPurifiers[].displayName",
+                              "flex": "4 4 80%"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "title": "Humidifiers",
+              "expandable": true,
+              "expanded": true,
+              "items": [
+                {
+                  "type": "array",
+                  "key": "devices.humidifiers",
+                  "removeable": false,
+                  "addable": false,
+                  "notitle": true,
+                  "items": [
+                    {
+                      "type": "div",
+                      "displayFlex": true,
+                      "flex-direction": "column",
+                      "items": [
+                        {
+                          "type": "div",
+                          "displayFlex": true,
+                          "flex-direction": "row",
+                          "items": [
+                            {
+                              "key": "devices.humidifiers[].deviceId",
+                              "flex": "4 4 50%"
+                            },
+                            {
+                              "key": "devices.humidifiers[].model",
+                              "flex": "1 1 50%"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "div",
+                          "displayFlex": "true",
+                          "flex-direction": "row",
+                          "items": [
+                            {
+                              "key": "devices.humidifiers[].ignore",
+                              "flex": "1 1 20%"
+                            },
+                            {
+                              "key": "devices.humidifiers[].displayName",
+                              "flex": "4 4 80%"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "title": "Lights",
+              "expandable": true,
+              "expanded": true,
+              "items": [
+                {
+                  "type": "array",
+                  "key": "devices.lights",
+                  "notitle": true,
+                  "items": [
+                    {
+                      "type": "div",
+                      "displayFlex": true,
+                      "flex-direction": "column",
+                      "items": [
+                        {
+                          "type": "div",
+                          "displayFlex": true,
+                          "flex-direction": "row",
+                          "items": [
+                            {
+                              "key": "devices.lights[].deviceId",
+                              "flex": "4 4 50%"
+                            },
+                            {
+                              "key": "devices.lights[].model",
+                              "flex": "1 1 50%"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "div",
+                          "displayFlex": "true",
+                          "flex-direction": "row",
+                          "items": [
+                            {
+                              "key": "devices.lights[].ignore",
+                              "flex": "1 1 20%"
+                            },
+                            {
+                              "key": "devices.lights[].displayName",
+                              "flex": "4 4 60%"
+                            },
+                            {
+                              "key": "devices.lights[].hideSegments",
+                              "flex": "1 1 20%",
+                              "condition": {
+                                "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && (model.devices.lights[arrayIndices]._lightType === 'RGBIC' || model.devices.lights[arrayIndices].hideSegments !== undefined);"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "section",
+                          "title": "Effects",
+                          "expandable": true,
+                          "expanded": false,
+                          "items": [
+                            {
+                              "type": "array",
+                              "key": "devices.lights[].effects",
+                              "htmlClass": "pre-scrollable",
+                              "notitle": true,
                               "items": [
                                 {
-                                  "key": "devices.lights[].effects[].enabled",
-                                  "notitle": true,
-                                  "flex": "4 4 10%"
-                                },
-                                {
-                                  "key": "devices.lights[].effects[].name",
-                                  "notitle": true,
-                                  "flex": "1 1 90%"
+                                  "type": "div",
+                                  "displayFlex": true,
+                                  "flex-direction": "row",
+                                  "items": [
+                                    {
+                                      "key": "devices.lights[].effects[].enabled",
+                                      "notitle": true,
+                                      "flex": "4 4 10%"
+                                    },
+                                    {
+                                      "key": "devices.lights[].effects[].name",
+                                      "notitle": true,
+                                      "flex": "1 1 90%"
+                                    }
+                                  ]
                                 }
                               ]
                             }
@@ -421,6 +561,110 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "condition": {
+        "functionBody": "return model === undefined || !('username' in model) || 'deviceConfigs' in model || model['2'] === 2 || model._version === 2 || model._version === '2'"
+      },
+      "items": [
+        {
+          "type": "flex",
+          "flex-flow": "row wrap",
+          "items": ["credentials.username", "credentials.password"]
+        },
+        {
+          "type": "section",
+          "key": "controlChannels",
+          "items": [
+            {
+              "type": "div",
+              "displayFlex": true,
+              "flex-direction": "row",
+              "items": [
+                {
+                  "key": "controlChannels.iot",
+                  "flex": "1 1 33%"
+                },
+                {
+                  "key": "controlChannels.ble",
+                  "flex": "1 1 33%"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "key": "deviceConfigs",
+          "items": [
+            {
+              "type": "section",
+              "items": [
+                {
+                  "type": "div",
+                  "displayFlex": true,
+                  "flex-direction": "row",
+                  "items": [
+                    {
+                      "key": "deviceConfigs[].id",
+                      "flex": "1 1 30%"
+                    },
+                    {
+                      "key": "deviceConfigs[].name",
+                      "flex": "1 1 70%"
+                    }
+                  ]
+                },
+                {
+                  "type": "div",
+                  "displayFlex": true,
+                  "flex-direction": "row",
+                  "items": [
+                    {
+                      "key": "deviceConfigs[].ignore",
+                      "flex": "1 1 30%"
+                    },
+                    {
+                      "key": "deviceConfigs[].exposePrevious",
+                      "flex": "1 1 30%"
+                    },
+                    {
+                      "key": "deviceConfigs[].showSegments",
+                      "flex": "1 1 30%",
+                      "condition": {
+                        "functionBody": "return model.deviceConfigs && model.deviceConfigs[arrayIndices]._type === 'rgbic';"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "div",
+                  "items": [
+                    {
+                      "type": "array",
+                      "items": [
+                        {
+                          "key": "deviceConfigs[].effects[].enabled"
+                        },
+                        {
+                          "key": "deviceConfigs[].effects[].name"
+                        }
+                      ]
+                    }
+                  ],
+                  "condition": {
+                    "functionBody": "return model.deviceConfigs[]._type.includes('rgb')"
+                  }
+                }
+              ]
+            }
+          ],
+          "condition": {
+            "functionBody": "return model.deviceConfigs && model.deviceConfigs.length > 0;"
+          }
         }
       ]
     }

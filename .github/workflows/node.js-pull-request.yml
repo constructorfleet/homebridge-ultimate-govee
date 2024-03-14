@@ -4,18 +4,22 @@
 name: Node.js CI
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 env:
   CI: true
 
 jobs:
   build:
+    if: github.event.pull_request.user.login != 'Dependabot[bot]'
     strategy:
       matrix:
-        node-version: [ 18.16.0 ]
+        node-version:
+          - 18.16.0
+          - 20.7.0
     runs-on: ubuntu-latest
 
     steps:
@@ -23,11 +27,9 @@ jobs:
       - name: Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
-          node-version: 18.16.0
+          node-version: ${{ matrix.node-version}}
       - run: npm ci
       - run: npm run build --if-present
       - run: npm run lint
       - name: Jest coverage report
-        uses: ArtiomTr/jest-coverage-report-action@v1.3
-        with:
-          github_token: ${{ secrets.GH_TOKEN }}
+        uses: ArtiomTr/jest-coverage-report-action@v2

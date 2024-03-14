@@ -128,3 +128,5 @@ test.ts
 .vscode/
 
 assets/testiot.key.pem
+persisted/
+persisted/*

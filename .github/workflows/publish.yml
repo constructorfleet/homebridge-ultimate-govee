@@ -1,7 +1,7 @@
 name: Publish package to GitHub Packages
 on:
   release:
-    types: [ created ]
+    types: [created]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,10 +13,12 @@ jobs:
       # Setup .npmrc file to publish to GitHub Packages
       - uses: actions/setup-node@v2
         with:
-          node-version: 18.16.0
+          node-version: 20.7.0
           registry-url: https://registry.npmjs.org
       - run: npm ci
-      - run: npm version --allow-same-version=true --git-tag-version=false $(git describe --tags)
+      - run:
+          npm version --allow-same-version=true --git-tag-version=false $(git
+          describe --tags)
       - name: npm publish
         uses: JS-DevTools/npm-publish@v1
         with:

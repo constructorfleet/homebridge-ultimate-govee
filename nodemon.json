@@ -1,10 +1,8 @@
 {
-  "watch": [
-    "src"
-  ],
+  "watch": ["src"],
   "ext": "ts",
   "ignore": [],
-  "exec": "tsc && ./node_modules/homebridge/bin/homebridge -I -D > /home/node/.homebridge/homebridge.log",
+  "exec": "tsc && ./node_modules/homebridge/bin/homebridge -I -D | tee /home/node/.homebridge/homebridge.log",
   "signal": "SIGTERM",
   "env": {
     "NODE_OPTIONS": "--trace-warnings"

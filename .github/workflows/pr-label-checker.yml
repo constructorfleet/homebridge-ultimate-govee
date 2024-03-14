@@ -1,0 +1,24 @@
+name: PR Label - Checker
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - reopened
+      - labeled
+      - unlabeled
+      - edited
+      - synchronize
+jobs:
+  check_labels:
+    name: Check PR Versioning Labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: mheap/github-action-required-labels@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          mode: exactly
+          count: 1
+          labels: major, minor, patch
