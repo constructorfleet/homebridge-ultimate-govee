@@ -72,6 +72,23 @@ export class AccessoryManager {
       ]);
     }
 
+    if (device instanceof RGBICLightDevice) {
+      let interval: NodeJS.Timeout | undefined = undefined;
+      let iterations: number = 0;
+      await new Promise<void>((resolve) => {
+        interval = setInterval(() => {
+          if (
+            ((device as RGBICLightDevice).lightEffect?.effects?.size ?? 0) >=
+              0 ||
+            iterations++ > 5
+          ) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 1000);
+      });
+    }
+
     await sleep(1000);
 
     const goveeAccessory = new GoveeAccessory(
