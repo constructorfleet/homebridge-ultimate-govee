@@ -105,11 +105,11 @@ export class GoveePluginConfig {
 
   @Expose({ name: 'credentials' })
   @Type(() => GoveeCredentials)
-  credentials: GoveeCredentials = new GoveeCredentials();
+  credentials!: GoveeCredentials;
 
   @Expose({ name: 'controlChannels' })
   @Type(() => ControlChannels)
-  controlChannels: ControlChannels = new ControlChannels();
+  controlChannels!: ControlChannels;
 
   @Expose({ name: 'deviceConfigs' })
   @Type(() => DeviceConfig, {
@@ -123,11 +123,11 @@ export class GoveePluginConfig {
     },
     keepDiscriminatorProperty: true,
   })
-  deviceConfigs: (
+  deviceConfigs!: (
     | DeviceConfig
     | RGBLightDeviceConfig
     | RGBICLightDeviceConfig
-  )[] = [];
+  )[];
 
   @Exclude()
   get deviceConfigMap(): Map<
