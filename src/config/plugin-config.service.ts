@@ -215,8 +215,8 @@ export class PluginConfigService implements OnModuleDestroy {
               lightConfig.enabled = false;
               (config as RGBLightDeviceConfig).effects.push(lightConfig);
             }
-            this.resumeWriteInterval();
           });
+          this.resumeWriteInterval();
         };
         updateEffects(
           device.state<LightEffectState>(LightEffectStateName)?.effects,
