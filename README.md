@@ -25,13 +25,22 @@ devices via Apple HomeKit.
     - Control Device Power
     - Control Device Mist Output Level
     - Reports When Device Water Level is Empty
-  - RGBIC Lights (H611A, H6061, H6062)
+  - RGBIC Lights (H611A, H61A8, H6061, H6062, H6072, H7090,...)
     - Control the entire light's brightness and color
     - Control each of the segments' color and relative brightness individually
     - Toggle specific scenes/effects
+  - Ice Maker (H7172)
+    - Control Ice Size
+    - Control Making Ice
+    - Add Water and Bucket Full
   - Air Quality Sensor (H5106)
     - Temperature, Humidity and PM 2.5
-  - Hygrometer (51)
+  - Hygrometer (5179)
+    - Temperature, Humidity and Battery Level
+  - Presence Sensor (H5127)
+    - mmWave Motion Sensor
+    - Biological Presence Sensor
+    - Control enabled flags
 - Required Information
   - Govee Account Credentials (Username, Password)
 
@@ -164,8 +173,7 @@ sudo npm install -g homebridge-example-plugin@beta
 ##### Connections
 
 `ble` - Enable Bluetooth LE connections  
-`iot` - Enable AWS IoT connections  
-`rest` - Enable REST API connection
+`iot` - Enable AWS IoT connections
 
 ##### Device Overrides
 
@@ -177,8 +185,13 @@ Once available, each device will display:
 `deviceId` - The Govee device identifier (READ-ONLY)  
 `model` - The Govee device model identifier (READ-ONLY)  
 `ignore` - Check this box to prevent this device from being exposed to Apple
-HomeKit
+HomeKit `name` - Change the configured name of the device `exposePrevious` -
+Expose a stateless switch that will revert the device to the previous state
+(TODO)
 
 RGBIC lights will also offer the ability to hide the segment lights from
 HomeKit, leaving the primary control:  
-`hideSegments` - Setting to `true` will remove all 15 segments from HomeKit.
+`showSegments` - Setting to `true` will add all 15 segments from HomeKit (TODO)
+
+Light Effects: `enabled`- Whether to expose a stateful switch to turn on a light
+effect
