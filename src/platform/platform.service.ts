@@ -1,22 +1,17 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PlatformAccessory } from 'homebridge';
 import { AccessoryManager } from './accessory/accessory.manager';
-import { InjectConfig } from '../config/plugin-config.providers';
-import { GoveePluginConfig } from '../config/v2/plugin-config.govee';
-import {
-  PartialBehaviorSubject,
-  UltimateGoveeService,
-} from '@constructorfleet/ultimate-govee';
-import { Subscription, filter, map } from 'rxjs';
+import { UltimateGoveeService } from '@constructorfleet/ultimate-govee';
+import { Subscription, map } from 'rxjs';
 import { LoggingService } from '../logger/logger.service';
+import { PluginConfigService } from '../config';
 
 @Injectable()
 export class PlatformService implements OnModuleDestroy {
   private channelSubscriptions: Record<string, Subscription> = {};
   constructor(
     private readonly logger: LoggingService,
-    @InjectConfig
-    private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
+    private readonly configService: PluginConfigService,
     private readonly service: UltimateGoveeService,
     private readonly accessoryManager: AccessoryManager,
   ) {}
@@ -35,54 +30,31 @@ export class PlatformService implements OnModuleDestroy {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
+    this.logger.info('Discovering devices');
     this.service.deviceDiscovered
       .pipe(map((event) => event.device))
       .subscribe(async (device) => {
         await this.accessoryManager.onDeviceDiscovered(device);
       });
-    let connected = false;
-    this.config
-      .pipe(
-        filter((config) => config !== undefined),
-        map((config) => config!),
-      )
-      .subscribe((config) => {
-        const controlChannels = config.controlChannels;
-        if (controlChannels !== undefined) {
-          if (
-            !this.channelSubscriptions['ble'] &&
-            controlChannels.ble.subscribe !== undefined
-          ) {
-            this.channelSubscriptions['ble'] = controlChannels.ble.subscribe(
-              (enabled) => {
-                this.service.channel('ble').setEnabled(enabled);
-              },
-            );
-          }
-          if (
-            !this.channelSubscriptions['iot'] &&
-            controlChannels.iot.subscribe !== undefined
-          ) {
-            this.channelSubscriptions['iot'] = controlChannels.iot.subscribe(
-              (enabled) => {
-                this.service.channel('iot').setEnabled(enabled);
-              },
-            );
-          }
-        }
-        if (connected) {
-          return;
-        }
-        const credentials = config?.credentials;
-        if (
-          credentials?.username === undefined ||
-          credentials?.password === undefined
-        ) {
-          return;
-        }
-        connected = true;
-        this.service.connect(credentials.username, credentials.password);
-      });
+    this.logger.info('Connecting', this.configService.pluginConfig);
+    const credentials = this.configService.pluginConfig.credentials;
+    if (
+      credentials?.username === undefined ||
+      credentials?.password === undefined
+    ) {
+      return;
+    }
+    this.service.connect(credentials.username, credentials.password);
+
+    const controlChannels = this.configService.pluginConfig.controlChannels;
+    if (
+      controlChannels !== undefined &&
+      controlChannels.ble !== undefined &&
+      controlChannels.iot !== undefined
+    ) {
+      this.service.channel('ble').setEnabled(controlChannels.ble);
+      this.service.channel('iot').setEnabled(controlChannels.iot);
+    }
   }
 
   onModuleDestroy() {

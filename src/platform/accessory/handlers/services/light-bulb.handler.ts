@@ -38,7 +38,14 @@ export class LightBulbHandler extends ServiceHandler<RGBLight> {
       {
         characteristic: Characteristic.ColorTemperature,
         configure: () => ({ minValue: 2000, maxValue: 9000 }),
-        updateValue: (value) => value,
+        updateValue: (
+          value,
+          { characteristic }: { characteristic: Characteristic },
+        ) =>
+          value >= (characteristic.props.minValue ?? 2000) &&
+          value <= (characteristic.props.maxValue ?? 9000)
+            ? value
+            : undefined,
         onSet: (value) => value,
       },
     ],
@@ -112,7 +119,13 @@ export class LightStripHandler extends ServiceHandler<RGBICLight> {
       {
         characteristic: Characteristic.ColorTemperature,
         configure: () => ({ minValue: 2000, maxValue: 9000 }),
-        updateValue: (value, { device }) => {
+        updateValue: (
+          value,
+          {
+            device,
+            characteristic,
+          }: { device: Device<RGBICLight>; characteristic: Characteristic },
+        ) => {
           const color = (device as Device<RGBICLight>)?.state(
             WholeColorModeStateName,
           )?.value;
@@ -121,7 +134,10 @@ export class LightStripHandler extends ServiceHandler<RGBICLight> {
           }
           const { red, green, blue } = color;
           if (red === 255 && green === 255 && blue === 255) {
-            if (value >= 2000 && value <= 9000) {
+            if (
+              value >= (characteristic.props.minValue ?? 2000) &&
+              value <= (characteristic.props.minValue ?? 9000)
+            ) {
               return value;
             }
           }

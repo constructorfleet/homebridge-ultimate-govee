@@ -3,6 +3,7 @@ import {
   AccessoryMapKey,
   GenerateUUIDKey,
   HomebridgeApiKey,
+  HomebridgeCharacteristicsKey,
   HomebridgeServicesKey,
   MODULE_OPTIONS_TOKEN,
   OPTIONS_TYPE,
@@ -29,7 +30,7 @@ export const HomebridgeServiceProvider: FactoryProvider = {
 };
 
 export const HomebridgeCharacteristicProvider: FactoryProvider = {
-  provide: HomebridgeServicesKey,
+  provide: HomebridgeCharacteristicsKey,
   inject: [MODULE_OPTIONS_TOKEN],
   useFactory: (options: typeof OPTIONS_TYPE) => options.api.hap.Characteristic,
 };

@@ -10,20 +10,21 @@ import { SubServiceHandlerFactory } from '../handler.factory';
 import {
   ServiceType,
   ServiceCharacteristicHandlerFactory,
-  EnabledWhen,
+  IsServiceEnabled,
   ServiceSubTypes,
   ServiceName,
 } from '../handler.types';
 import { Service, Characteristic } from 'hap-nodejs';
-import { PlatformAccessory } from 'homebridge';
-import { DeviceConfig, RGBICLightDeviceConfig } from '../../../../config';
+import { ConfigType, LightEffectConfig } from '../../../../config';
 import { Injectable } from '@nestjs/common';
+import { GoveeAccessory } from '../../govee.accessory';
 import { HandlerRegistry } from '../handler.registry';
 
 @HandlerRegistry.factoryFor(RGBICLightDevice)
 @Injectable()
 export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
   protected serviceType: ServiceType = Service.Switch;
+  protected readonly isPrimary: boolean = false;
   protected handlers: ServiceCharacteristicHandlerFactory<RGBICLight> = (
     device: Device<RGBICLight>,
     subType: string,
@@ -37,52 +38,60 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
           if (state === undefined || activeCode === undefined) {
             return undefined;
           }
-          return value?.name === subType;
+          return value?.code?.toString() === subType;
         },
-        onSet: (value, { device }) => {
+        onSet: (value) => {
           if (value === true) {
-            const effect = Array.from(
-              device
-                .state<LightEffectState>(LightEffectStateName)
-                ?.effects?.values() ?? [],
-            ).find((effect) => effect.name === subType);
-            if (effect === undefined) {
-              return undefined;
-            }
-            return effect;
+            return {
+              code: Number.parseInt(subType),
+            };
           }
         },
       },
+      {
+        characteristic: Characteristic.Name,
+        updateValue: (value: LightEffect, {device, service}) => {
+          const effect = Array.from(device.state<LightEffectState>(LightEffectStateName)?.effects?.values() ?? []).find((effect) => effect.code?.toString() === subType);
+          if (effect === undefined) {
+            return;
+          }
+          if (effect.name !== undefined) {
+            service.displayName = effect.name;
+          }
+          return `${device.name} ${effect.name}`;
+        }
+      }
     ],
   });
-  protected isEnabled: EnabledWhen<RGBICLight> = (
-    accessory: PlatformAccessory,
-    _: Device<RGBICLight>,
+  isEnabled: IsServiceEnabled<RGBICLight> = (
+    accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
   ) => {
-    const config: DeviceConfig = accessory.context.deviceConfig;
+    const config: ConfigType<RGBICLight> = accessory.deviceConfig.getValue();
     if (config === undefined || config.ignore) {
       return false;
     }
-    if (config instanceof RGBICLightDeviceConfig) {
-      const effect = (config as RGBICLightDeviceConfig).effects.find(
-        (effect) => effect.name === subType,
-      );
-      return effect !== undefined && effect.name === subType;
+    if ('effects' in config) {
+      const enabledEffects = (config.effects as LightEffectConfig[])
+        .filter((effect) => effect.enabled)
+        .map((e) => e.code.toString());
+      return enabledEffects.includes(subType ?? '');
     }
     return false;
   };
   protected possibleSubTypes: ServiceSubTypes<RGBICLight> = (
     device: Device<RGBICLight>,
-  ) =>
-    Array.from(
+  ) => {
+    return Array.from(
       device.state<LightEffectState>(LightEffectStateName)?.effects?.values() ??
         [],
     )
-      .filter((effect) => effect?.name !== undefined)
-      .map((effect) => effect.name!);
+      .filter((effect) => effect?.code !== undefined)
+      .map((effect) => effect.code!.toString());
+  };
   protected name: ServiceName<RGBICLight> = (
     device: Device<RGBICLight>,
     subType?: string,
-  ) => `${device.name} ${subType}`;
+  ) =>
+    `${device.name} ${Array.from(device.state<LightEffectState>(LightEffectStateName)?.effects?.values() ?? [])?.find((e) => e.code?.toString() === subType)?.name}`;
 }

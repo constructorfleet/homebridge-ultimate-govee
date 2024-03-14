@@ -5,7 +5,7 @@ import { WithUUID, Service, Characteristic } from 'hap-nodejs';
 import { Type } from '@nestjs/common';
 import {
   Device,
-  IceMaker,
+  IceMaker, 
   IceMakerStatus,
   IceMakerStatusStateName,
   MakingIceStateName,

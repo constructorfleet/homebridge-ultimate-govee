@@ -1,9 +1,9 @@
 import { Injectable, Type } from '@nestjs/common';
 import { ServiceHandler } from './service.handler';
-import { Device } from '@constructorfleet/ultimate-govee';
+import { Device, DeviceStatesType } from '@constructorfleet/ultimate-govee';
 import { ModuleRef } from '@nestjs/core';
-import { PlatformAccessory } from 'homebridge';
 import { SubServiceHandlerFactory } from './handler.factory';
+import { GoveeAccessory } from '../govee.accessory';
 
 @Injectable()
 export class HandlerRegistry {
@@ -38,55 +38,103 @@ export class HandlerRegistry {
     };
   }
 
-  constructor(private readonly moduleRef: ModuleRef) {}
+  private deviceTypeHandlers: Map<string, ServiceHandler<any>[]> = new Map();
 
-  async for(accessory: PlatformAccessory, device: Device) {
-    await this.handlersFor(accessory, device);
+  constructor(
+    private readonly moduleRef: ModuleRef,
+  ) {}
+
+  async for<States extends DeviceStatesType>(
+    accessory: GoveeAccessory<States>,
+  ): Promise<ServiceHandler<States>[]> {
+    const handlers: ServiceHandler<any>[] =
+      this.deviceTypeHandlers.get(accessory.deviceType) ??
+      ([] as ServiceHandler<any>[]);
+    (await Promise.all([
+      this.getHandlersFor(accessory),
+      this.getHandlersFromFactories(accessory)
+    ])).flat()
+      .filter(
+        (handler) =>
+          handlers.find(
+            (h) =>
+              h.serviceType.UUID === handler.serviceType.UUID &&
+              h.subType === handler.subType,
+          ) === undefined,
+      )
+      .forEach((handler) => handlers.push(handler));
+    this.deviceTypeHandlers.set(accessory.deviceType, handlers);
+    return handlers;
   }
 
-  private async handlersFor(accessory: PlatformAccessory, device: Device) {
-    const tokens = HandlerRegistry.handlerMap.get(device.deviceType);
+  private async getHandlersFor<States extends DeviceStatesType>(
+    accessory: GoveeAccessory<States>,
+  ): Promise<ServiceHandler<States>[]> {
+    const tokens = HandlerRegistry.handlerMap.get(accessory.device.deviceType);
     if (tokens === undefined) {
-      return undefined;
+      return [];
     }
-    const handlers = await Promise.all(
-      tokens.map(async (token) => {
-        if (token === undefined) {
-          return undefined;
-        }
-        try {
-          return this.moduleRef.get(token);
-        } catch {
-          return await this.moduleRef.create(token);
-        }
-      }),
-    );
-    handlers
+    return (
+      await Promise.all(
+        tokens.map(async (token) => {
+          if (token === undefined) {
+            return undefined;
+          }
+          let handler: ServiceHandler<any>;
+          try {
+            handler = this.moduleRef.get(token);
+          } catch {
+            handler = await this.moduleRef.create(token);
+          }
+
+          return handler;
+        }),
+      )
+    )
       .filter((h) => h !== undefined)
-      .map((h) => h!)
-      .forEach((h) => h.setup(accessory, device));
+      .map((h) => h!);
   }
 
-  private async factoriesFor(accessory: PlatformAccessory, device: Device) {
-    const tokens = HandlerRegistry.factoryMap.get(device.deviceType);
+  private async getHandlersFromFactories<States extends DeviceStatesType>(
+    accessory: GoveeAccessory<States>,
+  ): Promise<ServiceHandler<States>[]> {
+    const tokens = HandlerRegistry.factoryMap.get(accessory.device.deviceType);
     if (tokens === undefined) {
-      return undefined;
+      return [];
     }
-    const factories = await Promise.all(
-      tokens.map(async (token) => {
-        if (token === undefined) {
-          return undefined;
-        }
-        try {
-          return this.moduleRef.get(token);
-        } catch {
-          return await this.moduleRef.create(token);
-        }
-      }),
-    );
-    factories
-      .filter((h) => h !== undefined)
-      .map((h) => h!)
-      .forEach((h) => h.for(accessory, device));
+    return (
+      await Promise.all(
+        tokens.map(async (token) => {
+          if (token === undefined) {
+            return [];
+          }
+          let handlerFactory: SubServiceHandlerFactory<any> | undefined;
+          try {
+            handlerFactory = this.moduleRef.get(token);
+          } catch {
+            handlerFactory = await this.moduleRef.create(token);
+          }
+          if (handlerFactory === undefined) {
+            return [];
+          }
+          return await handlerFactory.for(accessory);
+        }),
+      )
+    ).flat() as ServiceHandler<any>[];
+  }
+
+  async updateAccessoryHandlers<States extends DeviceStatesType>(
+    accessory: GoveeAccessory<States>,
+  ) {
+    (await this.for(accessory)).forEach((handler) => {
+      if (handler.isPrimary || handler.subType === undefined || handler.isEnabled(accessory, handler.subType)) {
+        handler.setup(accessory);
+      }
+      // if (handler.isEnabled(accessory, handler.subType)) {
+      //   handler.setup(accessory);
+      // } else {
+      //   handler.tearDown(accessory);
+      // }
+    });
   }
 }

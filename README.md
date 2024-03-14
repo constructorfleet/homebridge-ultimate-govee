@@ -29,6 +29,9 @@ devices via Apple HomeKit.
     - Control the entire light's brightness and color
     - Control each of the segments' color and relative brightness individually
     - Toggle specific scenes/effects
+  - Air Quality Sensor (H5106)
+    - Temperature, Humidity and PM 2.5
+  - Hygrometer (51)
 - Required Information
   - Govee Account Credentials (Username, Password)
 

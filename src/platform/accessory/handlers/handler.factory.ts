@@ -1,9 +1,9 @@
-import { Device, DeviceStatesType } from '@constructorfleet/ultimate-govee';
+import { DeviceStatesType } from '@constructorfleet/ultimate-govee';
 import { InjectHomebridgeApi } from '../accessory.const';
-import { API, PlatformAccessory } from 'homebridge';
+import { API } from 'homebridge';
 import { ModuleRef } from '@nestjs/core';
 import {
-  EnabledWhen,
+  IsServiceEnabled,
   ServiceCharacteristicHandlerFactory,
   ServiceName,
   ServiceSubTypes,
@@ -14,68 +14,85 @@ import {
   SubServiceHandler as GetSubServiceHandler,
   getServiceIdentifier,
 } from './service.handler';
+import { GoveeAccessory } from '../govee.accessory';
+import { Logger } from '@nestjs/common';
 
 export abstract class SubServiceHandlerFactory<
   States extends DeviceStatesType,
 > {
   protected abstract readonly serviceType: ServiceType;
   protected abstract readonly handlers: ServiceCharacteristicHandlerFactory<States>;
-  protected abstract readonly isEnabled: EnabledWhen<States>;
+  abstract readonly isEnabled: IsServiceEnabled<States>;
   protected abstract readonly possibleSubTypes: ServiceSubTypes<States>;
   protected abstract readonly name: ServiceName<States>;
-
+  protected abstract readonly isPrimary: boolean;
   private readonly handlerMap: Map<string, SubServiceHandler<States>> =
     new Map();
+  private readonly deviceTypeHandlers: Map<
+    string,
+    SubServiceHandler<States>[]
+  > = new Map();
+  protected readonly logger: Logger = new Logger();
 
   constructor(
     @InjectHomebridgeApi private readonly api: API,
     private readonly moduleRef: ModuleRef,
   ) {}
 
-  for(accessory: PlatformAccessory, device: Device<States>) {
-    const possibleSubTypes = this.possibleSubTypes(device);
+  async for(
+    accessory: GoveeAccessory<States>,
+  ): Promise<SubServiceHandler<States>[]> {
+    const possibleSubTypes = this.possibleSubTypes(accessory.device);
     if (possibleSubTypes === undefined) {
-      return;
+      return [];
     }
 
-    possibleSubTypes?.map(async (subType) => {
-      const identifier = getServiceIdentifier(
-        device.deviceType,
-        this.serviceType,
-        subType,
-      );
-      if (!this.handlerMap.has(identifier)) {
+    const handlers =
+      this.deviceTypeHandlers.get(accessory.device.deviceType) ?? [];
+
+    await Promise.all(
+      possibleSubTypes?.map(async (subType) => {
+        const identifier = getServiceIdentifier(
+          accessory.device.deviceType,
+          this.serviceType,
+          subType,
+        );
+        let handler = this.handlerMap.get(identifier);
+        if (handler !== undefined) {
+          return;
+        }
         const handlerType = GetSubServiceHandler(
-          device,
+          accessory.device,
           this.serviceType,
           subType,
           this.name,
-          this.handlers(device, subType),
+          this.handlers(accessory.device, subType),
+          this.isEnabled,
+          this.isPrimary,
         );
         try {
-          this.handlerMap.set(identifier, this.moduleRef.get(handlerType));
+          handler = this.moduleRef.get(handlerType);
+          this.handlerMap.set(identifier, handler!);
         } catch {
-          this.handlerMap.set(
-            identifier,
-            await this.moduleRef.create(handlerType),
-          );
+          handler = await this.moduleRef.create(handlerType);
+          this.handlerMap.set(identifier, handler);
         }
-      }
-    });
+        if (handler === undefined) {
+          return;
+        }
+        if (
+          handlers.find(
+            (h) =>
+              h.serviceType.UUID === handler?.serviceType.UUID &&
+              h.subType === handler?.subType,
+          ) === undefined
+        ) {
+          handlers.push(handler);
+        }
+      }),
+    );
 
-    device.subscribe(() => {});
-  }
-
-  private addRemoveServices(
-    accessory: PlatformAccessory,
-    device: Device<States>,
-  ) {
-    Array.from(this.handlerMap.values()).forEach((handler) => {
-      if (this.isEnabled(accessory, device, handler.subType)) {
-        handler.setup(accessory, device);
-      } else {
-        handler.tearDown(accessory, device);
-      }
-    });
+    this.deviceTypeHandlers.set(accessory.device.deviceType, handlers);
+    return handlers;
   }
 }

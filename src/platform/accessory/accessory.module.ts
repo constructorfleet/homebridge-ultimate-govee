@@ -18,14 +18,11 @@ import {
   SubServiceFactories,
 } from './handlers';
 import {
-  GoveePluginConfig,
-  GoveePluginConfiguration,
   PluginConfigModule,
   PluginConfigModuleOptionsType,
 } from '../../config';
 import { LoggerModule, LoggerModuleOptionsType } from '../../logger';
 import {
-  PartialBehaviorSubject,
   UltimateGoveeModule,
   UltimateGoveeModuleOptions,
 } from '@constructorfleet/ultimate-govee';
@@ -51,34 +48,24 @@ import {
       }),
     }),
     UltimateGoveeModule.forRootAsync({
-      provideInjectionTokensFrom: [PluginConfigModule],
-      inject: [MODULE_OPTIONS_TOKEN, GoveePluginConfiguration.provide],
-      useFactory: async (
+      inject: [MODULE_OPTIONS_TOKEN],
+      useFactory: (
         options: typeof OPTIONS_TYPE,
-        config: PartialBehaviorSubject<GoveePluginConfig>,
-      ): Promise<typeof UltimateGoveeModuleOptions> => {
-        return await new Promise<typeof UltimateGoveeModuleOptions>(
-          (resolve) => {
-            config.subscribe((config) => {
-              if (config !== undefined) {
-                resolve({
-                  auth: {},
-                  persist: {
-                    rootDirectory: options.storagePath,
-                  },
-                  channels: {
-                    ble: {
-                      enabled: config.controlChannels.ble.getValue(),
-                    },
-                    iot: {
-                      enabled: config.controlChannels.iot.getValue(),
-                    },
-                  },
-                });
-              }
-            });
+      ): typeof UltimateGoveeModuleOptions => {
+        return {
+          auth: {},
+          persist: {
+            rootDirectory: options.storagePath,
           },
-        );
+          channels: {
+            ble: {
+              enabled: false,
+            },
+            iot: {
+              enabled: false,
+            },
+          },
+        };
       },
     }),
   ],

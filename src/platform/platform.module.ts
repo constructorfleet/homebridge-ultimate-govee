@@ -1,5 +1,9 @@
 import { ConfigurableModuleBuilder, Module } from '@nestjs/common';
 import { PlatformModuleOptions } from './platform.types';
+import {
+  UltimateGoveeModule,
+  UltimateGoveeModuleOptions,
+} from '@constructorfleet/ultimate-govee';
 import { AccessoryModule } from './accessory/accessory.module';
 import { PlatformService } from './platform.service';
 import { AccessoryModuleOptionsType } from './accessory';
@@ -36,8 +40,28 @@ export const {
         storagePath: options.storagePath,
       }),
     }),
+    UltimateGoveeModule.forRootAsync({
+      provideInjectionTokensFrom: [AccessoryModule],
+      inject: [MODULE_OPTIONS_TOKEN],
+      useFactory: (
+        options: typeof OPTIONS_TYPE,
+      ): typeof UltimateGoveeModuleOptions => ({
+        auth: {},
+        persist: {
+          rootDirectory: options.storagePath,
+        },
+        channels: {
+          ble: {
+            enabled: false,
+          },
+          iot: {
+            enabled: false,
+          },
+        },
+      }),
+    }),
   ],
   providers: [PlatformService],
-  exports: [PlatformService, MODULE_OPTIONS_TOKEN],
+  exports: [AccessoryModule, PlatformService, MODULE_OPTIONS_TOKEN],
 })
 export class PlatformModule extends ConfigurableModuleClass {}

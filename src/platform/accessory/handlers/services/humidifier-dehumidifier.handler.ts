@@ -7,7 +7,7 @@ import { HandlerRegistry } from '../handler.registry';
 
 @HandlerRegistry.forDevice(HumidifierDevice)
 export class HumidifierHandler extends ServiceHandler<Humidifier> {
-  readonly serviceType = Service.AirPurifier;
+  readonly serviceType = Service.HumidifierDehumidifier;
   readonly isPrimary: boolean = true;
   readonly handlers: Record<
     keyof Humidifier,
@@ -83,7 +83,13 @@ export class HumidifierHandler extends ServiceHandler<Humidifier> {
             maxValue: rangeValue.range.max,
           };
         },
-        updateValue: (value) => value as number,
+        updateValue: (value) => {
+          const currentValue = value as unknown as { current?: number };
+          if (currentValue?.current !== undefined) {
+            return currentValue.current;
+          }
+          return undefined;
+        },
       },
     ],
     waterShortage: [

@@ -11,14 +11,17 @@ import {
   ServiceName,
   SubServiceHandler as SubServiceHandlerType,
   ServiceType,
+  IsServiceEnabled,
 } from './handler.types';
 import { Logger, Type, mixin } from '@nestjs/common';
-import { API, PlatformAccessory, WithUUID } from 'homebridge';
+import { API, WithUUID } from 'homebridge';
 import { InjectHomebridgeApi } from '../accessory.const';
 import { Subscription } from 'rxjs';
+import { GoveeAccessory } from '../govee.accessory';
 
 const defaultName = <States extends DeviceStatesType>(device: Device<States>) =>
   device.name;
+const defaultEnabled = () => true;
 
 export const getServiceIdentifier = (
   deviceType: string,
@@ -34,6 +37,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
   readonly isPrimary: boolean = false;
   readonly subType: string | undefined = undefined;
   readonly subscriptions: Map<string, Subscription[]> = new Map();
+  readonly isEnabled: IsServiceEnabled<States> = defaultEnabled;
 
   constructor(@InjectHomebridgeApi private readonly api: API) {}
 
@@ -62,7 +66,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
               ...service.optionalCharacteristics,
             ].find((char) => char.UUID === handler.characteristic.UUID)
           ) {
-            logger.error(
+            logger.debug(
               `Service ${service.UUID} does not have characteristic ${handler.characteristic.name}`,
             );
             return false;
@@ -89,18 +93,21 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         if (handler.configure === undefined) {
           return;
         }
-        logger.debug(
-          `Initializing characteristic properties for ${handler.characteristic.name}`,
-        );
+
+        const char = service.getCharacteristic(handler.characteristic);
         const charProps =
           value !== undefined
-            ? handler.configure(value, { device, service })
+            ? handler.configure(value, {
+                device,
+                service,
+                characteristic: char,
+              })
             : undefined;
 
         if (charProps === undefined) {
           return;
         }
-        service.getCharacteristic(handler.characteristic).setProps(charProps);
+        char.setProps(charProps);
       },
     );
   }
@@ -115,26 +122,29 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     value: StateType,
   ) {
     this.filterHandlers(logger, service, handlers)?.forEach((handler) => {
+      const char = service.getCharacteristic(handler.characteristic);
       const charValue =
         value !== undefined
-          ? handler.updateValue(value, { device, service })
+          ? handler.updateValue(value, {
+              device,
+              service,
+              characteristic: char,
+            })
           : undefined;
 
       if (charValue === undefined) {
-        logger.warn(
-          `Unable to calculate new characteristic ${handler.characteristic.name} value`,
-        );
         return;
       }
       logger.debug(
         `Updating characteristic ${handler.characteristic.name} to ${charValue}`,
       );
-      service.getCharacteristic(handler.characteristic).updateValue(charValue);
+      char.updateValue(charValue);
     });
   }
 
-  tearDown(accessory: PlatformAccessory, device: Device<States>) {
-    const initializedKey = `${this.serviceType.UUID}${this.subType === undefined ? '' : this.subType}`;
+  tearDown(goveeAccessory: GoveeAccessory<States>): Service | undefined {
+    const { accessory, device } = goveeAccessory;
+    const initializedKey = `${this.serviceType.UUID}--${this.subType === undefined ? '' : this.subType}`;
     if (!accessory.context.initialized) {
       accessory.context.initialized = {};
     }
@@ -150,10 +160,12 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     accessory.removeService(service);
     this.api.updatePlatformAccessories([accessory]);
     this.subscriptions.get(device.id)?.forEach((sub) => sub.unsubscribe());
+    return service;
   }
 
-  setup(accessory: PlatformAccessory, device: Device<States>) {
-    const initializedKey = `${this.serviceType.UUID}${this.subType === undefined ? '' : this.subType}`;
+  setup(goveeAccessory: GoveeAccessory<States>): Service | undefined {
+    const { accessory, device } = goveeAccessory;
+    const initializedKey = `${this.serviceType.UUID}--${this.subType === undefined ? '' : this.subType}`;
     const logger = new Logger(`${ServiceHandler.name} - ${device.name}`);
     if (!accessory.context.initialized) {
       accessory.context.initialized = {};
@@ -162,10 +174,11 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       accessory.context.initialized &&
       accessory.context.initialized[initializedKey] === true
     ) {
-      logger.warn(
-        `Accessory already initialized service ${this.serviceType.name}`,
+      return accessory.services.find(
+        (service) =>
+          service.UUID === this.serviceType.UUID &&
+          this.subType === service.subtype,
       );
-      return;
     }
     let newService: Service | undefined = accessory.services.find(
       (service) =>
@@ -188,8 +201,8 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       }
 
       this.setProps(logger, device, service, handlers, state?.value);
-      this.doUpdate(logger, device, service, handlers, state?.value);
       const sub = state?.subscribe((value) => {
+        this.setProps(logger, device, service, handlers, value);
         this.doUpdate(logger, device, service, handlers, value);
       });
       if (sub !== undefined) {
@@ -205,12 +218,13 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
           char.onSet((value) => {
             const stateValue =
               value !== undefined
-                ? handler.onSet!(value, { device, service })
+                ? handler.onSet!(value, {
+                    device,
+                    service,
+                    characteristic: char,
+                  })
                 : undefined;
             if (stateValue === undefined) {
-              logger.warn(
-                `Unable to determine new value for state ${stateName}`,
-              );
               return;
             }
 
@@ -223,6 +237,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     this.subscriptions.set(device.id, subscriptions);
     accessory.context.initialized[initializedKey] = true;
     this.api.updatePlatformAccessories([accessory]);
+    return newService;
   }
 }
 
@@ -232,6 +247,8 @@ export const SubServiceHandler = <States extends DeviceStatesType>(
   subType: string,
   name: ServiceName<States>,
   characteristicHandlers: ServiceCharacteristicHandlers<States>,
+  isEnabled: IsServiceEnabled<States>,
+  isPrimary: boolean,
 ): Type<SubServiceHandlerType<States>> => {
   const identifier = getServiceIdentifier(
     deviceType.deviceType,
@@ -239,13 +256,14 @@ export const SubServiceHandler = <States extends DeviceStatesType>(
     subType,
   );
   class SubServiceHandlerMixin extends ServiceHandler<States> {
-    static readonly identifier: string = identifier;
+    readonly isPrimary: boolean = isPrimary;
     readonly identifier: string = identifier;
     readonly handlers: ServiceCharacteristicHandlers<States> =
       characteristicHandlers;
     readonly name: ServiceName<States> = name;
     readonly serviceType: ServiceType = serviceType;
     readonly subType: string | undefined = subType;
+    readonly isEnabled: IsServiceEnabled<States> = isEnabled;
   }
 
   return mixin(SubServiceHandlerMixin);

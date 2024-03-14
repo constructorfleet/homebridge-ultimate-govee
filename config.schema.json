@@ -1,7 +1,6 @@
 {
   "pluginAlias": "Govee Ultimate",
   "pluginType": "platform",
-  "platform": "homebridge-ultimate-govee",
   "singular": true,
   "schema": {
     "type": "object",
@@ -13,7 +12,7 @@
           "type": "string"
         },
         "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined;"
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
         }
       },
       "username": {
@@ -21,7 +20,7 @@
         "title": "Govee Account E-Email Address",
         "required": false,
         "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined;"
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
         }
       },
       "password": {
@@ -29,7 +28,7 @@
         "title": "Govee Account Password",
         "required": false,
         "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined;"
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
         }
       },
       "connections": {
@@ -54,7 +53,7 @@
         },
         "required": false,
         "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined;"
+          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
         }
       },
       "devices": {
@@ -69,7 +68,7 @@
             "items": {
               "type": "object",
               "condition": {
-                "functionBody": "return (model.devices.airPurifiers && model.devices.airPurifiers[arrayIndices] && model.devices.airPurifiers[arrayIndices].deviceId && model.devices.airPurifiers[arrayIndices].model);"
+                "functionBody": "return (model.devices.airPurifiers && model.devices.airPurifiers[arrayIndices] && model.devices.airPurifiers[arrayIndices].deviceId && model.devices.airPurifiers[arrayIndices].model;"
               },
               "properties": {
                 "deviceId": {
@@ -246,6 +245,79 @@
         "condition": {
           "functionBody": "return model === undefined || model['_version'] === 2 || model['credentials'] !== undefined;"
         }
+      },
+      "deviceConfigs": {
+        "type": "array",
+        "removeable": false,
+        "addable": false,
+        "items": {
+          "type": "object",
+          "properties": {
+            "_type": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string",
+              "title": "Device ID"
+            },
+            "name": {
+              "type": "string",
+              "title": "Name Override"
+            },
+            "debug": {
+              "type": "boolean",
+              "title": "Enable Debug",
+              "default": false
+            },
+            "ignore": {
+              "type": "boolean",
+              "title": "Ignore Device",
+              "default": false
+            },
+            "exposePrevious": {
+              "type": "boolean",
+              "title": "Expose Previous Button",
+              "default": false
+            },
+            "showSegments": {
+              "type": "boolean",
+              "title": "Show Each Segment",
+              "default": false,
+              "condition": {
+                "functionBody": "return model.deviceConfigs[arrayIndices]._type === 'rgbic';"
+              }
+            },
+            "effects": {
+              "type": "array",
+              "removeable": false,
+              "addable": false,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "title": "Effect Name"
+                  },
+                  "code": {
+                    "type": "hidden",
+                    "title": "Effect Code"
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "title": "Enable Light Effect",
+                    "default": false
+                  }
+                }
+              },
+              "condition": {
+                "functionBody": "return model.deviceConfigs[arrayIndices]._type !== 'device;"
+              }
+            }
+          },
+          "condition": {
+            "functionBody": "return model.deviceConfigs[arrayIndices];"
+          }
+        }
       }
     }
   },
@@ -253,7 +325,7 @@
     {
       "type": "section",
       "condition": {
-        "functionBody": "return model !== undefined && 'username' in model &&  model._version === undefined && !('credentials' in model);"
+        "functionBody": "return model !== undefined && 'username' in model &&  model._version === undefined && !('credentials' in model) && !('deviceConfigs' in model);"
       },
       "items": [
         {
@@ -495,7 +567,7 @@
     {
       "type": "section",
       "condition": {
-        "functionBody": "return model === undefined || !('username' in model) || model['2'] === 2 || model._version === 2 || model._version === '2'"
+        "functionBody": "return model === undefined || !('username' in model) || 'deviceConfigs' in model || model['2'] === 2 || model._version === 2 || model._version === '2'"
       },
       "items": [
         {
@@ -526,8 +598,73 @@
         },
         {
           "type": "section",
-          "key": "devices",
-          "items": []
+          "key": "deviceConfigs",
+          "items": [
+            {
+              "type": "section",
+              "items": [
+                {
+                  "type": "div",
+                  "displayFlex": true,
+                  "flex-direction": "row",
+                  "items": [
+                    {
+                      "key": "deviceConfigs[].id",
+                      "flex": "1 1 30%"
+                    },
+                    {
+                      "key": "deviceConfigs[].name",
+                      "flex": "1 1 70%"
+                    }
+                  ]
+                },
+                {
+                  "type": "div",
+                  "displayFlex": true,
+                  "flex-direction": "row",
+                  "items": [
+                    {
+                      "key": "deviceConfigs[].ignore",
+                      "flex": "1 1 30%"
+                    },
+                    {
+                      "key": "deviceConfigs[].exposePrevious",
+                      "flex": "1 1 30%"
+                    },
+                    {
+                      "key": "deviceConfigs[].showSegments",
+                      "flex": "1 1 30%",
+                      "condition": {
+                        "functionBody": "return model.deviceConfigs && model.deviceConfigs[arrayIndices]._type === 'rgbic';"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "div",
+                  "items": [
+                    {
+                      "type": "array",
+                      "items": [
+                        {
+                          "key": "deviceConfigs[].effects[].enabled"
+                        },
+                        {
+                          "key": "deviceConfigs[].effects[].name"
+                        }
+                      ]
+                    }
+                  ],
+                  "condition": {
+                    "functionBody": "return model.deviceConfigs[]._type.includes('rgb')"
+                  }
+                }
+              ]
+            }
+          ],
+          "condition": {
+            "functionBody": "return model.deviceConfigs && model.deviceConfigs.length > 0;"
+          }
         }
       ]
     }

@@ -1,31 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import {
-  API,
-  Categories,
-  PlatformAccessory,
-  Service,
-  WithUUID,
-} from 'homebridge';
+import { API, Categories, PlatformAccessory } from 'homebridge';
 import {
   AirQualityDevice,
   Device,
   HumidifierDevice,
   HygrometerDevice,
-  PartialBehaviorSubject,
   PurifierDevice,
   RGBICLightDevice,
   RGBLightDevice,
 } from '@constructorfleet/ultimate-govee';
 import { BinaryLike } from 'crypto';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
-import { InjectConfig } from '../../config/plugin-config.providers';
 import { PluginConfigService } from '../../config/plugin-config.service';
-import { GoveePluginConfig } from '../../config/v2/plugin-config.govee';
 import { LoggingService } from '../../logger/logger.service';
 import { Lock } from 'async-await-mutex-lock';
 import { HandlerRegistry } from './handlers';
-import { sampleTime } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { InjectHomebridgeApi, InjectUUID } from './accessory.const';
+import { GoveeAccessory } from './govee.accessory';
+import { sleep } from '@constructorfleet/ultimate-govee/dist/common';
 
 const categoryMap = {
   [HumidifierDevice.deviceType]: Categories.AIR_HUMIDIFIER,
@@ -43,11 +36,11 @@ export class AccessoryManager {
     string,
     PlatformAccessory
   >();
+  private readonly goveeAccessories: GoveeAccessory<any>[] = [];
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private readonly handlerRegistry: HandlerRegistry,
-    @InjectConfig
-    private readonly config: PartialBehaviorSubject<GoveePluginConfig>,
     private readonly logger: LoggingService,
     private readonly configService: PluginConfigService,
     @InjectHomebridgeApi private readonly api: API,
@@ -56,89 +49,45 @@ export class AccessoryManager {
   ) {}
 
   onAccessoryLoaded(accessory: PlatformAccessory) {
-    const device = accessory.context.device;
     accessory.context.initialized = {};
-    if (!device || !device.id) {
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-        accessory,
-      ]);
-      return;
-    }
-    const deviceConfig = this.configService.getDeviceConfiguration(device.id);
-    accessory.context.deviceConfig = deviceConfig;
-    if (deviceConfig?.ignore) {
-      this.logger.debug(`Ignoring ${accessory.displayName}`);
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-        accessory,
-      ]);
-      return;
-    }
-    this.accessories.set(device.id, accessory);
-    this.api.updatePlatformAccessories([accessory]);
-    this.logger.debug(`Loaded ${accessory.displayName} from cache`);
-  }
-
-  onDeviceUpdated(device: Device) {
-    if (!this.accessories.has(device.id)) {
-      return;
-    }
-
-    const accessory = this.accessories.get(device.id);
-    if (!accessory) {
-      return;
-    }
-    const deviceConfig = this.configService.getDeviceConfiguration(device.id);
-    accessory.context.deviceConfig = deviceConfig;
-    accessory.context.device = this.getSafeDeviceModel(device);
-    accessory.services
-      .filter((service) => 'update' in service)
-      .forEach(
-        (service) =>
-          'update' in service &&
-          typeof service.update === 'function' &&
-          service.update(device),
-      );
-
-    this.api.updatePlatformAccessories([accessory]);
+    this.accessories.set(accessory.UUID, accessory);
+    this.logger.info(`Loaded ${accessory.displayName} from cache`);
   }
 
   async onDeviceDiscovered(device: Device) {
-    await this.lock.acquire();
-    this.logger.debug(`Discovered Device ${device.id}`);
-    try {
-      const accessory: PlatformAccessory =
-        this.accessories.get(device.id) ??
-        new this.api.platformAccessory(
-          device.name,
-          this.uuid(device.id),
-          categoryMap[device.deviceType],
-        );
-      if (!this.accessories.has(device.id)) {
-        this.logger.debug(`Registering new accessory for ${device.id}`);
-        this.accessories.set(device.id, accessory);
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
-          accessory,
-        ]);
-      }
-      const deviceConfig = this.configService.getDeviceConfiguration(device.id);
-      accessory.context.deviceConfig = deviceConfig;
-      accessory.context.device = this.getSafeDeviceModel(device);
-
-      device.pipe(sampleTime(10000)).subscribe(async () => {
-        await this.handlerRegistry.for(accessory, device);
-      });
-      this.api.updatePlatformAccessories([accessory]);
-    } finally {
-      this.lock.release();
+    this.logger.info(`Discovered Device ${device.id}`);
+    const uuid = this.uuid(device.id);
+    const accessory: PlatformAccessory =
+      this.accessories.get(uuid) ??
+      new this.api.platformAccessory(
+        device.name,
+        uuid,
+        categoryMap[device.deviceType],
+      );
+    if (!this.accessories.has(uuid)) {
+      this.logger.info(`Registering new accessory for ${device.id}`);
+      this.accessories.set(device.id, accessory);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+        accessory,
+      ]);
     }
-    // await this.platformConfigService.updateConfigurationWithDevices(device);
-  }
 
-  private get(
-    accessory: PlatformAccessory,
-    service: WithUUID<Service>,
-  ): Service {
-    return accessory.getService(service.UUID) ?? accessory.addService(service);
+    await sleep(1000);
+
+    const goveeAccessory = new GoveeAccessory(
+      device,
+      accessory,
+      await this.configService.getDeviceConfiguration(device),
+    );
+
+    accessory.context.device = this.getSafeDeviceModel(device);
+    this.subscriptions.push(
+      goveeAccessory.deviceConfig.subscribe(async () => {
+        await this.handlerRegistry.updateAccessoryHandlers(goveeAccessory);
+      }),
+    );
+
+    this.api.updatePlatformAccessories([goveeAccessory.accessory]);
   }
 
   private getSafeDeviceModel(device: Device) {

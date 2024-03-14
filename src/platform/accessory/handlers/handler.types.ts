@@ -11,21 +11,33 @@ import {
   CharacteristicProps,
   WithUUID,
   Characteristic,
-  PlatformAccessory,
 } from 'homebridge';
 import { ClassConstructor } from 'class-transformer';
+import { GoveeAccessory } from '../govee.accessory';
 
 export type CharacteristicOnSetHandler<StateType> = (
   value: CharacteristicValue,
-  extras: { device: Device<any>; service: Service },
+  extras: {
+    device: Device<any>;
+    service: Service;
+    characteristic: Characteristic;
+  },
 ) => Optional<StateType>;
 export type ConfigureCharacteristicProps<StateType> = (
   value: StateType,
-  extras: { device: Device<any>; service: Service },
+  extras: {
+    device: Device<any>;
+    service: Service;
+    characteristic: Characteristic;
+  },
 ) => PartialAllowingNull<CharacteristicProps>;
 export type UpateCharacteristicHandler<StateType> = (
   value: StateType,
-  extras: { device: Device<any>; service: Service },
+  extras: {
+    device: Device<any>;
+    service: Service;
+    characteristic: Characteristic;
+  },
 ) => Optional<CharacteristicValue>;
 
 export type CharacteristicHandlerFunctions =
@@ -66,9 +78,8 @@ export type ServiceCharacteristicHandlerFactory<
   device: Device<States>,
   subType: string,
 ) => ServiceCharacteristicHandlers<States>;
-export type EnabledWhen<States extends DeviceStatesType> = (
-  accessory: PlatformAccessory,
-  device: Device<States>,
+export type IsServiceEnabled<States extends DeviceStatesType> = (
+  accessory: GoveeAccessory<States>,
   subType?: string,
 ) => boolean;
 
@@ -77,18 +88,17 @@ export type ServiceHandler<States extends DeviceStatesType> = {
   readonly serviceType: ServiceType;
   readonly name: ServiceName<States>;
   readonly isPrimary: boolean;
+  readonly isEnabled: IsServiceEnabled<States>;
   readonly subType: string | undefined;
-  tearDown(accessory: PlatformAccessory, device: Device<States>);
-  setup(accessory: PlatformAccessory, device: Device<States>);
+  tearDown: (accessory: GoveeAccessory<States>) => void;
+  setup: (accessory: GoveeAccessory<States>) => void;
 };
 
 export type ServiceHandlerType<States extends DeviceStatesType> =
   ClassConstructor<ServiceHandler<States>>;
 
 export type SubServiceHandler<States extends DeviceStatesType> =
-  ServiceHandler<States> & {
-    readonly identifier: string;
-  };
+  ServiceHandler<States>;
 
 export type SubServiceHandlerType<States extends DeviceStatesType> =
   ClassConstructor<SubServiceHandler<States>> & { readonly identifier: string };

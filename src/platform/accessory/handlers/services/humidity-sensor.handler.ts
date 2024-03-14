@@ -1,9 +1,9 @@
 import { Characteristic, Service, WithUUID } from 'hap-nodejs';
 import {
-  HygrometerDevice,
+  AirQualityDevice,
   HumidityState,
   HumidityStateName,
-  AirQualityDevice,
+  HygrometerDevice,
 } from '@constructorfleet/ultimate-govee';
 import { ServiceHandler } from '../service.handler';
 import { Type } from '@nestjs/common';
@@ -21,7 +21,7 @@ export class HumiditySensorHandler extends ServiceHandler<HumidityDeviceState> {
     keyof HumidityDeviceState,
     CharacteristicHandler<WithUUID<Type<Characteristic>>, any>[]
   > = {
-    humidity: [
+    [HumidityStateName]: [
       {
         characteristic: Characteristic.CurrentRelativeHumidity,
         configure: (value: { range?: { min?: number; max?: number } }) =>

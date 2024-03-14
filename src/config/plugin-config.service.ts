@@ -1,378 +1,229 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { dirname, join } from 'path';
-import fs, { WatchEventType } from 'fs';
 import { PLATFORM_NAME } from '../settings';
-import { GoveePluginConfig } from './v2/plugin-config.govee';
+import { GoveePluginConfig, configFromDevice } from './v2/plugin-config.govee';
 import { Lock } from 'async-await-mutex-lock';
-import { BehaviorSubject } from 'rxjs';
 import { InjectConfig, InjectConfigFilePath } from './plugin-config.providers';
-import { DeviceConfig } from './v2/devices/device.config';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { readFile, writeFile } from 'fs/promises';
+import {
+  Device,
+  DeviceStatesType,
+  LightEffectState,
+  LightEffectStateName,
+  PartialBehaviorSubject,
+  RGBLightDevice,
+} from '@constructorfleet/ultimate-govee';
+import { FSWatcher, existsSync, realpathSync, watch } from 'fs';
+import { Subscription } from 'rxjs';
+import { LightEffectConfig, RGBLightDeviceConfig } from './v2/devices';
+import { ConfigType, PluginConfig } from './plugin-config.types';
 
 @Injectable()
-export class PluginConfigService implements OnModuleInit, OnModuleDestroy {
+export class PluginConfigService implements OnModuleDestroy {
+  private readonly logger: Logger = new Logger(PluginConfigService.name);
   private readonly configFilePath: string;
   private readonly configDirectory: string;
-  private readonly writeLock: Lock<void> = new Lock<void>();
+  private readonly fileLock: Lock<void> = new Lock<void>();
+  private readonly deviceConfigs: Map<
+    string,
+    PartialBehaviorSubject<ConfigType<any>>
+  >;
+  private config: GoveePluginConfig;
+  private readonly subscriptions: Subscription[] = [];
   private debouncer?: NodeJS.Timeout = undefined;
-  private fsWatcher?: fs.FSWatcher = undefined;
+  private fsWatcher?: FSWatcher = undefined;
+  private interval?: NodeJS.Timeout;
+
+  get pluginConfig(): GoveePluginConfig {
+    return this.config;
+  }
 
   constructor(
     @InjectConfigFilePath configFilePath: string,
     @InjectConfig
-    private readonly goveePluginConfig: BehaviorSubject<GoveePluginConfig>,
+    pluginConfig: GoveePluginConfig,
   ) {
-    this.configFilePath = fs.realpathSync(configFilePath);
-    this.configDirectory = dirname(fs.realpathSync(this.configFilePath));
-    this.reloadConfig().then();
+    this.config = pluginConfig;
+    this.configFilePath = realpathSync(configFilePath);
+    this.configDirectory = dirname(realpathSync(this.configFilePath));
+    this.deviceConfigs = new Map();
+    this.watchForChanges();
   }
 
-  async onModuleDestroy() {
+  onModuleDestroy() {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.pauseWriteInterval();
+    this.stopWatching();
+  }
+
+  pauseWriteInterval() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+    this.interval = undefined;
+  }
+
+  resumeWriteInterval() {
+    if (this.interval) {
+      return;
+    }
+    this.interval = setInterval(
+      async () => await this.writeConfig(),
+      60 * 1000,
+    );
+  }
+
+  stopWatching() {
+    this.logger.log('Stop watching for changes');
     if (this.fsWatcher) {
-      await this.fsWatcher.close();
+      this.fsWatcher.close();
       this.fsWatcher = undefined;
     }
     if (this.debouncer) {
-      await clearTimeout(this.debouncer);
+      clearTimeout(this.debouncer);
       this.debouncer = undefined;
     }
   }
 
-  async onModuleInit() {
-    this.fsWatcher = await fs.watch(
+  watchForChanges() {
+    if (this.fsWatcher !== undefined) {
+      return;
+    }
+    this.logger.log('Watching for changes');
+    this.fsWatcher = watch(
       this.configDirectory,
       { persistent: true },
-      async (event: WatchEventType, filename) => {
+      (_, filename) => {
         if (
           this.configFilePath !== join(this.configDirectory, filename || '') ||
-          !fs.existsSync(this.configFilePath)
+          !existsSync(this.configFilePath)
         ) {
           return;
         }
+
         if (this.debouncer) {
-          await clearTimeout(this.debouncer);
+          clearTimeout(this.debouncer);
         }
-        // this.log.debug('Debouncing...');
-        this.debouncer = setTimeout(
-          async () => await this.reloadConfig(),
-          1000,
-        );
+        this.debouncer = setTimeout(() => this.reloadConfig(), 10000);
       },
     );
   }
 
-  private get deviceConfigById(): Map<string, DeviceConfig> {
-    const deviceMap = new Map<string, DeviceConfig>();
-    this.goveePluginConfig
-      .getValue()
-      ?.deviceConfigs?.forEach((deviceConfig) =>
-        deviceMap.set(deviceConfig.id!, deviceConfig),
-      );
-
-    return deviceMap;
-  }
-
-  get pluginConfiguration(): GoveePluginConfig {
-    return this.goveePluginConfig.getValue();
-  }
-
-  private async reloadConfig() {
-    // this.log.debug('Will reload config...');
-    await this.writeLock.acquire();
-    // this.log.debug('Reloading!');
-    let after: GoveePluginConfig | undefined = undefined;
+  private async reloadConfig(): Promise<PluginConfig | undefined> {
+    this.stopWatching();
+    await this.fileLock.acquire();
+    this.logger.log('RELOADING CONFIG');
     try {
-      const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
+      const data = await readFile(this.configFilePath, { encoding: 'utf8' });
       const config = JSON.parse(data);
       if (!config.platforms) {
         return;
       }
 
-      const platformConfig = config.platforms.find(
+      const pluginConfig = config.platforms.find(
         (platformConfig) => platformConfig.platform === PLATFORM_NAME,
       );
-      if (!platformConfig) {
+      if (pluginConfig === undefined) {
         return;
       }
-      after = platformConfig;
+      const goveeConfig = plainToInstance(GoveePluginConfig, pluginConfig);
+      if (goveeConfig.controlChannels.ble !== this.config.controlChannels.ble) {
+        this.config.controlChannels.ble = goveeConfig.controlChannels.ble;
+      }
+      if (goveeConfig.controlChannels.iot !== this.config.controlChannels.iot) {
+        this.config.controlChannels.iot = goveeConfig.controlChannels.iot;
+      }
+      if (
+        goveeConfig.credentials.username !== this.config.credentials.username
+      ) {
+        this.config.credentials.username = goveeConfig.credentials.username;
+      }
+      if (
+        goveeConfig.credentials.password !== this.config.credentials.password
+      ) {
+        this.config.credentials.password = goveeConfig.credentials.password;
+      }
+      goveeConfig.deviceConfigs.forEach((newDeviceConfig) => {
+        this.deviceConfigs.get(newDeviceConfig.id)?.next(newDeviceConfig);
+        const index = this.config.deviceConfigs.findIndex(
+          (dc) => dc.id === newDeviceConfig.id,
+        );
+        if (index < 0) {
+          this.config.deviceConfigs.push(newDeviceConfig);
+        } else {
+          this.config.deviceConfigs[index] = newDeviceConfig;
+        }
+      });
     } finally {
-      this.writeLock.release();
-    }
-
-    if (after !== undefined) {
-      this.goveePluginConfig.next(after);
+      this.watchForChanges();
+      this.fileLock.release();
     }
   }
 
-  getDeviceConfiguration<ConfigType extends DeviceConfig>(
-    deviceId: string,
-  ): ConfigType | undefined {
-    if (!Array.isArray(this.pluginConfiguration.deviceConfigs)) {
-      this.pluginConfiguration.deviceConfigs = [];
+  private async writeConfig() {
+    this.pauseWriteInterval();
+    await this.fileLock.acquire();
+    this.stopWatching();
+    this.logger.log('WRITING CONFIG');
+    try {
+      const data = await readFile(this.configFilePath, { encoding: 'utf8' });
+      const config = JSON.parse(data);
+      if (!config.platforms) {
+        return;
+      }
+
+      const pluginConfig = instanceToPlain(this.config) as PluginConfig;
+      const index = config.platforms.findIndex(
+        (platformConfig) => platformConfig.platform === PLATFORM_NAME,
+      );
+      if (index < 0) {
+        config.platforms.push(pluginConfig);
+      } else {
+        config.platforms[index] = pluginConfig;
+      }
+      await writeFile(this.configFilePath, JSON.stringify(config, null, 2));
+    } finally {
+      this.watchForChanges();
+      this.fileLock.release();
     }
-    const deviceConfigurations: DeviceConfig[] = new Array<DeviceConfig>(
-      ...(this.pluginConfiguration.deviceConfigs || []),
-    );
-    return deviceConfigurations.find(
-      (deviceConfig) => deviceConfig.id === deviceId,
-    ) as ConfigType;
   }
 
-  // async addFeatureFlags(...featureFlags: string[]) {
-  //   await this.writeLock.acquire();
-  //   try {
-  //     this.goveePluginConfig.featureFlags = [
-  //       ...new Set(
-  //         (this.goveePluginConfig.featureFlags || []).concat(...featureFlags),
-  //       ),
-  //     ];
-  //     const configFile = this.configurationFile(this.goveePluginConfig);
-  //     fs.writeFileSync(
-  //       this.configFilePath,
-  //       JSON.stringify(configFile, null, 2),
-  //       { encoding: 'utf8' },
-  //     );
-  //   } finally {
-  //     this.writeLock.release();
-  //   }
-  // }
+  getDeviceConfiguration<
+    States extends DeviceStatesType,
+    T extends Device<States>,
+  >(device: T): PartialBehaviorSubject<ConfigType<States>> {
+    if (!this.deviceConfigs.has(device.id)) {
+      const config =
+        this.config.deviceConfigs.find((c) => c.id === device.id) ??
+        configFromDevice<States, T>(device);
+      if (device instanceof RGBLightDevice) {
+        const existingCodes = (config as RGBLightDeviceConfig).effects.map(
+          (e) => e.code,
+        );
+        const effectSub =
+          device.state<LightEffectState>(LightEffectStateName)?.effects;
+        Array.from(effectSub?.values() ?? []).forEach((effect) => {
+          if (effect.code === undefined || effect.name === undefined) {
+            return;
+          }
+          if (!existingCodes.includes(effect.code)) {
+            const lightConfig = new LightEffectConfig();
+            lightConfig.code = effect.code;
+            lightConfig.name = effect.name;
+            lightConfig.description = '';
+            lightConfig.enabled = false;
+            (config as RGBLightDeviceConfig).effects.push(lightConfig);
+          }
+        });
+        this.resumeWriteInterval();
+        effectSub?.delta$?.subscribe(() => this.resumeWriteInterval());
+      }
+      this.deviceConfigs.set(device.id, new PartialBehaviorSubject(config));
+    }
 
-  // async removeFeatureFlags(...featureFlags: string[]) {
-  //   await this.writeLock.acquire();
-  //   try {
-  //     this.goveePluginConfig.featureFlags = [
-  //       ...new Set(
-  //         this.goveePluginConfig.featureFlags.filter(
-  //           (flag: string) => !featureFlags.includes(flag),
-  //         ),
-  //       ),
-  //     ];
-  //     const configFile = this.configurationFile(this.goveePluginConfig);
-  //     fs.writeFileSync(
-  //       this.configFilePath,
-  //       JSON.stringify(configFile, null, 2),
-  //       { encoding: 'utf8' },
-  //     );
-  //   } finally {
-  //     this.writeLock.release();
-  //   }
-  // }
-
-  // // async updateConfigurationWithEffects(
-  // //   diyEffects?: DIYLightEffect[],
-  // //   deviceEffects?: DeviceLightEffect[],
-  // // ) {
-  // //   await this.writeLock.acquire();
-  // //   try {
-  // //     const configFile = this.configurationFile(
-  // //       this.buildGoveePluginConfigurationFromEffects(
-  // //         this.goveePluginConfig.getValue(),
-  // //         false,
-  // //         diyEffects,
-  // //         deviceEffects,
-  // //       ),
-  // //     );
-
-  // //     fs.writeFileSync(
-  // //       this.configFilePath,
-  // //       JSON.stringify(configFile, null, 2),
-  // //       { encoding: 'utf8' },
-  // //     );
-  // //   } finally {
-  // //     this.writeLock.release();
-  // //   }
-  // // }
-
-  // // async setConfigurationEffects(
-  // //   diyEffects?: DIYLightEffect[],
-  // //   deviceEffects?: DeviceLightEffect[],
-  // // ) {
-  // //   await this.writeLock.acquire();
-  // //   try {
-  // //     const configFile = this.configurationFile(
-  // //       this.buildGoveePluginConfigurationFromEffects(
-  // //         this.goveePluginConfig.getValue(),
-  // //         true,
-  // //         diyEffects,
-  // //         deviceEffects,
-  // //       ),
-  // //     );
-
-  // //     fs.writeFileSync(
-  // //       this.configFilePath,
-  // //       JSON.stringify(configFile, null, 2),
-  // //       { encoding: 'utf8' },
-  // //     );
-  // //   } finally {
-  // //     this.writeLock.release();
-  // //   }
-  // // }
-
-  // // async updateConfigurationWithDevices(...devices: GoveeDevice[]) {
-  // //   await this.writeLock.acquire();
-  // //   try {
-  // //     const configFile = this.configurationFile(
-  // //       this.buildGoveePluginConfigurationFromDevices(
-  // //         this.goveePluginConfig.getValue(),
-  // //         ...devices,
-  // //       ),
-  // //     );
-
-  // //     fs.writeFileSync(
-  // //       this.configFilePath,
-  // //       JSON.stringify(configFile, null, 2),
-  // //       { encoding: 'utf8' },
-  // //     );
-  // //   } finally {
-  // //     this.writeLock.release();
-  // //   }
-  // // }
-
-  // private configurationFile(updatedPluginConfig?: GoveePluginConfig): unknown {
-  //   const data = fs.readFileSync(this.configFilePath, { encoding: 'utf8' });
-  //   const config = JSON.parse(data);
-  //   if (!config.platforms) {
-  //     config.platforms = [new GoveePluginConfig()];
-  //   }
-
-  //   const platforms: Record<string, never>[] = [];
-  //   config.platforms.forEach((platformConfig) =>
-  //     platformConfig.platform === PLATFORM_NAME
-  //       ? platforms.push(updatedPluginConfig || platformConfig)
-  //       : platforms.push(platformConfig),
-  //   );
-
-  //   config.platforms = platforms;
-
-  //   return config;
-  // }
-
-  // private buildGoveePluginConfigurationFromDevices(
-  //   config: GoveePluginConfig,
-  //   ...devices: GoveeDevice[]
-  // ): GoveePluginConfig {
-  //   config.devices = this.buildGoveeDeviceOverrides(config, ...devices);
-
-  //   return config;
-  // }
-
-  // private buildGoveePluginConfigurationFromEffects(
-  //   config: GoveePluginConfig,
-  //   overwrite: boolean,
-  //   diyEffects?: DIYLightEffect[],
-  //   deviceEffects?: DeviceLightEffect[],
-  // ): GoveePluginConfig {
-  //   if (diyEffects !== null && diyEffects !== undefined) {
-  //     config.devices = this.buildGoveeDIYEffectOverrides(config, ...diyEffects);
-  //   }
-  //   if (deviceEffects !== null && deviceEffects !== undefined) {
-  //     config.devices = this.buildGoveeDeviceEffectOverrides(
-  //       config,
-  //       overwrite,
-  //       ...deviceEffects,
-  //     );
-  //   }
-
-  //   return config;
-  // }
-
-  // private buildGoveeDeviceOverrides(
-  //   config: GoveePluginConfig,
-  //   ...devices: GoveeDevice[]
-  // ): GoveeDeviceOverrides {
-  //   const deviceMap = this.deviceOverridesById;
-  //   const newHumidifiers: GoveeDeviceOverride[] = devices
-  //     .filter(
-  //       (device) =>
-  //         !deviceMap.has(device.deviceId) && device instanceof GoveeHumidifier,
-  //     )
-  //     .map((device) => new GoveeDeviceOverride(device));
-  //   const newPurifiers: GoveeDeviceOverride[] = devices
-  //     .filter(
-  //       (device) =>
-  //         !deviceMap.has(device.deviceId) && device instanceof GoveeAirPurifier,
-  //     )
-  //     .map((device) => new GoveeDeviceOverride(device));
-  //   const newLights: GoveeDeviceOverride[] = devices
-  //     .filter(
-  //       (device) =>
-  //         !deviceMap.has(device.deviceId) &&
-  //         (device instanceof LightDevice ||
-  //           device instanceof GoveeRGBICLight ||
-  //           device instanceof GoveeRGBLight),
-  //     )
-  //     .map((device) =>
-  //       device instanceof GoveeRGBICLight
-  //         ? new GoveeRGBICLightOverride(device as GoveeRGBICLight)
-  //         : new GoveeLightOverride(device as GoveeLight),
-  //     );
-
-  //   return new GoveeDeviceOverrides(
-  //     (config.devices?.humidifiers || []).concat(...newHumidifiers),
-  //     (config?.devices?.airPurifiers || []).concat(...newPurifiers),
-  //     (config?.devices?.lights || []).concat(...newLights),
-  //   );
-  // }
-
-  // private buildGoveeDeviceEffectOverrides(
-  //   config: GoveePluginConfig,
-  //   overwrite: boolean,
-  //   ...deviceEffects: DeviceLightEffect[]
-  // ): GoveeDeviceOverrides {
-  //   const lightOverrides: GoveeLightOverride[] = (config?.devices?.lights ||
-  //     []) as GoveeLightOverride[];
-
-  //   lightOverrides.forEach((override: GoveeLightOverride) => {
-  //     if (overwrite) {
-  //       override.effects = deviceEffects;
-  //       return;
-  //     }
-  //     const effects = deviceEffects
-  //       .filter(
-  //         (effect: DeviceLightEffect) => effect.deviceId === override.deviceId,
-  //       )
-  //       .map((effect: DeviceLightEffect) => {
-  //         if (override.effects !== undefined) {
-  //           const existing = override.effects.find(
-  //             (x) => x.name === effect.name,
-  //           );
-  //           if (existing) {
-  //             const existingIndex = override.effects.indexOf(existing);
-  //             effect.enabled = existing.enabled;
-  //             override.effects?.splice(existingIndex, 1);
-  //           }
-  //         }
-  //         return effect;
-  //       });
-  //     if (!effects || effects.length === 0) {
-  //       return;
-  //     }
-  //     if (!override.effects) {
-  //       override.effects = [];
-  //     }
-  //     override.effects?.push(...effects);
-  //   });
-
-  //   return new GoveeDeviceOverrides(
-  //     config.devices?.humidifiers || [],
-  //     config?.devices?.airPurifiers || [],
-  //     lightOverrides,
-  //   );
-  // }
-
-  // private buildGoveeDIYEffectOverrides(
-  //   config: GoveePluginConfig,
-  //   ...diyEffects: DIYLightEffect[]
-  // ): GoveeDeviceOverrides {
-  //   const lightOverrides: GoveeLightOverride[] = (config?.devices?.lights ||
-  //     []) as GoveeLightOverride[];
-
-  //   lightOverrides.forEach((override: GoveeLightOverride) => {
-  //     override.diyEffects = diyEffects;
-  //   });
-
-  //   return new GoveeDeviceOverrides(
-  //     config.devices?.humidifiers || [],
-  //     config?.devices?.airPurifiers || [],
-  //     lightOverrides,
-  //   );
+    return this.deviceConfigs.get(device.id)! as PartialBehaviorSubject<
+      ConfigType<States>
+    >;
+  }
 }

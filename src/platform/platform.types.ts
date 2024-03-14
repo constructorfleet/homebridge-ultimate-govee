@@ -3,16 +3,11 @@ import { GoveePluginConfig } from '../config/v2/plugin-config.govee';
 import { DeltaMap, DeltaSet, Device } from '@constructorfleet/ultimate-govee';
 import {
   API,
-  Characteristic,
   PlatformAccessory,
   PlatformConfig,
-  PlatformName,
-  PluginIdentifier,
-  Service,
   Logger as HomebridgeLogger,
 } from 'homebridge';
 import { BinaryLike } from 'crypto';
-import { Logger } from '@nestjs/common';
 
 export type PlatformStateType = {
   configuration: Observable<GoveePluginConfig>;
@@ -33,18 +28,9 @@ export interface GoveeConnections {
 
 export type PlatformModuleOptions = {
   api: API;
-  service: typeof Service;
-  characteristic: typeof Characteristic;
   config: PlatformConfig;
   configPath: string;
   storagePath: string;
-  logger?: Logger;
   log: HomebridgeLogger;
-  registerAccessory: (
-    pluginIdentifier: PluginIdentifier,
-    platformName: PlatformName,
-    accessories: PlatformAccessory[],
-  ) => void;
-  updateAccessory: (accessories: PlatformAccessory[]) => void;
   generateUUID: (data: BinaryLike) => string;
 };

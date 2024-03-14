@@ -1,7 +1,7 @@
 import { FactoryProvider, Inject } from '@nestjs/common';
 import {
   ConfigFilePathKey,
-  GoveePluginConfigKey,
+  GoveePluginConfigKey$,
   MODULE_OPTIONS_TOKEN,
   OPTIONS_TYPE,
   PluginConfigVersion,
@@ -9,18 +9,15 @@ import {
 import { GoveePluginConfig } from './v1/plugin-config.govee';
 import { plainToInstance } from 'class-transformer';
 import { pluginConfigMigrate } from './plugin-config.migrate';
-import { PartialBehaviorSubject } from '@constructorfleet/ultimate-govee';
 
-export const InjectConfig = Inject(GoveePluginConfigKey);
+export const InjectConfig = Inject(GoveePluginConfigKey$);
 export const GoveePluginConfiguration: FactoryProvider = {
-  provide: GoveePluginConfigKey,
+  provide: GoveePluginConfigKey$,
   inject: [MODULE_OPTIONS_TOKEN],
   useFactory: async (options: typeof OPTIONS_TYPE) => {
-    const pluginConfig =
-      options.config.version === PluginConfigVersion
-        ? plainToInstance(GoveePluginConfig, options.config)
-        : await pluginConfigMigrate(options.config, PluginConfigVersion);
-    return new PartialBehaviorSubject(pluginConfig);
+    return options.config.version === PluginConfigVersion
+      ? plainToInstance(GoveePluginConfig, options.config)
+      : await pluginConfigMigrate(options.config, PluginConfigVersion);
   },
 };
 
