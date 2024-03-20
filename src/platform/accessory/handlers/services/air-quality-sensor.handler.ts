@@ -18,7 +18,8 @@ export class AirQualitySensorHandler extends ServiceHandler<AirQualitySensor> {
           value?.range?.min !== undefined && value?.range?.max !== undefined
             ? { minValue: value.range.min, maxValue: value.range.max }
             : {},
-        updateValue: (value: MeasurementData) => value as number,
+        updateValue: (value: MeasurementData) =>
+          value.current !== undefined ? value.current : undefined,
       },
       {
         characteristic: Characteristic.AirQuality,
