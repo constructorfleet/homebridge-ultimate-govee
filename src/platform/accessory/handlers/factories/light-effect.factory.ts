@@ -56,13 +56,11 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
               .state<LightEffectState>(LightEffectStateName)
               ?.effects?.values() ?? [],
           ).find((effect) => effect.code?.toString() === subType);
-          if (effect === undefined) {
+          if (effect === undefined || effect.name === undefined) {
             return;
           }
-          if (effect.name !== undefined) {
-            service.displayName = effect.name;
-          }
-          return `${device.name} ${effect.name}`;
+          service.displayName = effect.name;
+          return effect.name;
         },
       },
     ],
