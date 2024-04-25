@@ -55,11 +55,13 @@ export class AccessoryManager {
 
   async onDeviceDiscovered(device: Device) {
     this.logger.info(`Discovered Device ${device.id}`);
+    const deviceConfig =
+      await this.configService.getDeviceConfiguration(device);
     const uuid = this.uuid(device.id);
     const accessory: PlatformAccessory =
       this.accessories.get(uuid) ??
       new this.api.platformAccessory(
-        device.name,
+        deviceConfig.getValue().name ?? device.name,
         uuid,
         categoryMap[device.deviceType],
       );
@@ -88,11 +90,7 @@ export class AccessoryManager {
       });
     }
 
-    const goveeAccessory = new GoveeAccessory(
-      device,
-      accessory,
-      await this.configService.getDeviceConfiguration(device),
-    );
+    const goveeAccessory = new GoveeAccessory(device, accessory, deviceConfig);
 
     accessory.context.device = this.getSafeDeviceModel(device);
     this.subscriptions.push(
