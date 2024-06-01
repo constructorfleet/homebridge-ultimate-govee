@@ -18,6 +18,7 @@ import { HandlerRegistry } from './handlers';
 import { Subscription } from 'rxjs';
 import { InjectHomebridgeApi, InjectUUID } from './accessory.const';
 import { GoveeAccessory } from './govee.accessory';
+import { AccessoryFactory } from './accessory.factory';
 
 const categoryMap = {
   [HumidifierDevice.deviceType]: Categories.AIR_HUMIDIFIER,
@@ -40,6 +41,7 @@ export class AccessoryManager {
 
   constructor(
     private readonly handlerRegistry: HandlerRegistry,
+    private readonly accessoryFactory: AccessoryFactory,
     private readonly logger: LoggingService,
     private readonly configService: PluginConfigService,
     @InjectHomebridgeApi private readonly api: API,
@@ -90,11 +92,16 @@ export class AccessoryManager {
       });
     }
 
-    const goveeAccessory = new GoveeAccessory(device, accessory, deviceConfig);
+    const goveeAccessory = this.accessoryFactory.buildGoveeAccessory(
+      device,
+      accessory,
+      deviceConfig,
+    );
 
     accessory.context.device = this.getSafeDeviceModel(device);
     this.subscriptions.push(
-      goveeAccessory.deviceConfig.subscribe(async () => {
+      goveeAccessory.deviceConfig.subscribe(async (cfg) => {
+        this.logger.error(cfg);
         await this.handlerRegistry.updateAccessoryHandlers(goveeAccessory);
       }),
     );

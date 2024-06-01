@@ -1,10 +1,10 @@
+import { UltimateGoveeService } from '@constructorfleet/ultimate-govee';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PlatformAccessory } from 'homebridge';
-import { AccessoryManager } from './accessory/accessory.manager';
-import { UltimateGoveeService } from '@constructorfleet/ultimate-govee';
 import { Subscription, map } from 'rxjs';
-import { LoggingService } from '../logger/logger.service';
 import { PluginConfigService } from '../config';
+import { LoggingService } from '../logger/logger.service';
+import { AccessoryManager } from './accessory/accessory.manager';
 
 @Injectable()
 export class PlatformService implements OnModuleDestroy {

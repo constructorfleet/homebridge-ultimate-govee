@@ -26,6 +26,7 @@ import {
   UltimateGoveeModule,
   UltimateGoveeModuleOptions,
 } from '@constructorfleet/ultimate-govee';
+import { AccessoryFactory } from './accessory.factory';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import {
     HandlerRegistry,
     AccessoryMapProvider,
     AccessoryManager,
+    AccessoryFactory,
     HomebridgeApiProvider,
     HomebridgeServiceProvider,
     HomebridgeCharacteristicProvider,

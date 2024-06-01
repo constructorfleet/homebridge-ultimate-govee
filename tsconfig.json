@@ -28,13 +28,6 @@
     "baseUrl": "lib",
     "moduleResolution": "Node",
   },
-  "include": [
-    "src/"
-  ],
-  "exclude": [
-    ".vscode/",
-    ".idea/",
-    "node-modules/",
-    "**/*.spec.ts"
-  ],
+  "include": ["src/"],
+  "exclude": [".vscode/", ".idea/", "node-modules/", "**/*.spec.ts"],
 }

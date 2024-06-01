@@ -1,40 +1,40 @@
 import {
   DeltaMap,
   Device,
-  LightEffect,
-  LightEffectState,
-  LightEffectStateName,
+  DiyEffect,
+  DiyModeState,
+  DiyModeStateName,
   RGBICLight,
   RGBICLightDevice,
 } from '@constructorfleet/ultimate-govee';
-import { SubServiceHandlerFactory } from '../handler.factory';
-import {
-  ServiceType,
-  ServiceCharacteristicHandlerFactory,
-  IsServiceEnabled,
-  ServiceSubTypes,
-  ServiceName,
-} from '../handler.types';
-import { Service, Characteristic } from 'hap-nodejs';
-import { ConfigType, LightEffectConfig } from '../../../../config';
 import { Injectable } from '@nestjs/common';
+import { Characteristic, Service } from 'hap-nodejs';
+import { ConfigType, DiyEffectConfig } from '../../../../config';
 import { GoveeAccessory } from '../../govee.accessory';
+import { SubServiceHandlerFactory } from '../handler.factory';
 import { HandlerRegistry } from '../handler.registry';
+import {
+  IsServiceEnabled,
+  ServiceCharacteristicHandlerFactory,
+  ServiceName,
+  ServiceSubTypes,
+  ServiceType,
+} from '../handler.types';
 
 @HandlerRegistry.factoryFor(RGBICLightDevice)
 @Injectable()
-export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
+export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
   protected serviceType: ServiceType = Service.Switch;
   protected readonly isPrimary: boolean = false;
   protected handlers: ServiceCharacteristicHandlerFactory<RGBICLight> = (
     device: Device<RGBICLight>,
     subType: string,
   ) => ({
-    [LightEffectStateName]: [
+    [DiyModeStateName]: [
       {
         characteristic: Characteristic.On,
-        updateValue: (value: LightEffect, { device }) => {
-          const state = device.state<LightEffectState>(LightEffectStateName);
+        updateValue: (value: DiyEffect, { device }) => {
+          const state = device.state<DiyModeState>(DiyModeStateName);
           const activeCode = state?.activeEffectCode?.getValue();
           if (state === undefined || activeCode === undefined) {
             return undefined;
@@ -51,17 +51,16 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
       },
       {
         characteristic: Characteristic.Name,
-        updateValue: (value: LightEffect, { device, service }) => {
+        updateValue: (value: DiyEffect, { device, service }) => {
           const effect = Array.from(
-            device
-              .state<LightEffectState>(LightEffectStateName)
-              ?.effects?.values() ?? [],
+            device.state<DiyModeState>(DiyModeStateName)?.effects?.values() ??
+              [],
           ).find((effect) => effect.code?.toString() === subType);
           if (effect === undefined || effect.name === undefined) {
-            return `${device.name} ${value.name}`;
+            return;
           }
           service.displayName = effect.name;
-          return `${device.name} ${effect.name}`;
+          return effect.name;
         },
       },
     ],
@@ -74,12 +73,11 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     if (config === undefined || config.ignore) {
       return false;
     }
-    if ('effects' in config) {
-      const enabledEffects = Array.from(
-        (config.effects as DeltaMap<number, LightEffectConfig>).values(),
-      )
-        ?.filter((effect) => effect.enabled)
-        ?.map((e) => e.code.toString());
+    if ('diy' in config) {
+      const enabledEffects =
+        Array.from((config.diy as DeltaMap<number, DiyEffectConfig>).values())
+          ?.filter((effect) => effect.enabled)
+          ?.map((e) => e.code.toString()) ?? [];
       return enabledEffects.includes(subType ?? '');
     }
     return false;
@@ -88,8 +86,7 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     device: Device<RGBICLight>,
   ) => {
     return Array.from(
-      device.state<LightEffectState>(LightEffectStateName)?.effects?.values() ??
-        [],
+      device.state<DiyModeState>(DiyModeStateName)?.effects?.values() ?? [],
     )
       .filter((effect) => effect?.code !== undefined)
       .map((effect) => effect.code!.toString());
@@ -98,5 +95,5 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     device: Device<RGBICLight>,
     subType?: string,
   ) =>
-    `${device.name} ${Array.from(device.state<LightEffectState>(LightEffectStateName)?.effects?.values() ?? [])?.find((e) => e.code?.toString() === subType)?.name}`;
+    `${device.name} DIY ${Array.from(device.state<DiyModeState>(DiyModeStateName)?.effects?.values() ?? [])?.find((e) => e.code?.toString() === subType)?.name}`;
 }

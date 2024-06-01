@@ -1,24 +1,32 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { dirname, join } from 'path';
-import { PLATFORM_NAME } from '../settings';
-import { GoveePluginConfig, configFromDevice } from './v2/plugin-config.govee';
-import { Lock } from 'async-await-mutex-lock';
-import { InjectConfig, InjectConfigFilePath } from './plugin-config.providers';
-import { instanceToPlain, plainToInstance } from 'class-transformer';
-import { readFile, writeFile } from 'fs/promises';
 import {
+  DeltaMap,
   Device,
   DeviceStatesType,
-  LightEffect,
-  LightEffectState,
-  LightEffectStateName,
   PartialBehaviorSubject,
-  RGBLightDevice,
 } from '@constructorfleet/ultimate-govee';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Lock } from 'async-await-mutex-lock';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { FSWatcher, existsSync, realpathSync, watch } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
+import { dirname, join } from 'path';
 import { Subscription } from 'rxjs';
-import { LightEffectConfig, RGBLightDeviceConfig } from './v2/devices';
+import {
+  DiyEffectDiscoveredEvent,
+  DiyEffectRemovedEvent,
+  LightEffectDiscoveredEvent,
+  LightEffectRemovedEvent,
+} from '../events';
+import { PLATFORM_NAME } from '../settings';
+import { InjectConfig, InjectConfigFilePath } from './plugin-config.providers';
 import { ConfigType, PluginConfig } from './plugin-config.types';
+import {
+  DiyEffectConfig,
+  LightEffectConfig,
+  RGBLightDeviceConfig,
+} from './v2/devices';
+import { GoveePluginConfig, configFromDevice } from './v2/plugin-config.govee';
 
 @Injectable()
 export class PluginConfigService implements OnModuleDestroy {
@@ -26,11 +34,11 @@ export class PluginConfigService implements OnModuleDestroy {
   private readonly configFilePath: string;
   private readonly configDirectory: string;
   private readonly fileLock: Lock<void> = new Lock<void>();
-  private readonly deviceConfigs: Map<
+  private readonly configLock: Lock<void> = new Lock<void>();
+  private readonly deviceConfigs: DeltaMap<
     string,
-    PartialBehaviorSubject<ConfigType<any>>
-  >;
-  private config: GoveePluginConfig;
+    PartialBehaviorSubject<ConfigType<DeviceStatesType>>
+  > = new DeltaMap();
   private readonly subscriptions: Subscription[] = [];
   private debouncer?: NodeJS.Timeout = undefined;
   private fsWatcher?: FSWatcher = undefined;
@@ -41,15 +49,149 @@ export class PluginConfigService implements OnModuleDestroy {
   }
 
   constructor(
+    private readonly eventEmitter: EventEmitter2,
     @InjectConfigFilePath configFilePath: string,
     @InjectConfig
-    pluginConfig: GoveePluginConfig,
+    private readonly config: GoveePluginConfig,
   ) {
-    this.config = pluginConfig;
+    Object.entries(config.deviceConfigs).forEach(([id, deviceConfig]) => {
+      const configSubject = new PartialBehaviorSubject(deviceConfig);
+      configSubject.subscribe((config) =>
+        this.deviceConfigs.set(config.id, configSubject),
+      );
+      this.deviceConfigs.set(id, configSubject);
+    });
+    this.deviceConfigs.delta$.subscribe(
+      () =>
+        (this.config.deviceConfigs = Object.fromEntries(
+          Array.from(this.deviceConfigs.values())
+            .map((cfg) => cfg.value)
+            .map((cfg) => [cfg.id, cfg]),
+        )),
+    );
     this.configFilePath = realpathSync(configFilePath);
     this.configDirectory = dirname(realpathSync(this.configFilePath));
-    this.deviceConfigs = new Map();
     this.watchForChanges();
+  }
+
+  @OnEvent(LightEffectDiscoveredEvent.name, {
+    async: true,
+    nextTick: true,
+  })
+  async onLightEffectDiscovered(
+    event: LightEffectDiscoveredEvent<DeviceStatesType>,
+  ) {
+    if (event.effect.code === undefined || event.effect.name === undefined) {
+      return;
+    }
+    await this.configLock.acquire();
+    try {
+      const deviceConfig: PartialBehaviorSubject<RGBLightDeviceConfig> =
+        (this.deviceConfigs.get(event.device.id) ??
+          this.getDeviceConfiguration(
+            event.device,
+          )) as unknown as PartialBehaviorSubject<RGBLightDeviceConfig>;
+      const effects: Map<number, LightEffectConfig> =
+        deviceConfig.value.effects ?? new Map();
+      if (!effects.has(event.effect.code)) {
+        effects.set(event.effect.code, LightEffectConfig.from(event.effect)!);
+        deviceConfig.partialNext({
+          effects,
+        });
+        this.resumeWriteInterval();
+      }
+    } finally {
+      this.configLock.release();
+    }
+  }
+
+  @OnEvent(LightEffectRemovedEvent.name, {
+    async: true,
+    nextTick: true,
+  })
+  async onLightEffectRemoved(event: LightEffectRemovedEvent<DeviceStatesType>) {
+    if (event.effect.code === undefined) {
+      return;
+    }
+    await this.configLock.acquire();
+    try {
+      const deviceConfig: PartialBehaviorSubject<RGBLightDeviceConfig> =
+        (this.deviceConfigs.get(event.device.id) ??
+          this.getDeviceConfiguration(
+            event.device,
+          )) as unknown as PartialBehaviorSubject<RGBLightDeviceConfig>;
+      const effects: Map<number, DiyEffectConfig> =
+        deviceConfig.value.effects ?? new Map();
+      if (effects.has(event.effect.code)) {
+        effects.delete(event.effect.code);
+        deviceConfig.partialNext({
+          effects: effects,
+        });
+        this.resumeWriteInterval();
+      }
+    } finally {
+      this.configLock.release();
+    }
+  }
+
+  @OnEvent(DiyEffectDiscoveredEvent.name, {
+    async: true,
+    nextTick: true,
+  })
+  async onDiyEffectDiscovered(
+    event: DiyEffectDiscoveredEvent<DeviceStatesType>,
+  ) {
+    if (event.effect.code === undefined || event.effect.name === undefined) {
+      return;
+    }
+    await this.configLock.acquire();
+    try {
+      const deviceConfig: PartialBehaviorSubject<RGBLightDeviceConfig> =
+        (this.deviceConfigs.get(event.device.id) ??
+          this.getDeviceConfiguration(
+            event.device,
+          )) as unknown as PartialBehaviorSubject<RGBLightDeviceConfig>;
+      const diy: Map<number, DiyEffectConfig> =
+        deviceConfig.value.diy ?? new Map();
+      if (!diy.has(event.effect.code)) {
+        diy.set(event.effect.code, DiyEffectConfig.from(event.effect)!);
+        deviceConfig.partialNext({
+          diy,
+        });
+        this.resumeWriteInterval();
+      }
+    } finally {
+      this.configLock.release();
+    }
+  }
+
+  @OnEvent(DiyEffectRemovedEvent.name, {
+    async: true,
+    nextTick: true,
+  })
+  async onDiyEffectRemoved(event: DiyEffectRemovedEvent<DeviceStatesType>) {
+    if (event.effect.code === undefined) {
+      return;
+    }
+    await this.configLock.acquire();
+    try {
+      const deviceConfig: PartialBehaviorSubject<RGBLightDeviceConfig> =
+        (this.deviceConfigs.get(event.device.id) ??
+          this.getDeviceConfiguration(
+            event.device,
+          )) as unknown as PartialBehaviorSubject<RGBLightDeviceConfig>;
+      const diy: Map<number, DiyEffectConfig> =
+        deviceConfig.value.diy ?? new Map();
+      if (!diy.has(event.effect.code)) {
+        diy.set(event.effect.code, DiyEffectConfig.from(event.effect)!);
+        deviceConfig.partialNext({
+          diy,
+        });
+        this.resumeWriteInterval();
+      }
+    } finally {
+      this.configLock.release();
+    }
   }
 
   onModuleDestroy() {
@@ -71,7 +213,7 @@ export class PluginConfigService implements OnModuleDestroy {
     }
     this.interval = setInterval(
       async () => await this.writeConfig(),
-      60 * 1000,
+      10 * 1000,
     );
   }
 
@@ -129,33 +271,40 @@ export class PluginConfigService implements OnModuleDestroy {
         return;
       }
       const goveeConfig = plainToInstance(GoveePluginConfig, pluginConfig);
-      if (goveeConfig.controlChannels.ble !== this.config.controlChannels.ble) {
+      if (this.config.controlChannels.ble !== goveeConfig.controlChannels.ble) {
         this.config.controlChannels.ble = goveeConfig.controlChannels.ble;
       }
-      if (goveeConfig.controlChannels.iot !== this.config.controlChannels.iot) {
+      if (this.config.controlChannels.iot !== goveeConfig.controlChannels.iot) {
         this.config.controlChannels.iot = goveeConfig.controlChannels.iot;
       }
       if (
-        goveeConfig.credentials.username !== this.config.credentials.username
+        this.config.credentials.username !== goveeConfig.credentials.username
       ) {
         this.config.credentials.username = goveeConfig.credentials.username;
       }
       if (
-        goveeConfig.credentials.password !== this.config.credentials.password
+        this.config.credentials.password !== goveeConfig.credentials.password
       ) {
         this.config.credentials.password = goveeConfig.credentials.password;
       }
-      goveeConfig.deviceConfigs.forEach((newDeviceConfig) => {
-        this.deviceConfigs.get(newDeviceConfig.id)?.next(newDeviceConfig);
-        const index = this.config.deviceConfigs.findIndex(
-          (dc) => dc.id === newDeviceConfig.id,
-        );
-        if (index < 0) {
-          this.config.deviceConfigs.push(newDeviceConfig);
-        } else {
-          this.config.deviceConfigs[index] = newDeviceConfig;
-        }
-      });
+      Object.entries(goveeConfig.deviceConfigs).forEach(
+        ([deviceId, newDeviceConfig]) => {
+          if (this.deviceConfigs.has(deviceId)) {
+            this.deviceConfigs.get(deviceId)?.next(newDeviceConfig);
+          } else {
+            this.deviceConfigs.set(
+              deviceId,
+              new PartialBehaviorSubject(newDeviceConfig),
+            );
+          }
+        },
+      );
+
+      this.config.deviceConfigs = Object.fromEntries(
+        Array.from(this.deviceConfigs.values())
+          .map((cfg) => cfg.value)
+          .map((cfg) => [cfg.id, cfg]),
+      );
     } finally {
       this.watchForChanges();
       this.fileLock.release();
@@ -178,6 +327,11 @@ export class PluginConfigService implements OnModuleDestroy {
       const index = config.platforms.findIndex(
         (platformConfig) => platformConfig.platform === PLATFORM_NAME,
       );
+      this.config.deviceConfigs = Object.fromEntries(
+        Array.from(this.deviceConfigs.values())
+          .map((cfg) => cfg.value)
+          .map((cfg) => [cfg.id, cfg]),
+      );
       if (index < 0) {
         config.platforms.push(pluginConfig);
       } else {
@@ -195,41 +349,17 @@ export class PluginConfigService implements OnModuleDestroy {
     T extends Device<States>,
   >(device: T): PartialBehaviorSubject<ConfigType<States>> {
     if (!this.deviceConfigs.has(device.id)) {
-      const config =
-        this.config.deviceConfigs.find((c) => c.id === device.id) ??
-        configFromDevice<States, T>(device, this.config);
-      if (device instanceof RGBLightDevice) {
-        const existingCodes = (config as RGBLightDeviceConfig).effects.map(
-          (e) => e.code,
-        );
-        const updateEffects = (effects?: Map<number, LightEffect>) => {
-          Array.from(effects?.values() ?? []).forEach((effect) => {
-            if (effect.code === undefined || effect.name === undefined) {
-              return;
-            }
-            if (!existingCodes.includes(effect.code)) {
-              const lightConfig = new LightEffectConfig();
-              lightConfig.code = effect.code;
-              lightConfig.name = effect.name;
-              lightConfig.description = '';
-              lightConfig.enabled = false;
-              (config as RGBLightDeviceConfig).effects.push(lightConfig);
-            }
-          });
-          this.resumeWriteInterval();
-        };
-        updateEffects(
-          device.state<LightEffectState>(LightEffectStateName)?.effects,
-        );
-        device
-          .state<LightEffectState>(LightEffectStateName)
-          ?.effects?.delta$?.subscribe((delta) => updateEffects(delta.all));
-      }
-      this.deviceConfigs.set(device.id, new PartialBehaviorSubject(config));
+      const config = new PartialBehaviorSubject(
+        configFromDevice<States, T>(device, this.eventEmitter),
+      );
+      this.deviceConfigs.set(device.id, config);
+
+      this.resumeWriteInterval();
     }
 
-    return this.deviceConfigs.get(device.id)! as PartialBehaviorSubject<
+    const config = this.deviceConfigs.get(device.id)! as PartialBehaviorSubject<
       ConfigType<States>
     >;
+    return config;
   }
 }

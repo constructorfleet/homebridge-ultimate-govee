@@ -37,7 +37,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
           }),
         }),
         {
-          logger: ['debug', 'log', 'warn', 'error'],
+          logger: ['log', 'warn', 'error'],
           abortOnError: false,
         },
       );

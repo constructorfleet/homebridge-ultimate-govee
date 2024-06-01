@@ -164,6 +164,9 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
   }
 
   setup(goveeAccessory: GoveeAccessory<States>): Service | undefined {
+    if (this.serviceType === Service.Switch) {
+      console.dir(this.name);
+    }
     const { accessory, device } = goveeAccessory;
     const initializedKey = `${this.serviceType.UUID}--${this.subType === undefined ? '' : this.subType}`;
     const logger = new Logger(`${ServiceHandler.name} - ${device.name}`);
@@ -186,7 +189,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         this.subType === service.subtype,
     );
     if (newService === undefined) {
-      newService = new this.serviceType(device.name, this.subType);
+      newService = new this.serviceType(this.name ?? device.name, this.subType);
       accessory.addService(newService);
     }
     const service = newService!;
