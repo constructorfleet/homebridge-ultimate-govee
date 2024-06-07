@@ -68,6 +68,9 @@ export type ServiceCharacteristicHandlers<States extends DeviceStatesType> =
     >
   >;
 export type ServiceType = WithUUID<ClassConstructor<WithUUID<Service>>>;
+export type CharacteristicType = WithUUID<
+  ClassConstructor<WithUUID<Characteristic>>
+>;
 export type ServiceCharacteristicHandlerFactory<
   States extends DeviceStatesType,
 > = (

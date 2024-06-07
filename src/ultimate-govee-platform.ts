@@ -9,6 +9,7 @@ import { INestApplicationContext, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { PlatformModule } from './platform/platform.module';
 import { PlatformService } from './platform/platform.service';
+import { GoveePlatformAccessory } from './platform/accessory/govee.accessory';
 
 export class UltimateGoveePlatform implements DynamicPlatformPlugin {
   private readonly logger: Logger = new Logger(UltimateGoveePlatform.name);
@@ -58,7 +59,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
       while (this.cachedAccessories.length) {
         const acc = this.cachedAccessories.pop();
         if (acc) {
-          this.service.configureAccessory(acc);
+          this.service.configureAccessory(acc as GoveePlatformAccessory);
         }
       }
       this.service.discoverDevices();

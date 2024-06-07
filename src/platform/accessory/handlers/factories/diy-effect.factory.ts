@@ -2,8 +2,10 @@ import {
   DiyEffect,
   DiyModeState,
   DiyModeStateName,
+  Optional,
   RGBICLight,
   RGBICLightDevice,
+  DeviceState,
 } from '@constructorfleet/ultimate-govee';
 import { Injectable } from '@nestjs/common';
 import { Characteristic, Service } from 'hap-nodejs';
@@ -12,12 +14,15 @@ import { GoveeAccessory } from '../../govee.accessory';
 import { SubServiceHandlerFactory } from '../handler.factory';
 import { HandlerRegistry } from '../handler.registry';
 import {
+  CharacteristicType,
   IsServiceEnabled,
   ServiceCharacteristicHandlerFactory,
   ServiceName,
   ServiceSubTypes,
   ServiceType,
 } from '../handler.types';
+import { RGBICActiveState } from '@constructorfleet/ultimate-govee/dist/domain/devices/impl/lights/rgbic/rgbic-light.modes';
+import { ModeStateName } from '@constructorfleet/ultimate-govee/dist/domain';
 
 const diyPrefix = 'diy';
 
@@ -37,22 +42,41 @@ const getEffectCode = (subType: string) => {
 export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
   protected serviceType: ServiceType = Service.Switch;
   protected readonly isPrimary: boolean = false;
+  protected readonly optionalCharacteristics: CharacteristicType[] = [
+    Characteristic.ConfiguredName,
+  ];
   protected handlers: ServiceCharacteristicHandlerFactory<RGBICLight> = (
     accessory: GoveeAccessory<RGBICLight>,
     subType: string,
   ) => ({
+    [ModeStateName]: [
+      {
+        characteristic: Characteristic.On,
+        updateValue: (value: Optional<DeviceState<string, any>>) => {
+          if (!value || value?.name !== DiyModeStateName) {
+            return false;
+          }
+          return undefined;
+        },
+      },
+    ],
     [DiyModeStateName]: [
       {
         characteristic: Characteristic.On,
-        updateValue: (value: DiyEffect) => {
+        updateValue: (value: DiyEffect, { accessory }) => {
+          const activeMode =
+            accessory.device.state<RGBICActiveState>(ModeStateName)?.activeMode;
+          if (!activeMode || activeMode?.name !== DiyModeStateName) {
+            return false;
+          }
           const { effectType, code } = getEffectCode(subType);
           if (effectType !== diyPrefix) {
-            return undefined;
+            return false;
           }
-          const state = accessory.device.state<DiyModeState>(DiyModeStateName);
+          const state = activeMode as DiyModeState;
           const activeCode = state?.activeEffectCode?.getValue();
           if (state === undefined || activeCode === undefined) {
-            return undefined;
+            return false;
           }
           return value?.code === code;
         },
@@ -66,21 +90,6 @@ export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
               code,
             };
           }
-        },
-      },
-      {
-        characteristic: Characteristic.Name,
-        updateValue: (_: DiyEffect, { accessory, service }) => {
-          const { effectType, code } = getEffectCode(subType);
-          if (effectType !== diyPrefix) {
-            return undefined;
-          }
-          const effect = accessory.diyEffects.get(code);
-          if (effect === undefined || effect.name === undefined) {
-            return;
-          }
-          service.displayName = effect.name;
-          return effect.name;
         },
       },
     ],
@@ -114,12 +123,19 @@ export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     subType?: string,
   ) => {
     if (subType === undefined) {
-      return '';
+      return 'Unknown';
     }
     const { effectType, code } = getEffectCode(subType);
     if (effectType !== diyPrefix) {
-      return '';
+      return subType;
     }
-    return accessory.diyEffects.get(code)?.name ?? '';
+
+    const name =
+      accessory.lightEffects.get(code)?.name ??
+      accessory.device.state<DiyModeState>(DiyModeStateName)?.effects?.get(code)
+        ?.name ??
+      `${accessory.name} ${code}`;
+
+    return name;
   };
 }

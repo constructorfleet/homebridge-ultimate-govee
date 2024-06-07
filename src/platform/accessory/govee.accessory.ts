@@ -4,17 +4,27 @@ import { Characteristic, Service } from 'hap-nodejs';
 import { PlatformAccessory } from 'homebridge';
 import {
   ConfigType,
+  DeviceConfig,
   DiyEffectConfig,
   LightEffectConfig,
+  PluginDeviceConfig,
+  RGBICLightDeviceConfig,
   RGBLightDeviceConfig,
 } from '../../config';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+
+export type AccessoryContext = {
+  initialized: Record<string, boolean>;
+  deviceConfig: PluginDeviceConfig;
+};
+
+export type GoveePlatformAccessory = PlatformAccessory<AccessoryContext>;
 
 export class GoveeAccessoryEffect {
   private logger: Logger;
-  private effectname: string = '';
 
   get name(): string {
-    return this.effectname;
+    return this.effectName;
   }
 
   set name(name: string) {
@@ -53,6 +63,19 @@ export class GoveeAccessoryEffect {
 }
 
 export class GoveeAccessory<States extends DeviceStatesType> {
+  static parseConfig(
+    deviceConfig: PluginDeviceConfig,
+  ): ConfigType<DeviceStatesType> {
+    switch (deviceConfig._type) {
+      case 'rgbic':
+        return plainToInstance(RGBICLightDeviceConfig, deviceConfig);
+      case 'rgb':
+        return plainToInstance(RGBLightDeviceConfig, deviceConfig);
+      default:
+        return plainToInstance(DeviceConfig, deviceConfig);
+    }
+  }
+
   private logger?: Logger;
   private ignore: boolean = false;
   private debug: boolean = false;
@@ -139,9 +162,9 @@ export class GoveeAccessory<States extends DeviceStatesType> {
     this.showSegments = showSegments;
   }
 
-  addLightEffect(effect: LightEffectConfig) {
+  addLightEffect(effect: LightEffectConfig): boolean {
     if (this.lightEffects.has(effect.code)) {
-      return;
+      return false;
     }
     this.lightEffects.set(
       effect.code,
@@ -153,15 +176,20 @@ export class GoveeAccessory<States extends DeviceStatesType> {
         this,
       ),
     );
+    return true;
   }
 
-  removeLightEffect(code: number) {
+  removeLightEffect(code: number): boolean {
+    if (!this.lightEffects.has(code)) {
+      return false;
+    }
     this.lightEffects.delete(code);
+    return true;
   }
 
-  addDiyEffect(effect: DiyEffectConfig) {
+  addDiyEffect(effect: DiyEffectConfig): boolean {
     if (this.diyEffects.has(effect.code)) {
-      return;
+      return false;
     }
     this.diyEffects.set(
       effect.code,
@@ -173,21 +201,59 @@ export class GoveeAccessory<States extends DeviceStatesType> {
         this,
       ),
     );
+    return true;
   }
 
-  removeDiyEffect(code: number) {
+  removeDiyEffect(code: number): boolean {
+    if (!this.diyEffects.has(code)) {
+      return false;
+    }
     this.diyEffects.delete(code);
+    return true;
+  }
+
+  set deviceConfig(deviceConfig: ConfigType<States>) {
+    this.accessory.context = {
+      initialized: this.accessory.context.initialized ?? {},
+      deviceConfig: instanceToPlain(deviceConfig) as PluginDeviceConfig,
+    };
+  }
+
+  get deviceConfig(): ConfigType<States> {
+    const config = GoveeAccessory.parseConfig(
+      this.accessory.context.deviceConfig,
+    );
+    console.dir(config);
+    return config;
+  }
+
+  isServiceInitialized(serviceKey: string): boolean {
+    return (
+      !!this.accessory.context.initialized &&
+      this.accessory.context.initialized[serviceKey]
+    );
+  }
+
+  serviceInitialized(serviceKey: string, isInitialized: boolean = true) {
+    this.accessory.context = {
+      initialized: {
+        ...(this.accessory.context.initialized ?? {}),
+        [serviceKey]: isInitialized,
+      },
+      deviceConfig: this.accessory.context.deviceConfig,
+    };
   }
 
   constructor(
     readonly device: Device<States>,
-    readonly accessory: PlatformAccessory,
+    readonly accessory: GoveePlatformAccessory,
     deviceConfig: ConfigType<States>,
   ) {
-    this.setupInformationService(deviceConfig);
+    this.setup(deviceConfig);
   }
 
-  private setupInformationService(config: ConfigType<States>) {
+  setup(config: ConfigType<States>) {
+    this.deviceConfig = config;
     const service = this.accessory.getService(Service.AccessoryInformation);
     if (service === undefined) {
       return;
@@ -199,6 +265,9 @@ export class GoveeAccessory<States extends DeviceStatesType> {
     this.ignore = config.ignore === true;
 
     if (config instanceof RGBLightDeviceConfig) {
+      Array.from(this.lightEffects?.values() ?? [])
+        .filter((effect) => !config.effects[effect.code])
+        .forEach((effect) => this.removeLightEffect(effect.code));
       Object.values(config.effects).forEach((effect) => {
         if (effect.code === undefined || effect.name === undefined) {
           return;
@@ -214,6 +283,9 @@ export class GoveeAccessory<States extends DeviceStatesType> {
           ),
         );
       });
+      Array.from(this.diyEffects?.values() ?? [])
+        .filter((effect) => !config.diy[effect.code])
+        .forEach((effect) => this.removeDiyEffect(effect.code));
       Object.values(config.diy).forEach((effect) => {
         if (effect.code === undefined || effect.name === undefined) {
           return;

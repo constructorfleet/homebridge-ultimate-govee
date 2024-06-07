@@ -91,6 +91,7 @@ export class PluginConfigService implements OnModuleDestroy {
       return;
     }
     await this.configLock.acquire();
+
     try {
       let deviceConfig = this.config.deviceConfigs[event.device.id];
       if (!deviceConfig) {
@@ -101,7 +102,7 @@ export class PluginConfigService implements OnModuleDestroy {
         let effect: LightEffectConfig | undefined =
           deviceConfig.effects[event.effect.code];
         if (!effect) {
-          effect = LightEffectConfig.from(effect);
+          effect = LightEffectConfig.from(event.effect);
           if (effect === undefined) {
             return;
           }
@@ -131,17 +132,6 @@ export class PluginConfigService implements OnModuleDestroy {
         );
 
         deviceConfig.effects[event.effect.code] = effect;
-        if (deviceConfig.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-          this.logger.warn(
-            JSON.stringify({
-              device: {
-                id: deviceConfig.id,
-                name: deviceConfig.name,
-              },
-              effect,
-            }),
-          );
-        }
       }
 
       this.config.deviceConfigs[event.device.id] = deviceConfig;
@@ -363,23 +353,7 @@ export class PluginConfigService implements OnModuleDestroy {
       const index = config.platforms.findIndex(
         (platformConfig) => platformConfig.platform === PLATFORM_NAME,
       );
-      this.logger.warn(
-        JSON.stringify(
-          {
-            device: {
-              id: this.config.deviceConfigs['5F:D3:7C:A6:B0:4A:17:8C']?.id,
-              name: this.config.deviceConfigs['5F:D3:7C:A6:B0:4A:17:8C']?.name,
-            },
-            effects: (
-              this.config.deviceConfigs[
-                '5F:D3:7C:A6:B0:4A:17:8C'
-              ] as RGBICLightDeviceConfig
-            )?.effects,
-          },
-          null,
-          2,
-        ),
-      );
+
       const pluginConfig = instanceToPlain(this.config) as PluginConfig;
 
       if (index < 0) {
@@ -396,10 +370,6 @@ export class PluginConfigService implements OnModuleDestroy {
   }
 
   private async loadConfigFromFile() {
-    await writeFile(
-      `config.loadFromFile.pre.${new Date().toISOString()}.json`,
-      JSON.stringify(this.config, null, 2),
-    );
     const data = await readFile(this.configFilePath, { encoding: 'utf8' });
     const config = JSON.parse(data);
     if (!config.platforms) {
@@ -465,17 +435,6 @@ export class PluginConfigService implements OnModuleDestroy {
         ) {
           Object.values(cfg.effects)
             .map((effectConfig) => {
-              if (cfg.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-                this.logger.warn(
-                  JSON.stringify({
-                    device: {
-                      id: cfg.id,
-                      name: cfg.name,
-                    },
-                    effect: effectConfig,
-                  }),
-                );
-              }
               if (effectConfig?.code === undefined) {
                 return effectConfig;
               }
@@ -483,6 +442,7 @@ export class PluginConfigService implements OnModuleDestroy {
               if (!effectCfg) {
                 return effectConfig;
               }
+              effectCfg.code = effectConfig.code;
               effectCfg.name = effectConfig.name;
               effectCfg.enabled = effectConfig.enabled === true;
               effectCfg.code = effectConfig.code;
@@ -508,17 +468,6 @@ export class PluginConfigService implements OnModuleDestroy {
             });
           Object.values(cfg.diy)
             .map((effectConfig) => {
-              if (cfg.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-                this.logger.warn(
-                  JSON.stringify({
-                    device: {
-                      id: cfg.id,
-                      name: cfg.name,
-                    },
-                    diy: effectConfig,
-                  }),
-                );
-              }
               if (effectConfig?.code === undefined) {
                 return effectConfig;
               }
@@ -526,6 +475,7 @@ export class PluginConfigService implements OnModuleDestroy {
               if (!effectCfg) {
                 return effectConfig;
               }
+              effectCfg.code = effectConfig.code;
               effectCfg.name = effectConfig.name;
               effectCfg.enabled = effectConfig.enabled === true;
               effectCfg.code = effectConfig.code;

@@ -98,7 +98,7 @@
                     "title": "Effect Name"
                   },
                   "code": {
-                    "type": "hidden",
+                    "type": "number",
                     "title": "Effect Code"
                   },
                   "enabled": {
@@ -125,7 +125,7 @@
                     "title": "Effect Name"
                   },
                   "code": {
-                    "type": "hidden",
+                    "type": "number",
                     "title": "Effect Code"
                   },
                   "enabled": {

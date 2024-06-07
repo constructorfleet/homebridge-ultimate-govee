@@ -12,8 +12,8 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Lock } from 'async-await-mutex-lock';
 import { BinaryLike } from 'crypto';
-import { API, Categories, PlatformAccessory } from 'homebridge';
-import { Subject, Subscription, bufferTime, distinct } from 'rxjs';
+import { API, Categories } from 'homebridge';
+import { Subscription, interval } from 'rxjs';
 import { ConfigType } from '../../config';
 import { PluginConfigService } from '../../config/plugin-config.service';
 import {
@@ -37,7 +37,7 @@ import { ShowSegmentsDeviceChangedEvent } from '../../events/device-config/show-
 import { LoggingService } from '../../logger/logger.service';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
 import { InjectHomebridgeApi, InjectUUID } from './accessory.const';
-import { GoveeAccessory } from './govee.accessory';
+import { GoveeAccessory, GoveePlatformAccessory } from './govee.accessory';
 import { HandlerRegistry } from './handlers';
 
 const categoryMap = {
@@ -52,8 +52,8 @@ const categoryMap = {
 @Injectable()
 export class AccessoryManager {
   private lock: Lock<void> = new Lock();
-  private updateQueue$: Subject<GoveeAccessory<any>> = new Subject();
-  private readonly accessories: Map<string, PlatformAccessory> = new Map();
+  private updateQueue: Set<string> = new Set();
+  private readonly accessories: Map<string, GoveePlatformAccessory> = new Map();
   private readonly goveeAccessories: Map<string, GoveeAccessory<any>> =
     new Map();
   private subscriptions: Subscription[] = [];
@@ -67,25 +67,26 @@ export class AccessoryManager {
     private readonly uuid: (data: BinaryLike) => string,
   ) {
     this.subscriptions.push(
-      this.updateQueue$
-        .pipe(
-          distinct((acc) => acc.id),
-          bufferTime(5000),
-        )
-        .subscribe(async (accessories) => {
-          await Promise.all(
-            accessories.map(
-              async (acc) => await this.updateAccessoryHandlers(acc),
-            ),
-          );
-          this.api.updatePlatformAccessories(
-            accessories.map((acc) => acc.accessory),
-          );
-        }),
+      interval(5000).subscribe(async () => {
+        const ids = Array.from(this.updateQueue.values());
+        this.updateQueue.clear();
+
+        const accessories = ids
+          .map((id) => this.goveeAccessories.get(id))
+          .filter((acc) => !!acc);
+        await Promise.all(
+          accessories.map(
+            async (acc) => await this.updateAccessoryHandlers(acc!),
+          ),
+        );
+        this.api.updatePlatformAccessories(
+          accessories.map((acc) => acc!.accessory),
+        );
+      }),
     );
   }
 
-  onAccessoryLoaded(accessory: PlatformAccessory) {
+  onAccessoryLoaded(accessory: GoveePlatformAccessory) {
     accessory.context.initialized = {};
     this.accessories.set(accessory.UUID, accessory);
     this.logger.info(`Loaded ${accessory.displayName} from cache`);
@@ -93,10 +94,16 @@ export class AccessoryManager {
 
   private buildGoveeAccessory<States extends DeviceStatesType>(
     device: Device<States>,
-    accessory: PlatformAccessory,
+    accessory: GoveePlatformAccessory,
     deviceConfig: ConfigType<States>,
   ): GoveeAccessory<States> {
-    const goveeAccessory = new GoveeAccessory(device, accessory, deviceConfig);
+    const goveeAccessory = new GoveeAccessory(
+      device,
+      accessory,
+      accessory.context?.deviceConfig
+        ? GoveeAccessory.parseConfig(accessory.context.deviceConfig)
+        : deviceConfig,
+    );
     this.goveeAccessories.set(device.id, goveeAccessory);
     return goveeAccessory;
   }
@@ -114,8 +121,9 @@ export class AccessoryManager {
       if (!accessory) {
         return;
       }
-      accessory.addLightEffect(event.effectConfig);
-      this.updateQueue$.next(accessory);
+      if (accessory.addLightEffect(event.effectConfig)) {
+        this.updateQueue.add(accessory.device.id);
+      }
     } catch (error) {
       this.logger.error(`onAddLightEffect: ${error}`, error);
     }
@@ -134,8 +142,9 @@ export class AccessoryManager {
       if (!accessory) {
         return;
       }
-      accessory.removeLightEffect(event.code);
-      this.updateQueue$.next(accessory);
+      if (accessory.removeLightEffect(event.code)) {
+        this.updateQueue.add(accessory.device.id);
+      }
     } catch (error) {
       this.logger.error(`onRemoveLightEffect: ${error}`, error);
     }
@@ -154,8 +163,9 @@ export class AccessoryManager {
       if (!accessory) {
         return;
       }
-      accessory.addDiyEffect(event.effectConfig);
-      this.updateQueue$.next(accessory);
+      if (accessory.addDiyEffect(event.effectConfig)) {
+        this.updateQueue.add(accessory.device.id);
+      }
     } catch (error) {
       this.logger.error(`onAddLightEffect: ${error}`, error);
     }
@@ -174,8 +184,9 @@ export class AccessoryManager {
       if (!accessory) {
         return;
       }
-      accessory.removeLightEffect(event.code);
-      this.updateQueue$.next(accessory);
+      if (accessory.removeLightEffect(event.code)) {
+        this.updateQueue.add(accessory.device.id);
+      }
     } catch (error) {
       this.logger.error(`onRemoveLightEffect: ${error}`, error);
     }
@@ -267,7 +278,6 @@ export class AccessoryManager {
 
   private async updateAccessoryHandlers(goveeAccessory: GoveeAccessory<any>) {
     await this.handlerRegistry.updateAccessoryHandlers(goveeAccessory);
-    this.updateQueue$.next(goveeAccessory);
   }
 
   onDeviceConfigEffectChange(event: DeviceConfigChangedEvent) {
@@ -275,25 +285,41 @@ export class AccessoryManager {
     if (!accessory) {
       return;
     }
+    let changed: boolean = false;
+    let newValue: string | boolean;
     switch (true) {
       case event instanceof ExposePreviousDeviceChanged:
-        accessory.exposePreviousButton = (
-          event as ExposePreviousDeviceChanged
-        ).exposePrevious;
+        newValue = (event as ExposePreviousDeviceChanged).exposePrevious;
+        if (newValue !== accessory.exposePreviousButton) {
+          accessory.exposePreviousButton = newValue;
+          changed = true;
+        }
         break;
       case event instanceof IgnoreDeviceChangedEvent:
-        accessory.isIgnored = (event as IgnoreDeviceChangedEvent).ignoreDevice;
+        newValue = (event as IgnoreDeviceChangedEvent).ignoreDevice;
+        if (newValue !== accessory.isIgnored) {
+          accessory.isIgnored = newValue;
+          changed = true;
+        }
         break;
       case event instanceof NameDeviceChangedEvent:
-        accessory.name = (event as NameDeviceChangedEvent).name;
+        newValue = (event as NameDeviceChangedEvent).name;
+        if (newValue !== accessory.name) {
+          accessory.name = newValue;
+          changed = true;
+        }
         break;
       case event instanceof ShowSegmentsDeviceChangedEvent:
-        accessory.shouldShowSegments = (
-          event as ShowSegmentsDeviceChangedEvent
-        ).showSegments;
+        newValue = (event as ShowSegmentsDeviceChangedEvent).showSegments;
+        if (newValue !== accessory.shouldShowSegments) {
+          accessory.shouldShowSegments = newValue;
+          changed = true;
+        }
         break;
     }
-    this.updateQueue$.next(accessory);
+    if (changed) {
+      this.updateQueue.add(accessory.device.id);
+    }
   }
 
   onDiyEffectChange(event: DiyEffectChangedEvent) {
@@ -305,15 +331,27 @@ export class AccessoryManager {
     if (!effect) {
       return;
     }
+    let changed: boolean = false;
+    let newValue: boolean | string;
     switch (true) {
       case event instanceof ExposeDiyEffectChangedEvent:
-        effect.isExposed = (event as ExposeDiyEffectChangedEvent).expose;
+        newValue = (event as ExposeDiyEffectChangedEvent).expose;
+        if (newValue !== effect.isExposed) {
+          effect.isExposed = newValue;
+          changed = true;
+        }
         break;
       case event instanceof NameDiyEffectChangedEvent:
-        effect.name = (event as NameDiyEffectChangedEvent).name;
+        newValue = (event as NameDiyEffectChangedEvent).name;
+        if (newValue !== effect.name) {
+          effect.name = newValue;
+          changed = true;
+        }
         break;
     }
-    this.updateQueue$.next(accessory);
+    if (changed) {
+      this.updateQueue.add(accessory.device.id);
+    }
   }
 
   onLightEffectChange(event: LightEffectChangedEvent) {
@@ -325,26 +363,36 @@ export class AccessoryManager {
     if (!effect) {
       return;
     }
+    let changed: boolean = false;
+    let newValue: boolean | string;
     switch (true) {
       case event instanceof ExposeLightEffectChangedEvent:
-        effect.isExposed = (event as ExposeLightEffectChangedEvent).expose;
+        newValue = (event as ExposeLightEffectChangedEvent).expose;
+        if (newValue !== effect.isExposed) {
+          effect.isExposed = newValue;
+          changed = true;
+        }
         break;
       case event instanceof NameLightEffectChangedEvent:
-        effect.name = (event as NameLightEffectChangedEvent).name;
+        newValue = (event as NameLightEffectChangedEvent).name;
+        if (newValue !== effect.name) {
+          effect.name = newValue;
+          changed = true;
+        }
         break;
     }
-    this.updateQueue$.next(accessory);
+    if (changed) {
+      this.updateQueue.add(accessory.device.id);
+    }
   }
 
   async onDeviceDiscovered(device: Device) {
     this.logger.info(`Discovered Device ${device.id}`);
-    const deviceConfig =
-      await this.configService.getDeviceConfiguration(device);
     const uuid = this.uuid(device.id);
-    const accessory: PlatformAccessory =
+    const accessory: GoveePlatformAccessory =
       this.accessories.get(uuid) ??
       new this.api.platformAccessory(
-        deviceConfig.name ?? device.name,
+        device.name,
         uuid,
         categoryMap[device.deviceType],
       );
@@ -355,44 +403,28 @@ export class AccessoryManager {
         accessory,
       ]);
     }
-
-    if (device instanceof RGBICLightDevice) {
-      let interval: NodeJS.Timeout | undefined = undefined;
-      let iterations: number = 0;
-      await new Promise<void>((resolve) => {
-        interval = setInterval(() => {
-          if (
-            ((device as RGBICLightDevice).lightEffect?.effects?.size ?? 0) >=
-              0 ||
-            iterations++ > 5
-          ) {
-            clearInterval(interval);
-            resolve();
-          }
-        }, 1000);
-      });
-    }
-
     const goveeAccessory = this.buildGoveeAccessory(
       device,
       accessory,
-      deviceConfig,
+      await this.configService.getDeviceConfiguration(device),
     );
+    // if (device instanceof RGBICLightDevice) {
+    //   let interval: NodeJS.Timeout | undefined = undefined;
+    //   let iterations: number = 0;
+    //   await new Promise<void>((resolve) => {
+    //     interval = setInterval(() => {
+    //       if (
+    //         ((device as RGBICLightDevice).lightEffect?.effects?.size ?? 0) >=
+    //           0 ||
+    //         iterations++ > 5
+    //       ) {
+    //         clearInterval(interval);
+    //         resolve();
+    //       }
+    //     }, 1000);
+    //   });
+    // }
 
-    accessory.context.device = this.getSafeDeviceModel(device);
-
-    this.updateQueue$.next(goveeAccessory);
-  }
-
-  private getSafeDeviceModel(device: Device) {
-    const deviceModel = device.device;
-
-    if (!deviceModel) {
-      return undefined;
-    }
-    return {
-      ...deviceModel,
-      status: deviceModel.status.getValue(),
-    };
+    this.updateQueue.add(goveeAccessory.device.id);
   }
 }
