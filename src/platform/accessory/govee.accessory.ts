@@ -12,6 +12,7 @@ import {
   RGBLightDeviceConfig,
 } from '../../config';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { using } from '../../common';
 
 export type AccessoryContext = {
   initialized: Record<string, boolean>;
@@ -121,6 +122,9 @@ export class GoveeAccessory<States extends DeviceStatesType> {
       return;
     }
     this.ignore = ignore;
+    this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
+      deviceConfig.ignore = ignore;
+    });
     this.logger?.log(`Ignoring device ${ignore ? 'enabled' : 'disabled'}`);
   }
 
@@ -134,6 +138,9 @@ export class GoveeAccessory<States extends DeviceStatesType> {
     }
     this.debug = debug;
     this.device.debug(debug);
+    this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
+      deviceConfig.debug = debug;
+    });
     this.logger?.log(`Debugging ${debug ? 'enabled' : 'disabled'}`);
   }
 
@@ -146,6 +153,9 @@ export class GoveeAccessory<States extends DeviceStatesType> {
       return;
     }
     this.enablePrevious = exposePrevious;
+    this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
+      deviceConfig.exposePrevious = exposePrevious;
+    });
     this.logger?.log(
       `Previous button ${exposePrevious ? 'enabled' : 'disabled'}`,
     );
@@ -160,6 +170,13 @@ export class GoveeAccessory<States extends DeviceStatesType> {
       return;
     }
     this.showSegments = showSegments;
+    using(this.deviceConfig as RGBICLightDeviceConfig).do((deviceConfig) => {
+      if (deviceConfig === undefined) {
+        return;
+      }
+      deviceConfig.showSegments = showSegments;
+      this.deviceConfig = deviceConfig;
+    });
   }
 
   addLightEffect(effect: LightEffectConfig): boolean {
@@ -213,6 +230,12 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   set deviceConfig(deviceConfig: ConfigType<States>) {
+    this.enablePrevious = deviceConfig.exposePrevious;
+    this.ignore = deviceConfig.ignore;
+    this.debug = deviceConfig.debug;
+    if (deviceConfig instanceof RGBICLightDeviceConfig) {
+      this.showSegments = deviceConfig.showSegments;
+    }
     this.accessory.context = {
       initialized: this.accessory.context.initialized ?? {},
       deviceConfig: instanceToPlain(deviceConfig) as PluginDeviceConfig,
