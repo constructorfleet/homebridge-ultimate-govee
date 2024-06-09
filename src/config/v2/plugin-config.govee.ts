@@ -13,7 +13,6 @@ import { ControlChannels } from './control-channel.config';
 import { GoveeCredentials } from './credentials.config';
 import { RGBICLightDeviceConfig, RGBLightDeviceConfig } from './devices';
 import { DeviceConfig } from './devices/device.config';
-import { Logger } from '@nestjs/common';
 
 export const buildDeviceConfig = (
   value: PluginDeviceConfig,

@@ -225,6 +225,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       const state = device.state(stateName);
       if (state === undefined) {
         logger.error(`No characteristic handlers for state ${stateName}`);
+        logger.error(device.loggableState(device.id));
       }
 
       this.setProps(logger, goveeAccessory, service, handlers, state?.value);
