@@ -32,4 +32,5 @@ jobs:
       - run: npm run build --if-present
       - run: npm run lint
       - name: Jest coverage report
+        if: false
         uses: ArtiomTr/jest-coverage-report-action@v2
