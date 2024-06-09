@@ -59,7 +59,7 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
                 if (value !== true) {
                   return;
                 }
-                accessory.device.state(stateName)?.previousState(1);
+                accessory.device.state(stateName)?.previousState(0);
                 characteristic.updateValue(false);
               },
             },
