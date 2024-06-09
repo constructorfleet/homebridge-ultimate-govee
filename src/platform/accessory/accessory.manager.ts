@@ -2,8 +2,10 @@ import {
   AirQualityDevice,
   Device,
   DeviceStatesType,
+  DiyModeState,
   HumidifierDevice,
   HygrometerDevice,
+  LightEffectState,
   PurifierDevice,
   RGBICLightDevice,
   RGBLightDevice,
@@ -386,6 +388,40 @@ export class AccessoryManager {
     }
   }
 
+  private async waitForEffects(
+    state: DiyModeState | LightEffectState,
+    config?: Partial<{
+      delay: number | null;
+      interval: number;
+      maxIterations: number;
+    }>,
+  ) {
+    const delay = config?.delay === null ? null : config?.delay ?? 1000;
+    const interval = config?.interval ?? 1500;
+    const maxIterations = config?.maxIterations ?? 5;
+    if (delay !== null && delay > 0) {
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), delay));
+    }
+    let effectCount: number = state?.effects?.size ?? 0;
+    let iterations: number = 0;
+    let intervalHandle: NodeJS.Timeout;
+    await new Promise<void>((resolve) => {
+      intervalHandle = setInterval(() => {
+        const newCount = state?.effects?.size ?? 0;
+        if (newCount !== effectCount) {
+          iterations = 0;
+          effectCount = newCount;
+        } else if (iterations > maxIterations) {
+          iterations++;
+          clearInterval(intervalHandle);
+          resolve();
+        } else {
+          iterations++;
+        }
+      }, interval);
+    });
+  }
+
   async onDeviceDiscovered(device: Device) {
     this.logger.info(`Discovered Device ${device.id}`);
     const uuid = this.uuid(device.id);
@@ -403,33 +439,19 @@ export class AccessoryManager {
         accessory,
       ]);
     }
+    if (device instanceof RGBICLightDevice) {
+      const rgbicLightDevice = device as RGBICLightDevice;
+      await Promise.all([
+        this.waitForEffects(rgbicLightDevice.lightEffect!),
+        this.waitForEffects(rgbicLightDevice.diyEffect!),
+      ]);
+    }
+
     const goveeAccessory = this.buildGoveeAccessory(
       device,
       accessory,
       await this.configService.getDeviceConfiguration(device),
     );
-    if (device instanceof RGBICLightDevice) {
-      let interval: NodeJS.Timeout | undefined = undefined;
-      const rgbicLightDevice = device as RGBICLightDevice;
-      let effectCount: number =
-        rgbicLightDevice.lightEffect?.effects?.size ?? 0;
-      let iterations: number = 0;
-      await new Promise<void>((resolve) => {
-        interval = setInterval(() => {
-          const newCount = rgbicLightDevice.lightEffect?.effects?.size ?? 0;
-          if (newCount !== effectCount) {
-            iterations = 0;
-            effectCount = newCount;
-          } else if (iterations > 5) {
-            iterations++;
-            clearInterval(interval);
-            resolve();
-          } else {
-            iterations++;
-          }
-        }, 1000);
-      });
-    }
 
     this.updateQueue.add(goveeAccessory.device.id);
   }
