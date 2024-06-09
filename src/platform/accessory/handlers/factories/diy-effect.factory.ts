@@ -151,6 +151,20 @@ export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
   ) => {
+    if (accessory.device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
+      this.logger.warn({
+        device: {
+          id: accessory.device.id,
+          name: accessory.device.name,
+        },
+        enabled: {
+          subType,
+          isExposed: accessory?.diyEffects?.get(
+            getEffectCode(subType ?? 'uknown-unknown')?.code,
+          )?.isExposed,
+        },
+      });
+    }
     if (subType === undefined) {
       return false;
     }
