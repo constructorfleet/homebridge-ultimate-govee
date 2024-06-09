@@ -42,7 +42,7 @@ export abstract class SubServiceHandlerFactory<
   async for(
     accessory: GoveeAccessory<States>,
   ): Promise<SubServiceHandler<States>[]> {
-    const possibleSubTypes = this.possibleSubTypes(accessory.device);
+    const possibleSubTypes = this.possibleSubTypes(accessory);
     if (possibleSubTypes === undefined) {
       return [];
     }
@@ -66,7 +66,7 @@ export abstract class SubServiceHandlerFactory<
           this.serviceType,
           subType,
           this.name,
-          this.handlers(accessory.device, subType),
+          this.handlers(accessory, subType),
           this.isEnabled,
           this.isPrimary,
         );

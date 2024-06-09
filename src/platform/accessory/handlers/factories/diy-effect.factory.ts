@@ -1,6 +1,4 @@
 import {
-  DeltaMap,
-  Device,
   DiyEffect,
   DiyModeState,
   DiyModeStateName,
@@ -9,7 +7,7 @@ import {
 } from '@constructorfleet/ultimate-govee';
 import { Injectable } from '@nestjs/common';
 import { Characteristic, Service } from 'hap-nodejs';
-import { ConfigType, DiyEffectConfig } from '../../../../config';
+import { DiyEffectConfig } from '../../../../config';
 import { GoveeAccessory } from '../../govee.accessory';
 import { SubServiceHandlerFactory } from '../handler.factory';
 import { HandlerRegistry } from '../handler.registry';
@@ -21,41 +19,63 @@ import {
   ServiceType,
 } from '../handler.types';
 
+const diyPrefix = 'diy';
+
+const getSubType = (effect: DiyEffectConfig | DiyEffect): string =>
+  `${diyPrefix}-${effect.code}`;
+
+const getEffectCode = (subType: string) => {
+  const [effectType, code] = subType.split('-');
+  return {
+    effectType,
+    code: parseInt(code),
+  };
+};
+
 @HandlerRegistry.factoryFor(RGBICLightDevice)
 @Injectable()
 export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
   protected serviceType: ServiceType = Service.Switch;
   protected readonly isPrimary: boolean = false;
   protected handlers: ServiceCharacteristicHandlerFactory<RGBICLight> = (
-    device: Device<RGBICLight>,
+    accessory: GoveeAccessory<RGBICLight>,
     subType: string,
   ) => ({
     [DiyModeStateName]: [
       {
         characteristic: Characteristic.On,
-        updateValue: (value: DiyEffect, { device }) => {
-          const state = device.state<DiyModeState>(DiyModeStateName);
+        updateValue: (value: DiyEffect) => {
+          const { effectType, code } = getEffectCode(subType);
+          if (effectType !== diyPrefix) {
+            return undefined;
+          }
+          const state = accessory.device.state<DiyModeState>(DiyModeStateName);
           const activeCode = state?.activeEffectCode?.getValue();
           if (state === undefined || activeCode === undefined) {
             return undefined;
           }
-          return value?.code?.toString() === subType;
+          return value?.code === code;
         },
         onSet: (value) => {
+          const { effectType, code } = getEffectCode(subType);
+          if (effectType !== diyPrefix) {
+            return undefined;
+          }
           if (value === true) {
             return {
-              code: Number.parseInt(subType),
+              code,
             };
           }
         },
       },
       {
         characteristic: Characteristic.Name,
-        updateValue: (value: DiyEffect, { device, service }) => {
-          const effect = Array.from(
-            device.state<DiyModeState>(DiyModeStateName)?.effects?.values() ??
-              [],
-          ).find((effect) => effect.code?.toString() === subType);
+        updateValue: (_: DiyEffect, { accessory, service }) => {
+          const { effectType, code } = getEffectCode(subType);
+          if (effectType !== diyPrefix) {
+            return undefined;
+          }
+          const effect = accessory.diyEffects.get(code);
           if (effect === undefined || effect.name === undefined) {
             return;
           }
@@ -69,31 +89,37 @@ export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
   ) => {
-    const config: ConfigType<RGBICLight> = accessory.deviceConfig.getValue();
-    if (config === undefined || config.ignore) {
+    if (subType === undefined) {
       return false;
     }
-    if ('diy' in config) {
-      const enabledEffects =
-        Array.from((config.diy as DeltaMap<number, DiyEffectConfig>).values())
-          ?.filter((effect) => effect.enabled)
-          ?.map((e) => e.code.toString()) ?? [];
-      return enabledEffects.includes(subType ?? '');
+    const { effectType, code } = getEffectCode(subType);
+    if (accessory.isIgnored || effectType !== diyPrefix) {
+      return false;
     }
-    return false;
+    return accessory.diyEffects.get(code)?.isExposed === true;
   };
   protected possibleSubTypes: ServiceSubTypes<RGBICLight> = (
-    device: Device<RGBICLight>,
+    accessory: GoveeAccessory<RGBICLight>,
   ) => {
     return Array.from(
-      device.state<DiyModeState>(DiyModeStateName)?.effects?.values() ?? [],
+      accessory.device
+        .state<DiyModeState>(DiyModeStateName)
+        ?.effects?.values() ?? [],
     )
       .filter((effect) => effect?.code !== undefined)
-      .map((effect) => effect.code!.toString());
+      .map((effect) => getSubType(effect));
   };
   protected name: ServiceName<RGBICLight> = (
-    device: Device<RGBICLight>,
+    accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
-  ) =>
-    `${device.name} DIY ${Array.from(device.state<DiyModeState>(DiyModeStateName)?.effects?.values() ?? [])?.find((e) => e.code?.toString() === subType)?.name}`;
+  ) => {
+    if (subType === undefined) {
+      return '';
+    }
+    const { effectType, code } = getEffectCode(subType);
+    if (effectType !== diyPrefix) {
+      return '';
+    }
+    return accessory.diyEffects.get(code)?.name ?? '';
+  };
 }

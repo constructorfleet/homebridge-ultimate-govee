@@ -14,6 +14,7 @@ import {
 import { ServiceHandler } from '../service.handler';
 import { HandlerRegistry } from '../handler.registry';
 import { ColorRGB, hsvToRGB, rgbToHSV } from '../../../../common';
+import { GoveeAccessory } from '../../govee.accessory';
 
 @HandlerRegistry.forDevice(RGBLightDevice)
 export class LightBulbHandler extends ServiceHandler<RGBLight> {
@@ -122,11 +123,14 @@ export class LightStripHandler extends ServiceHandler<RGBICLight> {
         updateValue: (
           value,
           {
-            device,
+            accessory,
             characteristic,
-          }: { device: Device<RGBICLight>; characteristic: Characteristic },
+          }: {
+            accessory: GoveeAccessory<RGBICLight>;
+            characteristic: Characteristic;
+          },
         ) => {
-          const color = (device as Device<RGBICLight>)?.state(
+          const color = (accessory.device as Device<RGBICLight>)?.state(
             WholeColorModeStateName,
           )?.value;
           if (color === undefined) {

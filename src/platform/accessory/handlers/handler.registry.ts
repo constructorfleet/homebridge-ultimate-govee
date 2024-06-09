@@ -127,6 +127,7 @@ export class HandlerRegistry {
   async updateAccessoryHandlers<States extends DeviceStatesType>(
     accessory: GoveeAccessory<States>,
   ) {
+    console.log(`Updating handlers for ${accessory.name}`);
     (await this.for(accessory)).forEach((handler) => {
       if (
         handler.isPrimary ||
@@ -134,12 +135,9 @@ export class HandlerRegistry {
         handler.isEnabled(accessory, handler.subType)
       ) {
         handler.setup(accessory);
+      } else {
+        handler.tearDown(accessory);
       }
-      // if (handler.isEnabled(accessory, handler.subType)) {
-      //   handler.setup(accessory);
-      // } else {
-      //   handler.tearDown(accessory);
-      // }
     });
   }
 }

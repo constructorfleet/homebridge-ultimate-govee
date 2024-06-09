@@ -1,25 +1,36 @@
 import {
-  DeltaMap,
-  Device,
   LightEffect,
   LightEffectState,
   LightEffectStateName,
   RGBICLight,
   RGBICLightDevice,
 } from '@constructorfleet/ultimate-govee';
-import { SubServiceHandlerFactory } from '../handler.factory';
-import {
-  ServiceType,
-  ServiceCharacteristicHandlerFactory,
-  IsServiceEnabled,
-  ServiceSubTypes,
-  ServiceName,
-} from '../handler.types';
-import { Service, Characteristic } from 'hap-nodejs';
-import { ConfigType, LightEffectConfig } from '../../../../config';
 import { Injectable } from '@nestjs/common';
+import { Characteristic, Service } from 'hap-nodejs';
 import { GoveeAccessory } from '../../govee.accessory';
+import { SubServiceHandlerFactory } from '../handler.factory';
 import { HandlerRegistry } from '../handler.registry';
+import {
+  IsServiceEnabled,
+  ServiceCharacteristicHandlerFactory,
+  ServiceName,
+  ServiceSubTypes,
+  ServiceType,
+} from '../handler.types';
+import { LightEffectConfig } from '../../../../config';
+
+const lightPrefix = 'light';
+
+const getSubType = (effect: LightEffectConfig | LightEffect): string =>
+  `${lightPrefix}-${effect.code}`;
+
+const getEffectCode = (subType: string) => {
+  const [effectType, code] = subType.split('-');
+  return {
+    effectType,
+    code: parseInt(code),
+  };
+};
 
 @HandlerRegistry.factoryFor(RGBICLightDevice)
 @Injectable()
@@ -27,41 +38,50 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
   protected serviceType: ServiceType = Service.Switch;
   protected readonly isPrimary: boolean = false;
   protected handlers: ServiceCharacteristicHandlerFactory<RGBICLight> = (
-    device: Device<RGBICLight>,
+    accessory: GoveeAccessory<RGBICLight>,
     subType: string,
   ) => ({
     [LightEffectStateName]: [
       {
         characteristic: Characteristic.On,
-        updateValue: (value: LightEffect, { device }) => {
-          const state = device.state<LightEffectState>(LightEffectStateName);
+        updateValue: (value: LightEffect) => {
+          const { effectType, code } = getEffectCode(subType);
+          if (effectType !== lightPrefix) {
+            return undefined;
+          }
+          const state =
+            accessory.device.state<LightEffectState>(LightEffectStateName);
           const activeCode = state?.activeEffectCode?.getValue();
           if (state === undefined || activeCode === undefined) {
             return undefined;
           }
-          return value?.code?.toString() === subType;
+          return value?.code === code;
         },
         onSet: (value) => {
+          const { effectType, code } = getEffectCode(subType);
+          if (effectType !== lightPrefix) {
+            return undefined;
+          }
           if (value === true) {
             return {
-              code: Number.parseInt(subType),
+              code,
             };
           }
         },
       },
       {
         characteristic: Characteristic.Name,
-        updateValue: (value: LightEffect, { device, service }) => {
-          const effect = Array.from(
-            device
-              .state<LightEffectState>(LightEffectStateName)
-              ?.effects?.values() ?? [],
-          ).find((effect) => effect.code?.toString() === subType);
+        updateValue: (_: LightEffect, { accessory, service }) => {
+          const { effectType, code } = getEffectCode(subType);
+          if (effectType !== lightPrefix) {
+            return undefined;
+          }
+          const effect = accessory.lightEffects.get(code);
           if (effect === undefined || effect.name === undefined) {
-            return `${device.name} ${value.name}`;
+            return;
           }
           service.displayName = effect.name;
-          return `${device.name} ${effect.name}`;
+          return effect.name;
         },
       },
     ],
@@ -70,33 +90,37 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
   ) => {
-    const config: ConfigType<RGBICLight> = accessory.deviceConfig.getValue();
-    if (config === undefined || config.ignore) {
+    if (subType === undefined) {
       return false;
     }
-    if ('effects' in config) {
-      const enabledEffects = Array.from(
-        (config.effects as DeltaMap<number, LightEffectConfig>).values(),
-      )
-        ?.filter((effect) => effect.enabled)
-        ?.map((e) => e.code.toString());
-      return enabledEffects.includes(subType ?? '');
+    const { effectType, code } = getEffectCode(subType);
+    if (accessory.isIgnored || effectType !== lightPrefix) {
+      return false;
     }
-    return false;
+    return accessory.lightEffects.get(code)?.isExposed === true;
   };
   protected possibleSubTypes: ServiceSubTypes<RGBICLight> = (
-    device: Device<RGBICLight>,
+    accessory: GoveeAccessory<RGBICLight>,
   ) => {
     return Array.from(
-      device.state<LightEffectState>(LightEffectStateName)?.effects?.values() ??
-        [],
+      accessory.device
+        .state<LightEffectState>(LightEffectStateName)
+        ?.effects?.values() ?? [],
     )
       .filter((effect) => effect?.code !== undefined)
-      .map((effect) => effect.code!.toString());
+      .map((effect) => getSubType(effect));
   };
   protected name: ServiceName<RGBICLight> = (
-    device: Device<RGBICLight>,
+    accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
-  ) =>
-    `${device.name} ${Array.from(device.state<LightEffectState>(LightEffectStateName)?.effects?.values() ?? [])?.find((e) => e.code?.toString() === subType)?.name}`;
+  ) => {
+    if (subType === undefined) {
+      return '';
+    }
+    const { effectType, code } = getEffectCode(subType);
+    if (effectType !== lightPrefix) {
+      return '';
+    }
+    return accessory.lightEffects.get(code)?.name ?? '';
+  };
 }

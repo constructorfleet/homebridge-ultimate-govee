@@ -1,15 +1,11 @@
 import { DiyEffect, LightEffect } from '@constructorfleet/ultimate-govee';
-import {
-  Expose,
-  Transform,
-  instanceToPlain,
-  plainToInstance,
-} from 'class-transformer';
+import { Expose, Transform, instanceToPlain } from 'class-transformer';
+import { using } from '../../../common';
 import { DeviceConfig } from './device.config';
 
 export class LightEffectConfig {
   static from(effect: LightEffect): LightEffectConfig | undefined {
-    if (effect.code === undefined || effect.name === undefined) {
+    if (effect?.code === undefined || effect?.name === undefined) {
       return undefined;
     }
 
@@ -19,14 +15,12 @@ export class LightEffectConfig {
     config.enabled = false;
     return config;
   }
+
   @Expose({ name: 'name' })
   name!: string;
 
   @Expose({ name: 'code' })
   code!: number;
-
-  @Expose({ name: 'description' })
-  description?: string;
 
   @Expose({ name: 'enabled' })
   enabled!: boolean;
@@ -34,7 +28,7 @@ export class LightEffectConfig {
 
 export class DiyEffectConfig {
   static from(effect: DiyEffect): DiyEffectConfig | undefined {
-    if (effect.code === undefined || effect.name === undefined) {
+    if (effect?.code === undefined || effect?.name === undefined) {
       return undefined;
     }
 
@@ -44,6 +38,7 @@ export class DiyEffectConfig {
     config.enabled = false;
     return config;
   }
+
   @Expose({ name: 'name' })
   name!: string;
 
@@ -60,63 +55,73 @@ export class RGBLightDeviceConfig extends DeviceConfig {
 
   @Expose({ name: 'effects' })
   @Transform(
-    ({ value }: { value: Record<string, unknown>[] }) => {
-      if (value === undefined) {
-        return new Map<number, LightEffectConfig>();
-      }
-      const effectConfig = plainToInstance(LightEffectConfig, value);
-      return new Map<number, LightEffectConfig>(
-        effectConfig
-          .filter(
-            (effect) => effect.code !== undefined && effect.name !== undefined,
-          )
-          .map((effect) => [effect.code, effect]),
-      );
-    },
+    ({ value }: { value: Record<string, LightEffectConfig> }) =>
+      Object.values(value ?? {})
+        .filter((e) => !!e.code && !!e.name)
+        .map((e) => instanceToPlain(e)),
+    { toPlainOnly: true },
+  )
+  @Transform(
+    ({
+      value,
+    }: {
+      value?: { code?: number; name?: string; enabled?: boolean }[];
+    }) =>
+      value?.reduce(
+        (acc, cur) => {
+          if (cur.code === undefined || cur.name === undefined) {
+            return acc;
+          }
+
+          acc[cur.code] = using(new LightEffectConfig()).do((config) => {
+            config.code = cur.code!;
+            config.name = cur.name!;
+            config.enabled = cur.enabled === true;
+          });
+          return acc;
+        },
+        {} as Record<string, LightEffectConfig>,
+      ) ?? ({} as Record<string, LightEffectConfig>),
     {
       toClassOnly: true,
     },
   )
-  @Transform(
-    ({ value }: { value?: Map<number, LightEffectConfig> }) =>
-      Array.from(value?.values() ?? []).map((effect) =>
-        instanceToPlain(effect),
-      ),
-    {
-      toPlainOnly: true,
-    },
-  )
-  effects!: Map<number, LightEffectConfig>;
+  effects!: Record<number, LightEffectConfig>;
 
   @Expose({ name: 'diy' })
   @Transform(
-    ({ value }: { value: Record<string, unknown>[] }) => {
-      if (value === undefined) {
-        return new Map<number, DiyEffectConfig>();
-      }
-      const effectConfig = plainToInstance(DiyEffectConfig, value);
-      return new Map<number, DiyEffectConfig>(
-        effectConfig
-          .filter(
-            (effect) => effect.code === undefined || effect.name === undefined,
-          )
-          .map((effect) => [effect.code, effect]),
-      );
-    },
+    ({ value }: { value: Record<string, DiyEffectConfig> }) =>
+      Object.values(value ?? {})
+        .filter((e) => !!e.code && !!e.name)
+        .map((e) => instanceToPlain(e)),
+    { toPlainOnly: true },
+  )
+  @Transform(
+    ({
+      value,
+    }: {
+      value?: { code?: number; name?: string; enabled?: boolean }[];
+    }) =>
+      value?.reduce(
+        (acc, cur) => {
+          if (cur.code === undefined || cur.name === undefined) {
+            return acc;
+          }
+
+          acc[cur.code] = using(new DiyEffectConfig()).do((config) => {
+            config.code = cur.code!;
+            config.name = cur.name!;
+            config.enabled = cur.enabled === true;
+          });
+          return acc;
+        },
+        {} as Record<string, DiyEffectConfig>,
+      ) ?? ({} as Record<string, DiyEffect>),
     {
       toClassOnly: true,
     },
   )
-  @Transform(
-    ({ value }: { value?: Map<number, DiyEffectConfig> }) =>
-      Array.from(value?.values() ?? []).map((effect) =>
-        instanceToPlain(effect),
-      ),
-    {
-      toPlainOnly: true,
-    },
-  )
-  diy!: Map<number, DiyEffectConfig>;
+  diy!: Record<number, DiyEffectConfig>;
 }
 
 export class RGBICLightDeviceConfig extends RGBLightDeviceConfig {

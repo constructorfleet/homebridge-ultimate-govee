@@ -103,8 +103,34 @@
                   },
                   "enabled": {
                     "type": "boolean",
-                    "title": "Enable Light Effect",
-                    "default": false
+                    "title": "Enable Light Effect"
+                  }
+                }
+              },
+              "condition": {
+                "functionBody": "return model.deviceConfigs[arrayIndices]._type !== 'device;"
+              }
+            },
+            "diy": {
+              "type": "array",
+              "removeable": false,
+              "addable": false,
+              "expandable": true,
+              "expanded": false,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "title": "Effect Name"
+                  },
+                  "code": {
+                    "type": "hidden",
+                    "title": "Effect Code"
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "title": "Enable Light Effect"
                   }
                 }
               },

@@ -19,8 +19,9 @@ import { InjectHomebridgeApi } from '../accessory.const';
 import { Subscription } from 'rxjs';
 import { GoveeAccessory } from '../govee.accessory';
 
-const defaultName = <States extends DeviceStatesType>(device: Device<States>) =>
-  device.name;
+const defaultName = <States extends DeviceStatesType>(
+  accessory: GoveeAccessory<States>,
+) => accessory.name;
 const defaultEnabled = () => true;
 
 export const getServiceIdentifier = (
@@ -79,7 +80,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
 
   private setProps<StateType, ServiceType extends WithUUID<Service>>(
     logger: Logger,
-    device: Device<States>,
+    accessory: GoveeAccessory<States>,
     service: ServiceType,
     handlers:
       | Optional<
@@ -98,7 +99,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         const charProps =
           value !== undefined
             ? handler.configure(value, {
-                device,
+                accessory,
                 service,
                 characteristic: char,
               })
@@ -114,7 +115,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
 
   private doUpdate<StateType, ServiceType extends WithUUID<Service>>(
     logger: Logger,
-    device: Device<States>,
+    accessory: GoveeAccessory<States>,
     service: ServiceType,
     handlers:
       | CharacteristicHandler<WithUUID<Type<Characteristic>>, unknown>[]
@@ -126,7 +127,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       const charValue =
         value !== undefined
           ? handler.updateValue(value, {
-              device,
+              accessory,
               service,
               characteristic: char,
             })
@@ -164,9 +165,6 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
   }
 
   setup(goveeAccessory: GoveeAccessory<States>): Service | undefined {
-    if (this.serviceType === Service.Switch) {
-      console.dir(this.name);
-    }
     const { accessory, device } = goveeAccessory;
     const initializedKey = `${this.serviceType.UUID}--${this.subType === undefined ? '' : this.subType}`;
     const logger = new Logger(`${ServiceHandler.name} - ${device.name}`);
@@ -189,7 +187,10 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         this.subType === service.subtype,
     );
     if (newService === undefined) {
-      newService = new this.serviceType(this.name ?? device.name, this.subType);
+      newService = new this.serviceType(
+        this.name ? this.name(goveeAccessory, this.subType) : device.name,
+        this.subType,
+      );
       accessory.addService(newService);
     }
     const service = newService!;
@@ -203,10 +204,10 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         logger.error(`No characteristic handlers for state ${stateName}`);
       }
 
-      this.setProps(logger, device, service, handlers, state?.value);
+      this.setProps(logger, goveeAccessory, service, handlers, state?.value);
       const sub = state?.subscribe((value) => {
-        this.setProps(logger, device, service, handlers, value);
-        this.doUpdate(logger, device, service, handlers, value);
+        this.setProps(logger, goveeAccessory, service, handlers, value);
+        this.doUpdate(logger, goveeAccessory, service, handlers, value);
       });
       if (sub !== undefined) {
         subscriptions.push(sub);
@@ -222,7 +223,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
             const stateValue =
               value !== undefined
                 ? handler.onSet!(value, {
-                    device,
+                    accessory: goveeAccessory,
                     service,
                     characteristic: char,
                   })

@@ -84,10 +84,10 @@ export class IceMakerHeaderCoolerServiceHandler extends ServiceHandler<
     [NuggetSizeStateName]: [
       {
         characteristic: Characteristic.RotationSpeed,
-        updateValue: (value, { device }) =>
-          toSpeed(device as Device & IceMaker, value),
-        onSet: (value, { device }) =>
-          toSize(device as Device & IceMaker, value as number),
+        updateValue: (value, { accessory }) =>
+          toSpeed(accessory.device as Device & IceMaker, value),
+        onSet: (value, { accessory }) =>
+          toSize(accessory.device as Device & IceMaker, value as number),
       },
     ],
     [TemperatureStateName]: [

@@ -1,8 +1,12 @@
 import {
-  DeltaMap,
   Device,
   DeviceStatesType,
-  PartialBehaviorSubject,
+  DiyModeState,
+  DiyModeStateName,
+  LightEffectState,
+  LightEffectStateName,
+  RGBICLightDevice,
+  RGBLightDevice,
 } from '@constructorfleet/ultimate-govee';
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -12,21 +16,39 @@ import { FSWatcher, existsSync, realpathSync, watch } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { Subscription } from 'rxjs';
+import { using } from '../common';
 import {
+  AddDiyEffectEvent,
+  AddLightEffectEvent,
+  DebugDeviceChangedEvent,
+  DiyEffectChangedEvent,
   DiyEffectDiscoveredEvent,
   DiyEffectRemovedEvent,
+  ExposeDiyEffectChangedEvent,
+  ExposeLightEffectChangedEvent,
+  ExposePreviousDeviceChanged,
+  IgnoreDeviceChangedEvent,
+  LightEffectChangedEvent,
   LightEffectDiscoveredEvent,
   LightEffectRemovedEvent,
+  NameDeviceChangedEvent,
+  NameDiyEffectChangedEvent,
+  NameLightEffectChangedEvent,
+  RemoveDiyEffectEvent,
+  RemoveLightEffectEvent,
 } from '../events';
+import { BaseEvent } from '../events/base.event';
 import { PLATFORM_NAME } from '../settings';
 import { InjectConfig, InjectConfigFilePath } from './plugin-config.providers';
 import { ConfigType, PluginConfig } from './plugin-config.types';
 import {
+  DeviceConfig,
   DiyEffectConfig,
   LightEffectConfig,
+  RGBICLightDeviceConfig,
   RGBLightDeviceConfig,
 } from './v2/devices';
-import { GoveePluginConfig, configFromDevice } from './v2/plugin-config.govee';
+import { GoveePluginConfig } from './v2/plugin-config.govee';
 
 @Injectable()
 export class PluginConfigService implements OnModuleDestroy {
@@ -35,14 +57,10 @@ export class PluginConfigService implements OnModuleDestroy {
   private readonly configDirectory: string;
   private readonly fileLock: Lock<void> = new Lock<void>();
   private readonly configLock: Lock<void> = new Lock<void>();
-  private readonly deviceConfigs: DeltaMap<
-    string,
-    PartialBehaviorSubject<ConfigType<DeviceStatesType>>
-  > = new DeltaMap();
   private readonly subscriptions: Subscription[] = [];
   private debouncer?: NodeJS.Timeout = undefined;
   private fsWatcher?: FSWatcher = undefined;
-  private interval?: NodeJS.Timeout;
+  private interval?: NodeJS.Timeout = undefined;
 
   get pluginConfig(): GoveePluginConfig {
     return this.config;
@@ -54,21 +72,7 @@ export class PluginConfigService implements OnModuleDestroy {
     @InjectConfig
     private readonly config: GoveePluginConfig,
   ) {
-    Object.entries(config.deviceConfigs).forEach(([id, deviceConfig]) => {
-      const configSubject = new PartialBehaviorSubject(deviceConfig);
-      configSubject.subscribe((config) =>
-        this.deviceConfigs.set(config.id, configSubject),
-      );
-      this.deviceConfigs.set(id, configSubject);
-    });
-    this.deviceConfigs.delta$.subscribe(
-      () =>
-        (this.config.deviceConfigs = Object.fromEntries(
-          Array.from(this.deviceConfigs.values())
-            .map((cfg) => cfg.value)
-            .map((cfg) => [cfg.id, cfg]),
-        )),
-    );
+    setInterval(() => Logger.flush(), 1000);
     this.configFilePath = realpathSync(configFilePath);
     this.configDirectory = dirname(realpathSync(this.configFilePath));
     this.watchForChanges();
@@ -78,30 +82,74 @@ export class PluginConfigService implements OnModuleDestroy {
     async: true,
     nextTick: true,
   })
-  async onLightEffectDiscovered(
-    event: LightEffectDiscoveredEvent<DeviceStatesType>,
-  ) {
-    if (event.effect.code === undefined || event.effect.name === undefined) {
+  async onLightEffectDiscovered(event: LightEffectDiscoveredEvent<any>) {
+    if (
+      event.device?.id === undefined ||
+      event.effect?.code === undefined ||
+      event.effect?.name === undefined
+    ) {
       return;
     }
     await this.configLock.acquire();
     try {
-      const deviceConfig: PartialBehaviorSubject<RGBLightDeviceConfig> =
-        (this.deviceConfigs.get(event.device.id) ??
-          this.getDeviceConfiguration(
-            event.device,
-          )) as unknown as PartialBehaviorSubject<RGBLightDeviceConfig>;
-      const effects: Map<number, LightEffectConfig> =
-        deviceConfig.value.effects ?? new Map();
-      if (!effects.has(event.effect.code)) {
-        effects.set(event.effect.code, LightEffectConfig.from(event.effect)!);
-        deviceConfig.partialNext({
-          effects,
-        });
-        this.resumeWriteInterval();
+      let deviceConfig = this.config.deviceConfigs[event.device.id];
+      if (!deviceConfig) {
+        deviceConfig = await this.configFromDevice(event.device);
       }
+      if (deviceConfig instanceof RGBLightDeviceConfig) {
+        const events: LightEffectChangedEvent[] = [];
+        let effect: LightEffectConfig | undefined =
+          deviceConfig.effects[event.effect.code];
+        if (!effect) {
+          effect = LightEffectConfig.from(effect);
+          if (effect === undefined) {
+            return;
+          }
+          events.push(
+            new AddLightEffectEvent(event.device.id, {
+              code: effect.code,
+              name: effect.name,
+              enabled: effect!.enabled,
+            }),
+          );
+        } else {
+          events.push(
+            new NameLightEffectChangedEvent(
+              event.device.id,
+              effect.code,
+              effect.name,
+            ),
+            new ExposeLightEffectChangedEvent(
+              event.device.id,
+              effect.code,
+              effect.enabled,
+            ),
+          );
+        }
+        await Promise.all(
+          events.map(async (event) => await event.emit(this.eventEmitter)),
+        );
+
+        deviceConfig.effects[event.effect.code] = effect;
+        if (deviceConfig.id === '5F:D3:7C:A6:B0:4A:17:8C') {
+          this.logger.warn(
+            JSON.stringify({
+              device: {
+                id: deviceConfig.id,
+                name: deviceConfig.name,
+              },
+              effect,
+            }),
+          );
+        }
+      }
+
+      this.config.deviceConfigs[event.device.id] = deviceConfig;
+    } catch (error) {
+      this.logger.error(`onLightEffectDiscovered: ${error}`, error);
     } finally {
       this.configLock.release();
+      this.resumeWriteInterval();
     }
   }
 
@@ -110,27 +158,27 @@ export class PluginConfigService implements OnModuleDestroy {
     nextTick: true,
   })
   async onLightEffectRemoved(event: LightEffectRemovedEvent<DeviceStatesType>) {
-    if (event.effect.code === undefined) {
+    if (event.device?.id === undefined || event.effect?.code === undefined) {
       return;
     }
     await this.configLock.acquire();
     try {
-      const deviceConfig: PartialBehaviorSubject<RGBLightDeviceConfig> =
-        (this.deviceConfigs.get(event.device.id) ??
-          this.getDeviceConfiguration(
-            event.device,
-          )) as unknown as PartialBehaviorSubject<RGBLightDeviceConfig>;
-      const effects: Map<number, DiyEffectConfig> =
-        deviceConfig.value.effects ?? new Map();
-      if (effects.has(event.effect.code)) {
-        effects.delete(event.effect.code);
-        deviceConfig.partialNext({
-          effects: effects,
-        });
-        this.resumeWriteInterval();
+      let deviceConfig = this.config.deviceConfigs[event.device.id];
+      if (!deviceConfig) {
+        deviceConfig = await this.configFromDevice(event.device);
       }
+      if (deviceConfig instanceof RGBLightDeviceConfig) {
+        delete deviceConfig.effects[event.effect.code];
+      }
+      this.config.deviceConfigs[event.device.id] = deviceConfig;
+      await new RemoveLightEffectEvent(event.device.id, event.effect.code).emit(
+        this.eventEmitter,
+      );
+    } catch (error) {
+      this.logger.error(`onLightEffectRemoved: ${error}`, error);
     } finally {
       this.configLock.release();
+      this.resumeWriteInterval();
     }
   }
 
@@ -141,27 +189,60 @@ export class PluginConfigService implements OnModuleDestroy {
   async onDiyEffectDiscovered(
     event: DiyEffectDiscoveredEvent<DeviceStatesType>,
   ) {
-    if (event.effect.code === undefined || event.effect.name === undefined) {
+    if (
+      event.device?.id === undefined ||
+      event.effect?.code === undefined ||
+      event.effect?.name === undefined
+    ) {
       return;
     }
     await this.configLock.acquire();
     try {
-      const deviceConfig: PartialBehaviorSubject<RGBLightDeviceConfig> =
-        (this.deviceConfigs.get(event.device.id) ??
-          this.getDeviceConfiguration(
-            event.device,
-          )) as unknown as PartialBehaviorSubject<RGBLightDeviceConfig>;
-      const diy: Map<number, DiyEffectConfig> =
-        deviceConfig.value.diy ?? new Map();
-      if (!diy.has(event.effect.code)) {
-        diy.set(event.effect.code, DiyEffectConfig.from(event.effect)!);
-        deviceConfig.partialNext({
-          diy,
-        });
-        this.resumeWriteInterval();
+      let deviceConfig = this.config.deviceConfigs[event.device.id];
+      if (!deviceConfig) {
+        deviceConfig = await this.configFromDevice(event.device);
       }
+      if (deviceConfig instanceof RGBLightDeviceConfig) {
+        const events: DiyEffectChangedEvent[] = [];
+        let effect: DiyEffectConfig | undefined =
+          deviceConfig.diy[event.effect.code];
+        if (!effect) {
+          effect = DiyEffectConfig.from(event.effect);
+          if (effect === undefined) {
+            return;
+          }
+          events.push(
+            new AddDiyEffectEvent(event.device.id, {
+              code: effect.code,
+              name: effect.name,
+              enabled: effect!.enabled,
+            }),
+          );
+        } else {
+          events.push(
+            new NameDiyEffectChangedEvent(
+              event.device.id,
+              effect.code,
+              effect.name,
+            ),
+            new ExposeDiyEffectChangedEvent(
+              event.device.id,
+              effect.code,
+              effect.enabled,
+            ),
+          );
+        }
+        deviceConfig.diy[event.effect.code] = effect;
+        await Promise.all(
+          events.map(async (event) => await event.emit(this.eventEmitter)),
+        );
+      }
+      this.config.deviceConfigs[event.device.id] = deviceConfig;
+    } catch (error) {
+      this.logger.error(`onDiyEffectDiscovered: ${error}`, error);
     } finally {
       this.configLock.release();
+      this.resumeWriteInterval();
     }
   }
 
@@ -170,31 +251,32 @@ export class PluginConfigService implements OnModuleDestroy {
     nextTick: true,
   })
   async onDiyEffectRemoved(event: DiyEffectRemovedEvent<DeviceStatesType>) {
-    if (event.effect.code === undefined) {
+    if (event.device?.id === undefined || event.effect?.code === undefined) {
       return;
     }
     await this.configLock.acquire();
     try {
-      const deviceConfig: PartialBehaviorSubject<RGBLightDeviceConfig> =
-        (this.deviceConfigs.get(event.device.id) ??
-          this.getDeviceConfiguration(
-            event.device,
-          )) as unknown as PartialBehaviorSubject<RGBLightDeviceConfig>;
-      const diy: Map<number, DiyEffectConfig> =
-        deviceConfig.value.diy ?? new Map();
-      if (!diy.has(event.effect.code)) {
-        diy.set(event.effect.code, DiyEffectConfig.from(event.effect)!);
-        deviceConfig.partialNext({
-          diy,
-        });
-        this.resumeWriteInterval();
+      const deviceConfig = this.config.deviceConfigs[event.device.id];
+      if (!deviceConfig) {
+        return;
       }
+      if (deviceConfig instanceof RGBLightDeviceConfig) {
+        delete deviceConfig.diy[event.effect.code];
+      }
+      this.config.deviceConfigs[event.device.id] = deviceConfig;
+      await new RemoveDiyEffectEvent(event.device.id, event.effect.code).emit(
+        this.eventEmitter,
+      );
+    } catch (error) {
+      this.logger.error(`onDiyEffectRemoved: ${error}`, error);
     } finally {
       this.configLock.release();
+      this.resumeWriteInterval();
     }
   }
 
   onModuleDestroy() {
+    Logger.flush();
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.pauseWriteInterval();
     this.stopWatching();
@@ -208,7 +290,7 @@ export class PluginConfigService implements OnModuleDestroy {
   }
 
   resumeWriteInterval() {
-    if (this.interval) {
+    if (this.interval !== undefined) {
       return;
     }
     this.interval = setInterval(
@@ -253,10 +335,24 @@ export class PluginConfigService implements OnModuleDestroy {
     );
   }
 
-  private async reloadConfig(): Promise<PluginConfig | undefined> {
+  private async reloadConfig() {
     this.stopWatching();
     await this.fileLock.acquire();
-    this.logger.log('RELOADING CONFIG');
+    this.logger.log('Reloading configuration from disk...');
+    try {
+      await this.loadConfigFromFile();
+    } finally {
+      this.fileLock.release();
+      this.watchForChanges();
+    }
+  }
+
+  private async writeConfig() {
+    this.pauseWriteInterval();
+    this.stopWatching();
+    await this.fileLock.acquire();
+    this.logger.log('Writing updated configuration do disk...');
+    await this.loadConfigFromFile();
     try {
       const data = await readFile(this.configFilePath, { encoding: 'utf8' });
       const config = JSON.parse(data);
@@ -264,13 +360,61 @@ export class PluginConfigService implements OnModuleDestroy {
         return;
       }
 
-      const pluginConfig = config.platforms.find(
+      const index = config.platforms.findIndex(
         (platformConfig) => platformConfig.platform === PLATFORM_NAME,
       );
-      if (pluginConfig === undefined) {
-        return;
+      this.logger.warn(
+        JSON.stringify(
+          {
+            device: {
+              id: this.config.deviceConfigs['5F:D3:7C:A6:B0:4A:17:8C']?.id,
+              name: this.config.deviceConfigs['5F:D3:7C:A6:B0:4A:17:8C']?.name,
+            },
+            effects: (
+              this.config.deviceConfigs[
+                '5F:D3:7C:A6:B0:4A:17:8C'
+              ] as RGBICLightDeviceConfig
+            )?.effects,
+          },
+          null,
+          2,
+        ),
+      );
+      const pluginConfig = instanceToPlain(this.config) as PluginConfig;
+
+      if (index < 0) {
+        config.platforms.push(pluginConfig);
+      } else {
+        config.platforms[index] = pluginConfig;
       }
-      const goveeConfig = plainToInstance(GoveePluginConfig, pluginConfig);
+
+      await writeFile(this.configFilePath, JSON.stringify(config, null, 2));
+    } finally {
+      this.fileLock.release();
+      this.watchForChanges();
+    }
+  }
+
+  private async loadConfigFromFile() {
+    await writeFile(
+      `config.loadFromFile.pre.${new Date().toISOString()}.json`,
+      JSON.stringify(this.config, null, 2),
+    );
+    const data = await readFile(this.configFilePath, { encoding: 'utf8' });
+    const config = JSON.parse(data);
+    if (!config.platforms) {
+      return;
+    }
+
+    const pluginConfig = config.platforms.find(
+      (platformConfig) => platformConfig.platform === PLATFORM_NAME,
+    );
+    if (pluginConfig === undefined) {
+      return;
+    }
+    const goveeConfig = plainToInstance(GoveePluginConfig, pluginConfig);
+    await this.configLock.acquire();
+    try {
       if (this.config.controlChannels.ble !== goveeConfig.controlChannels.ble) {
         this.config.controlChannels.ble = goveeConfig.controlChannels.ble;
       }
@@ -287,79 +431,258 @@ export class PluginConfigService implements OnModuleDestroy {
       ) {
         this.config.credentials.password = goveeConfig.credentials.password;
       }
-      Object.entries(goveeConfig.deviceConfigs).forEach(
-        ([deviceId, newDeviceConfig]) => {
-          if (this.deviceConfigs.has(deviceId)) {
-            this.deviceConfigs.get(deviceId)?.next(newDeviceConfig);
-          } else {
-            this.deviceConfigs.set(
-              deviceId,
-              new PartialBehaviorSubject(newDeviceConfig),
-            );
-          }
-        },
-      );
+      if (!this.config.deviceConfigs) {
+        this.config.deviceConfigs = {};
+      }
 
-      this.config.deviceConfigs = Object.fromEntries(
-        Array.from(this.deviceConfigs.values())
-          .map((cfg) => cfg.value)
-          .map((cfg) => [cfg.id, cfg]),
-      );
+      Object.entries(this.config.deviceConfigs).forEach(async ([id, cfg]) => {
+        const events: BaseEvent[] = [];
+        const deviceConfig = goveeConfig.deviceConfigs[id];
+        if (!deviceConfig) {
+          return;
+        }
+        cfg.debug = deviceConfig.debug;
+        cfg.name = deviceConfig.name;
+        cfg.exposePrevious = deviceConfig.exposePrevious;
+        cfg.ignore = deviceConfig.ignore;
+        events.push(
+          new DebugDeviceChangedEvent(cfg.id, cfg.debug),
+          new ExposePreviousDeviceChanged(cfg.id, cfg.exposePrevious),
+          new IgnoreDeviceChangedEvent(cfg.id, cfg.ignore),
+        );
+        if (cfg.name !== undefined) {
+          events.push(new NameDeviceChangedEvent(cfg.id, cfg.name!));
+        }
+        if (
+          cfg instanceof RGBICLightDeviceConfig &&
+          deviceConfig instanceof RGBICLightDeviceConfig
+        ) {
+          cfg.showSegments = deviceConfig.showSegments;
+        }
+        if (
+          cfg instanceof RGBLightDeviceConfig &&
+          deviceConfig instanceof RGBLightDeviceConfig
+        ) {
+          Object.values(cfg.effects)
+            .map((effectConfig) => {
+              if (cfg.id === '5F:D3:7C:A6:B0:4A:17:8C') {
+                this.logger.warn(
+                  JSON.stringify({
+                    device: {
+                      id: cfg.id,
+                      name: cfg.name,
+                    },
+                    effect: effectConfig,
+                  }),
+                );
+              }
+              if (effectConfig?.code === undefined) {
+                return effectConfig;
+              }
+              const effectCfg = deviceConfig.effects[effectConfig.code];
+              if (!effectCfg) {
+                return effectConfig;
+              }
+              effectCfg.name = effectConfig.name;
+              effectCfg.enabled = effectConfig.enabled === true;
+              effectCfg.code = effectConfig.code;
+              return effectCfg;
+            })
+            .forEach((effectConfig) => {
+              if (effectConfig?.code === undefined) {
+                return;
+              }
+              cfg.effects[effectConfig.code] = effectConfig;
+              events.push(
+                new ExposeLightEffectChangedEvent(
+                  cfg.id,
+                  effectConfig.code,
+                  effectConfig.enabled,
+                ),
+                new NameLightEffectChangedEvent(
+                  cfg.id,
+                  effectConfig.code,
+                  effectConfig.name,
+                ),
+              );
+            });
+          Object.values(cfg.diy)
+            .map((effectConfig) => {
+              if (cfg.id === '5F:D3:7C:A6:B0:4A:17:8C') {
+                this.logger.warn(
+                  JSON.stringify({
+                    device: {
+                      id: cfg.id,
+                      name: cfg.name,
+                    },
+                    diy: effectConfig,
+                  }),
+                );
+              }
+              if (effectConfig?.code === undefined) {
+                return effectConfig;
+              }
+              const effectCfg = deviceConfig.diy[effectConfig.code];
+              if (!effectCfg) {
+                return effectConfig;
+              }
+              effectCfg.name = effectConfig.name;
+              effectCfg.enabled = effectConfig.enabled === true;
+              effectCfg.code = effectConfig.code;
+              return effectCfg;
+            })
+            .forEach((effectConfig) => {
+              if (effectConfig?.code === undefined) {
+                return;
+              }
+              cfg.diy[effectConfig.code] = effectConfig;
+              events.push(
+                new ExposeDiyEffectChangedEvent(
+                  cfg.id,
+                  effectConfig.code,
+                  effectConfig.enabled,
+                ),
+                new NameDiyEffectChangedEvent(
+                  cfg.id,
+                  effectConfig.code,
+                  effectConfig.name,
+                ),
+              );
+            });
+
+          await Promise.all(
+            events.map((event) => event.emit(this.eventEmitter)),
+          );
+        }
+        this.config.deviceConfigs[id] = cfg;
+      });
     } finally {
-      this.watchForChanges();
-      this.fileLock.release();
+      this.configLock.release();
     }
   }
 
-  private async writeConfig() {
-    this.pauseWriteInterval();
-    await this.fileLock.acquire();
-    this.stopWatching();
-    this.logger.log('WRITING CONFIG');
-    try {
-      const data = await readFile(this.configFilePath, { encoding: 'utf8' });
-      const config = JSON.parse(data);
-      if (!config.platforms) {
-        return;
-      }
-
-      const pluginConfig = instanceToPlain(this.config) as PluginConfig;
-      const index = config.platforms.findIndex(
-        (platformConfig) => platformConfig.platform === PLATFORM_NAME,
-      );
-      this.config.deviceConfigs = Object.fromEntries(
-        Array.from(this.deviceConfigs.values())
-          .map((cfg) => cfg.value)
-          .map((cfg) => [cfg.id, cfg]),
-      );
-      if (index < 0) {
-        config.platforms.push(pluginConfig);
-      } else {
-        config.platforms[index] = pluginConfig;
-      }
-      await writeFile(this.configFilePath, JSON.stringify(config, null, 2));
-    } finally {
-      this.watchForChanges();
-      this.fileLock.release();
-    }
-  }
-
-  getDeviceConfiguration<
+  private async configFromDevice<
     States extends DeviceStatesType,
     T extends Device<States>,
-  >(device: T): PartialBehaviorSubject<ConfigType<States>> {
-    if (!this.deviceConfigs.has(device.id)) {
-      const config = new PartialBehaviorSubject(
-        configFromDevice<States, T>(device, this.eventEmitter),
-      );
-      this.deviceConfigs.set(device.id, config);
+  >(device: T): Promise<ConfigType<States>> {
+    const config: ConfigType<States> =
+      device instanceof RGBICLightDevice
+        ? new RGBICLightDeviceConfig()
+        : device instanceof RGBLightDevice
+          ? new RGBLightDeviceConfig()
+          : new DeviceConfig();
+    config.id = device.id;
+    config.name = device.name;
+    config.type =
+      device instanceof RGBICLightDevice
+        ? 'rgbic'
+        : device instanceof RGBLightDevice
+          ? 'rgb'
+          : 'device';
 
-      this.resumeWriteInterval();
+    if (device instanceof RGBICLightDevice) {
+      const lightDevice: RGBICLightDevice = device;
+      const lightEffectState = lightDevice.lightEffect;
+      const diyEffectState = lightDevice.diyEffect;
+      const lightEffects = Array.from(
+        lightEffectState?.effects.values() ?? [],
+      ).filter(
+        (effect) => effect?.code !== undefined && effect?.name !== undefined,
+      );
+      const diyEffects = Array.from(
+        diyEffectState?.effects.values() ?? [],
+      ).filter(
+        (effect) => effect?.code !== undefined && effect?.name !== undefined,
+      );
+      const lightConfig = config as RGBICLightDeviceConfig;
+      lightConfig.effects = Object.fromEntries(
+        lightEffects.map((effect) => [
+          effect.code!,
+          LightEffectConfig.from(effect)!,
+        ]),
+      );
+      lightConfig.diy = Object.fromEntries(
+        diyEffects.map((effect) => [
+          effect.code!,
+          DiyEffectConfig.from(effect)!,
+        ]),
+      );
+      await Promise.all([
+        ...lightEffects.map(
+          async (effect) =>
+            await new LightEffectDiscoveredEvent(device, effect).emit(
+              this.eventEmitter,
+            ),
+        ),
+        ...diyEffects.map(
+          async (effect) =>
+            await new DiyEffectDiscoveredEvent(device, effect).emit(
+              this.eventEmitter,
+            ),
+        ),
+      ]);
+      return lightConfig;
     }
 
-    const config = this.deviceConfigs.get(device.id)! as PartialBehaviorSubject<
-      ConfigType<States>
-    >;
+    return config;
+  }
+
+  async getDeviceConfiguration<
+    States extends DeviceStatesType,
+    T extends Device<States>,
+  >(device: T): Promise<ConfigType<States>> {
+    using(device.state<LightEffectState>(LightEffectStateName)).do(
+      (lightEffectState) => {
+        if (lightEffectState == undefined) {
+          return;
+        }
+        lightEffectState.effects.delta$.subscribe(async (delta) => {
+          await Promise.all([
+            ...Array.from(delta.added.values()).map(
+              async (effect) =>
+                await new LightEffectDiscoveredEvent(device, effect).emit(
+                  this.eventEmitter,
+                ),
+            ),
+            ...Array.from(delta.deleted.values()).map(
+              async (effect) =>
+                await new LightEffectRemovedEvent(device, effect).emit(
+                  this.eventEmitter,
+                ),
+            ),
+          ]);
+        });
+      },
+    );
+    using(device.state<DiyModeState>(DiyModeStateName)).do((diyEffectState) => {
+      if (diyEffectState == undefined) {
+        return;
+      }
+      diyEffectState.effects.delta$.subscribe(async (delta) => {
+        await Promise.all([
+          ...Array.from(delta.added.values()).map(
+            async (effect) =>
+              await new DiyEffectDiscoveredEvent(device, effect).emit(
+                this.eventEmitter,
+              ),
+          ),
+          ...Array.from(delta.deleted.values()).map(
+            async (effect) =>
+              await new DiyEffectRemovedEvent(device, effect).emit(
+                this.eventEmitter,
+              ),
+          ),
+        ]);
+      });
+    });
+    let config: ConfigType<States> = this.config.deviceConfigs[device.id];
+    if (!config) {
+      config = await this.configFromDevice<States, T>(device);
+      this.config.deviceConfigs[device.id] = config;
+    }
+
+    this.resumeWriteInterval();
+
     return config;
   }
 }
