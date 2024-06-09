@@ -19,7 +19,7 @@ export class PlatformLogger extends ConsoleLogger {
     context = '',
     logLevel: LogLevel = 'log',
   ) {
-    if (logLevel === 'verbose' && process.env.DEV !== 'true') {
+    if (['verbose', 'debug'].includes(logLevel) && process.env.DEV !== 'true') {
       return;
     }
     messages.forEach((message) => {

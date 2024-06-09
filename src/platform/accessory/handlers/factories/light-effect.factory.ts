@@ -170,6 +170,7 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     if (accessory.isIgnored || effectType !== lightPrefix) {
       return false;
     }
+
     return accessory.lightEffects.get(code)?.isExposed === true;
   };
   protected possibleSubTypes: ServiceSubTypes<RGBICLight> = (
