@@ -60,7 +60,7 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
                   return;
                 }
                 this.logger.warn(
-                  accessory.device.state(stateName)?.previousState(0),
+                  accessory.device.state(stateName)?.previousState(1),
                 );
                 setTimeout(() => characteristic.updateValue(false), 1000);
               },
