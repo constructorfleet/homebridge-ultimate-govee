@@ -13,7 +13,7 @@ import {
 } from '@constructorfleet/ultimate-govee';
 import { Injectable } from '@nestjs/common';
 import { Characteristic, Service } from 'hap-nodejs';
-import { DiyEffectConfig } from '../../../../config';
+import { DiyEffectConfig, RGBLightDeviceConfig } from '../../../../config';
 import { GoveeAccessory } from '../../govee.accessory';
 import { SubServiceHandlerFactory } from '../handler.factory';
 import { HandlerRegistry } from '../handler.registry';
@@ -189,6 +189,24 @@ export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
   ) => {
+    if (accessory.device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
+      this.logger.warn({
+        device: {
+          id: accessory.device.id,
+          name: accessory.device.name,
+        },
+        service: {
+          subType,
+          name:
+            accessory.diyEffects.get(
+              getEffectCode(subType ?? 'unknown-unknown').code,
+            )?.name ??
+            (accessory.deviceConfig as RGBLightDeviceConfig)?.diy[
+              getEffectCode(subType ?? 'unknown-unknown').code
+            ]?.name,
+        },
+      });
+    }
     if (subType === undefined) {
       return 'Unknown';
     }
@@ -198,7 +216,8 @@ export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     }
 
     const name =
-      accessory.lightEffects.get(code)?.name ??
+      accessory.diyEffects.get(code)?.name ??
+      (accessory.deviceConfig as RGBLightDeviceConfig)?.diy[code]?.name ??
       accessory.device.state<DiyModeState>(DiyModeStateName)?.effects?.get(code)
         ?.name ??
       `${accessory.name} ${code}`;
