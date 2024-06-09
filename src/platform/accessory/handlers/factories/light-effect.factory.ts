@@ -81,6 +81,17 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
       {
         characteristic: Characteristic.On,
         updateValue: (value: DeviceState<string, any>) => {
+          if (accessory.device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
+            this.logger.warn({
+              device: {
+                id: accessory.device.id,
+                name: accessory.device.name,
+              },
+              mode: {
+                name: value?.name,
+              },
+            });
+          }
           if (value === undefined) {
             return undefined;
           }
@@ -95,6 +106,15 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
       {
         characteristic: Characteristic.On,
         updateValue: (effect: LightEffect, { accessory }) => {
+          if (accessory.device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
+            this.logger.warn({
+              device: {
+                id: accessory.device.id,
+                name: accessory.device.name,
+              },
+              lightEffect: effect,
+            });
+          }
           if (effect?.code === getEffectCode(subType).code) {
             return true;
           }
