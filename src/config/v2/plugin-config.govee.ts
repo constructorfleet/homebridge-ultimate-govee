@@ -3,6 +3,7 @@ import {
   Expose,
   Transform,
   Type,
+  instanceToPlain,
   plainToInstance,
 } from 'class-transformer';
 import { plainToSingleInstance } from '../../common';
@@ -12,6 +13,7 @@ import { ControlChannels } from './control-channel.config';
 import { GoveeCredentials } from './credentials.config';
 import { RGBICLightDeviceConfig, RGBLightDeviceConfig } from './devices';
 import { DeviceConfig } from './devices/device.config';
+import { Logger } from '@nestjs/common';
 
 export const buildDeviceConfig = (
   value: PluginDeviceConfig,
@@ -74,7 +76,10 @@ export class GoveePluginConfig {
         string,
         RGBICLightDeviceConfig | RGBLightDeviceConfig | DeviceConfig
       >;
-    }) => Object.values(value).filter((e) => e.id !== undefined),
+    }) =>
+      Object.values(value)
+        .filter((e) => e.id !== undefined)
+        .map((e) => instanceToPlain(e)),
     { toPlainOnly: true },
   )
   @Transform(
@@ -97,6 +102,12 @@ export class GoveePluginConfig {
             default:
               type = DeviceConfig;
               break;
+          }
+          if (cur._type === 'rgbic') {
+            new Logger('ConfigParse').warn({
+              cur,
+              instance: plainToInstance(type, cur),
+            });
           }
           const config:
             | RGBICLightDeviceConfig
