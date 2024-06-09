@@ -408,22 +408,28 @@ export class AccessoryManager {
       accessory,
       await this.configService.getDeviceConfiguration(device),
     );
-    // if (device instanceof RGBICLightDevice) {
-    //   let interval: NodeJS.Timeout | undefined = undefined;
-    //   let iterations: number = 0;
-    //   await new Promise<void>((resolve) => {
-    //     interval = setInterval(() => {
-    //       if (
-    //         ((device as RGBICLightDevice).lightEffect?.effects?.size ?? 0) >=
-    //           0 ||
-    //         iterations++ > 5
-    //       ) {
-    //         clearInterval(interval);
-    //         resolve();
-    //       }
-    //     }, 1000);
-    //   });
-    // }
+    if (device instanceof RGBICLightDevice) {
+      let interval: NodeJS.Timeout | undefined = undefined;
+      const rgbicLightDevice = device as RGBICLightDevice;
+      let effectCount: number =
+        rgbicLightDevice.lightEffect?.effects?.size ?? 0;
+      let iterations: number = 0;
+      await new Promise<void>((resolve) => {
+        interval = setInterval(() => {
+          const newCount = rgbicLightDevice.lightEffect?.effects?.size ?? 0;
+          if (newCount !== effectCount) {
+            iterations = 0;
+            effectCount = newCount;
+          } else if (iterations > 5) {
+            iterations++;
+            clearInterval(interval);
+            resolve();
+          } else {
+            iterations++;
+          }
+        }, 1000);
+      });
+    }
 
     this.updateQueue.add(goveeAccessory.device.id);
   }

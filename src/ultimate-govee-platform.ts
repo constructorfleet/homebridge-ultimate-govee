@@ -10,6 +10,7 @@ import { NestFactory } from '@nestjs/core';
 import { PlatformModule } from './platform/platform.module';
 import { PlatformService } from './platform/platform.service';
 import { GoveePlatformAccessory } from './platform/accessory/govee.accessory';
+import { PlatformLogger } from './platform-logger';
 
 export class UltimateGoveePlatform implements DynamicPlatformPlugin {
   private readonly logger: Logger = new Logger(UltimateGoveePlatform.name);
@@ -38,7 +39,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
           }),
         }),
         {
-          logger: ['log', 'warn', 'error'],
+          logger: PlatformLogger.create(log),
           abortOnError: false,
         },
       );

@@ -36,7 +36,6 @@ export class PlatformService implements OnModuleDestroy {
       .subscribe(async (device) => {
         await this.accessoryManager.onDeviceDiscovered(device);
       });
-    this.logger.info('Connecting', this.configService.pluginConfig);
     const credentials = this.configService.pluginConfig.credentials;
     if (
       credentials?.username === undefined ||

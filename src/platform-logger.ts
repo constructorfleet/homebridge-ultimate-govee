@@ -1,5 +1,8 @@
 import { ConsoleLogger, LogLevel } from '@nestjs/common';
-import { Logger as HomebridgeLogger } from 'homebridge';
+import {
+  Logger as HomebridgeLogger,
+  LogLevel as HomebridgeLogLevel,
+} from 'homebridge';
 
 export class PlatformLogger extends ConsoleLogger {
   private static logger: HomebridgeLogger;
@@ -29,7 +32,28 @@ export class PlatformLogger extends ConsoleLogger {
         contextMessage,
         timestampDiff,
       );
-      PlatformLogger.logger[logLevel](formattedMessage);
+      let hbLogLevel: HomebridgeLogLevel;
+      switch (logLevel) {
+        case 'log':
+          hbLogLevel = HomebridgeLogLevel.INFO;
+          break;
+        case 'debug':
+          hbLogLevel = HomebridgeLogLevel.DEBUG;
+          break;
+        case 'error':
+          hbLogLevel = HomebridgeLogLevel.ERROR;
+          break;
+        case 'fatal':
+          hbLogLevel = HomebridgeLogLevel.ERROR;
+          break;
+        case 'verbose':
+          hbLogLevel = HomebridgeLogLevel.DEBUG;
+          break;
+        case 'warn':
+          hbLogLevel = HomebridgeLogLevel.WARN;
+          break;
+      }
+      PlatformLogger.logger.log(hbLogLevel, formattedMessage.trim());
     });
   }
 }

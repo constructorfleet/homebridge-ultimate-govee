@@ -3,22 +3,22 @@ import {
   DeviceStatesType,
   Optional,
 } from '@constructorfleet/ultimate-govee';
-import { Service, Characteristic } from 'hap-nodejs';
+import { Logger, Type, mixin } from '@nestjs/common';
+import { Characteristic, Service } from 'hap-nodejs';
+import { API, WithUUID } from 'homebridge';
+import { Subscription } from 'rxjs';
+import { InjectHomebridgeApi } from '../accessory.const';
+import { GoveeAccessory } from '../govee.accessory';
 import {
   CharacteristicHandler,
   CharacteristicHandlerFunctions,
+  CharacteristicType,
+  IsServiceEnabled,
   ServiceCharacteristicHandlers,
   ServiceName,
-  SubServiceHandler as SubServiceHandlerType,
   ServiceType,
-  IsServiceEnabled,
-  CharacteristicType,
+  SubServiceHandler as SubServiceHandlerType,
 } from './handler.types';
-import { Logger, Type, mixin } from '@nestjs/common';
-import { API, WithUUID } from 'homebridge';
-import { InjectHomebridgeApi } from '../accessory.const';
-import { Subscription } from 'rxjs';
-import { GoveeAccessory } from '../govee.accessory';
 
 const defaultName = <States extends DeviceStatesType>(
   accessory: GoveeAccessory<States>,
@@ -53,7 +53,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       | undefined,
     functionName?: CharacteristicHandlerFunctions,
   ): CharacteristicHandler<CharacteristicType, unknown>[] {
-    return (
+    const filteredHandlers =
       handlers
         ?.filter((handler) => {
           if (handler === undefined) {
@@ -75,8 +75,8 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
           }
           return true;
         })
-        .map((handler) => handler!) ?? []
-    );
+        .map((handler) => handler!) ?? [];
+    return Array.from(new Set(filteredHandlers).values());
   }
 
   private setProps<StateType, ServiceType extends WithUUID<Service>>(
@@ -133,8 +133,8 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       if (charValue === undefined) {
         return;
       }
-      logger.debug(
-        `Updating characteristic ${handler.characteristic.name} to ${charValue}`,
+      logger.log(
+        `Updating characteristic ${service.name} ${service.subtype} ${handler.characteristic.name} to ${charValue}`,
       );
       char.updateValue(charValue);
     });
@@ -147,6 +147,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     const serviceName = this.name
       ? this.name(goveeAccessory, this.subType)
       : defaultName(goveeAccessory);
+    service.name = serviceName;
     service.displayName = serviceName;
     [...service.characteristics, ...service.optionalCharacteristics]
       .filter(
@@ -192,19 +193,15 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       accessory.context.initialized[initializedKey] === true
     ) {
       const service = accessory.services.find(
-        (service) =>
-          service.UUID === this.serviceType.UUID &&
-          this.subType === service.subtype,
+        (s) => s.UUID === this.serviceType.UUID && s.subtype === this.subType,
       );
       if (service !== undefined) {
         this.setServiceName(goveeAccessory, service);
+        return service;
       }
-      return service;
     }
     let newService: Service | undefined = accessory.services.find(
-      (service) =>
-        service.UUID === this.serviceType.UUID &&
-        this.subType === service.subtype,
+      (s) => s.UUID === this.serviceType.UUID && s.subtype === this.subType,
     );
     if (newService === undefined) {
       newService = new this.serviceType(
@@ -226,6 +223,9 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     if (service.isPrimaryService !== this.isPrimary) {
       service.setPrimaryService(this.isPrimary);
     }
+    if (this.subType === 'light-9') {
+      service.getCharacteristic(Characteristic.On);
+    }
     const subscriptions: Subscription[] = [];
     Object.entries(this.handlers).forEach(([stateName, handlers]) => {
       const state = device.state(stateName);
@@ -246,7 +246,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         (handler) => {
           const char = service.getCharacteristic(handler.characteristic)!;
           logger.debug(
-            `Assigning onSet handler to ${handler.characteristic.name} `,
+            `Assigning onSet handler ${service.name} ${service.subtype} ${handler.characteristic.name} to characteristic ${handler.characteristic.name}`,
           );
           char.onSet((value) => {
             const stateValue =
@@ -261,8 +261,10 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
               return;
             }
 
-            logger.debug(`Issuing state ${stateValue} to ${stateName} `);
-            state?.setState(stateValue);
+            logger.debug(
+              `Issuing state ${stateValue} to ${service.name} ${service.subtype} ${stateName}`,
+            ),
+              state?.setState(stateValue);
           });
         },
       );

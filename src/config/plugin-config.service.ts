@@ -341,7 +341,7 @@ export class PluginConfigService implements OnModuleDestroy {
     this.pauseWriteInterval();
     this.stopWatching();
     await this.fileLock.acquire();
-    this.logger.log('Writing updated configuration do disk...');
+    this.logger.log('Writing updated configuration to disk...');
     await this.loadConfigFromFile();
     try {
       const data = await readFile(this.configFilePath, { encoding: 'utf8' });

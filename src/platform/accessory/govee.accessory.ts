@@ -223,7 +223,6 @@ export class GoveeAccessory<States extends DeviceStatesType> {
     const config = GoveeAccessory.parseConfig(
       this.accessory.context.deviceConfig,
     );
-    console.dir(config);
     return config;
   }
 
@@ -260,9 +259,9 @@ export class GoveeAccessory<States extends DeviceStatesType> {
     }
 
     this.name = config.name ?? this.device.name;
-    this.debug = config.debug === true;
-    this.exposePreviousButton = config.exposePrevious === true;
-    this.ignore = config.ignore === true;
+    this.isDebugging = config.debug === true;
+    this.shouldShowSegments = config.exposePrevious === true;
+    this.isIgnored = config.ignore === true;
 
     if (config instanceof RGBLightDeviceConfig) {
       Array.from(this.lightEffects?.values() ?? [])
