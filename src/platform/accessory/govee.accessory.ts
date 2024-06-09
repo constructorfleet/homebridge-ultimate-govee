@@ -1,7 +1,9 @@
 import { Device, DeviceStatesType } from '@constructorfleet/ultimate-govee';
 import { Logger } from '@nestjs/common';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { Characteristic, Service } from 'hap-nodejs';
 import { PlatformAccessory } from 'homebridge';
+import { using } from '../../common';
 import {
   ConfigType,
   DeviceConfig,
@@ -11,8 +13,6 @@ import {
   RGBICLightDeviceConfig,
   RGBLightDeviceConfig,
 } from '../../config';
-import { instanceToPlain, plainToInstance } from 'class-transformer';
-import { using } from '../../common';
 
 export type AccessoryContext = {
   initialized: Record<string, boolean>;
@@ -78,10 +78,6 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   private logger?: Logger;
-  private ignore: boolean = false;
-  private debug: boolean = false;
-  private enablePrevious: boolean = false;
-  private showSegments: boolean = false;
   readonly lightEffects: Map<number, GoveeAccessoryEffect> = new Map();
   readonly diyEffects: Map<number, GoveeAccessoryEffect> = new Map();
 
@@ -114,14 +110,13 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   get isIgnored(): boolean {
-    return this.ignore;
+    return this.deviceConfig.ignore;
   }
 
   set isIgnored(ignore: boolean) {
     if (this.isIgnored === ignore) {
       return;
     }
-    this.ignore = ignore;
     this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
       deviceConfig.ignore = ignore;
     });
@@ -129,14 +124,13 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   get isDebugging(): boolean {
-    return this.debug;
+    return this.deviceConfig.debug;
   }
 
   set isDebugging(debug: boolean) {
-    if (this.debug === debug) {
+    if (this.isDebugging === debug) {
       return;
     }
-    this.debug = debug;
     this.device.debug(debug);
     this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
       deviceConfig.debug = debug;
@@ -145,14 +139,13 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   get exposePreviousButton(): boolean {
-    return this.enablePrevious;
+    return this.deviceConfig.exposePrevious;
   }
 
   set exposePreviousButton(exposePrevious: boolean) {
     if (this.exposePreviousButton === exposePrevious) {
       return;
     }
-    this.enablePrevious = exposePrevious;
     this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
       deviceConfig.exposePrevious = exposePrevious;
     });
@@ -162,14 +155,14 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   get shouldShowSegments(): boolean {
-    return this.showSegments;
+    return (this.deviceConfig as RGBICLightDeviceConfig)?.showSegments === true;
   }
 
   set shouldShowSegments(showSegments: boolean) {
-    if (this.showSegments === showSegments) {
+    if (this.shouldShowSegments === showSegments) {
       return;
     }
-    this.showSegments = showSegments;
+
     using(this.deviceConfig as RGBICLightDeviceConfig).do((deviceConfig) => {
       if (deviceConfig === undefined) {
         return;
@@ -230,11 +223,11 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   set deviceConfig(deviceConfig: ConfigType<States>) {
-    this.enablePrevious = deviceConfig.exposePrevious;
-    this.ignore = deviceConfig.ignore;
-    this.debug = deviceConfig.debug;
+    this.exposePreviousButton = deviceConfig.exposePrevious;
+    this.isIgnored = deviceConfig.ignore;
+    this.isDebugging = deviceConfig.debug;
     if (deviceConfig instanceof RGBICLightDeviceConfig) {
-      this.showSegments = deviceConfig.showSegments;
+      this.shouldShowSegments = deviceConfig.showSegments;
     }
     this.accessory.context = {
       initialized: this.accessory.context.initialized ?? {},

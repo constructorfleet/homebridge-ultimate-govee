@@ -238,7 +238,7 @@ export class AccessoryManager {
   })
   onExposePreviousDeviceChange(event: ExposePreviousDeviceChanged) {
     try {
-      this.onDeviceConfigEffectChange(event);
+      this.onDeviceConfigChanged(event);
     } catch (error) {
       this.logger.error(`onPreviousDeviceChange: ${error}`, error);
     }
@@ -250,7 +250,7 @@ export class AccessoryManager {
   })
   onIgnoreDeviceChange(event: IgnoreDeviceChangedEvent) {
     try {
-      this.onDeviceConfigEffectChange(event);
+      this.onDeviceConfigChanged(event);
     } catch (error) {
       this.logger.error(`onIgnoreDeviceChange: ${error}`, error);
     }
@@ -262,7 +262,7 @@ export class AccessoryManager {
   })
   onNameDeviceChange(event: NameDeviceChangedEvent) {
     try {
-      this.onDeviceConfigEffectChange(event);
+      this.onDeviceConfigChanged(event);
     } catch (error) {
       this.logger.error(`onNameDeviceChange: ${error}`, error);
     }
@@ -274,7 +274,7 @@ export class AccessoryManager {
   })
   onShowSegmentsDeviceChange(event: ShowSegmentsDeviceChangedEvent) {
     try {
-      this.onDeviceConfigEffectChange(event);
+      this.onDeviceConfigChanged(event);
     } catch (error) {
       this.logger.error(`onShowSegmentsDeviceChange: ${error}`, error);
     }
@@ -286,7 +286,7 @@ export class AccessoryManager {
   })
   onDebugDeviceChange(event: DebugDeviceChangedEvent) {
     try {
-      this.onDeviceConfigEffectChange(event);
+      this.onDeviceConfigChanged(event);
     } catch (error) {
       this.logger.error(`onDebugDeviceChange: ${error}`, error);
     }
@@ -296,7 +296,7 @@ export class AccessoryManager {
     await this.handlerRegistry.updateAccessoryHandlers(goveeAccessory);
   }
 
-  onDeviceConfigEffectChange(event: DeviceConfigChangedEvent) {
+  onDeviceConfigChanged(event: DeviceConfigChangedEvent) {
     const accessory = this.goveeAccessories.get(event.deviceId);
     if (!accessory) {
       return;
