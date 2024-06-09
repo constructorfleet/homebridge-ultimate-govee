@@ -4,15 +4,18 @@ import { using } from '../../../common';
 import { DeviceConfig } from './device.config';
 
 export class LightEffectConfig {
-  static from(effect: LightEffect): LightEffectConfig | undefined {
+  static from(
+    effect: LightEffect,
+    deviceConfig?: RGBLightDeviceConfig,
+  ): LightEffectConfig | undefined {
     if (effect?.code === undefined || effect?.name === undefined) {
       return undefined;
     }
-
+    const effectConfig = deviceConfig?.effects[effect.code];
     const config = new LightEffectConfig();
     config.code = effect.code;
-    config.name = effect.name;
-    config.enabled = false;
+    config.name = effectConfig?.name ?? effect.name;
+    config.enabled = effectConfig?.enabled ?? false;
     return config;
   }
 
@@ -27,15 +30,19 @@ export class LightEffectConfig {
 }
 
 export class DiyEffectConfig {
-  static from(effect: DiyEffect): DiyEffectConfig | undefined {
+  static from(
+    effect: DiyEffect,
+    deviceConfig?: RGBLightDeviceConfig,
+  ): DiyEffectConfig | undefined {
     if (effect?.code === undefined || effect?.name === undefined) {
       return undefined;
     }
 
-    const config = new DiyEffectConfig();
+    const effectConfig = deviceConfig?.effects[effect.code];
+    const config = new LightEffectConfig();
     config.code = effect.code;
-    config.name = effect.name;
-    config.enabled = false;
+    config.name = effectConfig?.name ?? effect.name;
+    config.enabled = effectConfig?.enabled ?? false;
     return config;
   }
 

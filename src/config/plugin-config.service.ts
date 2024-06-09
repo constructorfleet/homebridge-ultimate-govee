@@ -103,7 +103,7 @@ export class PluginConfigService implements OnModuleDestroy {
         let effect: LightEffectConfig | undefined =
           deviceConfig.effects[event.effect.code];
         if (!effect) {
-          effect = LightEffectConfig.from(event.effect);
+          effect = LightEffectConfig.from(event.effect, deviceConfig);
           if (effect === undefined) {
             return;
           }
@@ -204,7 +204,7 @@ export class PluginConfigService implements OnModuleDestroy {
         let effect: DiyEffectConfig | undefined =
           deviceConfig.diy[event.effect.code];
         if (!effect) {
-          effect = DiyEffectConfig.from(event.effect);
+          effect = DiyEffectConfig.from(event.effect, deviceConfig);
           if (effect === undefined) {
             return;
           }
