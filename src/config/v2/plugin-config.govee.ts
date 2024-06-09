@@ -103,12 +103,6 @@ export class GoveePluginConfig {
               type = DeviceConfig;
               break;
           }
-          if (cur._type === 'rgbic') {
-            new Logger('ConfigParse').warn({
-              cur,
-              instance: plainToInstance(type, cur),
-            });
-          }
           const config:
             | RGBICLightDeviceConfig
             | RGBLightDeviceConfig
