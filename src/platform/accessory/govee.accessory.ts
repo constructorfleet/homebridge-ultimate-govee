@@ -274,9 +274,6 @@ export class GoveeAccessory<States extends DeviceStatesType> {
     }
 
     this.name = config.name ?? this.device.name;
-    this.isDebugging = config.debug === true;
-    this.shouldShowSegments = config.exposePrevious === true;
-    this.isIgnored = config.ignore === true;
 
     if (config instanceof RGBLightDeviceConfig) {
       Array.from(this.lightEffects?.values() ?? [])
