@@ -9,7 +9,11 @@ import {
   LightBulbHandler,
   TemperatureSensorHandler,
 } from './services';
-import { DiyEffectFactory, LightEffectFactory } from './factories';
+import {
+  DiyEffectFactory,
+  LightEffectFactory,
+  PreviousFactory,
+} from './factories';
 import { PresenceOccupancySensorHandler } from './services/occupancy.handler';
 import { PresenceMotionSensorHandler } from './services/motion.handler';
 export * from './handler.registry';
@@ -28,4 +32,8 @@ export const ServiceHandlers = [
   PresenceMotionSensorHandler,
 ];
 
-export const SubServiceFactories = [LightEffectFactory, DiyEffectFactory];
+export const SubServiceFactories = [
+  LightEffectFactory,
+  DiyEffectFactory,
+  PreviousFactory,
+];
