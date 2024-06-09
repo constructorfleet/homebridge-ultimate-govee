@@ -9,7 +9,7 @@ import { HandlerRegistry } from '../handler.registry';
 import {
   EnablePresenceStateName,
   PresenceData,
-} from '@constructorfleet/ultimate-govee/dist/domain';
+} from '@constructorfleet/ultimate-govee';
 import { EnablePresenceFlags } from '@constructorfleet/ultimate-govee';
 
 @HandlerRegistry.forDevice(PresenceDevice)

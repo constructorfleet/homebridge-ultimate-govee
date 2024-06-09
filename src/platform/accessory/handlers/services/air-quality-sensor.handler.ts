@@ -5,6 +5,7 @@ import {
 } from '@constructorfleet/ultimate-govee';
 import { ServiceHandler } from '../service.handler';
 import { HandlerRegistry } from '../handler.registry';
+import { MeasurementData } from './types';
 
 @HandlerRegistry.forDevice(AirQualityDevice)
 export class AirQualitySensorHandler extends ServiceHandler<AirQualitySensor> {
@@ -13,11 +14,18 @@ export class AirQualitySensorHandler extends ServiceHandler<AirQualitySensor> {
     pm25: [
       {
         characteristic: Characteristic.PM2_5Density,
-        updateValue: (value: number) => value as number,
+        configure: (value: MeasurementData) =>
+          value?.range?.min !== undefined && value?.range?.max !== undefined
+            ? { minValue: value.range.min, maxValue: value.range.max }
+            : {},
+        updateValue: (value: MeasurementData) => value as number,
       },
       {
         characteristic: Characteristic.AirQuality,
-        updateValue: (value: number) => Math.ceil(value / 250),
+        updateValue: (value: MeasurementData) =>
+          value?.current !== undefined
+            ? Math.ceil(value.current / 250)
+            : undefined,
       },
     ],
   };
