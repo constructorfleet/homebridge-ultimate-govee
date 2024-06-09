@@ -163,13 +163,12 @@ export class GoveeAccessory<States extends DeviceStatesType> {
       return;
     }
 
-    using(this.deviceConfig as RGBICLightDeviceConfig).do((deviceConfig) => {
-      if (deviceConfig === undefined) {
-        return;
-      }
+    if (this.deviceConfig instanceof RGBICLightDeviceConfig) {
+      const deviceConfig: RGBICLightDeviceConfig = this
+        .deviceConfig as RGBICLightDeviceConfig;
       deviceConfig.showSegments = showSegments;
       this.deviceConfig = deviceConfig;
-    });
+    }
   }
 
   addLightEffect(effect: LightEffectConfig): boolean {
