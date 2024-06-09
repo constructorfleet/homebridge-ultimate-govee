@@ -262,6 +262,7 @@ export class GoveeAccessory<States extends DeviceStatesType> {
 
   setup(config: ConfigType<States>) {
     this.deviceConfig = config;
+    this.device.debug(config.debug);
     const service = this.accessory.getService(Service.AccessoryInformation);
     if (service === undefined) {
       return;
