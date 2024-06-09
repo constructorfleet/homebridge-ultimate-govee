@@ -197,19 +197,6 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       );
       if (service !== undefined) {
         this.setServiceName(goveeAccessory, service);
-        if (device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-          this.logger.warn({
-            device: {
-              id: device.id,
-              name: device.name,
-            },
-            service: {
-              name: service.name,
-              subType: this.subType,
-              new: false,
-            },
-          });
-        }
         return service;
       }
     }
@@ -235,19 +222,6 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
 
     if (service.isPrimaryService !== this.isPrimary) {
       service.setPrimaryService(this.isPrimary);
-    }
-    if (device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-      this.logger.warn({
-        device: {
-          id: device.id,
-          name: device.name,
-        },
-        service: {
-          name: service.name,
-          subType: this.subType,
-          new: true,
-        },
-      });
     }
     const subscriptions: Subscription[] = [];
     Object.entries(this.handlers).forEach(([stateName, handlers]) => {

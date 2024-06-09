@@ -81,17 +81,6 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
       {
         characteristic: Characteristic.On,
         updateValue: (value: DeviceState<string, any>) => {
-          if (accessory.device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-            this.logger.warn({
-              device: {
-                id: accessory.device.id,
-                name: accessory.device.name,
-              },
-              mode: {
-                name: value?.name,
-              },
-            });
-          }
           if (value === undefined) {
             return undefined;
           }
@@ -106,15 +95,6 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
       {
         characteristic: Characteristic.On,
         updateValue: (effect: LightEffect, { accessory }) => {
-          if (accessory.device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-            this.logger.warn({
-              device: {
-                id: accessory.device.id,
-                name: accessory.device.name,
-              },
-              lightEffect: effect,
-            });
-          }
           if (effect?.code === getEffectCode(subType).code) {
             return true;
           }
@@ -149,20 +129,6 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
   ) => {
-    if (accessory.device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-      this.logger.warn({
-        device: {
-          id: accessory.device.id,
-          name: accessory.device.name,
-        },
-        enabled: {
-          subType,
-          isExposed: accessory?.lightEffects?.get(
-            getEffectCode(subType ?? 'uknown-unknown')?.code,
-          )?.isExposed,
-        },
-      });
-    }
     if (subType === undefined) {
       return false;
     }
@@ -188,24 +154,6 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     accessory: GoveeAccessory<RGBICLight>,
     subType?: string,
   ) => {
-    if (accessory.device.id === '5F:D3:7C:A6:B0:4A:17:8C') {
-      this.logger.warn({
-        device: {
-          id: accessory.device.id,
-          name: accessory.device.name,
-        },
-        service: {
-          subType,
-          name:
-            accessory.lightEffects.get(
-              getEffectCode(subType ?? 'unknown-unknown').code,
-            )?.name ??
-            (accessory.deviceConfig as RGBLightDeviceConfig)?.effects[
-              getEffectCode(subType ?? 'unknown-unknown').code
-            ]?.name,
-        },
-      });
-    }
     if (subType === undefined) {
       return 'Unknown';
     }
