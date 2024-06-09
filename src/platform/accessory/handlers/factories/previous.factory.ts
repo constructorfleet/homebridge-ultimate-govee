@@ -9,6 +9,7 @@ import {
   RGBICLightDevice,
   RGBLightDevice,
 } from '@constructorfleet/ultimate-govee';
+import { CamelCaseStringToTitleCaseString } from '@ilihub/camel-case-string-to-title-case-string';
 import { Injectable } from '@nestjs/common';
 import { Characteristic, Service } from 'hap-nodejs';
 import { GoveeAccessory } from '../../govee.accessory';
@@ -76,7 +77,7 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
       .filter((stateName) => stateName !== ModeStateName)
       .map((stateName) => `previous-${stateName}`);
   protected name: ServiceName<DeviceWithStates> = (
-    accessory: GoveeAccessory<DeviceWithStates>,
+    _: GoveeAccessory<DeviceWithStates>,
     subType?: string,
   ) => {
     if (subType === undefined) {
@@ -84,10 +85,6 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
     }
 
     const stateName: string = subType.split('-').slice(-1)[0] as string;
-    return (
-      'Previous ' +
-      (stateName.slice(0, 1)[0] +
-        stateName.slice(1).replaceAll(/A-Z/g, (match) => ` ${match}`))
-    );
+    return `Previous ${CamelCaseStringToTitleCaseString(stateName)}`;
   };
 }
