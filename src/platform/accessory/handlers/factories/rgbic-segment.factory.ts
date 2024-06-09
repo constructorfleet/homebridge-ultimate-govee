@@ -232,17 +232,25 @@ export class RGBICSegmentFactory extends SubServiceHandlerFactory<SegmentsDevice
     accessory: GoveeAccessory<SegmentsDevice>,
     subType?: string,
   ) => {
-    this.logger.warn({ subType, enabled: accessory.shouldShowSegments });
+    this.logger.warn({
+      subType,
+      device: accessory.device.id,
+      enabled: accessory.shouldShowSegments,
+    });
     return accessory.shouldShowSegments;
   };
   protected possibleSubTypes: ServiceSubTypes<SegmentsDevice> = (
     _: GoveeAccessory<SegmentsDevice>,
   ) => new Array(30).fill(0).map((_, idx) => `segment-${idx}`);
   protected name: ServiceName<SegmentsDevice> = (
-    _: GoveeAccessory<SegmentsDevice>,
+    accessory: GoveeAccessory<SegmentsDevice>,
     subType?: string,
   ) => {
-    this.logger.warn({ subType, name: `Segment ${getSegment(subType)}` });
+    this.logger.warn({
+      subType,
+      device: accessory.device.id,
+      name: `Segment ${getSegment(subType)}`,
+    });
     if (subType === undefined) {
       return 'Unknown';
     }
