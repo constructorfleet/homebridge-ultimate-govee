@@ -35,7 +35,7 @@
     "govee"
   ],
   "dependencies": {
-    "@constructorfleet/ultimate-govee": "^1.0.0-rc5",
+    "@constructorfleet/ultimate-govee": "^1.0.0-rc6",
     "@nestjs/common": "^10.3.3",
     "@nestjs/core": "^10.3.3",
     "async-await-mutex-lock": "^1.0.11",
