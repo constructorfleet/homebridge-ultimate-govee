@@ -166,7 +166,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     if (!accessory.context.initialized) {
       accessory.context.initialized = {};
     }
-    accessory.context.initialized[initializedKey] = false;
+    goveeAccessory.serviceInitialized(initializedKey, false);
     const service = accessory.services.find(
       (service) =>
         service.UUID === this.serviceType.UUID &&
@@ -188,10 +188,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     if (!accessory.context.initialized) {
       accessory.context.initialized = {};
     }
-    if (
-      accessory.context.initialized &&
-      accessory.context.initialized[initializedKey] === true
-    ) {
+    if (goveeAccessory.isServiceInitialized(initializedKey)) {
       const service = accessory.services.find(
         (s) => s.UUID === this.serviceType.UUID && s.subtype === this.subType,
       );
@@ -267,7 +264,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       );
     });
     this.subscriptions.set(device.id, subscriptions);
-    accessory.context.initialized[initializedKey] = true;
+    goveeAccessory.serviceInitialized(initializedKey, true);
     this.api.updatePlatformAccessories([accessory]);
     return newService;
   }
