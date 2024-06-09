@@ -23,6 +23,7 @@ import {
   AddLightEffectEvent,
   DebugDeviceChangedEvent,
   DeviceConfigChangedEvent,
+  DeviceConfigUpdatedEvent,
   DiyEffectChangedEvent,
   ExposeDiyEffectChangedEvent,
   ExposeLightEffectChangedEvent,
@@ -108,6 +109,19 @@ export class AccessoryManager {
     );
     this.goveeAccessories.set(device.id, goveeAccessory);
     return goveeAccessory;
+  }
+
+  @OnEvent(DeviceConfigUpdatedEvent.name, {
+    async: true,
+    nextTick: true,
+  })
+  onDeviceConfigUpdated(event: DeviceConfigUpdatedEvent) {
+    const accessory = this.goveeAccessories.get(event.deviceId);
+    if (!accessory) {
+      return;
+    }
+    accessory.deviceConfig = event.deviceConfig;
+    this.updateQueue.add(accessory.device.id);
   }
 
   @OnEvent(AddLightEffectEvent.name, {

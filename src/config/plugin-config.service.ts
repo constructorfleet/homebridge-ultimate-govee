@@ -21,6 +21,7 @@ import {
   AddDiyEffectEvent,
   AddLightEffectEvent,
   DebugDeviceChangedEvent,
+  DeviceConfigUpdatedEvent,
   DiyEffectChangedEvent,
   DiyEffectDiscoveredEvent,
   DiyEffectRemovedEvent,
@@ -135,6 +136,9 @@ export class PluginConfigService implements OnModuleDestroy {
       }
 
       this.config.deviceConfigs[event.device.id] = deviceConfig;
+      await new DeviceConfigUpdatedEvent(event.device.id, deviceConfig).emit(
+        this.eventEmitter,
+      );
     } catch (error) {
       this.logger.error(`onLightEffectDiscovered: ${error}`, error);
     } finally {
@@ -162,6 +166,9 @@ export class PluginConfigService implements OnModuleDestroy {
       }
       this.config.deviceConfigs[event.device.id] = deviceConfig;
       await new RemoveLightEffectEvent(event.device.id, event.effect.code).emit(
+        this.eventEmitter,
+      );
+      await new DeviceConfigUpdatedEvent(event.device.id, deviceConfig).emit(
         this.eventEmitter,
       );
     } catch (error) {
@@ -228,6 +235,9 @@ export class PluginConfigService implements OnModuleDestroy {
         );
       }
       this.config.deviceConfigs[event.device.id] = deviceConfig;
+      await new DeviceConfigUpdatedEvent(event.device.id, deviceConfig).emit(
+        this.eventEmitter,
+      );
     } catch (error) {
       this.logger.error(`onDiyEffectDiscovered: ${error}`, error);
     } finally {
@@ -255,6 +265,9 @@ export class PluginConfigService implements OnModuleDestroy {
       }
       this.config.deviceConfigs[event.device.id] = deviceConfig;
       await new RemoveDiyEffectEvent(event.device.id, event.effect.code).emit(
+        this.eventEmitter,
+      );
+      await new DeviceConfigUpdatedEvent(event.device.id, deviceConfig).emit(
         this.eventEmitter,
       );
     } catch (error) {
