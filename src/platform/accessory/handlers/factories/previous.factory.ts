@@ -44,11 +44,15 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
   ];
   protected handlers: ServiceCharacteristicHandlerFactory<DeviceWithStates> = (
     accessory: GoveeAccessory<DeviceWithStates>,
-    _: string,
+    subType?: string,
   ) =>
     Object.fromEntries(
       Object.keys(accessory.device.states)
-        .filter((stateName) => stateName !== ModeStateName)
+        .filter(
+          (stateName) =>
+            stateName !== ModeStateName &&
+            stateName === subType?.split('-')?.slice(-1)[0],
+        )
         .map((stateName) => [
           stateName,
           [
@@ -62,7 +66,10 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
                 const state = accessory.device
                   .state(stateName)
                   ?.history.destack();
-                this.logger.warn(state);
+                this.logger.warn({
+                  stateName,
+                  state,
+                });
                 setTimeout(() => characteristic.updateValue(false), 1000);
                 return state;
               },
