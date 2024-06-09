@@ -222,12 +222,6 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   set deviceConfig(deviceConfig: ConfigType<States>) {
-    this.exposePreviousButton = deviceConfig.exposePrevious;
-    this.isIgnored = deviceConfig.ignore;
-    this.isDebugging = deviceConfig.debug;
-    if (deviceConfig instanceof RGBICLightDeviceConfig) {
-      this.shouldShowSegments = deviceConfig.showSegments;
-    }
     this.accessory.context = {
       initialized: this.accessory.context.initialized ?? {},
       deviceConfig: instanceToPlain(deviceConfig) as PluginDeviceConfig,
