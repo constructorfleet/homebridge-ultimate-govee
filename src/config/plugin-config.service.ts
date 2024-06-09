@@ -50,6 +50,7 @@ import {
   RGBLightDeviceConfig,
 } from './v2/devices';
 import { GoveePluginConfig } from './v2/plugin-config.govee';
+import { ShowSegmentsDeviceChangedEvent } from '../events/device-config/show-segments-device-changed.event';
 
 @Injectable()
 export class PluginConfigService implements OnModuleDestroy {
@@ -441,6 +442,9 @@ export class PluginConfigService implements OnModuleDestroy {
           deviceConfig instanceof RGBICLightDeviceConfig
         ) {
           cfg.showSegments = deviceConfig.showSegments;
+          events.push(
+            new ShowSegmentsDeviceChangedEvent(cfg.id, cfg.showSegments),
+          );
         }
         if (
           cfg instanceof RGBLightDeviceConfig &&
