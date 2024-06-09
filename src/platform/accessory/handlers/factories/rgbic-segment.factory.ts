@@ -244,6 +244,6 @@ export class RGBICSegmentFactory extends SubServiceHandlerFactory<SegmentsDevice
     }
 
     const segmentNumber = getSegment(subType);
-    return `Segment ${segmentNumber}`;
+    return `Segment ${segmentNumber + 1}`;
   };
 }
