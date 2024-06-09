@@ -13,6 +13,7 @@ import {
   DiyEffectFactory,
   LightEffectFactory,
   PreviousFactory,
+  RGBICSegmentFactory,
 } from './factories';
 import { PresenceOccupancySensorHandler } from './services/occupancy.handler';
 import { PresenceMotionSensorHandler } from './services/motion.handler';
@@ -36,4 +37,5 @@ export const SubServiceFactories = [
   LightEffectFactory,
   DiyEffectFactory,
   PreviousFactory,
+  RGBICSegmentFactory,
 ];
