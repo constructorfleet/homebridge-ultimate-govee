@@ -59,10 +59,12 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
                 if (value !== true) {
                   return;
                 }
-                this.logger.warn(
-                  accessory.device.state(stateName)?.previousState(1),
-                );
+                const state = accessory.device
+                  .state(stateName)
+                  ?.history.destack();
+                this.logger.warn(state);
                 setTimeout(() => characteristic.updateValue(false), 1000);
+                return state;
               },
             },
           ],
