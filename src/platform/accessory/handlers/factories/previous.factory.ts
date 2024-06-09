@@ -54,12 +54,14 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
           [
             {
               characteristic: Characteristic.On,
-              updateValue: () => undefined,
+              updateValue: () => false,
               onSet: (value, { characteristic }) => {
                 if (value !== true) {
                   return;
                 }
-                accessory.device.state(stateName)?.previousState(0);
+                this.logger.warn(
+                  accessory.device.state(stateName)?.previousState(0),
+                );
                 setTimeout(() => characteristic.updateValue(false), 1000);
               },
             },
