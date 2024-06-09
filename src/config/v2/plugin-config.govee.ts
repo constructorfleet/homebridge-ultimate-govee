@@ -1,23 +1,18 @@
-import { Exclude, Expose, Type } from 'class-transformer';
-import { GoveeCredentials } from './credentials.config';
-import { ControlChannels } from './control-channel.config';
-import { DeviceConfig } from './devices/device.config';
+import {
+  ClassConstructor,
+  Expose,
+  Transform,
+  Type,
+  plainToInstance,
+} from 'class-transformer';
+import { plainToSingleInstance } from '../../common';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../../settings';
-import {
-  LightEffectConfig,
-  RGBICLightDeviceConfig,
-  RGBLightDeviceConfig,
-} from './devices';
 import { PluginDeviceConfig } from '../plugin-config.types';
-import { plainToSingleInstance, using } from '../../common';
-import {
-  Device,
-  DeviceStatesType,
-  LightEffectState,
-  LightEffectStateName,
-  RGBICLightDevice,
-  RGBLightDevice,
-} from '@constructorfleet/ultimate-govee';
+import { ControlChannels } from './control-channel.config';
+import { GoveeCredentials } from './credentials.config';
+import { RGBICLightDeviceConfig, RGBLightDeviceConfig } from './devices';
+import { DeviceConfig } from './devices/device.config';
+
 export const buildDeviceConfig = (
   value: PluginDeviceConfig,
 ): DeviceConfig | undefined => {
@@ -52,49 +47,8 @@ export const buildDeviceConfig = (
   }
 };
 
-export const configFromDevice = <
-  States extends DeviceStatesType,
-  T extends Device<States>,
->(
-  device: T,
-): DeviceConfig => {
-  const config =
-    device instanceof RGBICLightDevice
-      ? new RGBICLightDeviceConfig()
-      : device instanceof RGBLightDevice
-        ? new RGBLightDeviceConfig()
-        : new DeviceConfig();
-  return using(config).do((config) => {
-    config.id = device.id;
-    config.name = device.name;
-    config.type = 'device';
-    if (config instanceof RGBLightDeviceConfig) {
-      config.type = 'rgb';
-      Array.from(
-        device
-          .state<LightEffectState>(LightEffectStateName)
-          ?.effects?.values() ?? [],
-      ).forEach((effect) => {
-        if (effect.name === undefined || effect.code === undefined) {
-          return;
-        }
-
-        config.effects.push(
-          using(new LightEffectConfig()).do((effectConfig) => {
-            effectConfig.name = effect.name!;
-            effectConfig.code = effect.code!;
-          }),
-        );
-      });
-      if (config instanceof RGBICLightDeviceConfig) {
-        config.type = 'rgbic';
-      }
-    }
-  });
-};
-
 export class GoveePluginConfig {
-  @Expose({ name: '_version' })
+  @Expose({ name: 'version' })
   version: number = 2;
 
   @Expose({ name: 'name' })
@@ -105,40 +59,65 @@ export class GoveePluginConfig {
 
   @Expose({ name: 'credentials' })
   @Type(() => GoveeCredentials)
-  credentials: GoveeCredentials = new GoveeCredentials();
+  credentials!: GoveeCredentials;
 
   @Expose({ name: 'controlChannels' })
   @Type(() => ControlChannels)
-  controlChannels: ControlChannels = new ControlChannels();
+  controlChannels!: ControlChannels;
 
   @Expose({ name: 'deviceConfigs' })
-  @Type(() => DeviceConfig, {
-    discriminator: {
-      property: '_type',
-      subTypes: [
-        { name: 'rgb', value: RGBLightDeviceConfig },
-        { name: 'rgbic', value: RGBICLightDeviceConfig },
-        { name: 'device', value: DeviceConfig },
-      ],
+  @Transform(
+    ({
+      value,
+    }: {
+      value: Record<
+        string,
+        RGBICLightDeviceConfig | RGBLightDeviceConfig | DeviceConfig
+      >;
+    }) => Object.values(value).filter((e) => e.id !== undefined),
+    { toPlainOnly: true },
+  )
+  @Transform(
+    ({ value }: { value: { _type: string; id: string }[] }) =>
+      value.reduce(
+        (acc, cur) => {
+          if (cur.id === undefined) {
+            return acc;
+          }
+          let type: ClassConstructor<
+            RGBICLightDeviceConfig | RGBLightDeviceConfig | DeviceConfig
+          >;
+          switch (cur._type) {
+            case 'rgbic':
+              type = RGBICLightDeviceConfig;
+              break;
+            case 'rgb':
+              type = RGBLightDeviceConfig;
+              break;
+            default:
+              type = DeviceConfig;
+              break;
+          }
+          const config:
+            | RGBICLightDeviceConfig
+            | RGBLightDeviceConfig
+            | DeviceConfig = plainToInstance(type, cur);
+          acc[config.id] = config;
+          return acc;
+        },
+        {} as Record<
+          string,
+          DeviceConfig | RGBLightDeviceConfig | RGBICLightDeviceConfig
+        >,
+      ),
+    {
+      toClassOnly: true,
     },
-    keepDiscriminatorProperty: true,
-  })
-  deviceConfigs: (
-    | DeviceConfig
-    | RGBLightDeviceConfig
-    | RGBICLightDeviceConfig
-  )[] = [];
-
-  @Exclude()
-  get deviceConfigMap(): Map<
+  )
+  deviceConfigs!: Record<
     string,
     DeviceConfig | RGBLightDeviceConfig | RGBICLightDeviceConfig
-  > {
-    return this.deviceConfigs.reduce((m, curr) => {
-      m.set(curr.id, curr);
-      return m;
-    }, new Map());
-  }
+  >;
 
   get isValid(): boolean {
     return ![

@@ -1,10 +1,10 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { PlatformAccessory } from 'homebridge';
-import { AccessoryManager } from './accessory/accessory.manager';
 import { UltimateGoveeService } from '@constructorfleet/ultimate-govee';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Subscription, map } from 'rxjs';
-import { LoggingService } from '../logger/logger.service';
 import { PluginConfigService } from '../config';
+import { LoggingService } from '../logger/logger.service';
+import { AccessoryManager } from './accessory/accessory.manager';
+import { GoveePlatformAccessory } from './accessory/govee.accessory';
 
 @Injectable()
 export class PlatformService implements OnModuleDestroy {
@@ -20,7 +20,7 @@ export class PlatformService implements OnModuleDestroy {
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  configureAccessory(accessory: PlatformAccessory) {
+  configureAccessory(accessory: GoveePlatformAccessory) {
     this.accessoryManager.onAccessoryLoaded(accessory);
   }
 
@@ -36,7 +36,6 @@ export class PlatformService implements OnModuleDestroy {
       .subscribe(async (device) => {
         await this.accessoryManager.onDeviceDiscovered(device);
       });
-    this.logger.info('Connecting', this.configService.pluginConfig);
     const credentials = this.configService.pluginConfig.credentials;
     if (
       credentials?.username === undefined ||

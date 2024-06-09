@@ -5,205 +5,8 @@
   "schema": {
     "type": "object",
     "properties": {
-      "featureFlags": {
-        "type": "array",
-        "default": [],
-        "items": {
-          "type": "string"
-        },
-        "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
-        }
-      },
-      "username": {
-        "type": "string",
-        "title": "Govee Account E-Email Address",
-        "required": false,
-        "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
-        }
-      },
-      "password": {
-        "type": "string",
-        "title": "Govee Account Password",
-        "required": false,
-        "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
-        }
-      },
-      "connections": {
-        "title": "Connection Settings",
-        "type": "object",
-        "properties": {
-          "iot": {
-            "title": "Enable AWS IoT",
-            "type": "boolean",
-            "default": true
-          },
-          "ble": {
-            "title": "Enable Bluetooth LE",
-            "type": "boolean",
-            "default": false
-          },
-          "api": {
-            "title": "Enable API",
-            "type": "boolean",
-            "default": true
-          }
-        },
-        "required": false,
-        "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined"
-        }
-      },
-      "devices": {
-        "title": "Device Overrides",
-        "description": "Optional settings for your Govee devices.",
-        "type": "object",
-        "properties": {
-          "airPurifiers": {
-            "type": "array",
-            "removeable": false,
-            "addable": false,
-            "items": {
-              "type": "object",
-              "condition": {
-                "functionBody": "return (model.devices.airPurifiers && model.devices.airPurifiers[arrayIndices] && model.devices.airPurifiers[arrayIndices].deviceId && model.devices.airPurifiers[arrayIndices].model;"
-              },
-              "properties": {
-                "deviceId": {
-                  "title": "Govee Device ID",
-                  "type": "string",
-                  "readonly": true
-                },
-                "model": {
-                  "title": "Model",
-                  "type": "string",
-                  "readonly": true
-                },
-                "ignore": {
-                  "title": "Ignore Device",
-                  "type": "boolean"
-                },
-                "displayName": {
-                  "title": "Display Name",
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "humidifiers": {
-            "title": "Humidifier Overrides",
-            "type": "array",
-            "removeable": false,
-            "addable": false,
-            "items": {
-              "type": "object",
-              "condition": {
-                "functionBody": "return (model.devices.humidifiers && model.devices.humidifiers[arrayIndices] && model.devices.humidifiers[arrayIndices].deviceId && model.devices.humidifiers[arrayIndices].model);"
-              },
-              "properties": {
-                "deviceId": {
-                  "title": "Govee Device ID",
-                  "type": "string",
-                  "readonly": true
-                },
-                "model": {
-                  "title": "Govee Device Model",
-                  "type": "string",
-                  "readonly": true
-                },
-                "ignore": {
-                  "title": "Ignore Device",
-                  "type": "boolean"
-                },
-                "displayName": {
-                  "title": "Display Name",
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "lights": {
-            "title": "Light Overrides",
-            "type": "array",
-            "removeable": false,
-            "addable": false,
-            "items": {
-              "type": "object",
-              "condition": {
-                "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && model.devices.lights[arrayIndices].deviceId && model.devices.lights[arrayIndices].model);"
-              },
-              "properties": {
-                "deviceId": {
-                  "title": "Govee Device ID",
-                  "type": "string",
-                  "readonly": true
-                },
-                "model": {
-                  "title": "Govee Device Model",
-                  "type": "string",
-                  "readonly": true
-                },
-                "ignore": {
-                  "title": "Ignore Device",
-                  "type": "boolean"
-                },
-                "displayName": {
-                  "title": "Display Name",
-                  "type": "string"
-                },
-                "_lightType": {
-                  "type": "string"
-                },
-                "hideSegments": {
-                  "title": "Hide Segment Controls",
-                  "type": "boolean",
-                  "default": true
-                },
-                "effects": {
-                  "title": "Device Scenes",
-                  "type": "array",
-                  "removeable": false,
-                  "addable": false,
-                  "default": [],
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "number",
-                        "default": 0,
-                        "readonly": true
-                      },
-                      "name": {
-                        "type": "string",
-                        "default": "",
-                        "readonly": true
-                      },
-                      "description": {
-                        "type": "string",
-                        "default": "",
-                        "readonly": true
-                      },
-                      "enabled": {
-                        "type": "boolean",
-                        "default": false
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "required": false,
-        "condition": {
-          "functionBody": "return model !== undefined && model['_version'] === undefined && model['credentials'] === undefined;"
-        }
-      },
       "version": {
-        "type": "hidden",
-        "default": 2
+        "type": "number"
       },
       "credentials": {
         "type": "object",
@@ -223,9 +26,6 @@
             "title": "Govee Developer API Key",
             "required": false
           }
-        },
-        "condition": {
-          "functionBody": "return model === undefined || model['_version'] === 2 || model['credentials'] !== undefined;"
         }
       },
       "controlChannels": {
@@ -241,9 +41,6 @@
             "default": true,
             "title": "AWS IoT Control"
           }
-        },
-        "condition": {
-          "functionBody": "return model === undefined || model['_version'] === 2 || model['credentials'] !== undefined;"
         }
       },
       "deviceConfigs": {
@@ -291,6 +88,8 @@
               "type": "array",
               "removeable": false,
               "addable": false,
+              "expandable": true,
+              "expanded": false,
               "items": {
                 "type": "object",
                 "properties": {
@@ -299,13 +98,39 @@
                     "title": "Effect Name"
                   },
                   "code": {
-                    "type": "hidden",
+                    "type": "number",
                     "title": "Effect Code"
                   },
                   "enabled": {
                     "type": "boolean",
-                    "title": "Enable Light Effect",
-                    "default": false
+                    "title": "Enable Light Effect"
+                  }
+                }
+              },
+              "condition": {
+                "functionBody": "return model.deviceConfigs[arrayIndices]._type !== 'device;"
+              }
+            },
+            "diy": {
+              "type": "array",
+              "removeable": false,
+              "addable": false,
+              "expandable": true,
+              "expanded": false,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "title": "Effect Name"
+                  },
+                  "code": {
+                    "type": "number",
+                    "title": "Effect Code"
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "title": "Enable Light Effect"
                   }
                 }
               },
@@ -315,358 +140,10 @@
             }
           },
           "condition": {
-            "functionBody": "return model.deviceConfigs[arrayIndices];"
+            "functionBody": "return model && model.deviceConfigs && model.deviceConfigs.length > 0 model.deviceConfigs[arrayIndices];"
           }
         }
       }
     }
-  },
-  "layout": [
-    {
-      "type": "section",
-      "condition": {
-        "functionBody": "return model !== undefined && 'username' in model &&  model._version === undefined && !('credentials' in model) && !('deviceConfigs' in model);"
-      },
-      "items": [
-        {
-          "type": "flex",
-          "flex-flow": "row wrap",
-          "items": ["username", "password"]
-        },
-        {
-          "type": "section",
-          "key": "connections",
-          "items": [
-            {
-              "type": "div",
-              "displayFlex": true,
-              "flex-direction": "row",
-              "items": [
-                {
-                  "key": "connections.iot",
-                  "flex": "1 1 33%"
-                },
-                {
-                  "key": "connections.ble",
-                  "flex": "1 1 33%"
-                },
-                {
-                  "key": "connections.api",
-                  "flex": "1 1 33%"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "section",
-          "key": "devices",
-          "items": [
-            {
-              "type": "section",
-              "title": "Air Purifiers",
-              "expandable": true,
-              "expanded": true,
-              "items": [
-                {
-                  "type": "array",
-                  "key": "devices.airPurifiers",
-                  "notitle": true,
-                  "items": [
-                    {
-                      "type": "div",
-                      "displayFlex": true,
-                      "flex-direction": "column",
-                      "items": [
-                        {
-                          "type": "div",
-                          "displayFlex": true,
-                          "flex-direction": "row",
-                          "items": [
-                            {
-                              "key": "devices.airPurifiers[].deviceId",
-                              "flex": "4 4 50%"
-                            },
-                            {
-                              "key": "devices.airPurifiers[].model",
-                              "flex": "1 1 50%"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "div",
-                          "displayFlex": "true",
-                          "flex-direction": "row",
-                          "items": [
-                            {
-                              "key": "devices.airPurifiers[].ignore",
-                              "flex": "1 1 20%"
-                            },
-                            {
-                              "key": "devices.airPurifiers[].displayName",
-                              "flex": "4 4 80%"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "section",
-              "title": "Humidifiers",
-              "expandable": true,
-              "expanded": true,
-              "items": [
-                {
-                  "type": "array",
-                  "key": "devices.humidifiers",
-                  "removeable": false,
-                  "addable": false,
-                  "notitle": true,
-                  "items": [
-                    {
-                      "type": "div",
-                      "displayFlex": true,
-                      "flex-direction": "column",
-                      "items": [
-                        {
-                          "type": "div",
-                          "displayFlex": true,
-                          "flex-direction": "row",
-                          "items": [
-                            {
-                              "key": "devices.humidifiers[].deviceId",
-                              "flex": "4 4 50%"
-                            },
-                            {
-                              "key": "devices.humidifiers[].model",
-                              "flex": "1 1 50%"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "div",
-                          "displayFlex": "true",
-                          "flex-direction": "row",
-                          "items": [
-                            {
-                              "key": "devices.humidifiers[].ignore",
-                              "flex": "1 1 20%"
-                            },
-                            {
-                              "key": "devices.humidifiers[].displayName",
-                              "flex": "4 4 80%"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "section",
-              "title": "Lights",
-              "expandable": true,
-              "expanded": true,
-              "items": [
-                {
-                  "type": "array",
-                  "key": "devices.lights",
-                  "notitle": true,
-                  "items": [
-                    {
-                      "type": "div",
-                      "displayFlex": true,
-                      "flex-direction": "column",
-                      "items": [
-                        {
-                          "type": "div",
-                          "displayFlex": true,
-                          "flex-direction": "row",
-                          "items": [
-                            {
-                              "key": "devices.lights[].deviceId",
-                              "flex": "4 4 50%"
-                            },
-                            {
-                              "key": "devices.lights[].model",
-                              "flex": "1 1 50%"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "div",
-                          "displayFlex": "true",
-                          "flex-direction": "row",
-                          "items": [
-                            {
-                              "key": "devices.lights[].ignore",
-                              "flex": "1 1 20%"
-                            },
-                            {
-                              "key": "devices.lights[].displayName",
-                              "flex": "4 4 60%"
-                            },
-                            {
-                              "key": "devices.lights[].hideSegments",
-                              "flex": "1 1 20%",
-                              "condition": {
-                                "functionBody": "return (model.devices.lights && model.devices.lights[arrayIndices] && (model.devices.lights[arrayIndices]._lightType === 'RGBIC' || model.devices.lights[arrayIndices].hideSegments !== undefined);"
-                              }
-                            }
-                          ]
-                        },
-                        {
-                          "type": "section",
-                          "title": "Effects",
-                          "expandable": true,
-                          "expanded": false,
-                          "items": [
-                            {
-                              "type": "array",
-                              "key": "devices.lights[].effects",
-                              "htmlClass": "pre-scrollable",
-                              "notitle": true,
-                              "items": [
-                                {
-                                  "type": "div",
-                                  "displayFlex": true,
-                                  "flex-direction": "row",
-                                  "items": [
-                                    {
-                                      "key": "devices.lights[].effects[].enabled",
-                                      "notitle": true,
-                                      "flex": "4 4 10%"
-                                    },
-                                    {
-                                      "key": "devices.lights[].effects[].name",
-                                      "notitle": true,
-                                      "flex": "1 1 90%"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "section",
-      "condition": {
-        "functionBody": "return model === undefined || !('username' in model) || 'deviceConfigs' in model || model['2'] === 2 || model._version === 2 || model._version === '2'"
-      },
-      "items": [
-        {
-          "type": "flex",
-          "flex-flow": "row wrap",
-          "items": ["credentials.username", "credentials.password"]
-        },
-        {
-          "type": "section",
-          "key": "controlChannels",
-          "items": [
-            {
-              "type": "div",
-              "displayFlex": true,
-              "flex-direction": "row",
-              "items": [
-                {
-                  "key": "controlChannels.iot",
-                  "flex": "1 1 33%"
-                },
-                {
-                  "key": "controlChannels.ble",
-                  "flex": "1 1 33%"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "section",
-          "key": "deviceConfigs",
-          "items": [
-            {
-              "type": "section",
-              "items": [
-                {
-                  "type": "div",
-                  "displayFlex": true,
-                  "flex-direction": "row",
-                  "items": [
-                    {
-                      "key": "deviceConfigs[].id",
-                      "flex": "1 1 30%"
-                    },
-                    {
-                      "key": "deviceConfigs[].name",
-                      "flex": "1 1 70%"
-                    }
-                  ]
-                },
-                {
-                  "type": "div",
-                  "displayFlex": true,
-                  "flex-direction": "row",
-                  "items": [
-                    {
-                      "key": "deviceConfigs[].ignore",
-                      "flex": "1 1 30%"
-                    },
-                    {
-                      "key": "deviceConfigs[].exposePrevious",
-                      "flex": "1 1 30%"
-                    },
-                    {
-                      "key": "deviceConfigs[].showSegments",
-                      "flex": "1 1 30%",
-                      "condition": {
-                        "functionBody": "return model.deviceConfigs && model.deviceConfigs[arrayIndices]._type === 'rgbic';"
-                      }
-                    }
-                  ]
-                },
-                {
-                  "type": "div",
-                  "items": [
-                    {
-                      "type": "array",
-                      "items": [
-                        {
-                          "key": "deviceConfigs[].effects[].enabled"
-                        },
-                        {
-                          "key": "deviceConfigs[].effects[].name"
-                        }
-                      ]
-                    }
-                  ],
-                  "condition": {
-                    "functionBody": "return model.deviceConfigs[]._type.includes('rgb')"
-                  }
-                }
-              ]
-            }
-          ],
-          "condition": {
-            "functionBody": "return model.deviceConfigs && model.deviceConfigs.length > 0;"
-          }
-        }
-      ]
-    }
-  ]
+  }
 }

@@ -1,5 +1,5 @@
-import 'reflect-metadata';
 import { API } from 'homebridge';
+import 'reflect-metadata';
 
 import { PLATFORM_NAME } from './settings';
 import { UltimateGoveePlatform } from './ultimate-govee-platform';

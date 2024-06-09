@@ -3,8 +3,8 @@ import { Expose } from 'class-transformer';
 export class ControlChannels {
   constructor() {}
   @Expose({ name: 'iot' })
-  iot: boolean = false;
+  iot!: boolean;
 
   @Expose({ name: 'ble' })
-  ble: boolean = false;
+  ble!: boolean;
 }

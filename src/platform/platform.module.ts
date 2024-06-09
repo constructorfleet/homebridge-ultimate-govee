@@ -7,6 +7,7 @@ import {
 import { AccessoryModule } from './accessory/accessory.module';
 import { PlatformService } from './platform.service';
 import { AccessoryModuleOptionsType } from './accessory';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 export const {
   ConfigurableModuleClass,
@@ -26,6 +27,7 @@ export const {
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     AccessoryModule.forRootAsync({
       inject: [MODULE_OPTIONS_TOKEN],
       useFactory: (

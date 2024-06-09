@@ -131,15 +131,13 @@ export class HandlerRegistry {
       if (
         handler.isPrimary ||
         handler.subType === undefined ||
+        handler.isEnabled === undefined ||
         handler.isEnabled(accessory, handler.subType)
       ) {
         handler.setup(accessory);
+      } else {
+        handler.tearDown(accessory);
       }
-      // if (handler.isEnabled(accessory, handler.subType)) {
-      //   handler.setup(accessory);
-      // } else {
-      //   handler.tearDown(accessory);
-      // }
     });
   }
 }

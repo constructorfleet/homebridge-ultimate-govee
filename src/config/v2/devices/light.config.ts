@@ -1,26 +1,52 @@
-import { Exclude, Expose, Type } from 'class-transformer';
+import { DiyEffect, LightEffect } from '@constructorfleet/ultimate-govee';
+import { Expose, Transform, instanceToPlain } from 'class-transformer';
+import { using } from '../../../common';
 import { DeviceConfig } from './device.config';
 
 export class LightEffectConfig {
+  static from(effect: LightEffect): LightEffectConfig | undefined {
+    if (effect?.code === undefined || effect?.name === undefined) {
+      return undefined;
+    }
+
+    const config = new LightEffectConfig();
+    config.code = effect.code;
+    config.name = effect.name;
+    config.enabled = false;
+    return config;
+  }
+
   @Expose({ name: 'name' })
-  name: string = '';
+  name!: string;
 
   @Expose({ name: 'code' })
-  code: number = 0;
-
-  @Expose({ name: 'description' })
-  description: string = '';
+  code!: number;
 
   @Expose({ name: 'enabled' })
-  enabled: boolean = false;
+  enabled!: boolean;
 }
 
 export class DiyEffectConfig {
+  static from(effect: DiyEffect): DiyEffectConfig | undefined {
+    if (effect?.code === undefined || effect?.name === undefined) {
+      return undefined;
+    }
+
+    const config = new DiyEffectConfig();
+    config.code = effect.code;
+    config.name = effect.name;
+    config.enabled = false;
+    return config;
+  }
+
   @Expose({ name: 'name' })
-  name: string = '';
+  name!: string;
 
   @Expose({ name: 'code' })
-  code: number = 0;
+  code!: number;
+
+  @Expose({ name: 'enabled' })
+  enabled!: boolean;
 }
 
 export class RGBLightDeviceConfig extends DeviceConfig {
@@ -28,20 +54,74 @@ export class RGBLightDeviceConfig extends DeviceConfig {
   type: string = 'rgb';
 
   @Expose({ name: 'effects' })
-  @Type(() => LightEffectConfig)
-  effects: LightEffectConfig[] = [];
+  @Transform(
+    ({ value }: { value: Record<string, LightEffectConfig> }) =>
+      Object.values(value ?? {})
+        .filter((e) => !!e.code && !!e.name)
+        .map((e) => instanceToPlain(e)),
+    { toPlainOnly: true },
+  )
+  @Transform(
+    ({
+      value,
+    }: {
+      value?: { code?: number; name?: string; enabled?: boolean }[];
+    }) =>
+      value?.reduce(
+        (acc, cur) => {
+          if (cur.code === undefined || cur.name === undefined) {
+            return acc;
+          }
 
-  @Exclude()
-  get effectMap(): Map<number, LightEffectConfig> {
-    return this.effects.reduce((m, curr) => {
-      m.set(curr.code, curr);
-      return m;
-    }, new Map());
-  }
+          acc[cur.code] = using(new LightEffectConfig()).do((config) => {
+            config.code = cur.code!;
+            config.name = cur.name!;
+            config.enabled = cur.enabled === true;
+          });
+          return acc;
+        },
+        {} as Record<string, LightEffectConfig>,
+      ) ?? ({} as Record<string, LightEffectConfig>),
+    {
+      toClassOnly: true,
+    },
+  )
+  effects!: Record<number, LightEffectConfig>;
 
   @Expose({ name: 'diy' })
-  @Type(() => LightEffectConfig)
-  diy: DiyEffectConfig[] = [];
+  @Transform(
+    ({ value }: { value: Record<string, DiyEffectConfig> }) =>
+      Object.values(value ?? {})
+        .filter((e) => !!e.code && !!e.name)
+        .map((e) => instanceToPlain(e)),
+    { toPlainOnly: true },
+  )
+  @Transform(
+    ({
+      value,
+    }: {
+      value?: { code?: number; name?: string; enabled?: boolean }[];
+    }) =>
+      value?.reduce(
+        (acc, cur) => {
+          if (cur.code === undefined || cur.name === undefined) {
+            return acc;
+          }
+
+          acc[cur.code] = using(new DiyEffectConfig()).do((config) => {
+            config.code = cur.code!;
+            config.name = cur.name!;
+            config.enabled = cur.enabled === true;
+          });
+          return acc;
+        },
+        {} as Record<string, DiyEffectConfig>,
+      ) ?? ({} as Record<string, DiyEffect>),
+    {
+      toClassOnly: true,
+    },
+  )
+  diy!: Record<number, DiyEffectConfig>;
 }
 
 export class RGBICLightDeviceConfig extends RGBLightDeviceConfig {
@@ -49,5 +129,5 @@ export class RGBICLightDeviceConfig extends RGBLightDeviceConfig {
   type: string = 'rgbic';
 
   @Expose({ name: 'segments' })
-  showSegments: boolean = false;
+  showSegments!: boolean;
 }

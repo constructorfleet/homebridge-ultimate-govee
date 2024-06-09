@@ -3,25 +3,26 @@ import {
   DeviceStatesType,
   Optional,
 } from '@constructorfleet/ultimate-govee';
-import { Service, Characteristic } from 'hap-nodejs';
+import { Logger, Type, mixin } from '@nestjs/common';
+import { Characteristic, Service } from 'hap-nodejs';
+import { API, WithUUID } from 'homebridge';
+import { Subscription } from 'rxjs';
+import { InjectHomebridgeApi } from '../accessory.const';
+import { GoveeAccessory } from '../govee.accessory';
 import {
   CharacteristicHandler,
   CharacteristicHandlerFunctions,
+  CharacteristicType,
+  IsServiceEnabled,
   ServiceCharacteristicHandlers,
   ServiceName,
-  SubServiceHandler as SubServiceHandlerType,
   ServiceType,
-  IsServiceEnabled,
+  SubServiceHandler as SubServiceHandlerType,
 } from './handler.types';
-import { Logger, Type, mixin } from '@nestjs/common';
-import { API, WithUUID } from 'homebridge';
-import { InjectHomebridgeApi } from '../accessory.const';
-import { Subscription } from 'rxjs';
-import { GoveeAccessory } from '../govee.accessory';
 
-const defaultName = <States extends DeviceStatesType>(device: Device<States>) =>
-  device.name;
-const defaultEnabled = () => true;
+const defaultName = <States extends DeviceStatesType>(
+  accessory: GoveeAccessory<States>,
+) => accessory.name;
 
 export const getServiceIdentifier = (
   deviceType: string,
@@ -33,11 +34,12 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
   protected readonly logger: Logger = new Logger(this.constructor.name);
   abstract readonly handlers: ServiceCharacteristicHandlers<States>;
   abstract readonly serviceType: ServiceType;
-  readonly name: ServiceName<States> = defaultName;
+  readonly optionalCharacteristics: CharacteristicType[] | undefined;
+  readonly name: ServiceName<States> | undefined;
   readonly isPrimary: boolean = false;
   readonly subType: string | undefined = undefined;
   readonly subscriptions: Map<string, Subscription[]> = new Map();
-  readonly isEnabled: IsServiceEnabled<States> = defaultEnabled;
+  readonly isEnabled: IsServiceEnabled<States> | undefined;
 
   constructor(@InjectHomebridgeApi private readonly api: API) {}
 
@@ -50,8 +52,8 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         >[]
       | undefined,
     functionName?: CharacteristicHandlerFunctions,
-  ): CharacteristicHandler<WithUUID<Type<Characteristic>>, unknown>[] {
-    return (
+  ): CharacteristicHandler<CharacteristicType, unknown>[] {
+    const filteredHandlers =
       handlers
         ?.filter((handler) => {
           if (handler === undefined) {
@@ -73,18 +75,16 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
           }
           return true;
         })
-        .map((handler) => handler!) ?? []
-    );
+        .map((handler) => handler!) ?? [];
+    return Array.from(new Set(filteredHandlers).values());
   }
 
   private setProps<StateType, ServiceType extends WithUUID<Service>>(
     logger: Logger,
-    device: Device<States>,
+    accessory: GoveeAccessory<States>,
     service: ServiceType,
     handlers:
-      | Optional<
-          CharacteristicHandler<WithUUID<Type<Characteristic>>, unknown>
-        >[]
+      | Optional<CharacteristicHandler<CharacteristicType, unknown>>[]
       | undefined,
     value: StateType,
   ) {
@@ -98,7 +98,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         const charProps =
           value !== undefined
             ? handler.configure(value, {
-                device,
+                accessory,
                 service,
                 characteristic: char,
               })
@@ -114,11 +114,9 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
 
   private doUpdate<StateType, ServiceType extends WithUUID<Service>>(
     logger: Logger,
-    device: Device<States>,
+    accessory: GoveeAccessory<States>,
     service: ServiceType,
-    handlers:
-      | CharacteristicHandler<WithUUID<Type<Characteristic>>, unknown>[]
-      | undefined,
+    handlers: CharacteristicHandler<CharacteristicType, unknown>[] | undefined,
     value: StateType,
   ) {
     this.filterHandlers(logger, service, handlers)?.forEach((handler) => {
@@ -126,7 +124,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       const charValue =
         value !== undefined
           ? handler.updateValue(value, {
-              device,
+              accessory,
               service,
               characteristic: char,
             })
@@ -135,11 +133,31 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       if (charValue === undefined) {
         return;
       }
-      logger.debug(
-        `Updating characteristic ${handler.characteristic.name} to ${charValue}`,
+      logger.log(
+        `Updating characteristic ${service.name} ${service.subtype} ${handler.characteristic.name} to ${charValue}`,
       );
       char.updateValue(charValue);
     });
+  }
+
+  private setServiceName(
+    goveeAccessory: GoveeAccessory<States>,
+    service: Service,
+  ) {
+    const serviceName = this.name
+      ? this.name(goveeAccessory, this.subType)
+      : defaultName(goveeAccessory);
+    service.name = serviceName;
+    service.displayName = serviceName;
+    [...service.characteristics, ...service.optionalCharacteristics]
+      .filter(
+        (char) =>
+          char.UUID === Characteristic.Name.UUID ||
+          char.UUID === Characteristic.ConfiguredName.UUID,
+      )
+      .forEach((char) => {
+        char.updateValue(serviceName);
+      });
   }
 
   tearDown(goveeAccessory: GoveeAccessory<States>): Service | undefined {
@@ -174,24 +192,39 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       accessory.context.initialized &&
       accessory.context.initialized[initializedKey] === true
     ) {
-      return accessory.services.find(
-        (service) =>
-          service.UUID === this.serviceType.UUID &&
-          this.subType === service.subtype,
+      const service = accessory.services.find(
+        (s) => s.UUID === this.serviceType.UUID && s.subtype === this.subType,
       );
+      if (service !== undefined) {
+        this.setServiceName(goveeAccessory, service);
+        return service;
+      }
     }
     let newService: Service | undefined = accessory.services.find(
-      (service) =>
-        service.UUID === this.serviceType.UUID &&
-        this.subType === service.subtype,
+      (s) => s.UUID === this.serviceType.UUID && s.subtype === this.subType,
     );
     if (newService === undefined) {
-      newService = new this.serviceType(device.name, this.subType);
+      newService = new this.serviceType(
+        this.name
+          ? this.name(goveeAccessory, this.subType)
+          : defaultName(goveeAccessory),
+        this.subType,
+      );
+      if (this.optionalCharacteristics) {
+        this.optionalCharacteristics.forEach((char) =>
+          newService!.addOptionalCharacteristic(char),
+        );
+      }
       accessory.addService(newService);
     }
     const service = newService!;
+    this.setServiceName(goveeAccessory, service);
+
     if (service.isPrimaryService !== this.isPrimary) {
       service.setPrimaryService(this.isPrimary);
+    }
+    if (this.subType === 'light-9') {
+      service.getCharacteristic(Characteristic.On);
     }
     const subscriptions: Subscription[] = [];
     Object.entries(this.handlers).forEach(([stateName, handlers]) => {
@@ -200,10 +233,10 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         logger.error(`No characteristic handlers for state ${stateName}`);
       }
 
-      this.setProps(logger, device, service, handlers, state?.value);
+      this.setProps(logger, goveeAccessory, service, handlers, state?.value);
       const sub = state?.subscribe((value) => {
-        this.setProps(logger, device, service, handlers, value);
-        this.doUpdate(logger, device, service, handlers, value);
+        this.setProps(logger, goveeAccessory, service, handlers, value);
+        this.doUpdate(logger, goveeAccessory, service, handlers, value);
       });
       if (sub !== undefined) {
         subscriptions.push(sub);
@@ -213,13 +246,13 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         (handler) => {
           const char = service.getCharacteristic(handler.characteristic)!;
           logger.debug(
-            `Assigning onSet handler to ${handler.characteristic.name} `,
+            `Assigning onSet handler ${service.name} ${service.subtype} ${handler.characteristic.name} to characteristic ${handler.characteristic.name}`,
           );
           char.onSet((value) => {
             const stateValue =
               value !== undefined
                 ? handler.onSet!(value, {
-                    device,
+                    accessory: goveeAccessory,
                     service,
                     characteristic: char,
                   })
@@ -228,8 +261,10 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
               return;
             }
 
-            logger.debug(`Issuing state ${stateValue} to ${stateName} `);
-            state?.setState(stateValue);
+            logger.debug(
+              `Issuing state ${stateValue} to ${service.name} ${service.subtype} ${stateName}`,
+            ),
+              state?.setState(stateValue);
           });
         },
       );
@@ -249,6 +284,7 @@ export const SubServiceHandler = <States extends DeviceStatesType>(
   characteristicHandlers: ServiceCharacteristicHandlers<States>,
   isEnabled: IsServiceEnabled<States>,
   isPrimary: boolean,
+  ...optionalCharacteristics: CharacteristicType[]
 ): Type<SubServiceHandlerType<States>> => {
   const identifier = getServiceIdentifier(
     deviceType.deviceType,
@@ -264,6 +300,8 @@ export const SubServiceHandler = <States extends DeviceStatesType>(
     readonly serviceType: ServiceType = serviceType;
     readonly subType: string | undefined = subType;
     readonly isEnabled: IsServiceEnabled<States> = isEnabled;
+    readonly optionalCharacteristics: CharacteristicType[] =
+      optionalCharacteristics;
   }
 
   return mixin(SubServiceHandlerMixin);

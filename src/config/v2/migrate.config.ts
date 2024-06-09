@@ -1,9 +1,9 @@
+import { using } from '../../common';
 import {
   GoveeLightOverride,
   GoveeRGBICLightOverride,
   GoveePluginConfig as v1Config,
 } from '../v1/plugin-config.govee';
-import { GoveePluginConfig } from './plugin-config.govee';
 import { DeviceConfig } from './devices/device.config';
 import {
   DiyEffectConfig,
@@ -11,6 +11,7 @@ import {
   RGBICLightDeviceConfig,
   RGBLightDeviceConfig,
 } from './devices/light.config';
+import { GoveePluginConfig } from './plugin-config.govee';
 
 export const migrateConfig = (config: v1Config): GoveePluginConfig => {
   const newConfig = new GoveePluginConfig();
@@ -56,22 +57,27 @@ export const migrateConfig = (config: v1Config): GoveePluginConfig => {
       deviceConfig.id = device.deviceId!;
       deviceConfig.name = device.displayName;
       deviceConfig.ignore = device.ignore === true;
-      deviceConfig.effects =
+      deviceConfig.effects = Object.fromEntries(
         device.effects?.map((effect) => {
-          const lightConfig = new LightEffectConfig();
-          lightConfig.code = effect.id;
-          lightConfig.description = effect.description;
-          lightConfig.enabled = effect.enabled === true;
-          lightConfig.name = effect.name;
-          return lightConfig;
-        }) ?? [];
-      deviceConfig.diy =
+          const lightConfig = using(new LightEffectConfig()).do(
+            (lightConfig) => {
+              lightConfig.code = effect.id;
+              lightConfig.enabled = effect.enabled === true;
+              lightConfig.name = effect.name;
+            },
+          );
+          return [lightConfig.code, lightConfig];
+        }) ?? [],
+      );
+      deviceConfig.diy = Object.fromEntries(
         device.effects?.map((effect) => {
-          const diyConfig = new DiyEffectConfig();
-          diyConfig.code = effect.id;
-          diyConfig.name = effect.name;
-          return diyConfig;
-        }) ?? [];
+          const diyConfig = using(new DiyEffectConfig()).do((diyConfig) => {
+            diyConfig.code = effect.id;
+            diyConfig.name = effect.name;
+          });
+          return [diyConfig.code, diyConfig];
+        }) ?? [],
+      );
       if (deviceConfig instanceof RGBICLightDeviceConfig) {
         if (device instanceof GoveeRGBICLightOverride) {
           deviceConfig.showSegments = device.hideSegments === false;

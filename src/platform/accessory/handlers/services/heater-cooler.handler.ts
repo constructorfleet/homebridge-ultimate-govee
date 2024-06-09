@@ -11,8 +11,19 @@ import {
   IceMakerStatusStateName,
   MakingIceStateName,
   NuggetSizeStateName,
+  TemperatureStateName,
 } from '@constructorfleet/ultimate-govee';
 import { HandlerRegistry } from '../handler.registry';
+
+type MeasurementData = {
+  range?: {
+    min: number;
+    max: number;
+  };
+  calibration?: number;
+  raw?: number;
+  current?: number;
+};
 
 const toSpeed = (device: Device & IceMaker, size): number => {
   switch (size) {
@@ -73,10 +84,26 @@ export class IceMakerHeaderCoolerServiceHandler extends ServiceHandler<
     [NuggetSizeStateName]: [
       {
         characteristic: Characteristic.RotationSpeed,
-        updateValue: (value, { device }) =>
-          toSpeed(device as Device & IceMaker, value),
-        onSet: (value, { device }) =>
-          toSize(device as Device & IceMaker, value as number),
+        updateValue: (value, { accessory }) =>
+          toSpeed(accessory.device as Device & IceMaker, value),
+        onSet: (value, { accessory }) =>
+          toSize(accessory.device as Device & IceMaker, value as number),
+      },
+    ],
+    [TemperatureStateName]: [
+      {
+        characteristic: Characteristic.CurrentTemperature,
+        configure: (value) => {
+          const measurementData = value as MeasurementData;
+          return measurementData?.range?.min !== undefined &&
+            measurementData?.range?.max !== undefined
+            ? {
+                minValue: measurementData.range.min,
+                measurementData: measurementData.range.max,
+              }
+            : { undefined };
+        },
+        updateValue: (value) => (value as MeasurementData)?.current,
       },
     ],
     basketFull: [],

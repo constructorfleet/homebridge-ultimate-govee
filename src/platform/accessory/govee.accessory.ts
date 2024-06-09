@@ -1,35 +1,306 @@
-import {
-  Device,
-  DeviceStatesType,
-  PartialBehaviorSubject,
-} from '@constructorfleet/ultimate-govee';
-import { Service, Characteristic } from 'hap-nodejs';
-import { PlatformAccessory } from 'homebridge';
-import { ConfigType } from '../../config';
+import { Device, DeviceStatesType } from '@constructorfleet/ultimate-govee';
 import { Logger } from '@nestjs/common';
+import { Characteristic, Service } from 'hap-nodejs';
+import { PlatformAccessory } from 'homebridge';
+import {
+  ConfigType,
+  DeviceConfig,
+  DiyEffectConfig,
+  LightEffectConfig,
+  PluginDeviceConfig,
+  RGBICLightDeviceConfig,
+  RGBLightDeviceConfig,
+} from '../../config';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+
+export type AccessoryContext = {
+  initialized: Record<string, boolean>;
+  deviceConfig: PluginDeviceConfig;
+};
+
+export type GoveePlatformAccessory = PlatformAccessory<AccessoryContext>;
+
+export class GoveeAccessoryEffect {
+  private logger: Logger;
+
+  get name(): string {
+    return this.effectName;
+  }
+
+  set name(name: string) {
+    if (this.effectName === name) {
+      return;
+    }
+    this.effectName = name;
+    this.accessory.accessory
+      .getServiceById(Service.Switch, this.code.toString())
+      ?.getCharacteristic(Characteristic.Name)
+      ?.updateValue(
+        `${this.accessory.name} ${this.name} ${this.effectType} Effect`,
+      );
+  }
+
+  get isExposed(): boolean {
+    return this.exposed;
+  }
+
+  set isExposed(exposed: boolean) {
+    if (this.exposed === exposed) {
+      return;
+    }
+    this.exposed = exposed;
+  }
+
+  constructor(
+    readonly code: number,
+    private effectType: 'light' | 'diy',
+    private effectName: string,
+    private exposed: boolean,
+    private readonly accessory: GoveeAccessory<any>,
+  ) {
+    this.logger = new Logger(`${accessory.id}-${this.name}`);
+  }
+}
 
 export class GoveeAccessory<States extends DeviceStatesType> {
-  private readonly logger: Logger = new Logger(
-    `${GoveeAccessory.name}-${this.device.name}`,
-  );
+  static parseConfig(
+    deviceConfig: PluginDeviceConfig,
+  ): ConfigType<DeviceStatesType> {
+    switch (deviceConfig._type) {
+      case 'rgbic':
+        return plainToInstance(RGBICLightDeviceConfig, deviceConfig);
+      case 'rgb':
+        return plainToInstance(RGBLightDeviceConfig, deviceConfig);
+      default:
+        return plainToInstance(DeviceConfig, deviceConfig);
+    }
+  }
+
+  private logger?: Logger;
+  private ignore: boolean = false;
+  private debug: boolean = false;
+  private enablePrevious: boolean = false;
+  private showSegments: boolean = false;
+  readonly lightEffects: Map<number, GoveeAccessoryEffect> = new Map();
+  readonly diyEffects: Map<number, GoveeAccessoryEffect> = new Map();
+
+  get id(): string {
+    return this.device.id;
+  }
+
   get deviceType(): string {
     return this.device.deviceType;
   }
 
-  constructor(
-    readonly device: Device<States>,
-    readonly accessory: PlatformAccessory,
-    readonly deviceConfig: PartialBehaviorSubject<ConfigType<States>>,
-  ) {
-    this.setupInformationService();
+  get name(): string {
+    return (this.accessory
+      .getService(Service.AccessoryInformation)
+      ?.getCharacteristic(Characteristic.ConfiguredName)?.value ??
+      this.device.name) as string;
   }
 
-  private setupInformationService() {
+  set name(name: string) {
+    const nameChar = this.accessory
+      .getService(Service.AccessoryInformation)
+      ?.getCharacteristic(Characteristic.ConfiguredName);
+
+    if (nameChar?.value !== name) {
+      nameChar?.updateValue(name);
+      Logger.flush();
+      this.logger = new Logger(`${GoveeAccessory.name}-${name}`);
+      this.logger.log(`Device name is now ${name}`);
+    }
+  }
+
+  get isIgnored(): boolean {
+    return this.ignore;
+  }
+
+  set isIgnored(ignore: boolean) {
+    if (this.isIgnored === ignore) {
+      return;
+    }
+    this.ignore = ignore;
+    this.logger?.log(`Ignoring device ${ignore ? 'enabled' : 'disabled'}`);
+  }
+
+  get isDebugging(): boolean {
+    return this.debug;
+  }
+
+  set isDebugging(debug: boolean) {
+    if (this.debug === debug) {
+      return;
+    }
+    this.debug = debug;
+    this.device.debug(debug);
+    this.logger?.log(`Debugging ${debug ? 'enabled' : 'disabled'}`);
+  }
+
+  get exposePreviousButton(): boolean {
+    return this.enablePrevious;
+  }
+
+  set exposePreviousButton(exposePrevious: boolean) {
+    if (this.exposePreviousButton === exposePrevious) {
+      return;
+    }
+    this.enablePrevious = exposePrevious;
+    this.logger?.log(
+      `Previous button ${exposePrevious ? 'enabled' : 'disabled'}`,
+    );
+  }
+
+  get shouldShowSegments(): boolean {
+    return this.showSegments;
+  }
+
+  set shouldShowSegments(showSegments: boolean) {
+    if (this.showSegments === showSegments) {
+      return;
+    }
+    this.showSegments = showSegments;
+  }
+
+  addLightEffect(effect: LightEffectConfig): boolean {
+    if (this.lightEffects.has(effect.code)) {
+      return false;
+    }
+    this.lightEffects.set(
+      effect.code,
+      new GoveeAccessoryEffect(
+        effect.code,
+        'light',
+        effect.name,
+        effect.enabled,
+        this,
+      ),
+    );
+    return true;
+  }
+
+  removeLightEffect(code: number): boolean {
+    if (!this.lightEffects.has(code)) {
+      return false;
+    }
+    this.lightEffects.delete(code);
+    return true;
+  }
+
+  addDiyEffect(effect: DiyEffectConfig): boolean {
+    if (this.diyEffects.has(effect.code)) {
+      return false;
+    }
+    this.diyEffects.set(
+      effect.code,
+      new GoveeAccessoryEffect(
+        effect.code,
+        'diy',
+        effect.name,
+        effect.enabled,
+        this,
+      ),
+    );
+    return true;
+  }
+
+  removeDiyEffect(code: number): boolean {
+    if (!this.diyEffects.has(code)) {
+      return false;
+    }
+    this.diyEffects.delete(code);
+    return true;
+  }
+
+  set deviceConfig(deviceConfig: ConfigType<States>) {
+    this.accessory.context = {
+      initialized: this.accessory.context.initialized ?? {},
+      deviceConfig: instanceToPlain(deviceConfig) as PluginDeviceConfig,
+    };
+  }
+
+  get deviceConfig(): ConfigType<States> {
+    const config = GoveeAccessory.parseConfig(
+      this.accessory.context.deviceConfig,
+    );
+    return config;
+  }
+
+  isServiceInitialized(serviceKey: string): boolean {
+    return (
+      !!this.accessory.context.initialized &&
+      this.accessory.context.initialized[serviceKey]
+    );
+  }
+
+  serviceInitialized(serviceKey: string, isInitialized: boolean = true) {
+    this.accessory.context = {
+      initialized: {
+        ...(this.accessory.context.initialized ?? {}),
+        [serviceKey]: isInitialized,
+      },
+      deviceConfig: this.accessory.context.deviceConfig,
+    };
+  }
+
+  constructor(
+    readonly device: Device<States>,
+    readonly accessory: GoveePlatformAccessory,
+    deviceConfig: ConfigType<States>,
+  ) {
+    this.setup(deviceConfig);
+  }
+
+  setup(config: ConfigType<States>) {
+    this.deviceConfig = config;
     const service = this.accessory.getService(Service.AccessoryInformation);
     if (service === undefined) {
       return;
     }
-    const config = this.deviceConfig.getValue();
+
+    this.name = config.name ?? this.device.name;
+    this.isDebugging = config.debug === true;
+    this.shouldShowSegments = config.exposePrevious === true;
+    this.isIgnored = config.ignore === true;
+
+    if (config instanceof RGBLightDeviceConfig) {
+      Array.from(this.lightEffects?.values() ?? [])
+        .filter((effect) => !config.effects[effect.code])
+        .forEach((effect) => this.removeLightEffect(effect.code));
+      Object.values(config.effects).forEach((effect) => {
+        if (effect.code === undefined || effect.name === undefined) {
+          return;
+        }
+        this.lightEffects.set(
+          effect.code,
+          new GoveeAccessoryEffect(
+            effect.code,
+            'light',
+            effect.name,
+            effect.enabled,
+            this,
+          ),
+        );
+      });
+      Array.from(this.diyEffects?.values() ?? [])
+        .filter((effect) => !config.diy[effect.code])
+        .forEach((effect) => this.removeDiyEffect(effect.code));
+      Object.values(config.diy).forEach((effect) => {
+        if (effect.code === undefined || effect.name === undefined) {
+          return;
+        }
+        this.diyEffects.set(
+          effect.code,
+          new GoveeAccessoryEffect(
+            effect.code,
+            'diy',
+            effect.name,
+            effect.enabled,
+            this,
+          ),
+        );
+      });
+    }
 
     if (config.name !== undefined) {
       service?.getCharacteristic(Characteristic.Name)?.updateValue(config.name);

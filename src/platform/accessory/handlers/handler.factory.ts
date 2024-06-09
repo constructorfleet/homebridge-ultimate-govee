@@ -1,8 +1,11 @@
 import { DeviceStatesType } from '@constructorfleet/ultimate-govee';
-import { InjectHomebridgeApi } from '../accessory.const';
-import { API } from 'homebridge';
+import { Logger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { API } from 'homebridge';
+import { InjectHomebridgeApi } from '../accessory.const';
+import { GoveeAccessory } from '../govee.accessory';
 import {
+  CharacteristicType,
   IsServiceEnabled,
   ServiceCharacteristicHandlerFactory,
   ServiceName,
@@ -14,8 +17,6 @@ import {
   SubServiceHandler as GetSubServiceHandler,
   getServiceIdentifier,
 } from './service.handler';
-import { GoveeAccessory } from '../govee.accessory';
-import { Logger } from '@nestjs/common';
 
 export abstract class SubServiceHandlerFactory<
   States extends DeviceStatesType,
@@ -26,6 +27,7 @@ export abstract class SubServiceHandlerFactory<
   protected abstract readonly possibleSubTypes: ServiceSubTypes<States>;
   protected abstract readonly name: ServiceName<States>;
   protected abstract readonly isPrimary: boolean;
+  protected readonly optionalCharacteristics: CharacteristicType[] = [];
   private readonly handlerMap: Map<string, SubServiceHandler<States>> =
     new Map();
   private readonly deviceTypeHandlers: Map<
@@ -42,7 +44,7 @@ export abstract class SubServiceHandlerFactory<
   async for(
     accessory: GoveeAccessory<States>,
   ): Promise<SubServiceHandler<States>[]> {
-    const possibleSubTypes = this.possibleSubTypes(accessory.device);
+    const possibleSubTypes = this.possibleSubTypes(accessory);
     if (possibleSubTypes === undefined) {
       return [];
     }
@@ -66,9 +68,10 @@ export abstract class SubServiceHandlerFactory<
           this.serviceType,
           subType,
           this.name,
-          this.handlers(accessory.device, subType),
+          this.handlers(accessory, subType),
           this.isEnabled,
           this.isPrimary,
+          ...this.optionalCharacteristics,
         );
         try {
           handler = this.moduleRef.get(handlerType);

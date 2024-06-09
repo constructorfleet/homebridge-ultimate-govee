@@ -8,7 +8,7 @@ import {
   MODULE_OPTIONS_TOKEN,
   OPTIONS_TYPE,
 } from './accessory.const';
-import { DeltaMap } from '@constructorfleet/ultimate-govee/dist/common';
+import { DeltaMap } from '@constructorfleet/ultimate-govee';
 import { PlatformAccessory } from 'homebridge';
 import { BehaviorSubject } from 'rxjs';
 import { Device } from '@constructorfleet/ultimate-govee';

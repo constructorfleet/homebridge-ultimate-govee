@@ -1,24 +1,20 @@
-import {
-  Device,
-  DeviceStatesType,
-  Optional,
-} from '@constructorfleet/ultimate-govee';
+import { DeviceStatesType, Optional } from '@constructorfleet/ultimate-govee';
 import { Type } from '@nestjs/common';
-import {
-  CharacteristicValue,
-  Service,
-  PartialAllowingNull,
-  CharacteristicProps,
-  WithUUID,
-  Characteristic,
-} from 'homebridge';
 import { ClassConstructor } from 'class-transformer';
+import {
+  Characteristic,
+  CharacteristicProps,
+  CharacteristicValue,
+  PartialAllowingNull,
+  Service,
+  WithUUID,
+} from 'homebridge';
 import { GoveeAccessory } from '../govee.accessory';
 
 export type CharacteristicOnSetHandler<StateType> = (
   value: CharacteristicValue,
   extras: {
-    device: Device<any>;
+    accessory: GoveeAccessory<any>;
     service: Service;
     characteristic: Characteristic;
   },
@@ -26,7 +22,7 @@ export type CharacteristicOnSetHandler<StateType> = (
 export type ConfigureCharacteristicProps<StateType> = (
   value: StateType,
   extras: {
-    device: Device<any>;
+    accessory: GoveeAccessory<any>;
     service: Service;
     characteristic: Characteristic;
   },
@@ -34,7 +30,7 @@ export type ConfigureCharacteristicProps<StateType> = (
 export type UpateCharacteristicHandler<StateType> = (
   value: StateType,
   extras: {
-    device: Device<any>;
+    accessory: GoveeAccessory<any>;
     service: Service;
     characteristic: Characteristic;
   },
@@ -58,11 +54,11 @@ export type CharacteristicHandler<
 };
 
 export type ServiceName<States extends DeviceStatesType> = (
-  device: Device<States>,
+  accessory: GoveeAccessory<States>,
   subType?: string,
 ) => string;
 export type ServiceSubTypes<States extends DeviceStatesType> = (
-  device: Device<States>,
+  accessory: GoveeAccessory<States>,
 ) => string[] | undefined;
 export type ServiceCharacteristicHandlers<States extends DeviceStatesType> =
   Partial<
@@ -72,10 +68,13 @@ export type ServiceCharacteristicHandlers<States extends DeviceStatesType> =
     >
   >;
 export type ServiceType = WithUUID<ClassConstructor<WithUUID<Service>>>;
+export type CharacteristicType = WithUUID<
+  ClassConstructor<WithUUID<Characteristic>>
+>;
 export type ServiceCharacteristicHandlerFactory<
   States extends DeviceStatesType,
 > = (
-  device: Device<States>,
+  accessory: GoveeAccessory<States>,
   subType: string,
 ) => ServiceCharacteristicHandlers<States>;
 export type IsServiceEnabled<States extends DeviceStatesType> = (

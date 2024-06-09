@@ -29,5 +29,5 @@
     "moduleResolution": "Node",
   },
   "include": ["src/"],
-  "exclude": [".vscode/", ".idea/", "**/*.spec.ts"],
+  "exclude": [".vscode/", ".idea/", "node-modules/", "**/*.spec.ts"],
 }
