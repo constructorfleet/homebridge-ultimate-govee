@@ -13,6 +13,8 @@ import { GoveePlatformAccessory } from './platform/accessory/govee.accessory';
 import { PlatformLogger } from './platform-logger';
 import { realpathSync } from 'fs';
 
+process.env.DEV = 'true';
+
 export class UltimateGoveePlatform implements DynamicPlatformPlugin {
   private readonly logger: Logger = new Logger(UltimateGoveePlatform.name);
   private appContext!: INestApplicationContext;
