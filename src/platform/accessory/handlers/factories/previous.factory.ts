@@ -76,8 +76,11 @@ export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> 
     );
   isEnabled: IsServiceEnabled<DeviceWithStates> = (
     accessory: GoveeAccessory<DeviceWithStates>,
-    _?: string,
-  ) => accessory.exposePreviousButton;
+    subType?: string,
+  ) =>
+    accessory.exposePreviousButton &&
+    accessory.device.state(subType?.split('-').slice(-1)?.at(0) ?? 'unknown')
+      ?.isCommandable === true;
   protected possibleSubTypes: ServiceSubTypes<DeviceWithStates> = (
     accessory: GoveeAccessory<DeviceWithStates>,
   ) =>
