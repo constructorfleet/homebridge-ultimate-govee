@@ -66,7 +66,7 @@ const setLightSegment = (
 @HandlerRegistry.factoryFor(RGBICLightDevice)
 @Injectable()
 export class RGBICSegmentFactory extends SubServiceHandlerFactory<SegmentsDevice> {
-  protected serviceType: ServiceType = Service.Switch;
+  protected serviceType: ServiceType = Service.Lightbulb;
   protected readonly isPrimary: boolean = false;
   protected readonly optionalCharacteristics: CharacteristicType[] = [
     Characteristic.ConfiguredName,
