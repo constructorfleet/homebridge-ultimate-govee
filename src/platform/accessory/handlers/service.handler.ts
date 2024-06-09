@@ -172,18 +172,6 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
         service.UUID === this.serviceType.UUID &&
         service.subtype === this.subType,
     );
-    this.logger.warn({
-      tearDown: {
-        device: {
-          id: goveeAccessory.device.id,
-        },
-        service: {
-          subType: this.subType,
-          type: service?.constructor?.name,
-          name: service?.name,
-        },
-      },
-    });
     if (service === undefined) {
       return;
     }
