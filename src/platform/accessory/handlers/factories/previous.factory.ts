@@ -1,8 +1,13 @@
 import {
   Device,
   DeviceState,
+  HumidifierDevice,
+  IceMakerDevice,
   ModeStateName,
   Optional,
+  PurifierDevice,
+  RGBICLightDevice,
+  RGBLightDevice,
 } from '@constructorfleet/ultimate-govee';
 import { Injectable } from '@nestjs/common';
 import { Characteristic, Service } from 'hap-nodejs';
@@ -22,7 +27,13 @@ type DeviceWithStates = Device & {
   [StateName: string]: Optional<DeviceState<string, any>>;
 };
 
-@HandlerRegistry.factoryFor(Device)
+@HandlerRegistry.factoryFor(
+  RGBLightDevice,
+  RGBICLightDevice,
+  PurifierDevice,
+  HumidifierDevice,
+  IceMakerDevice,
+)
 @Injectable()
 export class PreviousFactory extends SubServiceHandlerFactory<DeviceWithStates> {
   protected serviceType: ServiceType = Service.Switch;
