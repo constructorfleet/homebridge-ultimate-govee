@@ -13,7 +13,7 @@ import {
 } from '@constructorfleet/ultimate-govee';
 import { Injectable } from '@nestjs/common';
 import { Characteristic, Service } from 'hap-nodejs';
-import { LightEffectConfig } from '../../../../config';
+import { LightEffectConfig, RGBLightDeviceConfig } from '../../../../config';
 import { GoveeAccessory } from '../../govee.accessory';
 import { SubServiceHandlerFactory } from '../handler.factory';
 import { HandlerRegistry } from '../handler.registry';
@@ -136,6 +136,7 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     if (accessory.isIgnored || effectType !== lightPrefix) {
       return false;
     }
+
     return accessory.lightEffects.get(code)?.isExposed === true;
   };
   protected possibleSubTypes: ServiceSubTypes<RGBICLight> = (
@@ -163,6 +164,7 @@ export class LightEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
 
     const name =
       accessory.lightEffects.get(code)?.name ??
+      (accessory.deviceConfig as RGBLightDeviceConfig)?.effects[code]?.name ??
       accessory.device
         .state<LightEffectState>(LightEffectStateName)
         ?.effects?.get(code)?.name ??

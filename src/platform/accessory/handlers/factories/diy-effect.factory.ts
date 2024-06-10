@@ -13,7 +13,7 @@ import {
 } from '@constructorfleet/ultimate-govee';
 import { Injectable } from '@nestjs/common';
 import { Characteristic, Service } from 'hap-nodejs';
-import { DiyEffectConfig } from '../../../../config';
+import { DiyEffectConfig, RGBLightDeviceConfig } from '../../../../config';
 import { GoveeAccessory } from '../../govee.accessory';
 import { SubServiceHandlerFactory } from '../handler.factory';
 import { HandlerRegistry } from '../handler.registry';
@@ -164,7 +164,8 @@ export class DiyEffectFactory extends SubServiceHandlerFactory<RGBICLight> {
     }
 
     const name =
-      accessory.lightEffects.get(code)?.name ??
+      accessory.diyEffects.get(code)?.name ??
+      (accessory.deviceConfig as RGBLightDeviceConfig)?.diy[code]?.name ??
       accessory.device.state<DiyModeState>(DiyModeStateName)?.effects?.get(code)
         ?.name ??
       `${accessory.name} ${code}`;

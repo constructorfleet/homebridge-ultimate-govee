@@ -76,7 +76,7 @@
               "title": "Expose Previous Button",
               "default": false
             },
-            "showSegments": {
+            "segments": {
               "type": "boolean",
               "title": "Show Each Segment",
               "default": false,

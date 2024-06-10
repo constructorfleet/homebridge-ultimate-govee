@@ -3,6 +3,7 @@ import {
   Expose,
   Transform,
   Type,
+  instanceToPlain,
   plainToInstance,
 } from 'class-transformer';
 import { plainToSingleInstance } from '../../common';
@@ -74,7 +75,10 @@ export class GoveePluginConfig {
         string,
         RGBICLightDeviceConfig | RGBLightDeviceConfig | DeviceConfig
       >;
-    }) => Object.values(value).filter((e) => e.id !== undefined),
+    }) =>
+      Object.values(value)
+        .filter((e) => e.id !== undefined)
+        .map((e) => instanceToPlain(e)),
     { toPlainOnly: true },
   )
   @Transform(

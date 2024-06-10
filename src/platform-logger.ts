@@ -19,6 +19,9 @@ export class PlatformLogger extends ConsoleLogger {
     context = '',
     logLevel: LogLevel = 'log',
   ) {
+    if (['verbose', 'debug'].includes(logLevel) && process.env.DEV !== 'true') {
+      return;
+    }
     messages.forEach((message) => {
       const pidMessage = this.formatPid(process.pid);
       const contextMessage = this.formatContext(context);

@@ -35,7 +35,8 @@
     "govee"
   ],
   "dependencies": {
-    "@constructorfleet/ultimate-govee": "^1.0.0-rc17",
+    "@constructorfleet/ultimate-govee": "1.1.0",
+    "@ilihub/camel-case-string-to-title-case-string": "^1.0.7",
     "@nestjs/common": "^10.3.8",
     "@nestjs/core": "^10.3.8",
     "@nestjs/cqrs": "^10.2.7",

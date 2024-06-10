@@ -11,6 +11,7 @@ import { PlatformModule } from './platform/platform.module';
 import { PlatformService } from './platform/platform.service';
 import { GoveePlatformAccessory } from './platform/accessory/govee.accessory';
 import { PlatformLogger } from './platform-logger';
+import { realpathSync } from 'fs';
 
 export class UltimateGoveePlatform implements DynamicPlatformPlugin {
   private readonly logger: Logger = new Logger(UltimateGoveePlatform.name);
@@ -33,8 +34,8 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
             api: this.api,
             config,
             log,
-            configPath: this.api.user.configPath(),
-            storagePath: this.api.user.persistPath(),
+            configPath: realpathSync(this.api.user.configPath()),
+            storagePath: realpathSync(this.api.user.persistPath()),
             generateUUID: this.api.hap.uuid.generate,
           }),
         }),

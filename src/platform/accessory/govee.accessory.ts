@@ -1,7 +1,9 @@
 import { Device, DeviceStatesType } from '@constructorfleet/ultimate-govee';
 import { Logger } from '@nestjs/common';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { Characteristic, Service } from 'hap-nodejs';
 import { PlatformAccessory } from 'homebridge';
+import { using } from '../../common';
 import {
   ConfigType,
   DeviceConfig,
@@ -11,7 +13,6 @@ import {
   RGBICLightDeviceConfig,
   RGBLightDeviceConfig,
 } from '../../config';
-import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 export type AccessoryContext = {
   initialized: Record<string, boolean>;
@@ -77,10 +78,6 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   private logger?: Logger;
-  private ignore: boolean = false;
-  private debug: boolean = false;
-  private enablePrevious: boolean = false;
-  private showSegments: boolean = false;
   readonly lightEffects: Map<number, GoveeAccessoryEffect> = new Map();
   readonly diyEffects: Map<number, GoveeAccessoryEffect> = new Map();
 
@@ -113,53 +110,65 @@ export class GoveeAccessory<States extends DeviceStatesType> {
   }
 
   get isIgnored(): boolean {
-    return this.ignore;
+    return this.deviceConfig.ignore;
   }
 
   set isIgnored(ignore: boolean) {
     if (this.isIgnored === ignore) {
       return;
     }
-    this.ignore = ignore;
+    this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
+      deviceConfig.ignore = ignore;
+    });
     this.logger?.log(`Ignoring device ${ignore ? 'enabled' : 'disabled'}`);
   }
 
   get isDebugging(): boolean {
-    return this.debug;
+    return this.deviceConfig.debug;
   }
 
   set isDebugging(debug: boolean) {
-    if (this.debug === debug) {
+    if (this.isDebugging === debug) {
       return;
     }
-    this.debug = debug;
     this.device.debug(debug);
+    this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
+      deviceConfig.debug = debug;
+    });
     this.logger?.log(`Debugging ${debug ? 'enabled' : 'disabled'}`);
   }
 
   get exposePreviousButton(): boolean {
-    return this.enablePrevious;
+    return this.deviceConfig.exposePrevious;
   }
 
   set exposePreviousButton(exposePrevious: boolean) {
     if (this.exposePreviousButton === exposePrevious) {
       return;
     }
-    this.enablePrevious = exposePrevious;
+    this.deviceConfig = using(this.deviceConfig).do((deviceConfig) => {
+      deviceConfig.exposePrevious = exposePrevious;
+    });
     this.logger?.log(
       `Previous button ${exposePrevious ? 'enabled' : 'disabled'}`,
     );
   }
 
   get shouldShowSegments(): boolean {
-    return this.showSegments;
+    return (this.deviceConfig as RGBICLightDeviceConfig)?.showSegments === true;
   }
 
   set shouldShowSegments(showSegments: boolean) {
-    if (this.showSegments === showSegments) {
+    if (this.shouldShowSegments === showSegments) {
       return;
     }
-    this.showSegments = showSegments;
+
+    if (this.deviceConfig instanceof RGBICLightDeviceConfig) {
+      const deviceConfig: RGBICLightDeviceConfig = this
+        .deviceConfig as RGBICLightDeviceConfig;
+      deviceConfig.showSegments = showSegments;
+      this.deviceConfig = deviceConfig;
+    }
   }
 
   addLightEffect(effect: LightEffectConfig): boolean {
@@ -253,15 +262,13 @@ export class GoveeAccessory<States extends DeviceStatesType> {
 
   setup(config: ConfigType<States>) {
     this.deviceConfig = config;
+    this.device.debug(config.debug);
     const service = this.accessory.getService(Service.AccessoryInformation);
     if (service === undefined) {
       return;
     }
 
     this.name = config.name ?? this.device.name;
-    this.isDebugging = config.debug === true;
-    this.shouldShowSegments = config.exposePrevious === true;
-    this.isIgnored = config.ignore === true;
 
     if (config instanceof RGBLightDeviceConfig) {
       Array.from(this.lightEffects?.values() ?? [])

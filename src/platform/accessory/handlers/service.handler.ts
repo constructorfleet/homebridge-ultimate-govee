@@ -166,7 +166,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     if (!accessory.context.initialized) {
       accessory.context.initialized = {};
     }
-    accessory.context.initialized[initializedKey] = false;
+    goveeAccessory.serviceInitialized(initializedKey, false);
     const service = accessory.services.find(
       (service) =>
         service.UUID === this.serviceType.UUID &&
@@ -188,10 +188,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     if (!accessory.context.initialized) {
       accessory.context.initialized = {};
     }
-    if (
-      accessory.context.initialized &&
-      accessory.context.initialized[initializedKey] === true
-    ) {
+    if (goveeAccessory.isServiceInitialized(initializedKey)) {
       const service = accessory.services.find(
         (s) => s.UUID === this.serviceType.UUID && s.subtype === this.subType,
       );
@@ -223,14 +220,11 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
     if (service.isPrimaryService !== this.isPrimary) {
       service.setPrimaryService(this.isPrimary);
     }
-    if (this.subType === 'light-9') {
-      service.getCharacteristic(Characteristic.On);
-    }
     const subscriptions: Subscription[] = [];
     Object.entries(this.handlers).forEach(([stateName, handlers]) => {
       const state = device.state(stateName);
       if (state === undefined) {
-        logger.error(`No characteristic handlers for state ${stateName}`);
+        logger.error(`No state ${stateName} for device ${device.id}`);
       }
 
       this.setProps(logger, goveeAccessory, service, handlers, state?.value);
@@ -270,7 +264,7 @@ export abstract class ServiceHandler<States extends DeviceStatesType> {
       );
     });
     this.subscriptions.set(device.id, subscriptions);
-    accessory.context.initialized[initializedKey] = true;
+    goveeAccessory.serviceInitialized(initializedKey, true);
     this.api.updatePlatformAccessories([accessory]);
     return newService;
   }

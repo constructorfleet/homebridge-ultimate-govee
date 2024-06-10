@@ -21,6 +21,7 @@ import {
   AddDiyEffectEvent,
   AddLightEffectEvent,
   DebugDeviceChangedEvent,
+  DeviceConfigUpdatedEvent,
   DiyEffectChangedEvent,
   DiyEffectDiscoveredEvent,
   DiyEffectRemovedEvent,
@@ -49,6 +50,7 @@ import {
   RGBLightDeviceConfig,
 } from './v2/devices';
 import { GoveePluginConfig } from './v2/plugin-config.govee';
+import { ShowSegmentsDeviceChangedEvent } from '../events/device-config/show-segments-device-changed.event';
 
 @Injectable()
 export class PluginConfigService implements OnModuleDestroy {
@@ -102,7 +104,7 @@ export class PluginConfigService implements OnModuleDestroy {
         let effect: LightEffectConfig | undefined =
           deviceConfig.effects[event.effect.code];
         if (!effect) {
-          effect = LightEffectConfig.from(event.effect);
+          effect = LightEffectConfig.from(event.effect, deviceConfig);
           if (effect === undefined) {
             return;
           }
@@ -135,6 +137,9 @@ export class PluginConfigService implements OnModuleDestroy {
       }
 
       this.config.deviceConfigs[event.device.id] = deviceConfig;
+      await new DeviceConfigUpdatedEvent(event.device.id, deviceConfig).emit(
+        this.eventEmitter,
+      );
     } catch (error) {
       this.logger.error(`onLightEffectDiscovered: ${error}`, error);
     } finally {
@@ -162,6 +167,9 @@ export class PluginConfigService implements OnModuleDestroy {
       }
       this.config.deviceConfigs[event.device.id] = deviceConfig;
       await new RemoveLightEffectEvent(event.device.id, event.effect.code).emit(
+        this.eventEmitter,
+      );
+      await new DeviceConfigUpdatedEvent(event.device.id, deviceConfig).emit(
         this.eventEmitter,
       );
     } catch (error) {
@@ -197,7 +205,7 @@ export class PluginConfigService implements OnModuleDestroy {
         let effect: DiyEffectConfig | undefined =
           deviceConfig.diy[event.effect.code];
         if (!effect) {
-          effect = DiyEffectConfig.from(event.effect);
+          effect = DiyEffectConfig.from(event.effect, deviceConfig);
           if (effect === undefined) {
             return;
           }
@@ -228,6 +236,9 @@ export class PluginConfigService implements OnModuleDestroy {
         );
       }
       this.config.deviceConfigs[event.device.id] = deviceConfig;
+      await new DeviceConfigUpdatedEvent(event.device.id, deviceConfig).emit(
+        this.eventEmitter,
+      );
     } catch (error) {
       this.logger.error(`onDiyEffectDiscovered: ${error}`, error);
     } finally {
@@ -255,6 +266,9 @@ export class PluginConfigService implements OnModuleDestroy {
       }
       this.config.deviceConfigs[event.device.id] = deviceConfig;
       await new RemoveDiyEffectEvent(event.device.id, event.effect.code).emit(
+        this.eventEmitter,
+      );
+      await new DeviceConfigUpdatedEvent(event.device.id, deviceConfig).emit(
         this.eventEmitter,
       );
     } catch (error) {
@@ -428,6 +442,9 @@ export class PluginConfigService implements OnModuleDestroy {
           deviceConfig instanceof RGBICLightDeviceConfig
         ) {
           cfg.showSegments = deviceConfig.showSegments;
+          events.push(
+            new ShowSegmentsDeviceChangedEvent(cfg.id, cfg.showSegments),
+          );
         }
         if (
           cfg instanceof RGBLightDeviceConfig &&
