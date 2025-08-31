@@ -5,7 +5,7 @@
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
+    "target": "ES2022",
     "module": "commonjs",
     "lib": [
       "DOM",
