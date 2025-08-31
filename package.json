@@ -6,7 +6,7 @@
     "name": "Teagan Glenn",
     "email": "that@teagantotally.rocks"
   },
-  "version": "2.95.1",
+  "version": "2.95.2",
   "type": "commonjs",
   "description": "The Ultimate Govee HomeBridge plugin.",
   "license": "MIT",
