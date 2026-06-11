@@ -19,12 +19,14 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
   private service!: PlatformService;
   private loaded = false;
   private cachedAccessories: PlatformAccessory[] = [];
+  private readonly persistMaxFileSizeBytes?: number;
 
   constructor(
     public readonly log: HomebridgeLogger,
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+    this.persistMaxFileSizeBytes = this.resolvePersistMaxFileSize(config);
     this.api.on('didFinishLaunching', async () => {
       log.debug('Executed didFinishLaunching callback');
       await new Promise<void>((resolve) => setTimeout(() => resolve(), 100));
@@ -36,6 +38,7 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
             log,
             configPath: realpathSync(this.api.user.configPath()),
             storagePath: realpathSync(this.api.user.persistPath()),
+            persistMaxFileSizeBytes: this.persistMaxFileSizeBytes,
             generateUUID: this.api.hap.uuid.generate,
           }),
         }),
@@ -70,5 +73,30 @@ export class UltimateGoveePlatform implements DynamicPlatformPlugin {
 
   configureAccessory(accessory: PlatformAccessory): void {
     this.cachedAccessories.push(accessory);
+  }
+
+  private resolvePersistMaxFileSize(config: PlatformConfig): number | undefined {
+    const envValue = process.env.GOVEE_PERSIST_MAX_FILE_SIZE_BYTES;
+    if (envValue !== undefined) {
+      const parsedEnvValue = Number.parseInt(envValue, 10);
+      if (Number.isFinite(parsedEnvValue) && parsedEnvValue > 0) {
+        return parsedEnvValue;
+      }
+      this.logger.warn(
+        `Ignoring invalid GOVEE_PERSIST_MAX_FILE_SIZE_BYTES value "${envValue}"`,
+      );
+    }
+
+    const configValue = (config as { persistMaxFileSizeBytes?: unknown })
+      .persistMaxFileSizeBytes;
+    if (typeof configValue === 'number' && Number.isFinite(configValue)) {
+      if (configValue > 0) {
+        return configValue;
+      }
+      this.logger.warn(
+        `Ignoring invalid persistMaxFileSizeBytes value "${configValue}"`,
+      );
+    }
+    return undefined;
   }
 }

@@ -43,6 +43,13 @@
           }
         }
       },
+      "persistMaxFileSizeBytes": {
+        "type": "integer",
+        "title": "Max Persisted File Size (bytes)",
+        "default": 0,
+        "minimum": 0,
+        "description": "When greater than 0, rotates plugin persisted files after they exceed this size."
+      },
       "deviceConfigs": {
         "type": "array",
         "removeable": false,

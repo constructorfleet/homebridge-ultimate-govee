@@ -31,6 +31,7 @@ export type PlatformModuleOptions = {
   config: PlatformConfig;
   configPath: string;
   storagePath: string;
+  persistMaxFileSizeBytes?: number;
   log: HomebridgeLogger;
   generateUUID: (data: BinaryLike) => string;
 };

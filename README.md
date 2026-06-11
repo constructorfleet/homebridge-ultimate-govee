@@ -170,6 +170,10 @@ sudo npm install -g homebridge-example-plugin@beta
 
 `username` - Your Govee Home username  
 `password` - Your Govee Home password
+`persistMaxFileSizeBytes` - Max size for each plugin persisted file before it is
+rotated (`0` disables rotation)
+
+Environment override: `GOVEE_PERSIST_MAX_FILE_SIZE_BYTES`
 
 ##### Connections
 
