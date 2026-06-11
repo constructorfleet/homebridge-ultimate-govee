@@ -8,6 +8,7 @@ import { AccessoryModule } from './accessory/accessory.module';
 import { PlatformService } from './platform.service';
 import { AccessoryModuleOptionsType } from './accessory';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { PersistRotationService } from './persist-rotation.service';
 
 export const {
   ConfigurableModuleClass,
@@ -63,7 +64,7 @@ export const {
       }),
     }),
   ],
-  providers: [PlatformService],
+  providers: [PlatformService, PersistRotationService],
   exports: [AccessoryModule, PlatformService, MODULE_OPTIONS_TOKEN],
 })
 export class PlatformModule extends ConfigurableModuleClass {}
